@@ -1,0 +1,28 @@
+lib = File.expand_path("lib", __dir__)
+$:.unshift(lib) unless $:.include?(lib)
+
+require "ferrum/version"
+
+Gem::Specification.new do |s|
+  s.name          = "ferrum"
+  s.version       = Ferrum::VERSION
+  s.platform      = Gem::Platform::RUBY
+  s.authors       = ["Dmitry Vorotilin"]
+  s.email         = ["d.vorotilin@gmail.com"]
+  s.homepage      = "https://github.com/route/ferrum"
+  s.summary       = "Ruby headless Chrome driver"
+  s.description   = "Ferrum allows you to control headless Chrome browser"
+  s.license       = "MIT"
+  s.require_paths = ["lib"]
+  s.files         = Dir["{lib}/**/*"] + %w[LICENSE README.md]
+
+  s.required_ruby_version = ">= 2.3.0"
+
+  s.add_runtime_dependency "websocket-driver", ">= 0.6", "< 0.8"
+  s.add_runtime_dependency "cliver",           "~> 0.3"
+  s.add_runtime_dependency "addressable",      "~> 2.6"
+
+  s.add_development_dependency "rake",         "~> 12.3"
+  s.add_development_dependency "minitest",     "~> 5.11"
+  s.add_development_dependency "byebug",       "~> 10.0"
+end
