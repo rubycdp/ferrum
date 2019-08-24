@@ -1,0 +1,17 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <body>
+    <input id="input" type="text">
+    <div id="output"></div>
+
+    <script>
+      window.input = document.querySelector('#input')
+      window.output = document.querySelector('#output')
+      const log = (s) => output.textContent = `${output.textContent} ${s}`
+      input.addEventListener('keydown', () => log('keydown'))
+      input.addEventListener('keypress', () => log('keypress'))
+      input.addEventListener('input', () => log('input'))
+      input.addEventListener('keyup', () => log('keyup'))
+      input.addEventListener('change', () => log('change'))
+    </script>
+  </body>
+</html>

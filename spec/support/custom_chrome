@@ -1,0 +1,4 @@
+#!/bin/bash
+touch `dirname "$0"`/custom_chrome_called
+chrome=$(<`dirname "$0"`/chrome_path)
+exec "$chrome" "$@"
