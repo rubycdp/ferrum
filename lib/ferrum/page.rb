@@ -29,22 +29,26 @@ require "ferrum/network/response"
 # details (DOM.describeNode).
 module Ferrum
   class Page
+    NEW_WINDOW_BUG_SLEEP = 0.3
+
     include Input, DOM, Runtime, Frame, Net
 
     attr_accessor :referrer
     attr_reader :target_id, :status, :response_headers
 
-    def initialize(target_id, browser)
-      @wait = 0
+    def initialize(target_id, browser, new_window = false)
       @target_id, @browser = target_id, browser
-      @mutex, @resource = Mutex.new, ConditionVariable.new
       @network_traffic = []
+      @event = Concurrent::Event.new.tap(&:set)
 
       @frames = {}
       @waiting_frames ||= Set.new
       @frame_stack = []
       @accept_modal = []
       @modal_messages = []
+
+      # Dirty hack because new window doesn't have events at all
+      sleep(NEW_WINDOW_BUG_SLEEP) if new_window
 
       begin
         @session_id = @browser.command("Target.attachToTarget", targetId: @target_id)["sessionId"]
@@ -61,7 +65,7 @@ module Ferrum
       ws_url = "ws://#{host}:#{port}/devtools/page/#{@target_id}"
       @client = Browser::Client.new(browser, ws_url, 1000)
 
-      on_events
+      subscribe
       prepare_page
     end
 
@@ -70,10 +74,9 @@ module Ferrum
     end
 
     def goto(url = nil)
-      @wait = timeout
       options = { url: combine_url!(url) }
       options.merge!(referrer: referrer) if referrer
-      response = command("Page.navigate", **options)
+      response = command("Page.navigate", timeout: timeout, **options)
       # https://cs.chromium.org/chromium/src/net/base/net_error_list.h
       if %w[net::ERR_NAME_NOT_RESOLVED
             net::ERR_NAME_RESOLUTION_FAILED
@@ -108,8 +111,7 @@ module Ferrum
     end
 
     def refresh
-      @wait = timeout
-      command("Page.reload")
+      command("Page.reload", timeout: timeout)
     end
 
     def network_traffic(type = nil)
@@ -178,26 +180,20 @@ module Ferrum
       @modal_messages = []
     end
 
-    def command(*args)
-      id = nil
+    def command(method, timeout: 0, **params)
+      result = @client.command(method, params)
 
-      @mutex.synchronize do
-        id = @client.command(*args)
-        stop_at = ::Process.clock_gettime(::Process::CLOCK_MONOTONIC) + @wait
-
-        while @wait > 0 && (remain = stop_at - ::Process.clock_gettime(::Process::CLOCK_MONOTONIC)) > 0
-          @resource.wait(@mutex, remain)
-        end
-
-        @wait = 0
+      if timeout > 0
+        @event.reset
+        @event.wait(timeout)
       end
 
-      @client.wait(id: id)
+      result
     end
 
     private
 
-    def on_events
+    def subscribe
       super
 
       if @browser.logger
@@ -232,20 +228,17 @@ module Ferrum
 
       @client.on("Page.windowOpen") do
         @browser.targets.refresh
-        @mutex.try_lock
-        sleep 0.3 # Dirty hack because new window doesn't have events at all
-        @mutex.unlock if @mutex.locked? && @mutex.owned?
       end
 
       @client.on("Page.navigatedWithinDocument") do
-        signal if @waiting_frames.empty?
+        @event.set if @waiting_frames.empty?
       end
 
       @client.on("Page.domContentEventFired") do |params|
         # `frameStoppedLoading` doesn't occur if status isn't success
         if @status != 200
-          signal
-          @client.command("DOM.getDocument", depth: 0)
+          @event.set
+          command("DOM.getDocument", depth: 0)
         end
       end
 
@@ -256,7 +249,7 @@ module Ferrum
           # Fetch, EventSource, WebSocket, Manifest, SignedExchange, Ping,
           # CSPViolationReport, Other
           if params["type"] == "Document"
-            @mutex.try_lock
+            @event.reset
             @request_id = params["requestId"]
           end
         end
@@ -335,7 +328,7 @@ module Ferrum
         # occurs and thus search for nodes cannot be completed. Here we check
         # the history and if the transitionType for example `link` then
         # content is already loaded and we can try to get the document.
-        @client.command("DOM.getDocument", depth: 0)
+        command("DOM.getDocument", depth: 0)
       end
     end
 
@@ -352,24 +345,13 @@ module Ferrum
       end
     end
 
-    def signal
-      @wait = 0
-
-      if @mutex.locked? && @mutex.owned?
-        @resource.signal
-        @mutex.unlock
-      else
-        @mutex.synchronize { @resource.signal }
-      end
-    end
-
     def go(delta)
       history = command("Page.getNavigationHistory")
       index, entries = history.values_at("currentIndex", "entries")
 
       if entry = entries[index + delta]
-        @wait = 0.05 # Potential wait because of network event
-        command("Page.navigateToHistoryEntry", entryId: entry["id"])
+        # Potential wait because of network event
+        command("Page.navigateToHistoryEntry", timeout: 0.05, entryId: entry["id"])
       end
     end
 

@@ -5,6 +5,8 @@ module Ferrum
   class ModalNotFound < StandardError; end
   class Error < StandardError; end
   class NoSuchWindowError < Error; end
+  class EmptyTargetsError < Error; end
+  class NoExecutionContext < Error; end
 
   class ClientError < Error
     attr_reader :response
@@ -88,7 +90,7 @@ module Ferrum
   end
 
   class DeadBrowser < Error
-    def initialize(message = "Chrome is dead")
+    def initialize(message = "Browser is dead")
       super
     end
   end

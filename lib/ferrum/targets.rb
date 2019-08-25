@@ -2,7 +2,6 @@
 
 module Ferrum
   class Targets
-    EmptyTargetsError = Class.new(RuntimeError)
     TARGETS_RETRY_ATTEMPTS = 3
     TARGETS_RETRY_WAIT = 0.001
 
@@ -49,7 +48,7 @@ module Ferrum
 
     def open_new_window
       target_id = @browser.command("Target.createTarget", url: "about:blank", browserContextId: @_context_id)["targetId"]
-      page = Page.new(target_id, @browser)
+      page = Page.new(target_id, @browser, true)
       push(target_id, page)
       target_id
     end
@@ -91,7 +90,7 @@ module Ferrum
 
     def find_or_create_page(target_id)
       page = @targets[target_id]
-      page ||= Page.new(target_id, @browser)
+      page ||= Page.new(target_id, @browser, true)
       @targets[target_id] ||= page
       page
     end

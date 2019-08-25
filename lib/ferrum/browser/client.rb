@@ -1,60 +1,55 @@
 # frozen_string_literal: true
 
-require "timeout"
+require "concurrent-ruby"
+require "ferrum/browser/subscriber"
 require "ferrum/browser/web_socket"
 
 module Ferrum
   class Browser
     class Client
-      class IdError < RuntimeError; end
-
       def initialize(browser, ws_url, start_id = 0, allow_slowmo = true)
         @command_id = start_id
-        @on = Hash.new { |h, k| h[k] = [] }
-        @browser, @allow_slowmo = browser, allow_slowmo
-        @commands = Queue.new
+        @pendings = Concurrent::Hash.new
+        @browser = browser
+        @slowmo = @browser.slowmo if allow_slowmo && @browser.slowmo > 0
         @ws = WebSocket.new(ws_url, @browser.logger)
+        @subscriber = Subscriber.new
 
         @thread = Thread.new do
           while message = @ws.messages.pop
-            method, params = message.values_at("method", "params")
-            if method
-              @on[method].each { |b| b.call(params) }
+            if message.key?("method")
+              @subscriber.async.call(message)
             else
-              @commands.push(message)
+              @pendings[message["id"]]&.set(message)
             end
           end
-
-          @commands.close
         end
       end
 
       def command(method, params = {})
+        pending = Concurrent::IVar.new
         message = build_message(method, params)
-        sleep(@browser.slowmo) if !@browser.slowmo.nil? && @allow_slowmo
+        @pendings[message[:id]] = pending
+        sleep(@slowmo) if @slowmo
         @ws.send_message(message)
-        message[:id]
-      end
+        data = pending.value!(@browser.timeout)
+        @pendings.delete(message[:id])
 
-      def wait(id:)
-        message = Timeout.timeout(@browser.timeout, TimeoutError) { @commands.pop }
-        raise DeadBrowser unless message
-        raise IdError if message["id"] != id
-        error, response = message.values_at("error", "result")
+        raise DeadBrowser if data.nil? && @ws.messages.closed?
+        raise TimeoutError unless data
+        error, response = data.values_at("error", "result")
         raise BrowserError.new(error) if error
         response
-      rescue IdError
-        retry
       end
 
       def on(event, &block)
-        @on[event] << block
-        true
+        @subscriber.on(event, &block)
       end
 
       def close
         @ws.close
         # Give a thread some time to handle a tail of messages
+        @pendings.clear
         Timeout.timeout(1) { @thread.join }
       rescue Timeout::Error
         @thread.kill

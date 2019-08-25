@@ -38,15 +38,13 @@ module Ferrum
         handle(response)
       end
 
-      def evaluate_on(node:, expression:, by_value: true, wait: 0)
+      def evaluate_on(node:, expression:, by_value: true, timeout: 0)
         object_id = command("DOM.resolveNode", nodeId: node.node_id).dig("object", "objectId")
         options = DEFAULT_OPTIONS.merge(objectId: object_id)
         options[:functionDeclaration] = options[:functionDeclaration] % expression
         options.merge!(returnByValue: by_value)
 
-        @wait = wait if wait > 0
-
-        response = command("Runtime.callFunctionOn", **options)
+        response = command("Runtime.callFunctionOn", timeout: timeout, **options)
           .dig("result").tap { |r| handle_error(r) }
 
         by_value ? response.dig("value") : handle(response)
@@ -82,7 +80,9 @@ module Ferrum
           response.dig("result").tap { |r| handle_error(r) }
         rescue BrowserError => e
           case e.message
-          when "No node with given id found", "Could not find node with given id", "Cannot find context with specified id"
+          when "No node with given id found",
+               "Could not find node with given id",
+               "Cannot find context with specified id"
             sleep 0.1
             attempts += 1
             options = options.merge(executionContextId: execution_context_id)

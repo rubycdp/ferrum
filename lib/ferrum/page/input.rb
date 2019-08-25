@@ -29,8 +29,8 @@ module Ferrum
       def click(node, keys = [], offset = {})
         x, y, modifiers = prepare_before_click(__method__, node, keys, offset)
         command("Input.dispatchMouseEvent", type: "mousePressed", modifiers: modifiers, button: "left", x: x, y: y, clickCount: 1)
-        @wait = 0.05 # Potential wait because if network event is triggered then we have to wait until it's over.
-        command("Input.dispatchMouseEvent", type: "mouseReleased", modifiers: modifiers, button: "left", x: x, y: y, clickCount: 1)
+        # Potential wait because if network event is triggered then we have to wait until it's over.
+        command("Input.dispatchMouseEvent", timeout: 0.05, type: "mouseReleased", modifiers: modifiers, button: "left", x: x, y: y, clickCount: 1)
       end
 
       def right_click(node, keys = [], offset = {})
@@ -47,8 +47,8 @@ module Ferrum
 
       def click_coordinates(x, y)
         command("Input.dispatchMouseEvent", type: "mousePressed", button: "left", x: x, y: y, clickCount: 1)
-        @wait = 0.05 # Potential wait because if network event is triggered then we have to wait until it's over.
-        command("Input.dispatchMouseEvent", type: "mouseReleased", button: "left", x: x, y: y, clickCount: 1)
+        # Potential wait because if network event is triggered then we have to wait until it's over.
+        command("Input.dispatchMouseEvent", timeout: 0.05, type: "mouseReleased", button: "left", x: x, y: y, clickCount: 1)
       end
 
       def focus(node)

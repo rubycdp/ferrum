@@ -129,7 +129,7 @@ module Ferrum
       expect(browser.evaluate("window.result")).to eq(3)
     end
 
-    it "operates a timeout when communicating with browser", skip: true do
+    it "operates a timeout when communicating with browser" do
       begin
         prev_timeout = browser.timeout
         browser.timeout = 0.1

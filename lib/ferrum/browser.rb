@@ -46,7 +46,7 @@ module Ferrum
       @options = Hash(options.merge(window_size: @window_size))
       @logger, @timeout = @options.values_at(:logger, :timeout)
       @js_errors = @options.fetch(:js_errors, false)
-      @slowmo = @options[:slowmo]
+      @slowmo = @options[:slowmo].to_i
 
       if @options.key?(:base_url)
         self.base_url = @options[:base_url]
@@ -84,8 +84,7 @@ module Ferrum
     end
 
     def command(*args)
-      id = @client.command(*args)
-      @client.wait(id: id)
+      @client.command(*args)
     rescue DeadBrowser
       restart
       raise

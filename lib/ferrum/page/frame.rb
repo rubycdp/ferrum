@@ -4,13 +4,12 @@ module Ferrum
   class Page
     module Frame
       def execution_context_id
-        @mutex.synchronize do
-          if !@frame_stack.empty?
-            @frames[@frame_stack.last]["execution_context_id"]
-          else
-            @execution_context_id
-          end
-        end
+        context_id = current_execution_context_id
+        raise NoExecutionContext unless context_id
+        context_id
+      rescue NoExecutionContext
+        @event.reset
+        @event.wait(timeout) ? retry : raise
       end
 
       def frame_name
@@ -39,7 +38,7 @@ module Ferrum
 
       private
 
-      def on_events
+      def subscribe
         super if defined?(super)
 
         @client.on("Page.frameAttached") do |params|
@@ -48,7 +47,7 @@ module Ferrum
 
         @client.on("Page.frameStartedLoading") do |params|
           @waiting_frames << params["frameId"]
-          @mutex.try_lock
+          @event.reset
         end
 
         @client.on("Page.frameNavigated") do |params|
@@ -59,9 +58,8 @@ module Ferrum
         end
 
         @client.on("Page.frameScheduledNavigation") do |params|
-          # Trying to lock mutex if frame is the main frame
           @waiting_frames << params["frameId"]
-          @mutex.try_lock
+          @event.reset
         end
 
         @client.on("Page.frameStoppedLoading") do |params|
@@ -69,47 +67,54 @@ module Ferrum
           # It returns node with nodeId 1 and nodeType 9 from which descend the
           # tree and we save it in a variable because if we call that again root
           # node will change the id and all subsequent nodes have to change id too.
-          # `command` is not allowed in the block as it will deadlock the process.
           if params["frameId"] == @frame_id
-            signal if @waiting_frames.empty?
-            @client.command("DOM.getDocument", depth: 0)
+            @event.set if @waiting_frames.empty?
+            command("DOM.getDocument", depth: 0)
           end
 
           if @waiting_frames.include?(params["frameId"])
             @waiting_frames.delete(params["frameId"])
-            signal if @waiting_frames.empty?
+            @event.set if @waiting_frames.empty?
           end
         end
 
         @client.on("Runtime.executionContextCreated") do |params|
-          frame_id = params.dig("context", "auxData", "frameId")
-          execution_context_id = params.dig("context", "id")
+          context_id = params.dig("context", "id")
+          @execution_context_id ||= context_id
 
-          # Remember the very first frame since it's the main one
-          @frame_id ||= frame_id
-          @execution_context_id ||= execution_context_id
+          frame_id = params.dig("context", "auxData", "frameId")
+          @frame_id ||= frame_id # Remember the very first frame since it's the main one
 
           if @frames[frame_id]
-            @frames[frame_id].merge!("execution_context_id" => execution_context_id)
+            @frames[frame_id].merge!("execution_context_id" => context_id)
           else
-            @frames[frame_id] = { "execution_context_id" => execution_context_id }
+            @frames[frame_id] = { "execution_context_id" => context_id }
           end
         end
 
         @client.on("Runtime.executionContextDestroyed") do |params|
-          execution_context_id = params["executionContextId"]
-          _id, frame = @frames.find { |_, p| p["execution_context_id"] == execution_context_id }
-          frame["execution_context_id"] = nil if frame
+          context_id = params["executionContextId"]
 
-          if @execution_context_id == execution_context_id
+          if @execution_context_id == context_id
             @execution_context_id = nil
           end
+
+          _id, frame = @frames.find { |_, p| p["execution_context_id"] == context_id }
+          frame["execution_context_id"] = nil if frame
         end
 
         @client.on("Runtime.executionContextsCleared") do
           # If we didn't have time to set context id at the beginning we have
           # to set lock and release it when we set something.
           @execution_context_id = nil
+        end
+      end
+
+      def current_execution_context_id
+        if @frame_stack.empty?
+          @execution_context_id
+        else
+          @frames.dig(@frame_stack.last, "execution_context_id")
         end
       end
     end

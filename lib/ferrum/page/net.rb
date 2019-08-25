@@ -28,14 +28,14 @@ module Ferrum
 
       private
 
-      def on_events
+      def subscribe
         super if defined?(super)
 
         @client.on("Network.loadingFailed") do |params|
           # Free mutex as we aborted main request we are waiting for
           if params["requestId"] == @request_id && params["canceled"] == true
-            signal
-            @client.command("DOM.getDocument", depth: 0)
+            @event.set
+            command("DOM.getDocument", depth: 0)
           end
         end
 

@@ -7,6 +7,8 @@ require "websocket/driver"
 module Ferrum
   class Browser
     class WebSocket
+      WEBSOCKET_BUG_SLEEP = 0.01
+
       attr_reader :url, :messages
 
       def initialize(url, logger)
@@ -37,7 +39,8 @@ module Ferrum
       end
 
       def on_open(_event)
-        sleep 0.01 # https://github.com/faye/websocket-driver-ruby/issues/46
+        # https://github.com/faye/websocket-driver-ruby/issues/46
+        sleep(WEBSOCKET_BUG_SLEEP)
       end
 
       def on_message(event)
