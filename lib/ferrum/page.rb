@@ -363,7 +363,7 @@ module Ferrum
         raise "Set :base_url browser's option or use absolute url in `goto`, you passed: #{url_or_path}"
       end
 
-      nil_or_relative ? @browser.base_url.join(url.to_s) : url
+      (nil_or_relative ? @browser.base_url.join(url.to_s) : url).to_s
     end
 
     def get_document_id
