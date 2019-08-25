@@ -1,4 +1,8 @@
-# Ferrum - fearless Ruby headless Chrome driver (as simple as Puppeteer, though even simpler).
+# Ferrum - fearless Ruby Chrome/Chromium driver.
+
+As simple as Puppeteer, though even simpler. It is Ruby clean and high-level API
+to Chrome/Chromium through the DevTools Protocol. Runs headless by default,
+but you can configure it to run in a non-headless mode.
 
 Navigate to `example.com` and save a screenshot:
 
@@ -9,7 +13,16 @@ browser.screenshot(path: "example.png")
 browser.quit
 ```
 
-## Links
-https://medium.com/@aslushnikov/automating-clicks-in-chromium-a50e7f01d3fb
-https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
-https://github.com/machinio/cuprite/commit/9b1041dd6cd954e0b40b17bc74824e7a3a3ff3f4
+Interact with a page:
+
+```ruby
+browser = Ferrum::Browser.new
+browser.goto("https://google.com")
+input = browser.at_css("input[title='Search']")
+input.send_keys("Ruby headless driver for Capybara")
+input.send_keys(:Enter)
+browser.at_css("a > h3").text # => "machinio/cuprite: Headless Chrome driver for Capybara - GitHub"
+browser.quit
+```
+
+The README will be updated soon. Meanwhile take a look at specs.

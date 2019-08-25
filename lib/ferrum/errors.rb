@@ -13,6 +13,7 @@ module Ferrum
 
     def initialize(response)
       @response = response
+      super(response["message"])
     end
   end
 
@@ -23,10 +24,6 @@ module Ferrum
 
     def data
       response["data"]
-    end
-
-    def message
-      response["message"]
     end
   end
 
@@ -51,7 +48,7 @@ module Ferrum
     end
 
     def message
-      "The frame "#{name}" was not found."
+      "The frame \"#{name}\" was not found."
     end
   end
 

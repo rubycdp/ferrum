@@ -238,7 +238,7 @@ module Ferrum
         # `frameStoppedLoading` doesn't occur if status isn't success
         if @status != 200
           @event.set
-          command("DOM.getDocument", depth: 0)
+          @document_id = get_document_id
         end
       end
 
@@ -328,7 +328,7 @@ module Ferrum
         # occurs and thus search for nodes cannot be completed. Here we check
         # the history and if the transitionType for example `link` then
         # content is already loaded and we can try to get the document.
-        command("DOM.getDocument", depth: 0)
+        @document_id = get_document_id
       end
     end
 
@@ -364,6 +364,10 @@ module Ferrum
       end
 
       nil_or_relative ? @browser.base_url.join(url.to_s) : url
+    end
+
+    def get_document_id
+      command("DOM.getDocument", depth: 0).dig("root", "nodeId")
     end
   end
 end

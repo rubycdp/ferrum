@@ -35,7 +35,7 @@ module Ferrum
           # Free mutex as we aborted main request we are waiting for
           if params["requestId"] == @request_id && params["canceled"] == true
             @event.set
-            command("DOM.getDocument", depth: 0)
+            @document_id = get_document_id
           end
         end
 

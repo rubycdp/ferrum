@@ -69,7 +69,7 @@ module Ferrum
           # node will change the id and all subsequent nodes have to change id too.
           if params["frameId"] == @frame_id
             @event.set if @waiting_frames.empty?
-            command("DOM.getDocument", depth: 0)
+            @document_id = get_document_id
           end
 
           if @waiting_frames.include?(params["frameId"])

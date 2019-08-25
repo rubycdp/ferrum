@@ -32,8 +32,7 @@ module Ferrum
       end
 
       def css(selector, within: nil)
-        # FIXME: check node type and remove static 1
-        node_id = within&.node_id || 1
+        node_id = within&.node_id || @document_id
 
         ids = command("DOM.querySelectorAll",
                       nodeId: node_id,
@@ -42,8 +41,7 @@ module Ferrum
       end
 
       def at_css(selector, within: nil)
-        # FIXME: check node type and remove static 1
-        node_id = within&.node_id || 1
+        node_id = within&.node_id || @document_id
 
         id = command("DOM.querySelector",
                      nodeId: node_id,
@@ -56,6 +54,8 @@ module Ferrum
       def _build_node(node_id)
         description = command("DOM.describeNode", nodeId: node_id)
         Node.new(self, target_id, node_id, description["node"])
+      rescue BrowserError => e
+        node_id.zero? ? raise(NodeError.new(nil, e.response)) : raise
       end
     end
   end
