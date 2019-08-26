@@ -33,11 +33,6 @@ module Ferrum
         handle(response)
       end
 
-      def evaluate_in(context_id, expression)
-        response = call(expression, nil, { executionContextId: context_id })
-        handle(response)
-      end
-
       def evaluate_on(node:, expression:, by_value: true, timeout: 0)
         object_id = command("DOM.resolveNode", nodeId: node.node_id).dig("object", "objectId")
         options = DEFAULT_OPTIONS.merge(objectId: object_id)
