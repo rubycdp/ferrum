@@ -2,15 +2,15 @@
 
 module Ferrum
   class Node
-    attr_reader :page, :target_id, :node_id, :desc
+    attr_reader :page, :target_id, :node_id, :description
 
-    def initialize(page, target_id, node_id, desc)
-      @page, @target_id, @node_id, @desc =
-        page, target_id, node_id, desc
+    def initialize(page, target_id, node_id, description)
+      @page, @target_id, @node_id, @description =
+        page, target_id, node_id, description
     end
 
     def node?
-      desc["nodeType"] == 1 # nodeType: 3, nodeName: "#text" e.g.
+      description["nodeType"] == 1 # nodeType: 3, nodeName: "#text" e.g.
     end
 
     def page_send(name, *args)
@@ -101,7 +101,7 @@ module Ferrum
     end
 
     def tag_name
-      @tag_name ||= desc["nodeName"].downcase
+      @tag_name ||= description["nodeName"].downcase
     end
 
     def visible?
@@ -156,7 +156,7 @@ module Ferrum
       # We compare backendNodeId because once nodeId is sent to frontend backend
       # never returns same nodeId sending 0. In other words frontend is
       # responsible for keeping track of node ids.
-      target_id == other.target_id && desc["backendNodeId"] == other.desc["backendNodeId"]
+      target_id == other.target_id && description["backendNodeId"] == other.description["backendNodeId"]
     end
 
     def send_keys(*keys)
@@ -169,7 +169,7 @@ module Ferrum
     end
 
     def inspect
-      %(#<#{self.class} @target_id=#{@target_id.inspect} @node_id=#{@node_id} @desc=#{@desc.inspect}>)
+      %(#<#{self.class} @target_id=#{@target_id.inspect} @node_id=#{@node_id} @description=#{@description.inspect}>)
     end
   end
 end

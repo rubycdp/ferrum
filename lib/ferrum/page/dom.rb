@@ -37,7 +37,7 @@ module Ferrum
         ids = command("DOM.querySelectorAll",
                       nodeId: node_id,
                       selector: selector)["nodeIds"]
-        ids.map { |id| _build_node(id) }.compact
+        ids.map { |id| build_node(id) }.compact
       end
 
       def at_css(selector, within: nil)
@@ -46,12 +46,12 @@ module Ferrum
         id = command("DOM.querySelector",
                      nodeId: node_id,
                      selector: selector)["nodeId"]
-        _build_node(id)
+        build_node(id)
       end
 
       private
 
-      def _build_node(node_id)
+      def build_node(node_id)
         description = command("DOM.describeNode", nodeId: node_id)
         Node.new(self, target_id, node_id, description["node"])
       rescue BrowserError => e
