@@ -29,60 +29,51 @@ module Ferrum
       }.freeze
 
       def evaluate(expression, *args)
-        response = call(expression, nil, nil, *args)
-        handle(response)
-      end
-
-      def evaluate_on(node:, expression:, by_value: true, timeout: 0)
-        object_id = command("DOM.resolveNode", nodeId: node.node_id).dig("object", "objectId")
-        options = DEFAULT_OPTIONS.merge(objectId: object_id)
-        options[:functionDeclaration] = options[:functionDeclaration] % expression
-        options.merge!(returnByValue: by_value)
-
-        response = command("Runtime.callFunctionOn", timeout: timeout, **options)
-          .dig("result").tap { |r| handle_error(r) }
-
-        by_value ? response.dig("value") : handle(response)
+        call(*args, expression: expression)
       end
 
       def evaluate_async(expression, wait_time, *args)
-        response = call(expression, wait_time * 1000, EVALUATE_ASYNC_OPTIONS, *args)
-        handle(response)
+        call(*args, expression: expression, wait_time: wait_time * 1000, **EVALUATE_ASYNC_OPTIONS)
       end
 
       def execute(expression, *args)
-        call(expression, nil, EXECUTE_OPTIONS, *args)
+        call(*args, expression: expression, handle: false, **EXECUTE_OPTIONS)
         true
+      end
+
+      def evaluate_on(node:, expression:, by_value: true, timeout: 0)
+        rescue_intermittent_error do
+          response = command("DOM.resolveNode", nodeId: node.node_id)
+          object_id = response.dig("object", "objectId")
+          options = DEFAULT_OPTIONS.merge(objectId: object_id)
+          options[:functionDeclaration] = options[:functionDeclaration] % expression
+          options.merge!(returnByValue: by_value)
+
+          response = command("Runtime.callFunctionOn",
+                             timeout: timeout,
+                             **options)["result"].tap { |r| handle_error(r) }
+
+          by_value ? response.dig("value") : handle_response(response)
+        end
       end
 
       private
 
-      def call(expression, wait_time, options = nil, *args)
-        options ||= {}
-        args = prepare_args(args)
-
-        options = DEFAULT_OPTIONS.merge(options)
-        expression = [wait_time, expression] if wait_time
-        options[:functionDeclaration] = options[:functionDeclaration] % expression
-        options = options.merge(arguments: args)
-        unless options[:executionContextId]
-          options = options.merge(executionContextId: execution_context_id)
-        end
-
-        begin
-          attempts ||= 1
-          response = command("Runtime.callFunctionOn", **options)
-          response.dig("result").tap { |r| handle_error(r) }
-        rescue BrowserError => e
-          case e.message
-          when "No node with given id found",
-               "Could not find node with given id",
-               "Cannot find context with specified id"
-            sleep 0.1
-            attempts += 1
-            options = options.merge(executionContextId: execution_context_id)
-            retry if attempts <= 3
+      def call(*args, expression:, wait_time: nil, handle: true, **options)
+        rescue_intermittent_error do
+          arguments = prepare_args(args)
+          params = DEFAULT_OPTIONS.merge(options)
+          expression = [wait_time, expression] if wait_time
+          params[:functionDeclaration] = params[:functionDeclaration] % expression
+          params = params.merge(arguments: arguments)
+          unless params[:executionContextId]
+            params = params.merge(executionContextId: execution_context_id)
           end
+
+          response = command("Runtime.callFunctionOn",
+                             **params)["result"].tap { |r| handle_error(r) }
+
+          handle ? handle_response(response) : response
         end
       end
 
@@ -98,20 +89,7 @@ module Ferrum
         end
       end
 
-      def prepare_args(args)
-        args.map do |arg|
-          if arg.is_a?(Node)
-            resolved = command("DOM.resolveNode", nodeId: arg.node_id)
-            { objectId: resolved["object"]["objectId"] }
-          elsif arg.is_a?(Hash) && arg["objectId"]
-            { objectId: arg["objectId"] }
-          else
-            { value: arg }
-          end
-        end
-      end
-
-      def handle(response)
+      def handle_response(response)
         case response["type"]
         when "boolean", "number", "string"
           response["value"]
@@ -124,18 +102,17 @@ module Ferrum
 
           case response["subtype"]
           when "node"
-            begin
+              # We cannot store object_id in the node because page can be reloaded
+              # and node destroyed so we need to retrieve it each time for given id.
+              # Though we can try to subscribe to `DOM.childNodeRemoved` and
+              # `DOM.childNodeInserted` in the future.
               node_id = command("DOM.requestNode", objectId: object_id)["nodeId"]
-              desc = command("DOM.describeNode", nodeId: node_id)["node"]
-              Node.new(self, target_id, node_id, desc)
-            rescue BrowserError => e
-              # Node has disappeared while we were trying to get it
-              raise if e.message != "Could not find node with given id"
-            end
+              description = command("DOM.describeNode", nodeId: node_id)["node"]
+              Node.new(self, target_id, node_id, description)
           when "array"
             reduce_props(object_id, []) do |memo, key, value|
               next(memo) unless (Integer(key) rescue nil)
-              value = value["objectId"] ? handle(value) : value["value"]
+              value = value["objectId"] ? handle_response(value) : value["value"]
               memo.insert(key.to_i, value)
             end.compact
           when "date"
@@ -144,9 +121,22 @@ module Ferrum
             nil
           else
             reduce_props(object_id, {}) do |memo, key, value|
-              value = value["objectId"] ? handle(value) : value["value"]
+              value = value["objectId"] ? handle_response(value) : value["value"]
               memo.merge(key => value)
             end
+          end
+        end
+      end
+
+      def prepare_args(args)
+        args.map do |arg|
+          if arg.is_a?(Node)
+            resolved = command("DOM.resolveNode", nodeId: arg.node_id)
+            { objectId: resolved["object"]["objectId"] }
+          elsif arg.is_a?(Hash) && arg["objectId"]
+            { objectId: arg["objectId"] }
+          else
+            { value: arg }
           end
         end
       end
@@ -183,6 +173,20 @@ module Ferrum
                   }
                 JS
                )
+      end
+
+      def rescue_intermittent_error(max = 6)
+        attempts ||= 0
+        yield
+      rescue BrowserError => e
+        case e.message
+        when "No node with given id found",          # Node has disappeared while we were trying to get it
+             "Could not find node with given id",
+             "Cannot find context with specified id" # Context is lost, page is reloading
+          sleep 0.1
+          attempts += 1
+          attempts < max ? retry : raise
+        end
       end
     end
   end

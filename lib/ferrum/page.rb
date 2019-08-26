@@ -53,7 +53,8 @@ module Ferrum
       begin
         @session_id = @browser.command("Target.attachToTarget", targetId: @target_id)["sessionId"]
       rescue BrowserError => e
-        if e.message == "No target with given id found"
+        case e.message
+        when "No target with given id found"
           raise NoSuchWindowError
         else
           raise
