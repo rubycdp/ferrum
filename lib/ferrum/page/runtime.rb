@@ -175,7 +175,7 @@ module Ferrum
                )
       end
 
-      def rescue_intermittent_error(max = 6)
+      def rescue_intermittent_error(max = ENV.fetch("FERRUM_INTERMITTENT_ATTEMPTS", 6).to_i)
         attempts ||= 0
         yield
       rescue BrowserError => e
@@ -183,7 +183,7 @@ module Ferrum
         when "No node with given id found",          # Node has disappeared while we were trying to get it
              "Could not find node with given id",
              "Cannot find context with specified id" # Context is lost, page is reloading
-          sleep 0.1
+          sleep ENV.fetch("FERRUM_INTERMITTENT_SLEEP", 0.1).to_f
           attempts += 1
           attempts < max ? retry : raise
         end
