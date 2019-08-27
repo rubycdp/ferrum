@@ -484,13 +484,13 @@ module Ferrum
 
     context "evaluate" do
       it "can return an element" do
-        browser.goto("/ferrum/send_keys")
+        browser.goto("/ferrum/type")
         element = browser.evaluate(%(document.getElementById("empty_input")))
         expect(element).to eq(browser.at_css("#empty_input"))
       end
 
       it "can return structures with elements" do
-        browser.goto("/ferrum/send_keys")
+        browser.goto("/ferrum/type")
         result = browser.evaluate <<~JS
           {
             a: document.getElementById("empty_input"),

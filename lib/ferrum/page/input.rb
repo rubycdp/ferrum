@@ -51,10 +51,6 @@ module Ferrum
         command("Input.dispatchMouseEvent", timeout: 0.05, type: "mouseReleased", button: "left", x: x, y: y, clickCount: 1)
       end
 
-      def focus(node)
-        command("DOM.focus", nodeId: node.node_id)
-      end
-
       def hover(node)
         raise NotImplemented
       end
@@ -75,10 +71,7 @@ module Ferrum
         execute("window.scrollTo(#{top}, #{left})")
       end
 
-      def send_keys(node, keys)
-        # click(node)
-        # focus(node)
-
+      def type(node, keys)
         keys = normalize_keys(Array(keys))
 
         keys.each do |key|

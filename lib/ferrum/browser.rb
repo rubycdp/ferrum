@@ -25,7 +25,7 @@ module Ferrum
     delegate %i(goto status body at_css at_xpath css xpath text property attributes attribute select_file
                 value visible? disabled? network_traffic clear_network_traffic
                 path response_headers refresh click right_click double_click
-                hover set click_coordinates select trigger scroll_to send_keys
+                hover set click_coordinates select trigger scroll_to type
                 evaluate evaluate_on evaluate_async execute frame_url
                 frame_title switch_to_frame current_url title go_back
                 go_forward find_modal accept_confirm dismiss_confirm

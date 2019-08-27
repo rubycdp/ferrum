@@ -835,7 +835,7 @@ describe "Session" do
     end
 
     it "should submit form" do
-      browser("/ferrum/send_keys")
+      browser("/ferrum/type")
       @session.find(:css, "#without_submit_button").trigger("submit")
       expect(@session.find(:css, "#without_submit_button input").value).to eq("Submitted")
     end

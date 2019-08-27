@@ -13,6 +13,22 @@ module Ferrum
       description["nodeType"] == 1 # nodeType: 3, nodeName: "#text" e.g.
     end
 
+    def focus
+      tap { page.command("DOM.focus", nodeId: node_id) }
+    end
+
+    def blur
+      tap { page.evaluate_on(node: self, expression: "this.blur()") }
+    end
+
+    def type(*keys)
+      tap { page_send(:type, keys) }
+    end
+
+    def click(keys = [], offset = {})
+      tap { page_send(:click, keys, offset) }
+    end
+
     def page_send(name, *args)
       page.send(name, self, *args)
     rescue BrowserError => e
@@ -70,28 +86,6 @@ module Ferrum
       page.evaluate_on(node: self, expression: "this.value")
     end
 
-    def set(value)
-      if tag_name == "input"
-        case self[:type]
-        when "radio"
-          click
-        when "checkbox"
-          click if value != checked?
-        when "file"
-          files = value.respond_to?(:to_ary) ? value.to_ary.map(&:to_s) : value.to_s
-          page_send(:select_file, files)
-        else
-          page_send(:set, value.to_s)
-        end
-      elsif tag_name == "textarea"
-        page_send(:set, value.to_s)
-      elsif self[:isContentEditable]
-        # FIXME:
-        page_send(:delete_text)
-        send_keys(value.to_s)
-      end
-    end
-
     def select_option
       page_send(:select, true)
     end
@@ -118,10 +112,6 @@ module Ferrum
 
     def disabled?
       page_send(:disabled?)
-    end
-
-    def click(keys = [], offset = {})
-      page_send(:click, keys, offset)
     end
 
     def right_click(keys = [], offset = {})
@@ -158,11 +148,6 @@ module Ferrum
       # responsible for keeping track of node ids.
       target_id == other.target_id && description["backendNodeId"] == other.description["backendNodeId"]
     end
-
-    def send_keys(*keys)
-      page_send(:send_keys, keys)
-    end
-    alias_method :send_key, :send_keys
 
     def path
       page_send(:path)
