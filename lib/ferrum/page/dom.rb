@@ -24,11 +24,30 @@ module Ferrum
       end
 
       def at_xpath(selector, within: nil)
-        raise NotImplemented
+        xpath(selector, within: within).first
       end
 
       def xpath(selector, within: nil)
-        raise NotImplemented
+        evaluate_async(%(
+          try {
+            let selector = arguments[0];
+            let within = arguments[1] || document;
+            let results = [];
+
+            let xpath = document.evaluate(selector, within, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+            for (let i = 0; i < xpath.snapshotLength; i++) {
+              results.push(xpath.snapshotItem(i));
+            }
+
+            arguments[2](results);
+          } catch (error) {
+            // DOMException.INVALID_EXPRESSION_ERR is undefined, using pure code
+            if (error.code == DOMException.SYNTAX_ERR || error.code == 51) {
+              throw "Invalid Selector";
+            } else {
+              throw error;
+            }
+          }), timeout, selector, within)
       end
 
       def css(selector, within: nil)

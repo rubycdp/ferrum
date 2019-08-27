@@ -5,14 +5,14 @@ module Ferrum
     module Runtime
       EXECUTE_OPTIONS = {
         returnByValue: true,
-        functionDeclaration: %Q(function() { %s })
+        functionDeclaration: %(function() { %s })
       }.freeze
       DEFAULT_OPTIONS = {
-        functionDeclaration: %Q(function() { return %s })
+        functionDeclaration: %(function() { return %s })
       }.freeze
       EVALUATE_ASYNC_OPTIONS = {
         awaitPromise: true,
-        functionDeclaration: %Q(
+        functionDeclaration: %(
           function() {
            return new Promise((__resolve, __reject) => {
              try {
