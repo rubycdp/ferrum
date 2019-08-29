@@ -50,7 +50,7 @@ module Ferrum
     end
 
     it "raises an error and restarts the client if the client dies while executing a command" do
-      expect { browser.crash }.to raise_error(Ferrum::DeadBrowser)
+      expect { browser.crash }.to raise_error(Ferrum::DeadBrowserError)
       browser.goto
       expect(browser.body).to include("Hello world")
     end
@@ -257,14 +257,14 @@ module Ferrum
       end
 
       it "handles when DNS incorrect" do
-        expect { browser.goto("http://nope:#{port}/") }.to raise_error(Ferrum::StatusFailError)
+        expect { browser.goto("http://nope:#{port}/") }.to raise_error(Ferrum::StatusError)
       end
 
       it "has a descriptive message when DNS incorrect" do
         url = "http://nope:#{port}/"
         expect { browser.goto(url) }
           .to raise_error(
-            Ferrum::StatusFailError,
+            Ferrum::StatusError,
             %(Request to #{url} failed to reach server, check DNS and/or server status)
           )
       end
@@ -275,7 +275,7 @@ module Ferrum
           browser.timeout = 2
           expect do
             browser.goto("/ferrum/visit_timeout")
-          end.to raise_error(Ferrum::StatusFailError, %r{resources still waiting http://.*/ferrum/really_slow})
+          end.to raise_error(Ferrum::StatusError, %r{resources still waiting http://.*/ferrum/really_slow})
         ensure
           browser.timeout = old_timeout
         end
@@ -287,7 +287,7 @@ module Ferrum
           browser.timeout = 2
           expect do
             browser.goto("/ferrum/really_slow")
-          end.to raise_error(Ferrum::StatusFailError) { |error|
+          end.to raise_error(Ferrum::StatusError) { |error|
             expect(error.message).not_to include("resources still waiting")
           }
         ensure

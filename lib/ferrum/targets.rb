@@ -102,17 +102,13 @@ module Ferrum
     end
 
     def targets
-      attempts = 1
-      begin
+      Ferrum.with_attempts(errors: EmptyTargetsError,
+                           max: TARGETS_RETRY_ATTEMPTS,
+                           wait: TARGETS_RETRY_WAIT) do
         # Targets cannot be empty the must be at least one default target.
         targets = @browser.command("Target.getTargets")["targetInfos"]
-        raise EmptyTargetsError.new("No target browser available") if targets.empty?
+        raise EmptyTargetsError if targets.empty?
         targets
-      rescue EmptyTargetsError
-        raise if attempts > TARGETS_RETRY_ATTEMPTS
-        attempts += 1
-        sleep TARGETS_RETRY_WAIT
-        retry
       end
     end
 

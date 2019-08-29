@@ -42,7 +42,11 @@ module Ferrum
       end
 
       def evaluate_on(node:, expression:, by_value: true, timeout: 0)
-        rescue_intermittent_error do
+        errors = [NodeNotFoundError, NoExecutionContextError]
+        max = ENV.fetch("FERRUM_INTERMITTENT_ATTEMPTS", 6).to_i
+        wait = ENV.fetch("FERRUM_INTERMITTENT_SLEEP", 0.1).to_f
+
+        Ferrum.with_attempts(errors: errors, max: max, wait: wait) do
           response = command("DOM.resolveNode", nodeId: node.node_id)
           object_id = response.dig("object", "objectId")
           options = DEFAULT_OPTIONS.merge(objectId: object_id)
@@ -60,7 +64,11 @@ module Ferrum
       private
 
       def call(*args, expression:, wait_time: nil, handle: true, **options)
-        rescue_intermittent_error do
+        errors = [NodeNotFoundError, NoExecutionContextError]
+        max = ENV.fetch("FERRUM_INTERMITTENT_ATTEMPTS", 6).to_i
+        wait = ENV.fetch("FERRUM_INTERMITTENT_SLEEP", 0.1).to_f
+
+        Ferrum.with_attempts(errors: errors, max: max, wait: wait) do
           arguments = prepare_args(args)
           params = DEFAULT_OPTIONS.merge(options)
           expression = [wait_time, expression] if wait_time
@@ -173,20 +181,6 @@ module Ferrum
                   }
                 JS
                )
-      end
-
-      def rescue_intermittent_error(max = ENV.fetch("FERRUM_INTERMITTENT_ATTEMPTS", 6).to_i)
-        attempts ||= 0
-        yield
-      rescue BrowserError => e
-        case e.message
-        when "No node with given id found",          # Node has disappeared while we were trying to get it
-             "Could not find node with given id",
-             "Cannot find context with specified id" # Context is lost, page is reloading
-          sleep ENV.fetch("FERRUM_INTERMITTENT_SLEEP", 0.1).to_f
-          attempts += 1
-          attempts < max ? retry : raise
-        end
       end
     end
   end

@@ -52,19 +52,19 @@ module Ferrum
       end
 
       def hover(node)
-        raise NotImplemented
+        raise NotImplementedError
       end
 
       def set(node, value)
-        raise NotImplemented
+        raise NotImplementedError
       end
 
       def select(node, value)
-        raise NotImplemented
+        raise NotImplementedError
       end
 
       def trigger(node, event)
-        raise NotImplemented
+        raise NotImplementedError
       end
 
       def scroll_to(top, left)

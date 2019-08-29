@@ -35,10 +35,10 @@ module Ferrum
         data = pending.value!(@browser.timeout)
         @pendings.delete(message[:id])
 
-        raise DeadBrowser if data.nil? && @ws.messages.closed?
+        raise DeadBrowserError if data.nil? && @ws.messages.closed?
         raise TimeoutError unless data
         error, response = data.values_at("error", "result")
-        raise BrowserError.new(error) if error
+        raise_browser_error(error) if error
         response
       end
 
@@ -63,6 +63,22 @@ module Ferrum
 
       def next_command_id
         @command_id += 1
+      end
+
+      def raise_browser_error(error)
+        case error["message"]
+        # Node has disappeared while we were trying to get it
+        when "No node with given id found",
+             "Could not find node with given id"
+          raise NodeNotFoundError.new(error)
+        # Context is lost, page is reloading
+        when "Cannot find context with specified id"
+          raise NoExecutionContextError.new(error)
+        when "No target with given id found"
+          raise NoSuchWindowError
+        else
+          raise BrowserError.new(error)
+        end
       end
     end
   end

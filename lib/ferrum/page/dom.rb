@@ -73,8 +73,6 @@ module Ferrum
       def build_node(node_id)
         description = command("DOM.describeNode", nodeId: node_id)
         Node.new(self, target_id, node_id, description["node"])
-      rescue BrowserError => e
-        node_id.zero? ? raise(NodeError.new(nil, e.response)) : raise
       end
     end
   end

@@ -31,13 +31,6 @@ module Ferrum
 
     def page_send(name, *args)
       page.send(name, self, *args)
-    rescue BrowserError => e
-      case e.message
-      when "No node with given id found"
-        raise ObsoleteNode.new(self, e.response)
-      else
-        raise
-      end
     end
 
     def at_xpath(selector)
@@ -91,7 +84,7 @@ module Ferrum
     end
 
     def unselect_option
-      raise NotImplemented
+      raise NotImplementedError
     end
 
     def tag_name

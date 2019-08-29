@@ -5,9 +5,9 @@ module Ferrum
     module Frame
       def execution_context_id
         context_id = current_execution_context_id
-        raise NoExecutionContext unless context_id
+        raise NoExecutionContextError unless context_id
         context_id
-      rescue NoExecutionContext
+      rescue NoExecutionContextError
         @event.reset
         @event.wait(timeout) ? retry : raise
       end

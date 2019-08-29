@@ -85,7 +85,7 @@ module Ferrum
 
     def command(*args)
       @client.command(*args)
-    rescue DeadBrowser
+    rescue DeadBrowserError
       restart
       raise
     end

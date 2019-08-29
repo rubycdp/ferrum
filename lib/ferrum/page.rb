@@ -50,16 +50,7 @@ module Ferrum
       # Dirty hack because new window doesn't have events at all
       sleep(NEW_WINDOW_BUG_SLEEP) if new_window
 
-      begin
-        @session_id = @browser.command("Target.attachToTarget", targetId: @target_id)["sessionId"]
-      rescue BrowserError => e
-        case e.message
-        when "No target with given id found"
-          raise NoSuchWindowError
-        else
-          raise
-        end
-      end
+      @session_id = @browser.command("Target.attachToTarget", targetId: @target_id)["sessionId"]
 
       host = @browser.process.host
       port = @browser.process.port
@@ -83,7 +74,7 @@ module Ferrum
             net::ERR_NAME_RESOLUTION_FAILED
             net::ERR_INTERNET_DISCONNECTED
             net::ERR_CONNECTION_TIMED_OUT].include?(response["errorText"])
-        raise StatusFailError, "url" => options[:url]
+        raise StatusError, options[:url]
       end
       response["frameId"]
     end
@@ -165,8 +156,8 @@ module Ferrum
 
       begin
         modal_text = @modal_messages.shift
-        raise ModalNotFound if modal_text.nil? || (expect_text && !modal_text.match(expect_regexp))
-      rescue ModalNotFound => e
+        raise ModalNotFoundError if modal_text.nil? || (expect_text && !modal_text.match(expect_regexp))
+      rescue ModalNotFoundError => e
         raise e, not_found_msg if (::Process.clock_gettime(::Process::CLOCK_MONOTONIC) - start_time) >= timeout_sec
         sleep(0.05)
         retry
