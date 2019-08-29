@@ -18,7 +18,7 @@ Interact with a page:
 ```ruby
 browser = Ferrum::Browser.new
 browser.goto("https://google.com")
-input = browser.at_css("input[title='Search']")
+input = browser.at_xpath("//div[@id='searchform']/form//input[@type='text']")
 input.focus.type("Ruby headless driver for Capybara", :Enter)
 browser.at_css("a > h3").text # => "machinio/cuprite: Headless Chrome driver for Capybara - GitHub"
 browser.quit

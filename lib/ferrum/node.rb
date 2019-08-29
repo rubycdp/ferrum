@@ -23,7 +23,7 @@ module Ferrum
     end
 
     def type(*keys)
-      tap { page.type(self, keys) }
+      tap { page.keyboard.type(keys) }
     end
 
     # mode: (:left | :right | :double)
@@ -31,7 +31,7 @@ module Ferrum
     # offset: { :x, :y }
     def click(mode: :left, keys: [], offset: {})
       x, y = page.find_position(self, offset[:x], offset[:y])
-      modifiers = page.generate_modifiers(keys)
+      modifiers = page.keyboard.modifiers(keys)
 
       case mode
       when :right
