@@ -15,14 +15,6 @@ module Ferrum
         evaluate("document.documentElement.outerHTML")
       end
 
-      def property(node, name)
-        evaluate_on(node: node, expression: %Q(this["#{name}"]))
-      end
-
-      def select_file(node, value)
-        command("DOM.setFileInputFiles", nodeId: node.node_id, files: Array(value))
-      end
-
       def at_xpath(selector, within: nil)
         xpath(selector, within: within).first
       end

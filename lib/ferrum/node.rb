@@ -2,11 +2,12 @@
 
 module Ferrum
   class Node
-    attr_reader :page, :target_id, :node_id, :description
+    attr_reader :page, :target_id, :node_id, :description, :tag_name
 
     def initialize(page, target_id, node_id, description)
-      @page, @target_id, @node_id, @description =
-        page, target_id, node_id, description
+      @page, @target_id = page, target_id
+      @node_id, @description = node_id, description
+      @tag_name = description["nodeName"].downcase
     end
 
     def node?
@@ -18,19 +19,35 @@ module Ferrum
     end
 
     def blur
-      tap { page.evaluate_on(node: self, expression: "this.blur()") }
+      tap { evaluate("this.blur()") }
     end
 
     def type(*keys)
-      tap { page_send(:type, keys) }
+      tap { page.type(self, keys) }
     end
 
     def click(keys = [], offset = {})
-      tap { page_send(:click, keys, offset) }
+      tap { page.click(self, keys, offset) }
     end
 
-    def page_send(name, *args)
-      page.send(name, self, *args)
+    def right_click(keys = [], offset = {})
+      tap { page.right_click(self, keys, offset) }
+    end
+
+    def double_click(keys = [], offset = {})
+      tap { page.double_click(self, keys, offset) }
+    end
+
+    def hover
+      tap { page.hover(self) }
+    end
+
+    def trigger(event)
+      tap { page.trigger(self, event) }
+    end
+
+    def select_file(value)
+      page.command("DOM.setFileInputFiles", nodeId: node_id, files: Array(value))
     end
 
     def at_xpath(selector)
@@ -50,88 +67,23 @@ module Ferrum
     end
 
     def text
-      page.evaluate_on(node: self, expression: "this.textContent")
-    end
-
-    def property(name)
-      page_send(:property, name)
-    end
-
-    def [](name)
-      # Although the attribute matters, the property is consistent. Return that in
-      # preference to the attribute for links and images.
-      if ((tag_name == "img") && (name == "src")) || ((tag_name == "a") && (name == "href"))
-        # if attribute exists get the property
-        return page_send(:attribute, name) && page_send(:property, name)
-      end
-
-      value = property(name)
-      value = page_send(:attribute, name) if value.nil? || value.is_a?(Hash)
-
-      value
-    end
-
-    def attributes
-      page_send(:attributes)
+      evaluate("this.textContent")
     end
 
     def value
-      page.evaluate_on(node: self, expression: "this.value")
+      evaluate("this.value")
     end
 
-    def select_option
-      page_send(:select, true)
+    def property(name)
+      evaluate("this['#{name}']")
     end
 
-    def unselect_option
-      raise NotImplementedError
+    def attribute(name)
+      evaluate("this.getAttribute('#{name}')")
     end
 
-    def tag_name
-      @tag_name ||= description["nodeName"].downcase
-    end
-
-    def visible?
-      page_send(:visible?)
-    end
-
-    def checked?
-      self[:checked]
-    end
-
-    def selected?
-      !!self[:selected]
-    end
-
-    def disabled?
-      page_send(:disabled?)
-    end
-
-    def right_click(keys = [], offset = {})
-      page_send(:right_click, keys, offset)
-    end
-
-    def double_click(keys = [], offset = {})
-      page_send(:double_click, keys, offset)
-    end
-
-    def hover
-      page_send(:hover)
-    end
-
-    def trigger(event)
-      page_send(:trigger, event)
-    end
-
-    def scroll_to(element, location, position = nil)
-      if element.is_a?(Node)
-        scroll_element_to_location(element, location)
-      elsif location.is_a?(Symbol)
-        scroll_to_location(location)
-      else
-        scroll_to_coords(*position)
-      end
-      self
+    def evaluate(expression)
+      page.evaluate_on(node: self, expression: expression)
     end
 
     def ==(other)
@@ -140,10 +92,6 @@ module Ferrum
       # never returns same nodeId sending 0. In other words frontend is
       # responsible for keeping track of node ids.
       target_id == other.target_id && description["backendNodeId"] == other.description["backendNodeId"]
-    end
-
-    def path
-      page_send(:path)
     end
 
     def inspect

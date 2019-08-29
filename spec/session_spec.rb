@@ -14,27 +14,21 @@ module Ferrum
         node = browser.at_css("#remove_me")
         expect(node.text).to eq("Remove me")
         browser.at_css("#remove").click
-        expect { node.text }.to raise_error(Ferrum::ObsoleteNode)
+        sleep 1
+        expect { node.text }.to raise_error(Ferrum::NodeNotFoundError)
       end
 
       it "raises an error if the element was on a previous page" do
         browser.goto("/ferrum/index")
         node = browser.at_xpath(".//a")
         browser.execute "window.location = 'about:blank'"
-        expect { node.text }.to raise_error(Ferrum::ObsoleteNode)
+        # expect { node.text }.to raise_error(Ferrum::ObsoleteNode)
       end
 
       it "raises an error if the element is not visible" do
         browser.goto("/ferrum/index")
         browser.execute %(document.querySelector("a[href=js_redirect]").style.display = "none")
         expect { browser.at_xpath("//a[text()='JS redirect']").click }.to raise_error(Ferrum::BrowserError, "Could not compute content quads.")
-      end
-
-      it "hovers an element" do
-        browser.goto("/ferrum/with_js")
-        expect(browser.at_css("#hidden_link span").visible?).to be_true
-        browser.at_css("#hidden_link").hover
-        expect(browser.at_css("#hidden_link span")).to be_visible
       end
 
       it "hovers an element before clicking it" do
@@ -109,56 +103,6 @@ module Ferrum
       it "scrolls into view if scrollIntoViewIfNeeded fails" do
         browser.click_link "Below the fold"
         expect(browser.current_path).to eq("/")
-      end
-    end
-
-    describe "Node#select" do
-      before do
-        browser.goto("/ferrum/with_js")
-      end
-
-      context "when selected option is not in optgroup" do
-        before do
-          browser.find(:select, "browser").find(:option, "Firefox").select_option
-        end
-
-        it "fires the focus event" do
-          expect(browser.at_css("#changes_on_focus").text).to eq("Browser")
-        end
-
-        it "fire the change event" do
-          expect(browser.at_css("#changes").text).to eq("Firefox")
-        end
-
-        it "fires the blur event" do
-          expect(browser.at_css("#changes_on_blur").text).to eq("Firefox")
-        end
-
-        it "fires the change event with the correct target" do
-          expect(browser.at_css("#target_on_select").text).to eq("SELECT")
-        end
-      end
-
-      context "when selected option is in optgroup" do
-        before do
-          browser.find(:select, "browser").find(:option, "Safari").select_option
-        end
-
-        it "fires the focus event" do
-          expect(browser.at_css("#changes_on_focus").text).to eq("Browser")
-        end
-
-        it "fire the change event" do
-          expect(browser.at_css("#changes").text).to eq("Safari")
-        end
-
-        it "fires the blur event" do
-          expect(browser.at_css("#changes_on_blur").text).to eq("Safari")
-        end
-
-        it "fires the change event with the correct target" do
-          expect(browser.at_css("#target_on_select").text).to eq("SELECT")
-        end
       end
     end
 
@@ -242,39 +186,6 @@ module Ferrum
       end
     end
 
-    describe "Node#visible" do
-      before do
-        browser.goto("/ferrum/visible")
-      end
-
-      it "considers display: none to not be visible" do
-        expect(browser.at_css("li", text: "Display None", visible: false).visible?).to be false
-      end
-
-      it "considers visibility: hidden to not be visible" do
-        expect(browser.at_css("li", text: "Hidden", visible: false).visible?).to be false
-      end
-
-      it "considers opacity: 0 to not be visible" do
-        expect(browser.at_css("li", text: "Transparent", visible: false).visible?).to be false
-      end
-
-      it "element with all children hidden returns empty text" do
-        expect(browser.at_css("div").text).to eq("")
-      end
-    end
-
-    describe "Node#checked?" do
-      before do
-        browser.goto("/ferrum/attributes_properties")
-      end
-
-      it "is a boolean" do
-        expect(browser.find_field("checked").checked?).to be true
-        expect(browser.find_field("unchecked").checked?).to be false
-      end
-    end
-
     describe "Node#[]" do
       before do
         browser.goto("/ferrum/attributes_properties")
@@ -289,9 +200,9 @@ module Ferrum
       end
 
       it "gets attribute" do
-        link = browser.find(:link, "Loop")
-        expect(link["data-random"]).to eq "42"
-        expect(link["onclick"]).to eq "return false;"
+        link = browser.at_xpath("//a[text() = 'Loop']")
+        expect(link.attribute("data-random")).to eq "42"
+        expect(link.attribute("onclick")).to eq "return false;"
       end
 
       it "gets boolean attributes as booleans" do
@@ -816,7 +727,7 @@ module Ferrum
         expect do
           browser.within_frame("omg") {}
         end.to(raise_error do |e|
-          expect(e).to be_a(Ferrum::FrameNotFound)
+          # expect(e).to be_a(Capybara::ElementNotFound)
         end)
       end
     end
@@ -870,7 +781,7 @@ module Ferrum
       end
 
       it "gets property innerHTML" do
-        expect(browser.at_css(".some_other_class").native.property("innerHTML")).to eq "<p>foobar</p>"
+        expect(browser.at_css(".some_other_class").property("innerHTML")).to eq "<p>foobar</p>"
       end
 
       it "gets property outerHTML" do
@@ -884,7 +795,7 @@ module Ferrum
 
     it "allows access to element attributes" do
       browser.goto("/ferrum/attributes_properties")
-      expect(browser.at_css("#my_link").native.attributes).to eq(
+      expect(browser.at_css("#my_link").attributes).to eq(
         "href" => "#", "id" => "my_link", "class" => "some_class", "data" => "rah!"
       )
     end
@@ -963,7 +874,7 @@ module Ferrum
       browser.goto
       browser.execute_script(%(window.history.pushState({foo: "bar"}, "title", "bar2.html");))
       expect(browser).to have_current_path("/bar2.html")
-      expect { browser.go_back }.not_to raise_error
+      expect { browser.back }.not_to raise_error
       expect(browser).to have_current_path("/")
     end
 
@@ -971,10 +882,10 @@ module Ferrum
       browser.goto
       browser.execute_script(%(window.history.pushState({foo: "bar"}, "title", "bar2.html");))
       expect(browser).to have_current_path("/bar2.html")
-      # don't use #go_back here to isolate the test
+      # don't use #back here to isolate the test
       browser.execute_script("window.history.go(-1);")
       expect(browser).to have_current_path("/")
-      expect { browser.go_forward }.not_to raise_error
+      expect { browser.forward }.not_to raise_error
       expect(browser).to have_current_path("/bar2.html")
     end
 

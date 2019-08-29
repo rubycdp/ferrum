@@ -76,23 +76,6 @@ module Ferrum
       ).to eq([200, 400])
     end
 
-    # it "defaults viewport maximization to 1366x768" do
-    #   browser.goto
-    #   browser.current_window.maximize
-    #   expect(browser.current_window.size).to eq([1366, 768])
-    # end
-
-    # it "allows custom maximization size" do
-    #   begin
-    #     browser.options[:screen_size] = [1600, 1200]
-    #     browser.goto
-    #     browser.current_window.maximize
-    #     expect(browser.current_window.size).to eq([1600, 1200])
-    #   ensure
-    #     browser.options.delete(:screen_size)
-    #   end
-    # end
-
     it "allows the page to be scrolled" do
       browser.goto("/ferrum/long_page")
       browser.resize(width: 10, height: 10)
@@ -373,93 +356,102 @@ module Ferrum
       end
     end
 
-    # it "lists the open windows" do
+    it "lists the open windows" do
+      browser.goto
+
+      browser.execute <<~JS
+        window.open("/ferrum/simple", "popup")
+      JS
+
+      sleep 0.1
+
+      expect(browser.window_handles.size).to eq(2)
+
+      browser.execute <<~JS
+        window.open("/ferrum/simple", "popup2")
+      JS
+
+      expect(browser.window_handles.size).to eq(3)
+
+      popup2 = browser.window_handles.last
+
+      browser.within_window(popup2) do
+        expect(browser.body).to include("Test")
+        browser.execute("window.close()")
+      end
+
+      sleep 0.1
+
+      expect(browser.window_handles.size).to eq(2)
+    end
+
+    context "a new window inherits settings" do
+      it "inherits size" do
+        browser.goto
+        browser.resize(width: 1200, height: 800)
+        new_window = browser.open_new_window
+        browser.switch_to_window(new_window)
+        expect(browser.window_size).to eq [1200, 800]
+      end
+
+      # it "inherits url_blacklist" do
+      #   browser.url_blacklist = ["unwanted"]
+      #   browser.goto
+      #   new_window = browser.open_new_window
+      #   browser.within_window(new_window) do
+      #     browser.goto "/ferrum/url_blacklist"
+      #     expect(browser.body).to include("We are loading some unwanted action here")
+      #     browser.switch_to_frame "framename" do
+      #       expect(browser.body).not_to include("We shouldn't see this.")
+      #     end
+      #   end
+      # end
+      #
+      # it "inherits url_whitelist" do
+      #   browser.goto
+      #   browser.url_whitelist = ["url_whitelist", "/ferrum/wanted"]
+      #   new_window = browser.open_new_window
+      #   browser.within_window(new_window) do
+      #     browser.goto "/ferrum/url_whitelist"
+      #
+      #     expect(browser.body).to include("We are loading some wanted action here")
+      #     browser.switch_to_frame "framename" do
+      #       expect(browser.body).to include("We should see this.")
+      #     end
+      #     browser.switch_to_frame "unwantedframe" do
+      #       # make sure non whitelisted urls are blocked
+      #       expect(browser.body).not_to include("We shouldn't see this.")
+      #     end
+      #   end
+      # end
+    end
+
+    # it "resizes windows" do
     #   browser.goto
     #
+    #   expect(browser.window_handles.size).to eq(1)
+    #   main = browser.window_handles.first
+    #
     #   browser.execute <<-JS
-    #     window.open("/ferrum/simple", "popup")
+    #     window.open("/ferrum/simple", "popup1")
     #   JS
+    #   popup1 = browser.window_handles.last
     #
-    #   expect(browser.window_handles.size).to eq(2)
+    #   browser.execute <<-JS
+    #     window.open("/ferrum/simple", "popup2")
+    #   JS
+    #   popup2 = browser.window_handles.last
     #
-    #   popup2 = browser.window_opened_by do
-    #     browser.execute <<-JS
-    #       window.open("/ferrum/simple", "popup2")
-    #     JS
-    #   end
+    #   browser.switch_to_window(popup1)
+    #   browser.resize(width: 100, height: 200)
+    #   browser.switch_to_window(popup2)
+    #   browser.resize(width: 200, height: 100)
     #
-    #   expect(browser.window_handles.size).to eq(3)
+    #   browser.switch_to_window(popup1)
+    #   expect(browser.window_size).to eq([100, 200])
     #
-    #   browser.within_window(popup2) do
-    #     expect(browser.body).to include("Test")
-    #     browser.execute("window.close()")
-    #   end
-    #
-    #   sleep 0.1
-    #
-    #   expect(browser.window_handles.size).to eq(2)
-    # end
-    #
-    # context "a new window inherits settings" do
-    #   it "inherits size" do
-    #     browser.goto
-    #     browser.current_window.resize_to(1200, 800)
-    #     new_tab = browser.open_new_window
-    #     expect(new_tab.size).to eq [1200, 800]
-    #   end
-    #
-    #   it "inherits url_blacklist" do
-    #     @driver.browser.url_blacklist = ["unwanted"]
-    #     @session.goto
-    #     new_tab = @session.open_new_window
-    #     @session.within_window(new_tab) do
-    #       @session.goto "/ferrum/url_blacklist"
-    #       expect(@session).to have_content("We are loading some unwanted action here")
-    #       @session.within_frame "framename" do
-    #         expect(@session.html).not_to include("We shouldn't see this.")
-    #       end
-    #     end
-    #   end
-    #
-    #   it "inherits url_whitelist" do
-    #     @session.goto
-    #     @driver.browser.url_whitelist = ["url_whitelist", "/ferrum/wanted"]
-    #     new_tab = @session.open_new_window
-    #     @session.within_window(new_tab) do
-    #       @session.goto "/ferrum/url_whitelist"
-    #
-    #       expect(@session).to have_content("We are loading some wanted action here")
-    #       @session.within_frame "framename" do
-    #         expect(@session).to have_content("We should see this.")
-    #       end
-    #       @session.within_frame "unwantedframe" do
-    #         # make sure non whitelisted urls are blocked
-    #         expect(@session).not_to have_content("We shouldn't see this.")
-    #       end
-    #     end
-    #   end
-    # end
-    #
-    # it "resizes windows" do
-    #   @session.goto
-    #
-    #   popup1 = @session.window_opened_by do
-    #     @session.execute_script <<-JS
-    #       window.open("/ferrum/simple", "popup1")
-    #     JS
-    #   end
-    #
-    #   popup2 = @session.window_opened_by do
-    #     @session.execute_script <<-JS
-    #       window.open("/ferrum/simple", "popup2")
-    #     JS
-    #   end
-    #
-    #   popup1.resize_to(100, 200)
-    #   popup2.resize_to(200, 100)
-    #
-    #   expect(popup1.size).to eq([100, 200])
-    #   expect(popup2.size).to eq([200, 100])
+    #   browser.switch_to_window(popup2)
+    #   expect(browser.window_size).to eq([200, 100])
     # end
 
     it "clears local storage after reset" do

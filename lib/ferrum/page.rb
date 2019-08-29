@@ -121,12 +121,12 @@ module Ferrum
       @network_traffic = []
     end
 
-    def go_back
-      go(-1)
+    def back
+      history_navigate(delta: -1)
     end
 
-    def go_forward
-      go(1)
+    def forward
+      history_navigate(delta: 1)
     end
 
     def accept_confirm
@@ -337,7 +337,7 @@ module Ferrum
       end
     end
 
-    def go(delta)
+    def history_navigate(delta:)
       history = command("Page.getNavigationHistory")
       index, entries = history.values_at("currentIndex", "entries")
 

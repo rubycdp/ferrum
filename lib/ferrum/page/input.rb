@@ -55,14 +55,6 @@ module Ferrum
         raise NotImplementedError
       end
 
-      def set(node, value)
-        raise NotImplementedError
-      end
-
-      def select(node, value)
-        raise NotImplementedError
-      end
-
       def trigger(node, event)
         raise NotImplementedError
       end
