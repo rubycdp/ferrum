@@ -26,39 +26,6 @@ module Ferrum
         f10: "F10", f11: "F11", f12: "F12", meta: "Meta", command: "Meta",
       }
 
-      def click(node, keys = [], offset = {})
-        x, y, modifiers = prepare_before_click(__method__, node, keys, offset)
-        command("Input.dispatchMouseEvent", type: "mousePressed", modifiers: modifiers, button: "left", x: x, y: y, clickCount: 1)
-        # Potential wait because if network event is triggered then we have to wait until it's over.
-        command("Input.dispatchMouseEvent", timeout: 0.05, type: "mouseReleased", modifiers: modifiers, button: "left", x: x, y: y, clickCount: 1)
-      end
-
-      def right_click(node, keys = [], offset = {})
-        x, y, modifiers = prepare_before_click(__method__, node, keys, offset)
-        command("Input.dispatchMouseEvent", type: "mousePressed", modifiers: modifiers, button: "right", x: x, y: y, clickCount: 1)
-        command("Input.dispatchMouseEvent", type: "mouseReleased", modifiers: modifiers, button: "right", x: x, y: y, clickCount: 1)
-      end
-
-      def double_click(node, keys = [], offset = {})
-        x, y, modifiers = prepare_before_click(__method__, node, keys, offset)
-        command("Input.dispatchMouseEvent", type: "mousePressed", modifiers: modifiers, button: "left", x: x, y: y, clickCount: 2)
-        command("Input.dispatchMouseEvent", type: "mouseReleased", modifiers: modifiers, button: "left", x: x, y: y, clickCount: 2)
-      end
-
-      def click_coordinates(x, y)
-        command("Input.dispatchMouseEvent", type: "mousePressed", button: "left", x: x, y: y, clickCount: 1)
-        # Potential wait because if network event is triggered then we have to wait until it's over.
-        command("Input.dispatchMouseEvent", timeout: 0.05, type: "mouseReleased", button: "left", x: x, y: y, clickCount: 1)
-      end
-
-      def hover(node)
-        raise NotImplementedError
-      end
-
-      def trigger(node, event)
-        raise NotImplementedError
-      end
-
       def scroll_to(top, left)
         execute("window.scrollTo(#{top}, #{left})")
       end
@@ -72,6 +39,28 @@ module Ferrum
           command("Input.dispatchKeyEvent", type: "keyUp", **key)
         end
       end
+
+      def generate_modifiers(keys)
+        keys.map { |k| MODIFIERS[k.to_s] }.compact.reduce(0, :|)
+      end
+
+      def find_position(node, offset_x = nil, offset_y = nil)
+        quads = get_content_quads(node)
+        offset_x, offset_y = offset_x.to_i, offset_y.to_i
+
+        if offset_x > 0 || offset_y > 0
+          point = quads.first
+          [point[:x] + offset_x, point[:y] + offset_y]
+        else
+          x, y = quads.inject([0, 0]) do |memo, point|
+            [memo[0] + point[:x],
+             memo[1] + point[:y]]
+          end
+          [x / 4, y / 4]
+        end
+      end
+
+      private
 
       def normalize_keys(keys, pressed_keys = [], memo = [])
         case keys
@@ -120,37 +109,6 @@ module Ferrum
           .chunk { |k| k.is_a?(String) }
           .map { |s, k| s ? [k.reduce(&:+)] : k }
           .reduce(&:+)
-      end
-
-      private
-
-      def prepare_before_click(name, node, keys, offset)
-        # FIXME: scrollIntoViewport
-        # evaluate_on(node: node, expression: "this.scrollIntoView({block: 'center', inline: 'center', behavior: 'instant'})")
-
-        x, y = calculate_quads(node, offset[:x], offset[:y])
-
-        modifiers = keys.map { |k| MODIFIERS[k.to_s] }.compact.reduce(0, :|)
-
-        command("Input.dispatchMouseEvent", type: "mouseMoved", x: x, y: y)
-
-        [x, y, modifiers]
-      end
-
-      def calculate_quads(node, offset_x = nil, offset_y = nil)
-        quads = get_content_quads(node)
-        offset_x, offset_y = offset_x.to_i, offset_y.to_i
-
-        if offset_x > 0 || offset_y > 0
-          point = quads.first
-          [point[:x] + offset_x, point[:y] + offset_y]
-        else
-          x, y = quads.inject([0, 0]) do |memo, point|
-            [memo[0] + point[:x],
-             memo[1] + point[:y]]
-          end
-          [x / 4, y / 4]
-        end
       end
 
       def get_content_quads(node)

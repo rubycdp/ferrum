@@ -99,7 +99,7 @@ module Ferrum
 
     it "supports clicking precise coordinates" do
       browser.goto("/ferrum/click_coordinates")
-      browser.click_coordinates(100, 150)
+      browser.mouse.click(x: 100, y: 150)
       expect(browser.body).to include("x: 100, y: 150")
     end
 

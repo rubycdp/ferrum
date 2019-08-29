@@ -26,24 +26,35 @@ module Ferrum
       tap { page.type(self, keys) }
     end
 
-    def click(keys = [], offset = {})
-      tap { page.click(self, keys, offset) }
-    end
+    # mode: (:left | :right | :double)
+    # keys: (:alt, (:ctrl | :control), (:meta | :command), :shift)
+    # offset: { :x, :y }
+    def click(mode: :left, keys: [], offset: {})
+      x, y = page.find_position(self, offset[:x], offset[:y])
+      modifiers = page.generate_modifiers(keys)
 
-    def right_click(keys = [], offset = {})
-      tap { page.right_click(self, keys, offset) }
-    end
+      case mode
+      when :right
+        page.mouse.move(x: x, y: y)
+        page.mouse.down(button: :right, modifiers: modifiers)
+        page.mouse.up(button: :right, modifiers: modifiers)
+      when :double
+        page.mouse.move(x: x, y: y)
+        page.mouse.down(modifiers: modifiers, count: 2)
+        page.mouse.up(modifiers: modifiers, count: 2)
+      when :left
+        page.mouse.click(x: x, y: y, modifiers: modifiers, timeout: 0.05)
+      end
 
-    def double_click(keys = [], offset = {})
-      tap { page.double_click(self, keys, offset) }
+      self
     end
 
     def hover
-      tap { page.hover(self) }
+      raise NotImplementedError
     end
 
     def trigger(event)
-      tap { page.trigger(self, event) }
+      raise NotImplementedError
     end
 
     def select_file(value)

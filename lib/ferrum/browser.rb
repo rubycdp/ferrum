@@ -25,7 +25,7 @@ module Ferrum
     delegate %i[goto back forward refresh status
                 at_css at_xpath css xpath
                 network_traffic clear_network_traffic response_headers
-                type click right_click double_click hover click_coordinates trigger scroll_to
+                mouse type scroll_to
                 evaluate evaluate_on evaluate_async execute
                 frame_url frame_title switch_to_frame
                 current_url title body

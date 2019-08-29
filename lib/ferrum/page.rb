@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "ferrum/mouse"
 require "ferrum/page/dom"
 require "ferrum/page/input"
 require "ferrum/page/runtime"
@@ -34,7 +35,7 @@ module Ferrum
     include Input, DOM, Runtime, Frame, Net
 
     attr_accessor :referrer
-    attr_reader :target_id, :status, :response_headers
+    attr_reader :target_id, :status, :mouse, :response_headers
 
     def initialize(target_id, browser, new_window = false)
       @target_id, @browser = target_id, browser
@@ -56,6 +57,7 @@ module Ferrum
       port = @browser.process.port
       ws_url = "ws://#{host}:#{port}/devtools/page/#{@target_id}"
       @client = Browser::Client.new(browser, ws_url, 1000)
+      @mouse = Mouse.new(self)
 
       subscribe
       prepare_page
