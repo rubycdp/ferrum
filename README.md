@@ -26,7 +26,7 @@ browser.at_css("a > h3").text # => "machinio/cuprite: Headless Chrome driver for
 browser.quit
 ```
 
-Evaluate some JavaScript and full width/height:
+Evaluate some JavaScript and get full width/height:
 
 ```ruby
 browser = Ferrum::Browser.new
