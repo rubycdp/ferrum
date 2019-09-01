@@ -57,269 +57,279 @@ browser.mouse
 browser.quit
 ```
 
-#### API is WIP and may change before `1.0` w/o a warning
+#### The API below is correct but a subject to change before `1.0`
 
 ## Navigation
 
-##### goto(url) : [String]
+#### goto(url) : `String`
 
 Navigate page to.
 
-  * url [String] The url should include scheme unless you set `base_url` when
+  * url `String` The url should include scheme unless you set `base_url` when
   configuring driver.
 
-##### back
+#### back
 
 Navigate to the previous page in history.
 
-##### forward
+#### forward
 
 Navigate to the next page in history.
 
-##### refresh
+#### refresh
 
 Reload current page.
 
-##### status
+#### status : `Integer`
 
 Contains the status code of the response (e.g., 200 for a success).
 
 
 ## Finders
 
-##### at_css(selector, within: nil) : [Node, nil]
+#### at_css(selector, \*\*options) : `Node` | `nil`
 
 Find node by selector. Runs `document.querySelector` within the document or
 provided node.
 
-  * selector [String]
-  * within [Node | nil]
+  * selector `String`
+  * options `Hash`
+    * :within `Node` | `nil`
 
-##### css(selector, within: nil) : [Array<Node>, Array]
+#### css(selector, \*\*options) : `Array<Node>` | `[]`
 
 Find nodes by selector. The method runs `document.querySelectorAll` within the
 document or provided node.
 
-* selector [String]
-* within [Node | nil]
+* selector `String`
+* options `Hash`
+  * :within `Node` | `nil`
 
-##### at_xpath(selector, within: nil) : [Node, nil]
+#### at_xpath(selector, \*\*options) : `Node` | `nil`
 
 Find node by xpath.
 
-* selector [String]
-* within [Node | nil]
+* selector `String`
+* options `Hash`
+  * :within `Node` | `nil`
 
-##### xpath(selector, within: nil) : [Array<Node>, Array]
+#### xpath(selector, \*\*options) : `Array<Node>` | `[]`
 
 Find nodes by xpath.
 
-* selector [String]
-* within [Node | nil]
+* selector `String`
+* options `Hash`
+  * :within `Node` | `nil`
 
-##### current_url : [String]
+#### current_url : `String`
 
 Returns current window location href.
 
-##### title : [String]
+#### title : `String`
 
 Returns current window title
 
-##### body : [String]
+#### body : `String`
 
 Returns current page's html.
 
 
 ## Screenshots
 
-##### screenshot(options) : [String, Integer]
+#### screenshot(\*\*options) : `String` | `Integer`
 
 Saves screenshot on a disk or returns it as base64.
 
-* options [Hash]
-  * :path [String] to save a screenshot on the disk. If passed `:encoding` is
-    set to :binary automatically
-  * :encoding [Symbol] :base64 | :binary you can set it to return image as Base64
-  * :format [String] "jpeg" | "png" | "pdf"
-  * :quality [Integer] 0-100 works for jpeg only
-  * :full [Boolean] whether you need full page screenshot or a viewport
-  * :selector [String] css selector for given element
+* options `Hash`
+  * :path `String` to save a screenshot on the disk. If passed `:encoding` is
+    set to `:binary` automatically
+  * :encoding `Symbol` `:base64` | `:binary` you can set it to return image as
+    Base64
+  * :format `String` "jpeg" | "png" | "pdf"
+  * :quality `Integer` 0-100 works for jpeg only
+  * :full `Boolean` whether you need full page screenshot or a viewport
+  * :selector `String` css selector for given element
 
-##### zoom_factor = value
+#### zoom_factor = value
 
 Zoom in, zoom out
 
-* value [Float]
+* value `Float`
 
-##### paper_size = value
+#### paper_size = value
 
 Set paper size. Works for PDF only.
 
-* value [Hash]
-  * :width [Float]
-  * :height [Float]
+* value `Hash`
+  * :width `Float`
+  * :height `Float`
 
 
 ## Network
 
-##### network_traffic : [Array<Network::Request>]
+#### network_traffic : `Array<Network::Request>`
 
 Returns all information about network traffic as a request/response array.
 
-##### clear_network_traffic
+#### clear_network_traffic
 
 Cleans up collected data.
 
-##### response_headers : [Hash]
+#### response_headers : `Hash`
 
 Returns all headers for a given request in `goto` method.
 
 
 ## Input
 
-##### scroll_to(x, y)
+#### scroll_to(x, y)
 
 Scroll page to a given x, y
 
-  * x [Integer] the pixel along the horizontal axis of the document that you
+  * x `Integer` the pixel along the horizontal axis of the document that you
   want displayed in the upper left
-  * y [Integer] the pixel along the vertical axis of the document that you want
+  * y `Integer` the pixel along the vertical axis of the document that you want
   displayed in the upper left
 
 ### Mouse
 
 browser.mouse
 
-##### click(x:, y:, delay: 0)
+#### click(\*\*options) : `Mouse`
 
 Click given coordinates, fires mouse move, down and up events.
 
-* :x [Integer]
-* :y [Integer]
-* :delay [Float] between mouse down and mouse up events
-* :button [Symbol] :left | :right
-* :count [Integer] defaults to 1
-* :modifiers bitfield `keyboard.modifiers`
+* options `Hash`
+  * :x `Integer`
+  * :y `Integer`
+  * :delay `Float` defaults to 0. Delay between mouse down and mouse up events
+  * :button `Symbol` :left | :right, defaults to :left
+  * :count `Integer` defaults to 1
+  * :modifiers `Integer` bitfield for key modifiers. See`keyboard.modifiers`
 
-##### down(button: :left, count: 1, modifiers: nil)
+#### down(\*\*options) : `Mouse`
 
 Mouse down for given coordinates.
 
-* :button [Symbol] :left | :right
-* :count [Integer] defaults to 1
-* :modifiers bitfield `keyboard.modifiers`
+* options `Hash`
+  * :button `Symbol` :left | :right, defaults to :left
+  * :count `Integer` defaults to 1
+  * :modifiers `Integer` bitfield for key modifiers. See`keyboard.modifiers`
 
-##### up(button: :left, count: 1, modifiers: nil)
+#### up(\*\*options) : `Mouse`
 
 Mouse up for given coordinates.
 
-* :button [Symbol] :left | :right
-* :count [Integer] defaults to 1
-* :modifiers bitfield `keyboard.modifiers`
+* options `Hash`
+  * :button `Symbol` :left | :right, defaults to :left
+  * :count `Integer` defaults to 1
+  * :modifiers `Integer` bitfield for key modifiers. See`keyboard.modifiers`
 
-##### move(x:, y:, steps: 1)
+#### move(x:, y:, steps: 1) : `Mouse`
 
 Mouse move to given x and y.
 
-* :x [Integer]
-* :y [Integer]
-* :steps [Integer] defaults to 1. Sends intermediate mousemove events.
+* options `Hash`
+  * :x `Integer`
+  * :y `Integer`
+  * :steps `Integer` defaults to 1. Sends intermediate mousemove events.
 
 ### Keyboard
 
-##### down(key)
+#### down(key) : `Keyboard`
 
 Dispatches a keydown event.
 
-* key [String, Symbol] Name of key such as "a", :enter, :backspace
+* key `String` | `Symbol` Name of key such as "a", :enter, :backspace
 
-##### up(key)
+#### up(key) : `Keyboard`
 
 Dispatches a keyup event.
 
-* key [String, Symbol] Name of key such as "b", :enter, :backspace
+* key `String` | `Symbol` Name of key such as "b", :enter, :backspace
 
-##### type(text)
+#### type(\*keys) : `Keyboard`
 
 Sends a keydown, keypress/input, and keyup event for each character in the text.
 
-* text [Array<String, Symbol>] A text to type into a focused element, `[:Shift, "s"], "tring"`
+* text `String` | `Array<String> | Array<Symbol>` A text to type into a focused
+  element, `[:Shift, "s"], "tring"`
 
-##### modifiers(keys) : Integer
+#### modifiers(keys) : `Integer`
 
 Returns bitfield for a given keys
 
-* keys [Array<Symbol>] :alt | :ctrl | :command | :shift
+* keys `Array<Symbol>` :alt | :ctrl | :command | :shift
 
 
 ## Cookies
 
-##### cookies : Hash<String, Cookie>
+#### cookies : `Hash<String, Cookie>`
 
 Returns cookies hash
 
-##### set_cookie(\*\*options)
+#### set_cookie(\*\*options)
 
 Sets given values as cookie
 
-* options [Hash]
-  * :name [String]
-  * :value [String]
-  * :domain [String]
-  * :expires [Integer]
+* options `Hash`
+  * :name `String`
+  * :value `String`
+  * :domain `String`
+  * :expires `Integer`
 
-##### remove_cookie(\*\*options)
+#### remove_cookie(\*\*options)
 
 Removes given cookie
 
-* options [Hash]
-  * :name [String]
-  * :domain [String]
-  * :url [String]
+* options `Hash`
+  * :name `String`
+  * :domain `String`
+  * :url `String`
 
-##### clear_cookies
+#### clear_cookies
 
 Removes all cookies
 
 ## Headers
 
-##### headers=
-##### add_headers
-##### add_header
+#### headers=
+#### add_headers
+#### add_header
 
 
 ## JavaScript
 
-##### evaluate
-##### evaluate_on
-##### evaluate_async
-##### execute
+#### evaluate
+#### evaluate_on
+#### evaluate_async
+#### execute
 
 
 ## Frames
 
-##### frame_url
-##### frame_title
-##### switch_to_frame
+#### frame_url
+#### frame_title
+#### switch_to_frame
 
 
 ## Modals
 
-##### find_modal
-##### accept_confirm
-##### dismiss_confirm
-##### accept_prompt
-##### dismiss_prompt
-##### reset_modals
+#### find_modal
+#### accept_confirm
+#### dismiss_confirm
+#### accept_prompt
+#### dismiss_prompt
+#### reset_modals
 
 
 ## Auth
 
-##### authorize
-##### proxy_authorize
+#### authorize
+#### proxy_authorize
 
 
 ## Interception
 
-##### url_whitelist=
-##### url_blacklist=
+#### url_whitelist=
+#### url_blacklist=

@@ -23,12 +23,11 @@ module Ferrum
     delegate %i[window_handle window_handles switch_to_window
                 open_new_window close_window within_window page] => :targets
     delegate %i[goto back forward refresh status
-                at_css at_xpath css xpath
+                at_css at_xpath css xpath current_url title body
                 network_traffic clear_network_traffic response_headers
                 mouse keyboard scroll_to
                 evaluate evaluate_on evaluate_async execute
                 frame_url frame_title switch_to_frame
-                current_url title body
                 find_modal accept_confirm dismiss_confirm accept_prompt dismiss_prompt reset_modals
                 authorize proxy_authorize] => :page
 

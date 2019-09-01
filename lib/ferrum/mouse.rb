@@ -15,19 +15,22 @@ module Ferrum
       sleep(delay)
       # Potential wait because if network event is triggered then we have to wait until it's over.
       up(timeout: timeout, **options)
+      self
     end
 
     def down(**options)
-      mouse_event(type: "mousePressed", **options)
+      tap { mouse_event(type: "mousePressed", **options) }
     end
 
     def up(**options)
-      mouse_event(type: "mouseReleased", **options)
+      tap { mouse_event(type: "mouseReleased", **options) }
     end
 
+    # FIXME: steps
     def move(x:, y:, steps: 1)
       @x, @y = x, y
       @page.command("Input.dispatchMouseEvent", type: "mouseMoved", x: @x, y: @y)
+      self
     end
 
     private

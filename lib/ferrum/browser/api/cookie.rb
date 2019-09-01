@@ -9,7 +9,7 @@ module Ferrum
           cookies.map { |c| [c["name"], ::Ferrum::Cookie.new(c)] }.to_h
         end
 
-        def set_cookie(name: nil, value: nil, cookie: nil, **options)
+        def set_cookie(name: nil, value: nil, **options)
           cookie = options.dup
           cookie[:name]   ||= name
           cookie[:value]  ||= value

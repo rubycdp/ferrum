@@ -19,6 +19,7 @@ module Ferrum
         xpath(selector, within: within).first
       end
 
+      # FIXME: Check within
       def xpath(selector, within: nil)
         evaluate_async(%(
           try {

@@ -23,7 +23,7 @@ module Ferrum
     end
 
     def type(*keys)
-      tap { page.keyboard.type(keys) }
+      tap { page.keyboard.type(*keys) }
     end
 
     # mode: (:left | :right | :double)
