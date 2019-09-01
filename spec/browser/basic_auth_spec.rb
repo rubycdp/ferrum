@@ -26,7 +26,7 @@ module Ferrum
 
     it "allows even overwriting headers" do
       browser.authorize("login", "pass")
-      browser.headers = { "Cuprite" => "true" }
+      browser.headers.set("Cuprite" => "true")
 
       browser.goto("/ferrum/basic_auth")
 

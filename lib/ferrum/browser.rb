@@ -17,14 +17,14 @@ module Ferrum
     include API
     extend Forwardable
 
-    attr_reader :headers, :window_size
+    attr_reader :window_size
 
     delegate on: :@client
     delegate %i[window_handle window_handles switch_to_window
                 open_new_window close_window within_window page] => :targets
     delegate %i[goto back forward refresh status
                 at_css at_xpath css xpath current_url title body
-                network_traffic clear_network_traffic response_headers
+                headers network_traffic clear_network_traffic response_headers
                 mouse keyboard scroll_to
                 evaluate evaluate_on evaluate_async execute
                 frame_url frame_title switch_to_frame
@@ -89,21 +89,11 @@ module Ferrum
       raise
     end
 
-    def set_overrides(user_agent: nil, accept_language: nil, platform: nil)
-      options = Hash.new
-      options[:userAgent] = user_agent if user_agent
-      options[:acceptLanguage] = accept_language if accept_language
-      options[:platform] if platform
-
-      page.command("Network.setUserAgentOverride", **options) if !options.empty?
-    end
-
     def clear_memory_cache
       page.command("Network.clearBrowserCache")
     end
 
     def reset
-      @headers = {}
       @zoom_factor = nil
       @window_size = @original_window_size
       targets.reset
@@ -136,7 +126,6 @@ module Ferrum
     private
 
     def start
-      @headers = {}
       @process = Process.start(@options)
       @client = Client.new(self, @process.ws_url, 0, false)
     end

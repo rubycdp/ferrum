@@ -2,6 +2,7 @@
 
 require "ferrum/mouse"
 require "ferrum/keyboard"
+require "ferrum/headers"
 require "ferrum/page/dom"
 require "ferrum/page/input"
 require "ferrum/page/runtime"
@@ -36,7 +37,8 @@ module Ferrum
     include Input, DOM, Runtime, Frame, Net
 
     attr_accessor :referrer
-    attr_reader :target_id, :status, :mouse, :keyboard, :response_headers
+    attr_reader :target_id, :status, :headers, :response_headers,
+                :mouse, :keyboard
 
     def initialize(target_id, browser, new_window = false)
       @target_id, @browser = target_id, browser
@@ -58,8 +60,9 @@ module Ferrum
       port = @browser.process.port
       ws_url = "ws://#{host}:#{port}/devtools/page/#{@target_id}"
       @client = Browser::Client.new(browser, ws_url, 1000)
-      @mouse = Mouse.new(self)
-      @keyboard = Keyboard.new(self)
+
+      @mouse, @keyboard = Mouse.new(self), Keyboard.new(self)
+      @headers = Headers.new(self)
 
       subscribe
       prepare_page
@@ -84,6 +87,7 @@ module Ferrum
     end
 
     def close
+      @headers.clear
       @browser.command("Target.detachFromTarget", sessionId: @session_id)
       @browser.command("Target.closeTarget", targetId: @target_id)
       close_connection

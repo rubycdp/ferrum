@@ -68,21 +68,48 @@ Navigate page to.
   * url `String` The url should include scheme unless you set `base_url` when
   configuring driver.
 
+```ruby
+browser.goto("https://github.com/")
+```
+
 #### back
 
 Navigate to the previous page in history.
+
+```ruby
+browser.goto("https://github.com/")
+browser.at_xpath("//a").click
+browser.back
+```
 
 #### forward
 
 Navigate to the next page in history.
 
+```ruby
+browser.goto("https://github.com/")
+browser.at_xpath("//a").click
+browser.back
+browser.forward
+```
+
 #### refresh
 
 Reload current page.
 
+```ruby
+browser.goto("https://github.com/")
+browser.refresh
+```
+
 #### status : `Integer`
 
 Contains the status code of the response (e.g., 200 for a success).
+
+```ruby
+browser.goto("https://github.com/")
+browser.status # => 200
+```
 
 
 ## Finders
@@ -96,6 +123,12 @@ provided node.
   * options `Hash`
     * :within `Node` | `nil`
 
+```ruby
+browser.goto("https://github.com/")
+browser.at_css("a[aria-label='Issues you created']") # => Node
+```
+
+
 #### css(selector, \*\*options) : `Array<Node>` | `[]`
 
 Find nodes by selector. The method runs `document.querySelectorAll` within the
@@ -105,6 +138,11 @@ document or provided node.
 * options `Hash`
   * :within `Node` | `nil`
 
+```ruby
+browser.goto("https://github.com/")
+browser.css("a[aria-label='Issues you created']") # => [Node]
+```
+
 #### at_xpath(selector, \*\*options) : `Node` | `nil`
 
 Find node by xpath.
@@ -112,6 +150,11 @@ Find node by xpath.
 * selector `String`
 * options `Hash`
   * :within `Node` | `nil`
+
+```ruby
+browser.goto("https://github.com/")
+browser.at_xpath("//a[@aria-label='Issues you created']") # => Node
+```
 
 #### xpath(selector, \*\*options) : `Array<Node>` | `[]`
 
@@ -121,18 +164,37 @@ Find nodes by xpath.
 * options `Hash`
   * :within `Node` | `nil`
 
+```ruby
+browser.goto("https://github.com/")
+browser.xpath("//a[@aria-label='Issues you created']") # => [Node]
+```
+
 #### current_url : `String`
 
 Returns current window location href.
+
+```ruby
+browser.goto("https://google.com/")
+browser.current_url # => "https://www.google.com/"
+```
 
 #### title : `String`
 
 Returns current window title
 
+```ruby
+browser.goto("https://google.com/")
+browser.title # => "Google"
+```
+
 #### body : `String`
 
 Returns current page's html.
 
+```ruby
+browser.goto("https://google.com/")
+browser.body # => '<html itemscope="" itemtype="http://schema.org/WebPage" lang="ru"><head>...
+```
 
 ## Screenshots
 
@@ -149,6 +211,17 @@ Saves screenshot on a disk or returns it as base64.
   * :quality `Integer` 0-100 works for jpeg only
   * :full `Boolean` whether you need full page screenshot or a viewport
   * :selector `String` css selector for given element
+
+```ruby
+browser.goto("https://google.com/")
+# Save on the disk in PNG
+browser.screenshot(path: "google.png") # => 134660
+# Save on the disk in JPG
+browser.screenshot(path: "google.jpg") # => 30902
+# Save to Base64 the whole page not only viewport and reduce quality
+browser.screenshot(full: true, quality: 60) # "iVBORw0KGgoAAAANSUhEUgAABAAAAAMACAYAAAC6uhUNAAAAAXNSR0IArs4c6Q...
+```
+
 
 #### zoom_factor = value
 
@@ -236,6 +309,8 @@ Mouse move to given x and y.
 
 ### Keyboard
 
+browser.keyboard
+
 #### down(key) : `Keyboard`
 
 Dispatches a keydown event.
@@ -293,17 +368,67 @@ Removes all cookies
 
 ## Headers
 
-#### headers=
-#### add_headers
-#### add_header
+browser.headers
+
+#### get : `Hash`
+
+Get all cookies
+
+#### set(headers)
+
+Set given headers. Eventually clear all cookies and set given ones.
+
+* headers `Hash` key-value pairs for example `"User-Agent" => "Browser"`
+
+#### add(headers)
+
+Adds given headers to already set ones.
+
+* headers `Hash` key-value pairs for example `"Referer" => "http://example.com"`
+
+#### clear
+
+Clear all cookies.
 
 
 ## JavaScript
 
-#### evaluate
-#### evaluate_on
-#### evaluate_async
-#### execute
+#### evaluate(expression, \*args)
+
+Evaluate and return result for given JS expression
+
+* expression `String` should be valid JavaScript
+* args `Object` you can pass arguments, though it should be a valid `Node` or a
+simple value.
+
+```ruby
+browser.evaluate("[window.scrollX, window.scrollY]")
+```
+
+#### evaluate_async(expression, wait_time, \*args)
+
+Evaluate asynchronous expression and return result
+
+* expression `String` should be valid JavaScript
+* wait_time How long we should wait for Promise to resolve or reject
+* args `Object` you can pass arguments, though it should be a valid `Node` or a
+simple value.
+
+```ruby
+browser.evaluate_async(%(arguments[0]({foo: "bar"})), 5) # => { "foo" => "bar" }
+```
+
+#### execute(expression, \*args)
+
+Execute expression. Doesn't return the result
+
+* expression `String` should be valid JavaScript
+* args `Object` you can pass arguments, though it should be a valid `Node` or a
+simple value.
+
+```ruby
+browser.execute(%(1 + 1)) # => true
+```
 
 
 ## Frames
