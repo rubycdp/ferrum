@@ -207,10 +207,12 @@ Saves screenshot on a disk or returns it as base64.
     set to `:binary` automatically
   * :encoding `Symbol` `:base64` | `:binary` you can set it to return image as
     Base64
-  * :format `String` "jpeg" | "png" | "pdf"
+  * :format `String` "jpeg" | "png"
   * :quality `Integer` 0-100 works for jpeg only
   * :full `Boolean` whether you need full page screenshot or a viewport
   * :selector `String` css selector for given element
+  * :scale `Float` zoom in/out
+
 
 ```ruby
 browser.goto("https://google.com/")
@@ -222,20 +224,27 @@ browser.screenshot(path: "google.jpg") # => 30902
 browser.screenshot(full: true, quality: 60) # "iVBORw0KGgoAAAANSUhEUgAABAAAAAMACAYAAAC6uhUNAAAAAXNSR0IArs4c6Q...
 ```
 
+#### pdf(\*\*options) : `String` | `Integer`
 
-#### zoom_factor = value
+Saves PDF on a disk or returns it as base64.
 
-Zoom in, zoom out
+* options `Hash`
+  * :path `String` to save a screenshot on the disk. If passed `:encoding` is
+    set to `:binary` automatically
+  * :encoding `Symbol` `:base64` | `:binary` you can set it to return pdf as
+    Base64
+  * :landscape `Boolean` paper orientation. Defaults to false.
+  * :scale `Float` zoom in/out
+  * :paper_width `Float` set paper width
+  * :paper_height `Float` set paper height
+  * See other [native options](https://chromedevtools.github.io/devtools-protocol/tot/Page#method-printToPDF) you can pass
 
-* value `Float`
 
-#### paper_size = value
-
-Set paper size. Works for PDF only.
-
-* value `Hash`
-  * :width `Float`
-  * :height `Float`
+```ruby
+browser.goto("https://google.com/")
+# Save on the disk in PNG
+browser.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => 14983
+```
 
 
 ## Network

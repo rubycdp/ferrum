@@ -6,7 +6,7 @@ require "chunky_png"
 require "spec_helper"
 
 module Ferrum
-  describe Browser::API::Screenshot do
+  describe "Browser::API::Screenshot" do
     let!(:browser) { Browser.new(base_url: @server.base_url) }
 
     after { browser.reset }
@@ -63,7 +63,7 @@ module Ferrum
 
       it "ignores :selector in #save_screenshot if full: true" do
         browser.goto("/ferrum/long_page")
-        expect(browser).to receive(:warn).with(/Ignoring :selector/)
+        expect(browser.page).to receive(:warn).with(/Ignoring :selector/)
 
         create_screenshot(path: file, full: true, selector: "#penultimate")
 
@@ -145,7 +145,7 @@ module Ferrum
         end
       end
 
-      shared_examples "when #zoom_factor= is set" do
+      shared_examples "when scale is set" do
         it "changes image dimensions" do
           browser.goto("/ferrum/zoom_test")
 
@@ -157,32 +157,28 @@ module Ferrum
           browser.screenshot(path: file)
           before = black_pixels_count[file]
 
-          browser.zoom_factor = zoom_factor
-          browser.screenshot(path: file)
+          browser.screenshot(path: file, scale: scale)
           after = black_pixels_count[file]
 
-          expect(after.to_f / before.to_f).to eq(zoom_factor**2)
+          expect(after.to_f / before.to_f).to eq(scale**2)
         end
       end
 
       context "zoom in" do
-        let(:zoom_factor) { 2 }
-        include_examples "when #zoom_factor= is set"
+        let(:scale) { 2 }
+        include_examples "when scale is set"
       end
 
       context "zoom out" do
-        let(:zoom_factor) { 0.5 }
-        include_examples "when #zoom_factor= is set"
+        let(:scale) { 0.5 }
+        include_examples "when scale is set"
       end
 
-      context "when #paper_size= is set" do
-        let(:format) { :pdf }
-
+      context "when :paper_width and :paper_height are set" do
         it "changes pdf size" do
           browser.goto("/ferrum/long_page")
-          browser.paper_size = { width: "1in", height: "1in" }
 
-          browser.screenshot(path: file)
+          browser.pdf(path: file, paper_width: 1.0, paper_height: 1.0)
 
           reader = PDF::Reader.new(file)
           reader.pages.each do |page|

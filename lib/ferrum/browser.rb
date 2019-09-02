@@ -6,7 +6,6 @@ require "ferrum/page"
 require "ferrum/targets"
 require "ferrum/browser/process"
 require "ferrum/browser/client"
-require "ferrum/browser/api/screenshot"
 require "ferrum/browser/api/intercept"
 
 module Ferrum
@@ -15,7 +14,7 @@ module Ferrum
     WINDOW_SIZE = [1024, 768].freeze
     BASE_URL_SCHEMA = %w[http https].freeze
 
-    include API::Screenshot, API::Intercept
+    include API::Intercept
     extend Forwardable
 
     attr_reader :window_size
@@ -27,6 +26,7 @@ module Ferrum
                 at_css at_xpath css xpath current_url title body
                 headers cookies network_traffic clear_network_traffic response_headers
                 mouse keyboard scroll_to
+                screenshot pdf
                 evaluate evaluate_on evaluate_async execute
                 frame_url frame_title switch_to_frame
                 find_modal accept_confirm dismiss_confirm accept_prompt dismiss_prompt reset_modals
@@ -95,7 +95,6 @@ module Ferrum
     end
 
     def reset
-      @zoom_factor = nil
       @window_size = @original_window_size
       targets.reset
     end

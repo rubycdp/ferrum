@@ -9,6 +9,7 @@ require "ferrum/page/input"
 require "ferrum/page/runtime"
 require "ferrum/page/frame"
 require "ferrum/page/net"
+require "ferrum/page/screenshot"
 require "ferrum/browser/client"
 require "ferrum/network/error"
 require "ferrum/network/request"
@@ -35,7 +36,7 @@ module Ferrum
   class Page
     NEW_WINDOW_BUG_SLEEP = 0.3
 
-    include Input, DOM, Runtime, Frame, Net
+    include Input, DOM, Runtime, Frame, Net, Screenshot
 
     attr_accessor :referrer
     attr_reader :target_id, :status,
