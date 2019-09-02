@@ -6,7 +6,6 @@ require "ferrum/page"
 require "ferrum/targets"
 require "ferrum/browser/process"
 require "ferrum/browser/client"
-require "ferrum/browser/api/intercept"
 
 module Ferrum
   class Browser
@@ -14,7 +13,6 @@ module Ferrum
     WINDOW_SIZE = [1024, 768].freeze
     BASE_URL_SCHEMA = %w[http https].freeze
 
-    include API::Intercept
     extend Forwardable
 
     attr_reader :window_size
@@ -25,15 +23,15 @@ module Ferrum
     delegate %i[goto back forward refresh status
                 at_css at_xpath css xpath current_url title body
                 headers cookies network_traffic clear_network_traffic response_headers
+                intercept_request on_request_intercepted continue_request abort_request
                 mouse keyboard scroll_to
                 screenshot pdf
                 evaluate evaluate_on evaluate_async execute
-                frame_url frame_title switch_to_frame
+                frame_url frame_title within_frame
                 find_modal accept_confirm dismiss_confirm accept_prompt dismiss_prompt reset_modals
                 authorize proxy_authorize] => :page
 
-    attr_reader :process, :logger, :js_errors, :slowmo, :base_url,
-                :url_blacklist, :url_whitelist, :options
+    attr_reader :process, :logger, :js_errors, :slowmo, :base_url, :options
     attr_writer :timeout
 
     def initialize(options = nil)
@@ -51,9 +49,6 @@ module Ferrum
       if @options.key?(:base_url)
         self.base_url = @options[:base_url]
       end
-
-      self.url_blacklist = @options[:url_blacklist]
-      self.url_whitelist = @options[:url_whitelist]
 
       if ENV["FERRUM_DEBUG"] && !@logger
         STDOUT.sync = true

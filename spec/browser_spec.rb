@@ -393,37 +393,6 @@ module Ferrum
         browser.switch_to_window(new_window)
         expect(browser.window_size).to eq [1200, 800]
       end
-
-      # it "inherits url_blacklist" do
-      #   browser.url_blacklist = ["unwanted"]
-      #   browser.goto
-      #   new_window = browser.open_new_window
-      #   browser.within_window(new_window) do
-      #     browser.goto "/ferrum/url_blacklist"
-      #     expect(browser.body).to include("We are loading some unwanted action here")
-      #     browser.switch_to_frame "framename" do
-      #       expect(browser.body).not_to include("We shouldn't see this.")
-      #     end
-      #   end
-      # end
-      #
-      # it "inherits url_whitelist" do
-      #   browser.goto
-      #   browser.url_whitelist = ["url_whitelist", "/ferrum/wanted"]
-      #   new_window = browser.open_new_window
-      #   browser.within_window(new_window) do
-      #     browser.goto "/ferrum/url_whitelist"
-      #
-      #     expect(browser.body).to include("We are loading some wanted action here")
-      #     browser.switch_to_frame "framename" do
-      #       expect(browser.body).to include("We should see this.")
-      #     end
-      #     browser.switch_to_frame "unwantedframe" do
-      #       # make sure non whitelisted urls are blocked
-      #       expect(browser.body).not_to include("We shouldn't see this.")
-      #     end
-      #   end
-      # end
     end
 
     # it "resizes windows" do
@@ -514,16 +483,17 @@ module Ferrum
       end
     end
 
-    # it "can get the frames url" do
-    #   browser.goto("/ferrum/frames")
-    #
-    #   browser.within_frame(0) do
-    #     expect(browser.frame_url).to end_with("/ferrum/slow")
-    #     expect(browser.current_url).to end_with("/ferrum/frames")
-    #   end
-    #
-    #   expect(browser.frame_url).to end_with("/ferrum/frames")
-    #   expect(browser.current_url).to end_with("/ferrum/frames")
-    # end
+    it "can get the frames url" do
+      browser.goto("/ferrum/frames")
+
+      frame = browser.at_xpath("//iframe")
+      browser.within_frame(frame) do
+        expect(browser.frame_url).to end_with("/ferrum/slow")
+        expect(browser.current_url).to end_with("/ferrum/frames")
+      end
+
+      expect(browser.frame_url).to end_with("/ferrum/frames")
+      expect(browser.current_url).to end_with("/ferrum/frames")
+    end
   end
 end

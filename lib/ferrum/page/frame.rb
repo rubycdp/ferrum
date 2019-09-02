@@ -24,16 +24,17 @@ module Ferrum
         evaluate("document.title")
       end
 
-      def switch_to_frame(handle)
-        case handle
-        when :parent
-          @frame_stack.pop
-        when :top
-          @frame_stack = []
-        else
-          @frame_stack << handle
-          inject_extensions
+      def within_frame(frame)
+        unless frame.is_a?(Node)
+          raise ArgumentError, "Node is expected, but #{frame.class} is given"
         end
+
+        frame_id = frame.description["frameId"]
+        @frame_stack << frame_id
+        inject_extensions
+        yield
+      ensure
+        @frame_stack.pop
       end
 
       private
@@ -53,7 +54,7 @@ module Ferrum
         @client.on("Page.frameNavigated") do |params|
           id = params["frame"]["id"]
           if frame = @frames[id]
-            frame.merge!(params["frame"].select { |k, v| k == "name" || k == "url" })
+            frame.merge!(params["frame"].select { |k, _| k == "name" || k == "url" })
           end
         end
 

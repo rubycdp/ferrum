@@ -94,10 +94,10 @@ module Ferrum
     end
 
     def with_attempts(errors:, max:, wait:)
-      attempts ||= 0
+      attempts ||= 1
       yield
     rescue *Array(errors)
-      raise if attempts > max
+      raise if attempts >= max
       attempts += 1
       sleep(wait)
       retry

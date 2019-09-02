@@ -473,7 +473,17 @@ browser.execute(%(1 + 1)) # => true
 
 #### frame_url
 #### frame_title
-#### switch_to_frame
+#### within_frame(frame, &block)
+
+Play around inside given frame
+
+```ruby
+browser.goto("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
+frame = browser.at_xpath("//iframe")
+browser.within_frame(frame) do
+  puts browser.frame_url # => https://interactive-examples.mdn.mozilla.net/pages/tabbed/iframe.html
+end
+```
 
 
 ## Modals
@@ -488,11 +498,33 @@ browser.execute(%(1 + 1)) # => true
 
 ## Auth
 
-#### authorize
-#### proxy_authorize
+#### authorize(user, password)
+
+If site uses authorization you can provide credentials using this method.
+
+* user `String`
+* passowrd `String`
+
+#### proxy_authorize(user, password)
+
+If you want to use proxy that requires authentication this is the method you need.
+
+* user `String`
+* passowrd `String`
 
 
 ## Interception
 
-#### url_whitelist=
-#### url_blacklist=
+#### intercept_request
+
+```ruby
+browser = Ferrum::Browser.new
+browser.intercept_request do |request|
+  if request.match?(/bla-bla/)
+    request.abort
+  else
+    request.continue
+  end
+end
+browser.goto("https://google.com")
+```

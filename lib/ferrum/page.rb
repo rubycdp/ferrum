@@ -14,6 +14,7 @@ require "ferrum/browser/client"
 require "ferrum/network/error"
 require "ferrum/network/request"
 require "ferrum/network/response"
+require "ferrum/network/intercepted_request"
 
 # RemoteObjectId is from a JavaScript world, and corresponds to any JavaScript
 # object, including JS wrappers for DOM nodes. There is a way to convert between
@@ -220,13 +221,13 @@ module Ferrum
           options = { accept: accept_modal }
           response = @modal_response || params["defaultPrompt"]
           options.merge!(promptText: response) if response
-          @client.command("Page.handleJavaScriptDialog", **options)
+          command("Page.handleJavaScriptDialog", **options)
         else
           warn "Modal window has been opened, but you didn't wrap your code into (`accept_prompt` | `dismiss_prompt` | `accept_confirm` | `dismiss_confirm` | `accept_alert`), accepting by default"
           options = { accept: true }
           response = params["defaultPrompt"]
           options.merge!(promptText: response) if response
-          @client.command("Page.handleJavaScriptDialog", **options)
+          command("Page.handleJavaScriptDialog", **options)
         end
       end
 
@@ -313,17 +314,13 @@ module Ferrum
       end
 
       @browser.extensions.each do |extension|
-        @client.command("Page.addScriptToEvaluateOnNewDocument", source: extension)
+        command("Page.addScriptToEvaluateOnNewDocument", source: extension)
       end
 
       inject_extensions
 
       width, height = @browser.window_size
       resize(width: width, height: height)
-
-      url_whitelist = Array(@browser.url_whitelist)
-      url_blacklist = Array(@browser.url_blacklist)
-      intercept_request("*") if !url_whitelist.empty? || !url_blacklist.empty?
 
       response = command("Page.getNavigationHistory")
       if response.dig("entries", 0, "transitionType") != "typed"
@@ -343,9 +340,9 @@ module Ferrum
         # https://github.com/cyrus-and/chrome-remote-interface/issues/319
         # We also evaluate script just in case because
         # `Page.addScriptToEvaluateOnNewDocument` doesn't work in popups.
-        @client.command("Runtime.evaluate", expression: extension,
-                                            contextId: execution_context_id,
-                                            returnByValue: true)
+        command("Runtime.evaluate", expression: extension,
+                                    contextId: execution_context_id,
+                                    returnByValue: true)
       end
     end
 

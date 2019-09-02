@@ -19,7 +19,9 @@ module Ferrum
       end
 
       it "keeps track of blocked network traffic" do
-        browser.url_blacklist = ["unwanted"]
+        browser.intercept_request do |request|
+          request.match?(/unwanted/) ? request.abort : request.continue
+        end
 
         browser.goto("/ferrum/url_blacklist")
 
@@ -71,7 +73,9 @@ module Ferrum
       end
 
       it "blocked requests get cleared along with network traffic" do
-        browser.url_blacklist = ["unwanted"]
+        browser.intercept_request do |request|
+          request.match?(/unwanted/) ? request.abort : request.continue
+        end
 
         browser.goto("/ferrum/url_blacklist")
 

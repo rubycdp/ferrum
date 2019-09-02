@@ -19,7 +19,11 @@ module Ferrum
 
       def call(message)
         method, params = message.values_at("method", "params")
-        @on[method].each { |b| b.call(params) }
+        total = @on[method].size
+        @on[method].each_with_index do |block, index|
+          # If there are a few callback we provide current index and total
+          block.call(params, index, total)
+        end
       end
     end
   end
