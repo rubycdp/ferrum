@@ -24,13 +24,13 @@ module Ferrum
     end
 
     it "can set cookies" do
-      browser.set_cookie(name: "stealth", value: "omg")
+      browser.cookies.set(name: "stealth", value: "omg")
       browser.goto("/get_cookie")
       expect(browser.body).to include("omg")
     end
 
     it "can set cookies with custom settings" do
-      browser.set_cookie(name: "stealth", value: "omg", path: "/ferrum")
+      browser.cookies.set(name: "stealth", value: "omg", path: "/ferrum")
 
       browser.goto("/get_cookie")
       expect(browser.body).to_not include("omg")
@@ -47,7 +47,7 @@ module Ferrum
       browser.goto("/get_cookie")
       expect(browser.body).to include("test_cookie")
 
-      browser.remove_cookie(name: "stealth")
+      browser.cookies.remove(name: "stealth")
 
       browser.goto("/get_cookie")
       expect(browser.body).to_not include("test_cookie")
@@ -59,7 +59,7 @@ module Ferrum
       browser.goto("/get_cookie")
       expect(browser.body).to include("test_cookie")
 
-      browser.clear_cookies
+      browser.cookies.clear
 
       browser.goto("/get_cookie")
       expect(browser.body).to_not include("test_cookie")
@@ -68,14 +68,14 @@ module Ferrum
     it "can set cookies with an expires time" do
       time = Time.at(Time.now.to_i + 10000)
       browser.goto
-      browser.set_cookie(name: "foo", value: "bar", expires: time)
+      browser.cookies.set(name: "foo", value: "bar", expires: time)
       expect(browser.cookies["foo"].expires).to eq(time)
     end
 
     it "can set cookies for given domain" do
       port = @server.port
-      browser.set_cookie(name: "stealth", value: "127.0.0.1")
-      browser.set_cookie(name: "stealth", value: "localhost", domain: "localhost")
+      browser.cookies.set(name: "stealth", value: "127.0.0.1")
+      browser.cookies.set(name: "stealth", value: "localhost", domain: "localhost")
 
       browser.goto("http://localhost:#{port}/ferrum/get_cookie")
       expect(browser.body).to include("localhost")
@@ -87,7 +87,7 @@ module Ferrum
     it "sets cookies correctly with :domain option when base_url isn't set" do
       begin
         browser = Browser.new
-        browser.set_cookie(name: "stealth", value: "123456", domain: "localhost")
+        browser.cookies.set(name: "stealth", value: "123456", domain: "localhost")
 
         port = @server.port
         browser.goto("http://localhost:#{port}/ferrum/get_cookie")

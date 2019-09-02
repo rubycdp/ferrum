@@ -18,6 +18,7 @@ module Ferrum
 
     def clear
       @headers = {}
+      true
     end
 
     def add(headers, permanent: true)
@@ -32,6 +33,7 @@ module Ferrum
 
       set_overrides(user_agent: user_agent, accept_language: accept_language)
       @page.command("Network.setExtraHTTPHeaders", headers: @headers)
+      true
     end
 
     private

@@ -339,11 +339,28 @@ Returns bitfield for a given keys
 
 ## Cookies
 
-#### cookies : `Hash<String, Cookie>`
+browser.cookies
+
+#### all : `Hash<String, Cookie>`
 
 Returns cookies hash
 
-#### set_cookie(\*\*options)
+
+```ruby
+browser.cookies.all # => {"NID"=>#<Ferrum::Cookies::Cookie:0x0000558624b37a40 @attributes={"name"=>"NID", "value"=>"...", "domain"=>".google.com", "path"=>"/", "expires"=>1583211046.575681, "size"=>178, "httpOnly"=>true, "secure"=>false, "session"=>false}>}
+```
+
+#### [](value) : `Cookie`
+
+Returns cookie
+
+* value `String`
+
+```ruby
+browser.cookies["NID"] # => <Ferrum::Cookies::Cookie:0x0000558624b67a88 @attributes={"name"=>"NID", "value"=>"...", "domain"=>".google.com", "path"=>"/", "expires"=>1583211046.575681, "size"=>178, "httpOnly"=>true, "secure"=>false, "session"=>false}>
+```
+
+#### set(\*\*options) : `Boolean`
 
 Sets given values as cookie
 
@@ -353,7 +370,11 @@ Sets given values as cookie
   * :domain `String`
   * :expires `Integer`
 
-#### remove_cookie(\*\*options)
+```ruby
+browser.cookies.set(name: "stealth", value: "omg", domain: "google.com") # => true
+```
+
+#### remove(\*\*options) : `Boolean`
 
 Removes given cookie
 
@@ -362,9 +383,17 @@ Removes given cookie
   * :domain `String`
   * :url `String`
 
-#### clear_cookies
+```ruby
+browser.cookies.remove(name: "stealth", domain: "google.com") # => true
+```
 
-Removes all cookies
+#### clear : `Boolean`
+
+Removes all cookies for current page
+
+```ruby
+browser.cookies.clear # => true
+```
 
 ## Headers
 
@@ -372,23 +401,23 @@ browser.headers
 
 #### get : `Hash`
 
-Get all cookies
+Get all headers
 
-#### set(headers)
+#### set(headers) : `Boolean`
 
-Set given headers. Eventually clear all cookies and set given ones.
+Set given headers. Eventually clear all headers and set given ones.
 
 * headers `Hash` key-value pairs for example `"User-Agent" => "Browser"`
 
-#### add(headers)
+#### add(headers) : `Boolean`
 
 Adds given headers to already set ones.
 
 * headers `Hash` key-value pairs for example `"Referer" => "http://example.com"`
 
-#### clear
+#### clear : `Boolean`
 
-Clear all cookies.
+Clear all headers.
 
 
 ## JavaScript

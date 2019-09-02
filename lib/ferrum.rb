@@ -2,7 +2,6 @@
 
 require "ferrum/browser"
 require "ferrum/node"
-require "ferrum/cookie"
 
 Thread.abort_on_exception = true
 Thread.report_on_exception = true if Thread.respond_to?(:report_on_exception=)

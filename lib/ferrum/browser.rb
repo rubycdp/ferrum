@@ -4,9 +4,10 @@ require "base64"
 require "forwardable"
 require "ferrum/page"
 require "ferrum/targets"
-require "ferrum/browser/api"
 require "ferrum/browser/process"
 require "ferrum/browser/client"
+require "ferrum/browser/api/screenshot"
+require "ferrum/browser/api/intercept"
 
 module Ferrum
   class Browser
@@ -14,7 +15,7 @@ module Ferrum
     WINDOW_SIZE = [1024, 768].freeze
     BASE_URL_SCHEMA = %w[http https].freeze
 
-    include API
+    include API::Screenshot, API::Intercept
     extend Forwardable
 
     attr_reader :window_size
@@ -24,7 +25,7 @@ module Ferrum
                 open_new_window close_window within_window page] => :targets
     delegate %i[goto back forward refresh status
                 at_css at_xpath css xpath current_url title body
-                headers network_traffic clear_network_traffic response_headers
+                headers cookies network_traffic clear_network_traffic response_headers
                 mouse keyboard scroll_to
                 evaluate evaluate_on evaluate_async execute
                 frame_url frame_title switch_to_frame

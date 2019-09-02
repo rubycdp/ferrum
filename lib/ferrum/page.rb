@@ -3,6 +3,7 @@
 require "ferrum/mouse"
 require "ferrum/keyboard"
 require "ferrum/headers"
+require "ferrum/cookies"
 require "ferrum/page/dom"
 require "ferrum/page/input"
 require "ferrum/page/runtime"
@@ -37,8 +38,10 @@ module Ferrum
     include Input, DOM, Runtime, Frame, Net
 
     attr_accessor :referrer
-    attr_reader :target_id, :status, :headers, :response_headers,
-                :mouse, :keyboard
+    attr_reader :target_id, :status,
+                :headers, :cookies, :response_headers,
+                :mouse, :keyboard,
+                :browser
 
     def initialize(target_id, browser, new_window = false)
       @target_id, @browser = target_id, browser
@@ -62,7 +65,7 @@ module Ferrum
       @client = Browser::Client.new(browser, ws_url, 1000)
 
       @mouse, @keyboard = Mouse.new(self), Keyboard.new(self)
-      @headers = Headers.new(self)
+      @headers, @cookies = Headers.new(self), Cookies.new(self)
 
       subscribe
       prepare_page
