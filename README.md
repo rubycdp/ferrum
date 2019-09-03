@@ -6,6 +6,23 @@ It is Ruby clean and high-level API to Chrome. Runs headless by default,
 but you can configure it to run in a non-headless mode. All you need is Ruby and
 Chrome/Chromium. Ferrum connects to the browser via DevTools Protocol.
 
+Relation to [Cuprite](https://github.com/machinio/cuprite). Cuprite used to have
+this code inside in one form or another but the thing is you don't need capybara
+if you are going to crawl sites. You crawl, not test. Besides that clean
+lightweight API to browser is what Ruby was missing, so here it comes.
+
+## Install
+
+There's no official Chrome or Chromium package for Linux don't install it this
+way because it either will be outdated or unofficial, both are bad. Download it
+from official [source](https://www.chromium.org/getting-involved/download-chromium).
+Chrome binary should be in the `PATH` or `BROWSER_PATH` or you can pass it as an
+option.
+
+``` ruby
+gem "ferrum"
+```
+
 Navigate to a website and save a screenshot:
 
 ```ruby
@@ -57,7 +74,41 @@ browser.mouse
 browser.quit
 ```
 
-#### The API below is correct but a subject to change before `1.0`
+## Customization ##
+
+You can customize options with the following code in your test setup:
+
+``` ruby
+Ferrum::Browser.new(options)
+```
+
+* options `Hash`
+  * `:browser_path` (String) - Path to chrome binary, you can also set ENV
+      variable as `BROWSER_PATH=some/path/chrome bundle exec rspec`.
+  * `:headless` (Boolean) - Set browser as headless or not, `true` by default.
+  * `:slowmo` (Integer | Float) - Set a delay to wait before sending command.
+      Usefull companion of headless option, so that you have time to see changes.
+  * `:logger` (Object responding to `puts`) - When present, debug output is
+      written to this object.
+  * `:timeout` (Numeric) - The number of seconds we'll wait for a response when
+      communicating with browser. Default is 5.
+  * `:js_errors` (Boolean) - When true, JavaScript errors get re-raised in Ruby.
+  * `:window_size` (Array) - The dimensions of the browser window in which to
+      test, expressed as a 2-element array, e.g. [1024, 768]. Default: [1024, 768]
+  * `:browser_options` (Hash) - Additional command line options,
+      [see them all](https://peter.sh/experiments/chromium-command-line-switches/)
+      e.g. `{ "ignore-certificate-errors" => nil }`
+  * `:extensions` (Array) - An array of JS files to be preloaded into the browser
+  * `:port` (Integer) - Remote debugging port for headless Chrome
+  * `:host` (String) - Remote debugging address for headless Chrome
+  * `:url` (String) - URL for a running instance of Chrome. If this is set, a
+      browser process will not be spawned.
+  * `:process_timeout` (Integer) - How long to wait for the Chrome process to
+      respond on startup
+
+
+#### The API below is for master branch and a subject to change before 1.0
+
 
 ## Navigation
 
@@ -195,6 +246,7 @@ Returns current page's html.
 browser.goto("https://google.com/")
 browser.body # => '<html itemscope="" itemtype="http://schema.org/WebPage" lang="ru"><head>...
 ```
+
 
 ## Screenshots
 
