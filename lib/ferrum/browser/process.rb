@@ -10,7 +10,7 @@ module Ferrum
   class Browser
     class Process
       KILL_TIMEOUT = 2
-      PROCESS_TIMEOUT = 1
+      PROCESS_TIMEOUT = 2
       BROWSER_PATH = ENV["BROWSER_PATH"]
       BROWSER_HOST = "127.0.0.1"
       BROWSER_PORT = "0"
