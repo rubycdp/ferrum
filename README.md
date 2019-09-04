@@ -20,7 +20,7 @@ Chrome binary should be in the `PATH` or `BROWSER_PATH` or you can pass it as an
 option.
 
 ``` ruby
-gem "ferrum"
+gem install "ferrum"
 ```
 
 Navigate to a website and save a screenshot:
