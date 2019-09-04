@@ -86,14 +86,14 @@ module Ferrum
       push(target_id, @page)
     end
 
-    private
-
     def find_or_create_page(target_id)
       page = @targets[target_id]
       page ||= Page.new(target_id, @browser, true)
       @targets[target_id] ||= page
       page
     end
+
+    private
 
     def remove_page(target_id)
       page = @targets.delete(target_id)

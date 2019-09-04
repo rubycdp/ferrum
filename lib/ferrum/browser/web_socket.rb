@@ -28,7 +28,7 @@ module Ferrum
             while data = @sock.readpartial(512)
               @driver.parse(data)
             end
-          rescue EOFError, Errno::ECONNRESET
+          rescue EOFError, Errno::ECONNRESET, Errno::EPIPE
             @messages.close
           end
         end
@@ -62,6 +62,8 @@ module Ferrum
 
       def write(data)
         @sock.write(data)
+      rescue EOFError, Errno::ECONNRESET, Errno::EPIPE
+        @messages.close
       end
 
       def close
