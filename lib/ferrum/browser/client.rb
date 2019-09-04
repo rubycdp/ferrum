@@ -16,6 +16,9 @@ module Ferrum
         @subscriber = Subscriber.new
 
         @thread = Thread.new do
+          Thread.current.abort_on_exception = true
+          Thread.current.report_on_exception = true if Thread.current.respond_to?(:report_on_exception=)
+
           while message = @ws.messages.pop
             if message.key?("method")
               @subscriber.async.call(message)

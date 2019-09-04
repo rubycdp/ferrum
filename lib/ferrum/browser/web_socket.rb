@@ -24,6 +24,9 @@ module Ferrum
         @driver.on(:close,   &method(:on_close))
 
         @thread = Thread.new do
+          Thread.current.abort_on_exception = true
+          Thread.current.report_on_exception = true if Thread.current.respond_to?(:report_on_exception=)
+
           begin
             while data = @sock.readpartial(512)
               @driver.parse(data)

@@ -3,9 +3,6 @@
 require "ferrum/browser"
 require "ferrum/node"
 
-Thread.abort_on_exception = true
-Thread.report_on_exception = true if Thread.respond_to?(:report_on_exception=)
-
 module Ferrum
   class Error               < StandardError; end
   class NoSuchWindowError   < Error; end
