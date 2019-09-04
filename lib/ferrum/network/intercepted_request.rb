@@ -19,7 +19,7 @@ module Ferrum::Network
     end
 
     def match?(regexp)
-      url.match?(regexp)
+      !!(url =~ regexp)
     end
 
     def abort
