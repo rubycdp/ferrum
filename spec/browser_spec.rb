@@ -4,10 +4,6 @@ require "spec_helper"
 
 module Ferrum
   describe Browser do
-    let!(:browser) { Browser.new(base_url: @server.base_url) }
-
-    after { browser.reset }
-
     it "supports a custom path" do
       begin
         original_path = PROJECT_ROOT + "/spec/support/chrome_path"
@@ -135,7 +131,7 @@ module Ferrum
     context "extending browser javascript" do
       it "supports extending the browser's world" do
         begin
-          browser = Browser.new(base_url: @server.base_url,
+          browser = Browser.new(base_url: base_url,
                                 extensions: [File.expand_path("support/geolocation.js", __dir__)])
 
           browser.goto("/ferrum/requiring_custom_extension")
@@ -167,7 +163,7 @@ module Ferrum
     end
 
     context "javascript errors" do
-      let(:browser) { Browser.new(base_url: @server.base_url, js_errors: true) }
+      let(:browser) { Browser.new(base_url: base_url, js_errors: true) }
 
       it "propagates a Javascript error to a ruby exception" do
         expect do
@@ -208,7 +204,7 @@ module Ferrum
 
       it "does not propagate a Javascript error to ruby if error raising disabled" do
         begin
-          browser = Browser.new(base_url: @server.base_url, js_errors: false)
+          browser = Browser.new(base_url: base_url, js_errors: false)
           browser.goto("/ferrum/js_error")
           browser.execute "setTimeout(function() { omg }, 0)"
           sleep 0.1
@@ -220,7 +216,7 @@ module Ferrum
 
       it "does not propagate a Javascript error to ruby if error raising disabled and client restarted" do
         begin
-          browser = Browser.new(base_url: @server.base_url, js_errors: false)
+          browser = Browser.new(base_url: base_url, js_errors: false)
           browser.restart
           browser.goto("/ferrum/js_error")
           browser.execute "setTimeout(function() { omg }, 0)"
@@ -233,7 +229,7 @@ module Ferrum
     end
 
     context "browser failed responses" do
-      let(:port) { @server.port }
+      let(:port) { server.port }
 
       it "do not occur when DNS correct" do
         expect { browser.goto("http://localhost:#{port}/") }.not_to raise_error
@@ -371,13 +367,20 @@ module Ferrum
         window.open("/ferrum/simple", "popup2")
       JS
 
+      sleep 0.1
+
       expect(browser.window_handles.size).to eq(3)
 
       popup2 = browser.window_handles.last
 
       browser.within_window(popup2) do
         expect(browser.body).to include("Test")
-        browser.execute("window.close()")
+        # Browser isn't dead, current page after executing JS closes connection
+        # and we don't have a chance to push response to the Queue. Since the
+        # queue and websocket are closed and response is nil the proper guess
+        # would be that browser is dead, but in fact the page is dead and
+        # browser is fully alive.
+        browser.execute("window.close()") rescue Ferrum::DeadBrowserError
       end
 
       sleep 0.1

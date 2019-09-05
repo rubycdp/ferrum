@@ -4,10 +4,6 @@ require "spec_helper"
 
 module Ferrum
   describe "intercept requests" do
-    let!(:browser) { Browser.new(base_url: @server.base_url) }
-
-    after { browser.reset }
-
     it "blocks unwanted urls" do
       browser.intercept_request do |request|
         request.match?(/unwanted/) ? request.abort : request.continue

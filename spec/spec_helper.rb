@@ -10,8 +10,16 @@ require "ferrum"
 require "support/server"
 
 RSpec.shared_context "Global helpers" do
+  def server
+    Ferrum::Server.server
+  end
+
   def base_url(*args)
-    @server.base_url(*args)
+    server.base_url(*args)
+  end
+
+  def browser
+    @browser
   end
 
   def with_external_browser(host: "127.0.0.1", port: 32001)
@@ -30,14 +38,23 @@ end
 RSpec.configure do |config|
   config.include_context "Global helpers"
 
-  # config.before(:each) do
-  #   @server&.wait_for_pending_requests
-  # end
-
-  config.before(:all) do
+  config.before(:suite) do
     @server = Ferrum::Server.boot
   end
 
-  # config.after(:all) do
-  # end
+  config.before(:all) do
+    @browser = Ferrum::Browser.new(base_url: Ferrum::Server.server.base_url)
+  end
+
+  config.after(:all) do
+    @browser.quit
+  end
+
+  config.before(:each) do
+    server&.wait_for_pending_requests
+  end
+
+  config.after(:each) do
+    @browser.reset
+  end
 end

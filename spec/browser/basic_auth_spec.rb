@@ -4,10 +4,6 @@ require "spec_helper"
 
 module Ferrum
   describe "basic http authentication" do
-    let!(:browser) { Browser.new(base_url: @server.base_url) }
-
-    after { browser.reset }
-
     it "denies without credentials" do
       browser.goto("/ferrum/basic_auth")
 

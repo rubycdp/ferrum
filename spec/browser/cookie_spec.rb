@@ -4,10 +4,6 @@ require "spec_helper"
 
 module Ferrum
   describe "cookies support" do
-    let!(:browser) { Browser.new(base_url: @server.base_url) }
-
-    after { browser.reset }
-
     it "returns set cookies" do
       browser.goto("/set_cookie")
 
@@ -73,7 +69,7 @@ module Ferrum
     end
 
     it "can set cookies for given domain" do
-      port = @server.port
+      port = server.port
       browser.cookies.set(name: "stealth", value: "127.0.0.1")
       browser.cookies.set(name: "stealth", value: "localhost", domain: "localhost")
 
@@ -89,7 +85,7 @@ module Ferrum
         browser = Browser.new
         browser.cookies.set(name: "stealth", value: "123456", domain: "localhost")
 
-        port = @server.port
+        port = server.port
         browser.goto("http://localhost:#{port}/ferrum/get_cookie")
         expect(browser.body).to include("123456")
 

@@ -4,10 +4,6 @@ require "spec_helper"
 
 module Ferrum
   describe "Browser::API::Input" do
-    let!(:browser) { Browser.new(base_url: @server.base_url) }
-
-    after { browser.reset }
-
     context "has ability to send keys" do
       before { browser.goto("/ferrum/type") }
 

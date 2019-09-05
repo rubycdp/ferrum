@@ -7,10 +7,6 @@ require "spec_helper"
 
 module Ferrum
   describe "Browser::API::Screenshot" do
-    let!(:browser) { Browser.new(base_url: @server.base_url) }
-
-    after { browser.reset }
-
     shared_examples "screenshot screen" do
       it "supports screenshotting the whole of a page that goes outside the viewport" do
         browser.goto("/ferrum/long_page")
