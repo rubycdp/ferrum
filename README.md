@@ -294,7 +294,7 @@ Saves PDF on a disk or returns it as base64.
 
 ```ruby
 browser.goto("https://google.com/")
-# Save on the disk in PNG
+# Save to disk as a PDF
 browser.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => 14983
 ```
 
