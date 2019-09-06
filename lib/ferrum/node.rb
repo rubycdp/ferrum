@@ -2,7 +2,7 @@
 
 module Ferrum
   class Node
-    CLICK_WAIT = ENV.fetch("FERRUM_CLICK_WAIT", 0.05)
+    CLICK_WAIT = ENV.fetch("FERRUM_CLICK_WAIT", 0.05).to_f
 
     attr_reader :page, :target_id, :node_id, :description, :tag_name
 
