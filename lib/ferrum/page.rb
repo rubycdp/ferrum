@@ -37,6 +37,20 @@ module Ferrum
   class Page
     NEW_WINDOW_BUG_SLEEP = 0.3
 
+    class Event < Concurrent::Event
+      def iteration
+        synchronize { @iteration }
+      end
+
+      def reset
+        synchronize do
+          @iteration += 1
+          @set = false if @set
+          true
+        end
+      end
+    end
+
     include Input, DOM, Runtime, Frame, Net, Screenshot
 
     attr_accessor :referrer
@@ -48,7 +62,7 @@ module Ferrum
     def initialize(target_id, browser, new_window = false)
       @target_id, @browser = target_id, browser
       @network_traffic = []
-      @event = Concurrent::Event.new.tap(&:set)
+      @event = Event.new.tap(&:set)
 
       @frames = {}
       @waiting_frames ||= Set.new
@@ -186,13 +200,11 @@ module Ferrum
     end
 
     def command(method, timeout: 0, **params)
+      @event.reset if timeout > 0
+      iteration = @event.iteration
       result = @client.command(method, params)
-
-      if timeout > 0
-        @event.reset
-        @event.wait(timeout)
-      end
-
+      @event.wait(timeout) if timeout > 0
+      @event.wait(@browser.timeout) if iteration != @event.iteration
       result
     end
 
