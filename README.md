@@ -1,5 +1,7 @@
 # Ferrum - fearless Ruby Chrome driver
 
+[![Build Status](https://travis-ci.org/route/ferrum.svg?branch=master)](https://travis-ci.org/route/ferrum)
+
 As simple as Puppeteer, though even simpler.
 
 It is Ruby clean and high-level API to Chrome. Runs headless by default,

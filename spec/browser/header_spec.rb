@@ -4,10 +4,6 @@ require "spec_helper"
 
 module Ferrum
   describe Headers do
-    let!(:browser) { Browser.new(base_url: @server.base_url) }
-
-    after { browser.reset }
-
     it "allows headers to be set" do
       browser.headers.set("Cookie" => "foo=bar", "YourName" => "your_value")
       browser.goto("/ferrum/headers")

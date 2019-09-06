@@ -56,6 +56,10 @@ module Ferrum
       new(**options).tap { |s| s.boot! }
     end
 
+    def self.server
+      @@server
+    end
+
     def initialize(app: nil, host: "127.0.0.1", port: nil)
       @host = host
       @port = port || find_available_port(host)
@@ -89,6 +93,8 @@ module Ferrum
 
           @server_thread.join(0.1)
         end
+
+        @@server = self
       end
     end
 

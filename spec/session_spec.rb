@@ -4,10 +4,6 @@ require "spec_helper"
 
 module Ferrum
   describe Browser, skip: true do
-    let!(:browser) { Browser.new(base_url: @server.base_url) }
-
-    after { browser.reset }
-
     describe Ferrum::Node do
       it "raises an error if the element has been removed from the DOM" do
         browser.goto("/ferrum/with_js")
