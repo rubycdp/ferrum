@@ -2,6 +2,8 @@
 
 module Ferrum
   class Node
+    CLICK_WAIT = ENV.fetch("FERRUM_CLICK_WAIT", 0.05)
+
     attr_reader :page, :target_id, :node_id, :description, :tag_name
 
     def initialize(page, target_id, node_id, description)
@@ -43,7 +45,7 @@ module Ferrum
         page.mouse.down(modifiers: modifiers, count: 2)
         page.mouse.up(modifiers: modifiers, count: 2)
       when :left
-        page.mouse.click(x: x, y: y, modifiers: modifiers, timeout: 0.05)
+        page.mouse.click(x: x, y: y, modifiers: modifiers, timeout: CLICK_WAIT)
       end
 
       self
