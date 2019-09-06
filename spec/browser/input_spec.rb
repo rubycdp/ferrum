@@ -5,7 +5,6 @@ require "spec_helper"
 module Ferrum
   describe "Browser::API::Input" do
     let!(:browser) { Browser.new(base_url: @server.base_url) }
-    let!(:select_all) { Ferrum.mac? ? %i[Alt shift Right] : %i[Ctrl A] }
 
     after { browser.reset }
 
@@ -172,11 +171,13 @@ module Ferrum
     end
 
     context "set" do
+      let(:delete_all) { [ [(Ferrum.mac? ? :alt : :ctrl), :shift, :right], :backspace ] }
+
       before { browser.goto("/ferrum/set") }
 
       it "sets contenteditable's content" do
         input = browser.at_css("#filled_div")
-        input.focus.type(select_all, :Backspace, "new text")
+        input.focus.type(delete_all, "new text")
         expect(input.text).to eq("new text")
       end
 
@@ -187,7 +188,7 @@ module Ferrum
         expect(input.text).to eq("new text")
 
         input = browser.at_css("#filled_div")
-        input.focus.type(select_all, :Backspace, "replacement text")
+        input.focus.type(delete_all, "replacement text")
 
         expect(input.text).to eq("replacement text")
       end
