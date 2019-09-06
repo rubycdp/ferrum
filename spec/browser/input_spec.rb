@@ -5,6 +5,7 @@ require "spec_helper"
 module Ferrum
   describe "Browser::API::Input" do
     let!(:browser) { Browser.new(base_url: @server.base_url) }
+    let!(:select_all) { Ferrum.mac? ? %i[Alt shift Right] : %i[Ctrl A] }
 
     after { browser.reset }
 
@@ -175,7 +176,7 @@ module Ferrum
 
       it "sets contenteditable's content" do
         input = browser.at_css("#filled_div")
-        input.focus.type([:Ctrl, "A"], :Backspace, "new text")
+        input.focus.type(select_all, :Backspace, "new text")
         expect(input.text).to eq("new text")
       end
 
@@ -186,7 +187,7 @@ module Ferrum
         expect(input.text).to eq("new text")
 
         input = browser.at_css("#filled_div")
-        input.focus.type([:Ctrl, "A"], :Backspace, "replacement text")
+        input.focus.type(select_all, :Backspace, "replacement text")
 
         expect(input.text).to eq("replacement text")
       end
@@ -245,9 +246,9 @@ module Ferrum
       it "sets a date" do
         input = browser.at_css("#date_field")
 
-        input.focus.type("02-14-2016")
+        input.focus.type("02-02-2016")
 
-        expect(input.value).to eq("2016-02-14")
+        expect(input.value).to eq("2016-02-02")
       end
     end
   end
