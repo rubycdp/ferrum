@@ -75,7 +75,7 @@ module Ferrum
     it "allows the page to be scrolled" do
       browser.goto("/ferrum/long_page")
       browser.resize(width: 10, height: 10)
-      browser.scroll_to(200, 100)
+      browser.mouse.scroll_to(200, 100)
       expect(
         browser.evaluate("[window.scrollX, window.scrollY]")
       ).to eq([200, 100])

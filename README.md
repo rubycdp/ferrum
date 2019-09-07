@@ -267,7 +267,6 @@ Saves screenshot on a disk or returns it as base64.
   * :selector `String` css selector for given element
   * :scale `Float` zoom in/out
 
-
 ```ruby
 browser.goto("https://google.com/")
 # Save on the disk in PNG
@@ -293,7 +292,6 @@ Saves PDF on a disk or returns it as base64.
   * :paper_height `Float` set paper height
   * See other [native options](https://chromedevtools.github.io/devtools-protocol/tot/Page#method-printToPDF) you can pass
 
-
 ```ruby
 browser.goto("https://google.com/")
 # Save to disk as a PDF
@@ -316,7 +314,9 @@ Cleans up collected data.
 Returns all headers for a given request in `goto` method.
 
 
-## Input
+### Mouse
+
+browser.mouse
 
 #### scroll_to(x, y)
 
@@ -327,9 +327,10 @@ Scroll page to a given x, y
   * y `Integer` the pixel along the vertical axis of the document that you want
   displayed in the upper left
 
-### Mouse
-
-browser.mouse
+```ruby
+browser.goto("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
+browser.mouse.scroll_to(0, 400)
+```
 
 #### click(\*\*options) : `Mouse`
 

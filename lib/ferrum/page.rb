@@ -5,7 +5,6 @@ require "ferrum/keyboard"
 require "ferrum/headers"
 require "ferrum/cookies"
 require "ferrum/page/dom"
-require "ferrum/page/input"
 require "ferrum/page/runtime"
 require "ferrum/page/frame"
 require "ferrum/page/net"
@@ -51,7 +50,7 @@ module Ferrum
       end
     end
 
-    include Input, DOM, Runtime, Frame, Net, Screenshot
+    include DOM, Runtime, Frame, Net, Screenshot
 
     attr_accessor :referrer
     attr_reader :target_id, :status,

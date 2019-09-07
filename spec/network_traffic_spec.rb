@@ -3,8 +3,8 @@
 require "spec_helper"
 
 module Ferrum
-  describe "Browser::API::Input" do
-    context "network traffic" do
+  describe Browser do
+    context "network traffic support" do
       it "keeps track of network traffic" do
         browser.goto("/ferrum/with_js")
         urls = browser.network_traffic.map(&:url)

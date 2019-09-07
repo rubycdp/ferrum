@@ -3,7 +3,7 @@
 require "spec_helper"
 
 module Ferrum
-  describe "Browser::API::Input" do
+  describe Keyboard do
     context "has ability to send keys" do
       before { browser.goto("/ferrum/type") }
 

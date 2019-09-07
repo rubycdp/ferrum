@@ -24,7 +24,7 @@ module Ferrum
                 at_css at_xpath css xpath current_url title body
                 headers cookies network_traffic clear_network_traffic response_headers
                 intercept_request on_request_intercepted continue_request abort_request
-                mouse keyboard scroll_to
+                mouse keyboard
                 screenshot pdf
                 evaluate evaluate_on evaluate_async execute
                 frame_url frame_title within_frame

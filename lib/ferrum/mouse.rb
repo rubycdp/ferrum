@@ -9,6 +9,10 @@ module Ferrum
       @x = @y = 0
     end
 
+    def scroll_to(top, left)
+      tap { @page.execute("window.scrollTo(#{top}, #{left})") }
+    end
+
     def click(x:, y:, delay: 0, timeout: 0, **options)
       move(x: x, y: y)
       down(**options)
