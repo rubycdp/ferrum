@@ -13,7 +13,7 @@ module Ferrum
       end
 
       it "allows with given credentials" do
-        browser.authorize("login", "pass")
+        browser.authorize(user: "login", password: "pass")
 
         browser.goto("/ferrum/basic_auth")
 
@@ -22,7 +22,7 @@ module Ferrum
       end
 
       it "allows even overwriting headers" do
-        browser.authorize("login", "pass")
+        browser.authorize(user: "login", password: "pass")
         browser.headers.set("Cuprite" => "true")
 
         browser.goto("/ferrum/basic_auth")
@@ -32,7 +32,7 @@ module Ferrum
       end
 
       it "denies with wrong credentials" do
-        browser.authorize("user", "pass!")
+        browser.authorize(user: "user", password: "pass!")
 
         browser.goto("/ferrum/basic_auth")
 
@@ -41,7 +41,7 @@ module Ferrum
       end
 
       it "allows on POST request" do
-        browser.authorize("login", "pass")
+        browser.authorize(user: "login", password: "pass")
 
         browser.goto("/ferrum/basic_auth")
         browser.at_css(%([type="submit"])).click

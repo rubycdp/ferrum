@@ -553,19 +553,15 @@ end
 
 ## Auth
 
-#### authorize(user, password)
+#### authorize(\*\*options)
 
 If site uses authorization you can provide credentials using this method.
 
-* user `String`
-* passowrd `String`
-
-#### proxy_authorize(user, password)
-
-If you want to use proxy that requires authentication this is the method you need.
-
-* user `String`
-* passowrd `String`
+* options `Hash`
+  * :user `String`
+  * :password `String`
+  * :type `Symbol` :server by default for site authorization and :proxy if you
+    use proxy that requires authentication
 
 
 ## Interception

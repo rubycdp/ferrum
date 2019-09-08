@@ -3,40 +3,26 @@
 module Ferrum
   class Page
     module Net
+      AUTHORIZE_TYPE = %i[server proxy]
       RESOURCE_TYPES = %w[Document Stylesheet Image Media Font Script TextTrack
                           XHR Fetch EventSource WebSocket Manifest
                           SignedExchange Ping CSPViolationReport Other]
 
-      def proxy_authorize(user, password)
-        @proxy_authorized_ids ||= []
-
-        if user && password
-          intercept_request do |request, index, total|
-            if request.auth_challenge?(:proxy)
-              response = authorized_response(@proxy_authorized_ids,
-                                             request.interception_id,
-                                             user, password)
-              @proxy_authorized_ids << request.interception_id
-              request.continue(authChallengeResponse: response)
-            elsif index + 1 < total
-              next # There are other callbacks that can handle this, skip
-            else
-              request.continue
-            end
-          end
+      def authorize(user:, password:, type: :server)
+        unless AUTHORIZE_TYPE.include?(type)
+          raise ArgumentError, ":type should be in #{AUTHORIZE_TYPE}"
         end
-      end
 
-      def authorize(user, password)
-        @authorized_ids ||= []
+        @authorized_ids ||= {}
+        @authorized_ids[type] ||= []
 
         intercept_request do |request, index, total|
-          if request.auth_challenge?(:server)
-            response = authorized_response(@authorized_ids,
+          if request.auth_challenge?(type)
+            response = authorized_response(@authorized_ids[type],
                                            request.interception_id,
                                            user, password)
 
-            @authorized_ids << request.interception_id
+            @authorized_ids[type] << request.interception_id
             request.continue(authChallengeResponse: response)
           elsif index + 1 < total
             next # There are other callbacks that can handle this, skip

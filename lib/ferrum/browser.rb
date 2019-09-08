@@ -29,7 +29,7 @@ module Ferrum
                 evaluate evaluate_on evaluate_async execute
                 frame_url frame_title within_frame
                 find_modal accept_confirm dismiss_confirm accept_prompt dismiss_prompt reset_modals
-                authorize proxy_authorize] => :page
+                authorize] => :page
 
     attr_reader :process, :logger, :js_errors, :slowmo, :base_url, :options
     attr_writer :timeout
