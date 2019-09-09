@@ -2,6 +2,10 @@
 
 [![Build Status](https://travis-ci.org/route/ferrum.svg?branch=master)](https://travis-ci.org/route/ferrum)
 
+<img align="right" width="95" height="95"
+     alt="Ferrum logo"
+     src="https://raw.githubusercontent.com/route/ferrum/master/logo.svg?sanitize=true">
+
 As simple as Puppeteer, though even simpler.
 
 It is Ruby clean and high-level API to Chrome. Runs headless by default,
