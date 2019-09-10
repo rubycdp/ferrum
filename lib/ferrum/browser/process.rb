@@ -10,7 +10,8 @@ module Ferrum
   class Browser
     class Process
       KILL_TIMEOUT = 2
-      PROCESS_TIMEOUT = 2
+      WAIT_KILLED = 0.05
+      PROCESS_TIMEOUT = ENV.fetch("FERRUM_PROCESS_TIMEOUT", 2).to_i
       BROWSER_PATH = ENV["BROWSER_PATH"]
       BROWSER_HOST = "127.0.0.1"
       BROWSER_PORT = "0"
@@ -69,10 +70,10 @@ module Ferrum
               ::Process.kill("KILL", pid)
             else
               ::Process.kill("USR1", pid)
-              start = ::Process.clock_gettime(::Process::CLOCK_MONOTONIC)
+              start = Ferrum.monotonic_time
               while ::Process.wait(pid, ::Process::WNOHANG).nil?
-                sleep 0.05
-                next unless (::Process.clock_gettime(::Process::CLOCK_MONOTONIC) - start) > KILL_TIMEOUT
+                sleep(WAIT_KILLED)
+                next unless Ferrum.timeout?(start, KILL_TIMEOUT)
                 ::Process.kill("KILL", pid)
                 ::Process.wait(pid)
                 break
@@ -142,17 +143,13 @@ module Ferrum
           read_io, write_io = IO.pipe
           process_options = { in: File::NULL }
           process_options[:pgroup] = true unless Ferrum.windows?
-          if Ferrum.mri?
-            process_options[:out] = process_options[:err] = write_io
-          end
+          process_options[:out] = process_options[:err] = write_io
 
           raise Cliver::Dependency::NotFound.new(NOT_FOUND) unless @path
 
-          redirect_stdout(write_io) do
-            @cmd = [@path] + @options.map { |k, v| v.nil? ? "--#{k}" : "--#{k}=#{v}" }
-            @pid = ::Process.spawn(*@cmd, process_options)
-            ObjectSpace.define_finalizer(self, self.class.process_killer(@pid))
-          end
+          @cmd = [@path] + @options.map { |k, v| v.nil? ? "--#{k}" : "--#{k}=#{v}" }
+          @pid = ::Process.spawn(*@cmd, process_options)
+          ObjectSpace.define_finalizer(self, self.class.process_killer(@pid))
 
           parse_ws_url(read_io, @process_timeout)
         ensure
@@ -173,34 +170,17 @@ module Ferrum
 
       private
 
-      def redirect_stdout(write_io)
-        if Ferrum.mri?
-          yield
-        else
-          begin
-            prev = STDOUT.dup
-            $stdout = write_io
-            STDOUT.reopen(write_io)
-            yield
-          ensure
-            STDOUT.reopen(prev)
-            $stdout = STDOUT
-            prev.close
-          end
-        end
-      end
-
       def kill
         self.class.process_killer(@pid).call
         @pid = nil
       end
 
-      def parse_ws_url(read_io, timeout = PROCESS_TIMEOUT)
+      def parse_ws_url(read_io, timeout)
         output = ""
-        start = ::Process.clock_gettime(::Process::CLOCK_MONOTONIC)
+        start = Ferrum.monotonic_time
         max_time = start + timeout
         regexp = /DevTools listening on (ws:\/\/.*)/
-        while (now = ::Process.clock_gettime(::Process::CLOCK_MONOTONIC)) < max_time
+        while (now = Ferrum.monotonic_time) < max_time
           begin
             output += read_io.read_nonblock(512)
           rescue IO::WaitReadable

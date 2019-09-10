@@ -90,6 +90,22 @@ module Ferrum
       defined?(RUBY_ENGINE) && RUBY_ENGINE == "ruby"
     end
 
+    def started
+      @@started ||= monotonic_time
+    end
+
+    def elapsed_time(start = nil)
+      monotonic_time - (start || @@started)
+    end
+
+    def monotonic_time
+      Concurrent.monotonic_time
+    end
+
+    def timeout?(start, timeout)
+      elapsed_time(start) > timeout
+    end
+
     def with_attempts(errors:, max:, wait:)
       attempts ||= 1
       yield

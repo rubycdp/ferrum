@@ -71,9 +71,9 @@ module Ferrum
     end
 
     def wait_for_pending_requests
-      start = clock_gettime
+      start = Ferrum.monotonic_time
       while pending_requests?
-        if expired?(start, KILL_TIMEOUT)
+        if Ferrum.timeout?(start, KILL_TIMEOUT)
           raise "Requests did not finish in #{KILL_TIMEOUT} seconds"
         end
 
@@ -83,11 +83,11 @@ module Ferrum
 
     def boot!
       unless responsive?
-        start = clock_gettime
+        start = Ferrum.monotonic_time
         @server_thread = Thread.new { run }
 
         until responsive?
-          if expired?(start, KILL_TIMEOUT)
+          if Ferrum.timeout?(start, KILL_TIMEOUT)
             raise "Rack application timed out during boot"
           end
 
@@ -125,14 +125,6 @@ module Ferrum
       return res.body == app.object_id.to_s if res.is_a?(Net::HTTPSuccess) || res.is_a?(Net::HTTPRedirection)
     rescue SystemCallError, Net::ReadTimeout
       false
-    end
-
-    def clock_gettime
-      ::Process.clock_gettime(::Process::CLOCK_MONOTONIC)
-    end
-
-    def expired?(start, timeout)
-      (clock_gettime - start) > timeout
     end
 
     def pending_requests?
