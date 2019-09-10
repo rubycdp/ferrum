@@ -53,9 +53,7 @@ module Ferrum
         @ws.close
         # Give a thread some time to handle a tail of messages
         @pendings.clear
-        Timeout.timeout(1) { @thread.join }
-      rescue Timeout::Error
-        @thread.kill
+        @thread.kill unless @thread.join(1)
       end
 
       private

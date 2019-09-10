@@ -2,6 +2,7 @@
 
 module Ferrum
   class Mouse
+    CLICK_WAIT = ENV.fetch("FERRUM_CLICK_WAIT", 0.05).to_f
     VALID_BUTTONS = %w[none left middle right back forward].freeze
 
     def initialize(page)
@@ -13,12 +14,13 @@ module Ferrum
       tap { @page.execute("window.scrollTo(#{top}, #{left})") }
     end
 
-    def click(x:, y:, delay: 0, timeout: 0, **options)
+    def click(x:, y:, delay: 0, wait: CLICK_WAIT, **options)
       move(x: x, y: y)
       down(**options)
       sleep(delay)
-      # Potential wait because if network event is triggered then we have to wait until it's over.
-      up(timeout: timeout, **options)
+      # Potential wait because if some network event is triggered then we have
+      # to wait until it's over and frame is loaded or failed to load.
+      up(wait: wait, **options)
       self
     end
 
@@ -39,11 +41,11 @@ module Ferrum
 
     private
 
-    def mouse_event(type:, button: :left, count: 1, modifiers: nil, timeout: 0)
+    def mouse_event(type:, button: :left, count: 1, modifiers: nil, wait: 0)
       button = validate_button(button)
       options = { x: @x, y: @y, type: type, button: button, clickCount: count }
       options.merge!(modifiers: modifiers) if modifiers
-      @page.command("Input.dispatchMouseEvent", timeout: timeout, **options)
+      @page.command("Input.dispatchMouseEvent", wait: wait, **options)
     end
 
     def validate_button(button)

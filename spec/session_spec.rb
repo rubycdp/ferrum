@@ -10,7 +10,6 @@ module Ferrum
         node = browser.at_css("#remove_me")
         expect(node.text).to eq("Remove me")
         browser.at_css("#remove").click
-        sleep 1
         expect { node.text }.to raise_error(Ferrum::NodeNotFoundError)
       end
 
@@ -18,12 +17,14 @@ module Ferrum
         browser.goto("/ferrum/index")
         node = browser.at_xpath(".//a")
         browser.execute "window.location = 'about:blank'"
-        # expect { node.text }.to raise_error(Ferrum::ObsoleteNode)
+        expect { node.text }.to raise_error(Ferrum::NodeNotFoundError)
       end
 
       it "raises an error if the element is not visible" do
         browser.goto("/ferrum/index")
-        browser.execute %(document.querySelector("a[href=js_redirect]").style.display = "none")
+        browser.execute <<~JS
+          document.querySelector("a[href=js_redirect]").style.display = "none"
+        JS
         expect { browser.at_xpath("//a[text()='JS redirect']").click }.to raise_error(Ferrum::BrowserError, "Could not compute content quads.")
       end
 

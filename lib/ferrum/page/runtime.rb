@@ -3,6 +3,9 @@
 module Ferrum
   class Page
     module Runtime
+      INTERMITTENT_ATTEMPTS = ENV.fetch("FERRUM_INTERMITTENT_ATTEMPTS", 6).to_i
+      INTERMITTENT_SLEEP = ENV.fetch("FERRUM_INTERMITTENT_SLEEP", 0.1).to_f
+
       EXECUTE_OPTIONS = {
         returnByValue: true,
         functionDeclaration: %(function() { %s })
@@ -41,12 +44,11 @@ module Ferrum
         true
       end
 
-      def evaluate_on(node:, expression:, by_value: true, timeout: 0)
+      def evaluate_on(node:, expression:, by_value: true, wait: 0)
         errors = [NodeNotFoundError, NoExecutionContextError]
-        max = ENV.fetch("FERRUM_INTERMITTENT_ATTEMPTS", 6).to_i
-        wait = ENV.fetch("FERRUM_INTERMITTENT_SLEEP", 0.1).to_f
+        attempts, sleep = INTERMITTENT_ATTEMPTS, INTERMITTENT_SLEEP
 
-        Ferrum.with_attempts(errors: errors, max: max, wait: wait) do
+        Ferrum.with_attempts(errors: errors, max: attempts, wait: sleep) do
           response = command("DOM.resolveNode", nodeId: node.node_id)
           object_id = response.dig("object", "objectId")
           options = DEFAULT_OPTIONS.merge(objectId: object_id)
@@ -54,8 +56,8 @@ module Ferrum
           options.merge!(returnByValue: by_value)
 
           response = command("Runtime.callFunctionOn",
-                             timeout: timeout,
-                             **options)["result"].tap { |r| handle_error(r) }
+                             wait: wait, **options)["result"]
+                            .tap { |r| handle_error(r) }
 
           by_value ? response.dig("value") : handle_response(response)
         end
@@ -65,10 +67,9 @@ module Ferrum
 
       def call(*args, expression:, wait_time: nil, handle: true, **options)
         errors = [NodeNotFoundError, NoExecutionContextError]
-        max = ENV.fetch("FERRUM_INTERMITTENT_ATTEMPTS", 6).to_i
-        wait = ENV.fetch("FERRUM_INTERMITTENT_SLEEP", 0.1).to_f
+        attempts, sleep = INTERMITTENT_ATTEMPTS, INTERMITTENT_SLEEP
 
-        Ferrum.with_attempts(errors: errors, max: max, wait: wait) do
+        Ferrum.with_attempts(errors: errors, max: attempts, wait: sleep) do
           arguments = prepare_args(args)
           params = DEFAULT_OPTIONS.merge(options)
           expression = [wait_time, expression] if wait_time

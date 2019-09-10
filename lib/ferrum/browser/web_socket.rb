@@ -36,8 +36,6 @@ module Ferrum
           end
         end
 
-        @thread.priority = 1
-
         @driver.start
       end
 
@@ -49,7 +47,7 @@ module Ferrum
       def on_message(event)
         data = JSON.parse(event.data)
         @messages.push(data)
-        @logger&.puts("    ◀ #{event.data}\n")
+        @logger&.puts("    ◀ #{Ferrum.elapsed_time} #{event.data}\n")
       end
 
       def on_close(_event)
@@ -60,7 +58,7 @@ module Ferrum
       def send_message(data)
         json = data.to_json
         @driver.text(json)
-        @logger&.puts("\n\n▶ #{json}")
+        @logger&.puts("\n\n▶ #{Ferrum.elapsed_time} #{json}")
       end
 
       def write(data)

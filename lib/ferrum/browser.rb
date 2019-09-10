@@ -9,7 +9,7 @@ require "ferrum/browser/client"
 
 module Ferrum
   class Browser
-    TIMEOUT = 5
+    DEFAULT_TIMEOUT = ENV.fetch("FERRUM_DEFAULT_TIMEOUT", 5).to_i
     WINDOW_SIZE = [1024, 768].freeze
     BASE_URL_SCHEMA = %w[http https].freeze
 
@@ -75,7 +75,7 @@ module Ferrum
     end
 
     def timeout
-      @timeout || TIMEOUT
+      @timeout || DEFAULT_TIMEOUT
     end
 
     def command(*args)
@@ -121,6 +121,7 @@ module Ferrum
     private
 
     def start
+      Ferrum.started
       @process = Process.start(@options)
       @client = Client.new(self, @process.ws_url, 0, false)
     end

@@ -34,7 +34,8 @@ require "ferrum/network/intercepted_request"
 # details (DOM.describeNode).
 module Ferrum
   class Page
-    NEW_WINDOW_BUG_SLEEP = 0.3
+    MODAL_WAIT = ENV.fetch("FERRUM_MODAL_WAIT", 0.05).to_f
+    NEW_WINDOW_WAIT = ENV.fetch("FERRUM_NEW_WINDOW_WAIT", 0.3).to_f
 
     class Event < Concurrent::Event
       def iteration
@@ -45,7 +46,7 @@ module Ferrum
         synchronize do
           @iteration += 1
           @set = false if @set
-          true
+          @iteration
         end
       end
     end
@@ -70,7 +71,7 @@ module Ferrum
       @modal_messages = []
 
       # Dirty hack because new window doesn't have events at all
-      sleep(NEW_WINDOW_BUG_SLEEP) if new_window
+      sleep(NEW_WINDOW_WAIT) if new_window
 
       @session_id = @browser.command("Target.attachToTarget", targetId: @target_id)["sessionId"]
 
@@ -93,7 +94,7 @@ module Ferrum
     def goto(url = nil)
       options = { url: combine_url!(url) }
       options.merge!(referrer: referrer) if referrer
-      response = command("Page.navigate", timeout: timeout, **options)
+      response = command("Page.navigate", wait: timeout, **options)
       # https://cs.chromium.org/chromium/src/net/base/net_error_list.h
       if %w[net::ERR_NAME_NOT_RESOLVED
             net::ERR_NAME_RESOLUTION_FAILED
@@ -129,7 +130,7 @@ module Ferrum
     end
 
     def refresh
-      command("Page.reload", timeout: timeout)
+      command("Page.reload", wait: timeout)
     end
 
     def network_traffic(type = nil)
@@ -173,9 +174,9 @@ module Ferrum
     end
 
     def find_modal(options)
-      start_time    = ::Process.clock_gettime(::Process::CLOCK_MONOTONIC)
-      timeout_sec   = options.fetch(:wait) { session_wait_time }
-      expect_text   = options[:text]
+      start = Ferrum.monotonic_time
+      timeout = options.fetch(:wait) { session_wait_time }
+      expect_text = options[:text]
       expect_regexp = expect_text.is_a?(Regexp) ? expect_text : Regexp.escape(expect_text.to_s)
       not_found_msg = "Unable to find modal dialog"
       not_found_msg += " with #{expect_text}" if expect_text
@@ -184,8 +185,8 @@ module Ferrum
         modal_text = @modal_messages.shift
         raise ModalNotFoundError if modal_text.nil? || (expect_text && !modal_text.match(expect_regexp))
       rescue ModalNotFoundError => e
-        raise e, not_found_msg if (::Process.clock_gettime(::Process::CLOCK_MONOTONIC) - start_time) >= timeout_sec
-        sleep(0.05)
+        raise e, not_found_msg if Ferrum.timeout?(start, timeout)
+        sleep(MODAL_WAIT)
         retry
       end
 
@@ -198,12 +199,13 @@ module Ferrum
       @modal_messages = []
     end
 
-    def command(method, timeout: 0, **params)
-      @event.reset if timeout > 0
-      iteration = @event.iteration
+    def command(method, wait: 0, **params)
+      iteration = @event.reset if wait > 0
       result = @client.command(method, params)
-      @event.wait(timeout) if timeout > 0
-      @event.wait(@browser.timeout) if iteration != @event.iteration
+      if wait > 0
+        @event.wait(wait)
+        @event.wait(@browser.timeout) if iteration != @event.iteration
+      end
       result
     end
 
@@ -220,6 +222,7 @@ module Ferrum
 
       if @browser.js_errors
         @client.on("Runtime.exceptionThrown") do |params|
+          # FIXME https://jvns.ca/blog/2015/11/27/why-rubys-timeout-is-dangerous-and-thread-dot-raise-is-terrifying/
           Thread.main.raise JavaScriptError.new(params.dig("exceptionDetails", "exception"))
         end
       end
@@ -363,7 +366,7 @@ module Ferrum
 
       if entry = entries[index + delta]
         # Potential wait because of network event
-        command("Page.navigateToHistoryEntry", timeout: 0.05, entryId: entry["id"])
+        command("Page.navigateToHistoryEntry", wait: Mouse::CLICK_WAIT, entryId: entry["id"])
       end
     end
 
