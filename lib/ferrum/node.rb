@@ -53,10 +53,6 @@ module Ferrum
       raise NotImplementedError
     end
 
-    def trigger(event)
-      raise NotImplementedError
-    end
-
     def select_file(value)
       page.command("DOM.setFileInputFiles", nodeId: node_id, files: Array(value))
     end
@@ -79,6 +75,11 @@ module Ferrum
 
     def text
       evaluate("this.textContent")
+    end
+
+    # FIXME: clear API for text and inner_text
+    def inner_text
+      evaluate("this.innerText")
     end
 
     def value

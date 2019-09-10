@@ -555,17 +555,16 @@ end
 #### reset_modals
 
 
-## Auth
+## Authorization
 
 #### authorize(\*\*options)
 
 If site uses authorization you can provide credentials using this method.
 
 * options `Hash`
+  * :type `Symbol` `:server` | `:proxy` site or proxy authorization
   * :user `String`
   * :password `String`
-  * :type `Symbol` :server by default for site authorization and :proxy if you
-    use proxy that requires authentication
 
 
 ## Interception

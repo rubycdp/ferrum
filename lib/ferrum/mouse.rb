@@ -2,7 +2,7 @@
 
 module Ferrum
   class Mouse
-    CLICK_WAIT = ENV.fetch("FERRUM_CLICK_WAIT", 0.05).to_f
+    CLICK_WAIT = ENV.fetch("FERRUM_CLICK_WAIT", 0.1).to_f
     VALID_BUTTONS = %w[none left middle right back forward].freeze
 
     def initialize(page)

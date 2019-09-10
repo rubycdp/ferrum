@@ -166,7 +166,7 @@ module Ferrum
       end
     end
 
-    context "set" do
+    context "type" do
       let(:delete_all) { [ [(Ferrum.mac? ? :alt : :ctrl), :shift, :right], :backspace ] }
 
       before { browser.goto("/ferrum/set") }
@@ -233,6 +233,88 @@ module Ferrum
           input.focus.type("a")
 
           expect(output.text.strip).to eq("keydown keypress input keyup change keydown keypress input keyup")
+        end
+      end
+    end
+
+    describe "events" do
+      let(:change_me) { browser.at_css("#change_me") }
+
+      before do
+        browser.goto("/ferrum/with_js")
+        change_me.focus.type("Hello!")
+      end
+
+      it "fires the change event", skip: true do
+        expect(browser.at_css("#changes").text).to eq("Hello!")
+      end
+
+      it "fires the input event" do
+        expect(browser.at_css("#changes_on_input").text).to eq("Hello!")
+      end
+
+      it "accepts numbers in a maxlength field" do
+        element = browser.at_css("#change_me_maxlength")
+        element.focus.type("100")
+        expect(element.value).to eq("100")
+      end
+
+      it "accepts negatives in a number field" do
+        element = browser.at_css("#change_me_number")
+        element.focus.type("-100")
+        expect(element.value).to eq("-100")
+      end
+
+      it "fires the keydown event" do
+        expect(browser.at_css("#changes_on_keydown").text).to eq("6")
+      end
+
+      it "fires the keyup event" do
+        expect(browser.at_css("#changes_on_keyup").text).to eq("6")
+      end
+
+      it "fires the keypress event" do
+        expect(browser.at_css("#changes_on_keypress").text).to eq("6")
+      end
+
+      it "fires the focus event" do
+        expect(browser.at_css("#changes_on_focus").text).to eq("Focus")
+      end
+
+      it "fires the blur event" do
+        change_me.blur
+        expect(browser.at_css("#changes_on_blur").text).to eq("Blur")
+      end
+
+      it "fires the keydown event before the value is updated" do
+        expect(browser.at_css("#value_on_keydown").text).to eq("Hello")
+      end
+
+      it "fires the keyup event after the value is updated" do
+        expect(browser.at_css("#value_on_keyup").text).to eq("Hello!")
+      end
+
+      it "clears the input" do
+        keys = Ferrum.mac? ? %i[Alt Shift Left] : %i[Ctrl Shift Left]
+        change_me.type(keys, :backspace)
+        expect(change_me.value).to eq("")
+      end
+
+      it "supports special characters" do
+        change_me.type("$52.00")
+        expect(change_me.value).to eq("Hello!$52.00")
+      end
+
+      it "attaches a file when passed a Pathname", skip: true do
+        begin
+          filename = Pathname.new("spec/tmp/a_test_pathname").expand_path
+          File.open(filename, "w") { |f| f.write("text") }
+
+          element = browser.at_css("#change_me_file")
+          element.set(filename)
+          expect(element.value).to eq("C:\\fakepath\\a_test_pathname")
+        ensure
+          FileUtils.rm_f(filename)
         end
       end
     end

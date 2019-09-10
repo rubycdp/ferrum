@@ -486,17 +486,308 @@ module Ferrum
       end
     end
 
-    it "can get the frames url" do
-      browser.goto("/ferrum/frames")
+    it "handles evaluate values properly" do
+      expect(browser.evaluate("null")).to be_nil
+      expect(browser.evaluate("false")).to be false
+      expect(browser.evaluate("true")).to be true
+      expect(browser.evaluate("undefined")).to eq(nil)
 
-      frame = browser.at_xpath("//iframe")
-      browser.within_frame(frame) do
-        expect(browser.frame_url).to end_with("/ferrum/slow")
-        expect(browser.current_url).to end_with("/ferrum/frames")
+      expect(browser.evaluate("3;")).to eq(3)
+      expect(browser.evaluate("31337")).to eq(31337)
+      expect(browser.evaluate(%("string"))).to eq("string")
+      expect(browser.evaluate(%({foo: "bar"}))).to eq("foo" => "bar")
+
+      expect(browser.evaluate("new Object")).to eq({})
+      expect(browser.evaluate("new Date(2012, 0).toDateString()")).to eq("Sun Jan 01 2012")
+      expect(browser.evaluate("new Object({a: 1})")).to eq({"a" => 1})
+      expect(browser.evaluate("new Array")).to eq([])
+      expect(browser.evaluate("new Function")).to eq({})
+
+      expect { browser.evaluate(%(throw "smth")) }.to raise_error(Ferrum::JavaScriptError)
+    end
+
+    it "ignores cyclic structure errors in evaluate" do
+      code = <<-JS
+        (function() {
+          var a = {};
+          var b = {};
+          var c = {};
+          c.a = a;
+          a.a = a;
+          a.b = b;
+          a.c = c;
+          return a;
+        })()
+      JS
+
+      expect(browser.evaluate(code)).to eq("(cyclic structure)")
+    end
+
+    it "synchronizes page loads properly" do
+      browser.goto("/ferrum/index")
+      browser.at_xpath("//a[text() = 'JS redirect']").click
+      sleep 0.1
+      expect(browser.body).to include("Hello world")
+    end
+
+    context "status support" do
+      it "determines status code when user goes to a page by using a link on it" do
+        browser.goto("/ferrum/with_different_resources")
+
+        browser.at_xpath("//a[text() = 'Go to 500']").click
+
+        expect(browser.status).to eq(500)
       end
 
-      expect(browser.frame_url).to end_with("/ferrum/frames")
-      expect(browser.current_url).to end_with("/ferrum/frames")
+      it "determines properly status when user goes through a few pages", skip: true do
+        browser.goto("/ferrum/with_different_resources")
+
+        browser.at_xpath("//a[text() = 'Go to 201']").click
+        browser.at_xpath("//a[text() = 'Do redirect']").click
+        browser.at_xpath("//a[text() = 'Go to 402']").click
+
+        expect(browser.status_code).to eq(402)
+      end
+    end
+
+    it "returns BR as new line in #text" do
+      browser.goto("/ferrum/simple")
+      el = browser.at_css("#break")
+      expect(el.inner_text).to eq("Foo\nBar")
+      expect(browser.at_css("#break").text).to eq("FooBar")
+    end
+
+    it "handles hash changes" do
+      browser.goto("/#omg")
+      expect(browser.current_url).to match(%r{/#omg$})
+      browser.execute <<-JS
+        window.onhashchange = function() { window.last_hashchange = window.location.hash }
+      JS
+      browser.goto("/#foo")
+      expect(browser.current_url).to match(%r{/#foo$})
+      expect(browser.evaluate("window.last_hashchange")).to eq("#foo")
+    end
+
+    context "current_url" do
+      it "supports whitespace characters" do
+        browser.goto("/ferrum/arbitrary_path/200/foo%20bar%20baz")
+        expect(browser.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo%20bar%20baz"))
+      end
+
+      it "supports escaped characters" do
+        browser.goto("/ferrum/arbitrary_path/200/foo?a%5Bb%5D=c")
+        expect(browser.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo?a%5Bb%5D=c"))
+      end
+
+      it "supports url in parameter" do
+        browser.goto("/ferrum/arbitrary_path/200/foo%20asd?a=http://example.com/asd%20asd")
+        expect(browser.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo%20asd?a=http://example.com/asd%20asd"))
+      end
+
+      it "supports restricted characters ' []:/+&='" do
+        browser.goto("/ferrum/arbitrary_path/200/foo?a=%20%5B%5D%3A%2F%2B%26%3D")
+        expect(browser.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo?a=%20%5B%5D%3A%2F%2B%26%3D"))
+      end
+
+      it "returns about:blank when on about:blank" do
+        browser.goto("about:blank")
+        expect(browser.current_url).to eq("about:blank")
+      end
+    end
+
+    context "dragging support", skip: true do
+      before { browser.goto("/ferrum/drag") }
+
+      it "supports drag_to" do
+        draggable = browser.at_css("#drag_to #draggable")
+        droppable = browser.at_css("#drag_to #droppable")
+
+        draggable.drag_to(droppable)
+        expect(droppable).to have_content("Dropped")
+      end
+
+      it "supports drag_by on native element" do
+        draggable = browser.at_css("#drag_by .draggable")
+
+        top_before = browser.evaluate(%($("#drag_by .draggable").position().top))
+        left_before = browser.evaluate(%($("#drag_by .draggable").position().left))
+
+        draggable.native.drag_by(15, 15)
+
+        top_after = browser.evaluate(%($("#drag_by .draggable").position().top))
+        left_after = browser.evaluate(%($("#drag_by .draggable").position().left))
+
+        expect(top_after).to eq(top_before + 15)
+        expect(left_after).to eq(left_before + 15)
+      end
+    end
+
+    context "window switching support", skip: true do
+      it "waits for the window to load" do
+        browser.goto
+
+        popup = browser.window_opened_by do
+          browser.execute <<-JS
+            window.open("/ferrum/slow", "popup")
+          JS
+        end
+
+        browser.within_window(popup) do
+          expect(browser.html).to include("slow page")
+        end
+        popup.close
+      end
+
+      it "can access a second window of the same name" do
+        browser.goto
+
+        popup = browser.window_opened_by do
+          browser.execute <<-JS
+            window.open("/ferrum/simple", "popup")
+          JS
+        end
+        browser.within_window(popup) do
+          expect(browser.html).to include("Test")
+        end
+        popup.close
+
+        sleep 0.5 # https://github.com/ChromeDevTools/devtools-protocol/issues/145
+
+        same = browser.window_opened_by do
+          browser.execute <<-JS
+            window.open("/ferrum/simple", "popup")
+          JS
+        end
+        browser.within_window(same) do
+          expect(browser.html).to include("Test")
+        end
+        same.close
+      end
+    end
+
+    it "handles obsolete node during an attach_file", skip: true do
+      browser.goto("/ferrum/attach_file")
+      browser.attach_file "file", __FILE__
+    end
+
+    it "throws an error on an invalid selector", skip: true do
+      browser.goto("/ferrum/table")
+      expect { browser.at_css("table tr:last") }.to raise_error(Ferrum::InvalidSelector)
+    end
+
+    it "throws an error on wrong xpath", skip: true do
+      browser.goto("/ferrum/with_js")
+      expect { browser.at_xpath("#remove_me") }.to raise_error(Ferrum::InvalidSelector)
+    end
+
+    context "whitespace stripping tests", skip: true do
+      before do
+        browser.goto("/ferrum/filter_text_test")
+      end
+
+      it "gets text" do
+        expect(browser.at_css("#foo").text).to eq "foo"
+      end
+
+      it "gets text stripped whitespace" do
+        expect(browser.at_css("#bar").inner_text).to eq "bar"
+      end
+
+      it "gets text stripped whitespace and then converts nbsp to space" do
+        expect(browser.at_css("#baz").inner_text).to eq " baz    "
+      end
+
+      it "gets text stripped whitespace" do
+        expect(browser.at_css("#qux").text).to eq "  \u3000 qux \u3000  "
+      end
+    end
+
+    context "supports accessing element properties" do
+      before do
+        browser.goto("/ferrum/attributes_properties")
+      end
+
+      it "gets property innerHTML" do
+        expect(browser.at_css(".some_other_class").property("innerHTML")).to eq "<p>foobar</p>"
+      end
+
+      it "gets property outerHTML" do
+        el = browser.at_css(".some_other_class")
+        expect(el.property("outerHTML"))
+          .to eq %(<div class="some_other_class"><p>foobar</p></div>)
+      end
+
+      it "gets non existent property" do
+        el = browser.at_css(".some_other_class")
+        expect(el.property("does_not_exist")).to eq nil
+      end
+    end
+
+    context "SVG tests" do
+      before do
+        browser.goto("/ferrum/svg_test")
+      end
+
+      it "gets text from tspan node" do
+        expect(browser.at_css("tspan").text).to eq "svg foo"
+      end
+    end
+
+    it "can go back when history state has been pushed" do
+      browser.goto
+      browser.execute(%(window.history.pushState({foo: "bar"}, "title", "bar2.html");))
+      expect(browser.current_url).to eq(base_url("/bar2.html"))
+      expect { browser.back }.not_to raise_error
+      expect(browser.current_url).to eq(base_url("/"))
+    end
+
+    it "can go forward when history state is used" do
+      browser.goto
+      browser.execute(%(window.history.pushState({foo: "bar"}, "title", "bar2.html");))
+      expect(browser.current_url).to eq(base_url("/bar2.html"))
+      # don't use #back here to isolate the test
+      browser.execute("window.history.go(-1);")
+      expect(browser.current_url).to eq(base_url("/"))
+      expect { browser.forward }.not_to raise_error
+      expect(browser.current_url).to eq(base_url("/bar2.html"))
+    end
+
+    if Ferrum.mri? && !Ferrum.windows?
+      require "pty"
+      require "timeout"
+
+      context "with pty" do
+        before do
+          Tempfile.open(%w[test rb]) do |file|
+            file.print(script)
+            file.flush
+
+            Timeout.timeout(10) do
+              PTY.spawn("bundle exec ruby #{file.path}") do |read, write, pid|
+                sleep 0.01 until read.readline.chomp == "Please type enter"
+                write.puts
+                sleep 0.1 until (status = PTY.check(pid))
+                @status = status
+              end
+            end
+          end
+        end
+
+        let(:script) do
+          <<-RUBY
+            require "ferrum"
+            browser = Ferrum::Browser.new
+            browser.goto("http://example.com")
+            puts "Please type enter"
+            sleep 1
+            browser.current_url
+          RUBY
+        end
+
+        it do
+          expect(@status).to be_success
+        end
+      end
     end
   end
 end
