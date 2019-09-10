@@ -173,12 +173,24 @@ module Ferrum
                       return false;
                     }
 
-                    try {
-                      JSON.stringify(this);
+                    const seen = [];
+                    function detectCycle(obj) {
+                      if (typeof obj === 'object') {
+                        if (seen.indexOf(obj) !== -1) {
+                          return true;
+                        }
+                        seen.push(obj);
+                        for (let key in obj) {
+                          if (obj.hasOwnProperty(key) && detectCycle(obj[key])) {
+                            return true;
+                          }
+                        }
+                      }
+
                       return false;
-                    } catch (e) {
-                      return true;
                     }
+
+                    return detectCycle(this);
                   }
                 JS
                )
