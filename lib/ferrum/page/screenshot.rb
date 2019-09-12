@@ -30,6 +30,10 @@ module Ferrum
         encoding = encoding.to_sym
         encoding = :binary if path
 
+        if encoding == :binary && !path
+          raise "You have to provide `:path` for `:binary` encoding"
+        end
+
         [path, encoding]
       end
 
