@@ -15,7 +15,8 @@ module Ferrum
       end
 
       it "keeps track of blocked network traffic" do
-        browser.intercept_request do |request|
+        browser.intercept_request
+        browser.on(:request_intercepted) do |request|
           request.match?(/unwanted/) ? request.abort : request.continue
         end
 
@@ -69,7 +70,8 @@ module Ferrum
       end
 
       it "blocked requests get cleared along with network traffic" do
-        browser.intercept_request do |request|
+        browser.intercept_request
+        browser.on(:request_intercepted) do |request|
           request.match?(/unwanted/) ? request.abort : request.continue
         end
 

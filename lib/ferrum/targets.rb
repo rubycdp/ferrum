@@ -11,7 +11,7 @@ module Ferrum
       @browser = browser
       @_default = targets.first["targetId"]
 
-      @browser.on("Target.detachedFromTarget") do |params|
+      @browser.client.on("Target.detachedFromTarget") do |params|
         page = remove_page(params["targetId"])
         page&.close_connection
       end

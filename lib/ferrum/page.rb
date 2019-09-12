@@ -4,6 +4,7 @@ require "ferrum/mouse"
 require "ferrum/keyboard"
 require "ferrum/headers"
 require "ferrum/cookies"
+require "ferrum/dialog"
 require "ferrum/page/dom"
 require "ferrum/page/runtime"
 require "ferrum/page/frame"
@@ -34,7 +35,6 @@ require "ferrum/network/intercepted_request"
 # details (DOM.describeNode).
 module Ferrum
   class Page
-    MODAL_WAIT = ENV.fetch("FERRUM_MODAL_WAIT", 0.05).to_f
     NEW_WINDOW_WAIT = ENV.fetch("FERRUM_NEW_WINDOW_WAIT", 0.3).to_f
 
     class Event < Concurrent::Event
@@ -67,8 +67,6 @@ module Ferrum
       @frames = {}
       @waiting_frames ||= Set.new
       @frame_stack = []
-      @accept_modal = []
-      @modal_messages = []
 
       # Dirty hack because new window doesn't have events at all
       sleep(NEW_WINDOW_WAIT) if new_window
@@ -156,49 +154,6 @@ module Ferrum
       history_navigate(delta: 1)
     end
 
-    def accept_confirm
-      @accept_modal << true
-    end
-
-    def dismiss_confirm
-      @accept_modal << false
-    end
-
-    def accept_prompt(modal_response)
-      @accept_modal << true
-      @modal_response = modal_response
-    end
-
-    def dismiss_prompt
-      @accept_modal << false
-    end
-
-    def find_modal(options)
-      start = Ferrum.monotonic_time
-      timeout = options.fetch(:wait) { session_wait_time }
-      expect_text = options[:text]
-      expect_regexp = expect_text.is_a?(Regexp) ? expect_text : Regexp.escape(expect_text.to_s)
-      not_found_msg = "Unable to find modal dialog"
-      not_found_msg += " with #{expect_text}" if expect_text
-
-      begin
-        modal_text = @modal_messages.shift
-        raise ModalNotFoundError if modal_text.nil? || (expect_text && !modal_text.match(expect_regexp))
-      rescue ModalNotFoundError => e
-        raise e, not_found_msg if Ferrum.timeout?(start, timeout)
-        sleep(MODAL_WAIT)
-        retry
-      end
-
-      modal_text
-    end
-
-    def reset_modals
-      @accept_modal = []
-      @modal_response = nil
-      @modal_messages = []
-    end
-
     def command(method, wait: 0, **params)
       iteration = @event.reset if wait > 0
       result = @client.command(method, params)
@@ -207,6 +162,23 @@ module Ferrum
         @event.wait(@browser.timeout) if iteration != @event.iteration
       end
       result
+    end
+
+    def on(name, &block)
+      case name
+      when :dialog
+        @client.on("Page.javascriptDialogOpening") do |params, index, total|
+          dialog = Dialog.new(self, params)
+          block.call(dialog, index, total)
+        end
+      when :request_intercepted
+        @client.on("Network.requestIntercepted") do |params, index, total|
+          request = Network::InterceptedRequest.new(self, params)
+          block.call(request, index, total)
+        end
+      else
+        @client.on(name, &block)
+      end
     end
 
     private
@@ -224,24 +196,6 @@ module Ferrum
         @client.on("Runtime.exceptionThrown") do |params|
           # FIXME https://jvns.ca/blog/2015/11/27/why-rubys-timeout-is-dangerous-and-thread-dot-raise-is-terrifying/
           Thread.main.raise JavaScriptError.new(params.dig("exceptionDetails", "exception"))
-        end
-      end
-
-      @client.on("Page.javascriptDialogOpening") do |params|
-        accept_modal = @accept_modal.last
-        if accept_modal == true || accept_modal == false
-          @accept_modal.pop
-          @modal_messages << params["message"]
-          options = { accept: accept_modal }
-          response = @modal_response || params["defaultPrompt"]
-          options.merge!(promptText: response) if response
-          command("Page.handleJavaScriptDialog", **options)
-        else
-          warn "Modal window has been opened, but you didn't wrap your code into (`accept_prompt` | `dismiss_prompt` | `accept_confirm` | `dismiss_confirm` | `accept_alert`), accepting by default"
-          options = { accept: true }
-          response = params["defaultPrompt"]
-          options.merge!(promptText: response) if response
-          command("Page.handleJavaScriptDialog", **options)
         end
       end
 

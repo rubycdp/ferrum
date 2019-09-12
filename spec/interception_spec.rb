@@ -6,7 +6,8 @@ module Ferrum
   describe Browser do
     context "interception support" do
       it "blocks unwanted urls" do
-        browser.intercept_request do |request|
+        browser.intercept_request
+        browser.on(:request_intercepted) do |request|
           request.match?(/unwanted/) ? request.abort : request.continue
         end
 
@@ -22,7 +23,8 @@ module Ferrum
       end
 
       it "supports wildcards" do
-        browser.intercept_request do |request|
+        browser.intercept_request
+        browser.on(:request_intercepted) do |request|
           request.match?(/.*wanted/) ? request.abort : request.continue
         end
 
@@ -43,7 +45,8 @@ module Ferrum
       end
 
       it "allows whitelisted urls" do
-        browser.intercept_request do |request|
+        browser.intercept_request
+        browser.on(:request_intercepted) do |request|
           request.match?(%r{url_whitelist|/wanted}) ? request.continue : request.abort
         end
 
@@ -64,7 +67,8 @@ module Ferrum
       end
 
       it "supports wildcards" do
-        browser.intercept_request do |request|
+        browser.intercept_request
+        browser.on(:request_intercepted) do |request|
           request.match?(%r{url_whitelist|/.*wanted}) ? request.continue : request.abort
         end
 

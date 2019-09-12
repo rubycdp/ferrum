@@ -545,16 +545,6 @@ end
 ```
 
 
-## Modals
-
-#### find_modal
-#### accept_confirm
-#### dismiss_confirm
-#### accept_prompt
-#### dismiss_prompt
-#### reset_modals
-
-
 ## Authorization
 
 #### authorize(\*\*options)
@@ -567,13 +557,52 @@ If site uses authorization you can provide credentials using this method.
   * :password `String`
 
 
-## Interception
+## Dialog
 
-#### intercept_request
+#### accept(text)
+
+Accept dialog with given text or default prompt if applicable
+
+  * text `String`
+
+#### dismiss
+
+Dismiss dialog
 
 ```ruby
 browser = Ferrum::Browser.new
-browser.intercept_request do |request|
+browser.on(:dialog) do |dialog|
+  if dialog.match?(/bla-bla/)
+    dialog.accept
+  else
+    dialog.dismiss
+  end
+end
+browser.goto("https://google.com")
+```
+
+
+## Interception
+
+#### intercept_request(\*\*options)
+
+Set request interception for given options. This method is only sets request
+interception, you should use `on` callback to catch it.
+
+* options `Hash`
+  * :pattern `String` \* by default
+  * :resource_type `Symbol` one of the [resource types](https://chromedevtools.github.io/devtools-protocol/tot/Network#type-ResourceType)
+
+#### on(event)
+
+Set callback for given event.
+
+* event `Symbol`
+
+```ruby
+browser = Ferrum::Browser.new
+browser.intercept_request
+browser.on(:request_intercepted) do |request|
   if request.match?(/bla-bla/)
     request.abort
   else

@@ -14,24 +14,21 @@ module Ferrum
     BASE_URL_SCHEMA = %w[http https].freeze
 
     extend Forwardable
-
-    attr_reader :window_size
-
-    delegate on: :@client
     delegate %i[window_handle window_handles switch_to_window
                 open_new_window close_window within_window page] => :targets
     delegate %i[goto back forward refresh status
                 at_css at_xpath css xpath current_url title body
                 headers cookies network_traffic clear_network_traffic response_headers
-                intercept_request on_request_intercepted continue_request abort_request
+                intercept_request continue_request abort_request
                 mouse keyboard
                 screenshot pdf
                 evaluate evaluate_on evaluate_async execute
                 frame_url frame_title within_frame
-                find_modal accept_confirm dismiss_confirm accept_prompt dismiss_prompt reset_modals
-                authorize] => :page
+                authorize
+                on] => :page
 
-    attr_reader :process, :logger, :js_errors, :slowmo, :base_url, :options
+    attr_reader :client, :process, :logger, :js_errors, :slowmo, :base_url,
+                :options, :window_size
     attr_writer :timeout
 
     def initialize(options = nil)

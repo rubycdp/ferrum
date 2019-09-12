@@ -6,7 +6,6 @@ require "ferrum/node"
 module Ferrum
   class Error               < StandardError; end
   class NoSuchWindowError   < Error; end
-  class ModalNotFoundError  < Error; end
   class NotImplementedError < Error; end
 
   class EmptyTargetsError < Error

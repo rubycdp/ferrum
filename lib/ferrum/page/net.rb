@@ -16,7 +16,9 @@ module Ferrum
         @authorized_ids ||= {}
         @authorized_ids[type] ||= []
 
-        intercept_request do |request, index, total|
+        intercept_request
+
+        on(:request_intercepted) do |request, index, total|
           if request.auth_challenge?(type)
             response = authorized_response(@authorized_ids[type],
                                            request.interception_id,
@@ -32,22 +34,13 @@ module Ferrum
         end
       end
 
-      def intercept_request(pattern: "*", resource_type: nil, &block)
+      def intercept_request(pattern: "*", resource_type: nil)
         pattern = { urlPattern: pattern }
         if resource_type && RESOURCE_TYPES.include?(resource_type.to_s)
           pattern[:resourceType] = resource_type
         end
 
         command("Network.setRequestInterception", patterns: [pattern])
-
-        on_request_intercepted(&block) if block_given?
-      end
-
-      def on_request_intercepted(&block)
-        @client.on("Network.requestIntercepted") do |params, index, total|
-          request = Network::InterceptedRequest.new(self, params)
-          block.call(request, index, total)
-        end
       end
 
       def continue_request(interception_id, options = nil)
