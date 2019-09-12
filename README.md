@@ -286,8 +286,8 @@ browser.screenshot(full: true, quality: 60) # "iVBORw0KGgoAAAANSUhEUgAABAAAAAMAC
 Saves PDF on a disk or returns it as base64.
 
 * options `Hash`
-  * :path `String` to save a screenshot on the disk. If passed `:encoding` is
-    set to `:binary` automatically
+  * :path `String` to save a pdf on the disk. `:encoding` will be set to
+    `:binary` automatically
   * :encoding `Symbol` `:base64` | `:binary` you can set it to return pdf as
     Base64
   * :landscape `Boolean` paper orientation. Defaults to false.
