@@ -43,16 +43,6 @@ module Ferrum
         command("Network.setRequestInterception", patterns: [pattern])
       end
 
-      def continue_request(interception_id, options = nil)
-        options ||= {}
-        options = options.merge(interceptionId: interception_id)
-        command("Network.continueInterceptedRequest", **options)
-      end
-
-      def abort_request(interception_id)
-        continue_request(interception_id, errorReason: "Aborted")
-      end
-
       private
 
       def subscribe

@@ -22,12 +22,13 @@ module Ferrum::Network
       !!url.match(regexp)
     end
 
-    def abort
-      @page.abort_request(interception_id)
+    def continue(**options)
+      options = options.merge(interceptionId: interception_id)
+      @page.command("Network.continueInterceptedRequest", **options)
     end
 
-    def continue(**options)
-      @page.continue_request(interception_id, **options)
+    def abort
+      continue(errorReason: "Aborted")
     end
 
     def url

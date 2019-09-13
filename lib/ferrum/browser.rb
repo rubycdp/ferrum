@@ -18,8 +18,9 @@ module Ferrum
                 open_new_window close_window within_window page] => :targets
     delegate %i[goto back forward refresh status
                 at_css at_xpath css xpath current_url title body
-                headers cookies network_traffic clear_network_traffic response_headers
-                intercept_request continue_request abort_request
+                headers cookies
+                network_traffic clear_network_traffic response_headers
+                intercept_request
                 mouse keyboard
                 screenshot pdf
                 evaluate evaluate_on evaluate_async execute

@@ -540,6 +540,7 @@ Play around inside given frame
 browser.goto("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
 frame = browser.at_xpath("//iframe")
 browser.within_frame(frame) do
+  puts browser.frame_title # => HTML Demo: <iframe>
   puts browser.frame_url # => https://interactive-examples.mdn.mozilla.net/pages/tabbed/iframe.html
 end
 ```
