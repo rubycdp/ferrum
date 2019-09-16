@@ -5,34 +5,13 @@ require "ferrum/keyboard"
 require "ferrum/headers"
 require "ferrum/cookies"
 require "ferrum/dialog"
+require "ferrum/network"
 require "ferrum/page/dom"
 require "ferrum/page/runtime"
 require "ferrum/page/frame"
-require "ferrum/page/net"
 require "ferrum/page/screenshot"
 require "ferrum/browser/client"
-require "ferrum/network/error"
-require "ferrum/network/request"
-require "ferrum/network/response"
-require "ferrum/network/intercepted_request"
 
-# RemoteObjectId is from a JavaScript world, and corresponds to any JavaScript
-# object, including JS wrappers for DOM nodes. There is a way to convert between
-# node ids and remote object ids (DOM.requestNode and DOM.resolveNode).
-#
-# NodeId is used for inspection, when backend tracks the node and sends updates to
-# the frontend. If you somehow got NodeId over protocol, backend should have
-# pushed to the frontend all of it's ancestors up to the Document node via
-# DOM.setChildNodes. After that, frontend is always kept up-to-date about anything
-# happening to the node.
-#
-# BackendNodeId is just a unique identifier for a node. Obtaining it does not send
-# any updates, for example, the node may be destroyed without any notification.
-# This is a way to keep a reference to the Node, when you don't necessarily want
-# to keep track of it. One example would be linking to the node from performance
-# data (e.g. relayout root node). BackendNodeId may be either resolved to
-# inspected node (DOM.pushNodesByBackendIdsToFrontend) or described in more
-# details (DOM.describeNode).
 module Ferrum
   class Page
     NEW_WINDOW_WAIT = ENV.fetch("FERRUM_NEW_WINDOW_WAIT", 0.3).to_f
@@ -51,17 +30,15 @@ module Ferrum
       end
     end
 
-    include DOM, Runtime, Frame, Net, Screenshot
+    include DOM, Runtime, Frame, Screenshot
 
     attr_accessor :referrer
-    attr_reader :target_id, :status,
-                :headers, :cookies, :response_headers,
-                :mouse, :keyboard,
-                :browser
+    attr_reader :target_id, :browser,
+                :headers, :cookies, :network,
+                :mouse, :keyboard
 
     def initialize(target_id, browser, new_window = false)
       @target_id, @browser = target_id, browser
-      @network_traffic = []
       @event = Event.new.tap(&:set)
 
       @frames = {}
@@ -80,6 +57,7 @@ module Ferrum
 
       @mouse, @keyboard = Mouse.new(self), Keyboard.new(self)
       @headers, @cookies = Headers.new(self), Cookies.new(self)
+      @network = Network.new(self)
 
       subscribe
       prepare_page
@@ -131,21 +109,6 @@ module Ferrum
       command("Page.reload", wait: timeout)
     end
 
-    def network_traffic(type = nil)
-      case type.to_s
-      when "all"
-        @network_traffic
-      when "blocked"
-        @network_traffic.select { |r| r.response.nil? } # when request blocked
-      else
-        @network_traffic.select { |r| r.response } # when request isn't blocked
-      end
-    end
-
-    def clear_network_traffic
-      @network_traffic = []
-    end
-
     def back
       history_navigate(delta: -1)
     end
@@ -171,7 +134,7 @@ module Ferrum
           dialog = Dialog.new(self, params)
           block.call(dialog, index, total)
         end
-      when :request_intercepted
+      when :request
         @client.on("Network.requestIntercepted") do |params, index, total|
           request = Network::InterceptedRequest.new(self, params)
           block.call(request, index, total)
@@ -186,85 +149,43 @@ module Ferrum
     def subscribe
       super
 
-      if @browser.logger
-        @client.on("Runtime.consoleAPICalled") do |params|
-          params["args"].each { |r| @browser.logger.puts(r["value"]) }
-        end
-      end
+      network.subscribe
 
-      if @browser.js_errors
-        @client.on("Runtime.exceptionThrown") do |params|
-          # FIXME https://jvns.ca/blog/2015/11/27/why-rubys-timeout-is-dangerous-and-thread-dot-raise-is-terrifying/
-          Thread.main.raise JavaScriptError.new(params.dig("exceptionDetails", "exception"))
-        end
-      end
-
-      @client.on("Page.windowOpen") do
-        @browser.targets.refresh
-      end
-
-      @client.on("Page.navigatedWithinDocument") do
-        @event.set if @waiting_frames.empty?
-      end
-
-      @client.on("Page.domContentEventFired") do |params|
-        # `frameStoppedLoading` doesn't occur if status isn't success
-        if @status != 200
+      on("Network.loadingFailed") do |params|
+        id, canceled = params.values_at("requestId", "canceled")
+        # Set event as we aborted main request we are waiting for
+        if network.request&.id == id && canceled == true
           @event.set
           @document_id = get_document_id
         end
       end
 
-      @client.on("Network.requestWillBeSent") do |params|
-        if params["frameId"] == @frame_id
-          # Possible types:
-          # Document, Stylesheet, Image, Media, Font, Script, TextTrack, XHR,
-          # Fetch, EventSource, WebSocket, Manifest, SignedExchange, Ping,
-          # CSPViolationReport, Other
-          if params["type"] == "Document"
-            @event.reset
-            @request_id = params["requestId"]
-          end
-        end
-
-        id, time = params.values_at("requestId", "wallTime")
-        params = params["request"].merge("id" => id, "time" => time)
-        @network_traffic << Network::Request.new(params)
-      end
-
-      @client.on("Network.responseReceived") do |params|
-        if params["requestId"] == @request_id
-          @response_headers = params.dig("response", "headers")
-          @status = params.dig("response", "status")
-        end
-
-        if request = @network_traffic.find { |r| r.id == params["requestId"] }
-          params = params["response"].merge("id" => params["requestId"])
-          request.response = Network::Response.new(params)
+      if @browser.logger
+        on("Runtime.consoleAPICalled") do |params|
+          params["args"].each { |r| @browser.logger.puts(r["value"]) }
         end
       end
 
-      @client.on("Network.loadingFinished") do |params|
-        if request = @network_traffic.find { |r| r.id == params["requestId"] }
-          # Sometimes we never get the Network.responseReceived event.
-          # See https://crbug.com/883475
-          #
-          # Network.loadingFinished's encodedDataLength contains both body and headers
-          # sizes received by wire. See https://crbug.com/764946
-          if response = request.response
-            response.body_size = params["encodedDataLength"] - response.headers_size
-          end
+      if @browser.js_errors
+        on("Runtime.exceptionThrown") do |params|
+          # FIXME https://jvns.ca/blog/2015/11/27/why-rubys-timeout-is-dangerous-and-thread-dot-raise-is-terrifying/
+          Thread.main.raise JavaScriptError.new(params.dig("exceptionDetails", "exception"))
         end
       end
 
-      @client.on("Log.entryAdded") do |params|
-        source = params.dig("entry", "source")
-        level = params.dig("entry", "level")
-        if source == "network" && level == "error"
-          id = params.dig("entry", "networkRequestId")
-          if request = @network_traffic.find { |r| r.id == id }
-            request.error = Network::Error.new(params["entry"])
-          end
+      on("Page.windowOpen") do
+        @browser.targets.refresh
+      end
+
+      on("Page.navigatedWithinDocument") do
+        @event.set if @waiting_frames.empty?
+      end
+
+      on("Page.domContentEventFired") do |params|
+        # `frameStoppedLoading` doesn't occur if status isn't success
+        if network.status != 200
+          @event.set
+          @document_id = get_document_id
         end
       end
     end

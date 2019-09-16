@@ -3,6 +3,8 @@
 module Ferrum
   class Page
     module Frame
+      attr_reader :frame_id
+
       def execution_context_id
         context_id = current_execution_context_id
         raise NoExecutionContextError unless context_id
@@ -42,28 +44,28 @@ module Ferrum
       def subscribe
         super if defined?(super)
 
-        @client.on("Page.frameAttached") do |params|
+        on("Page.frameAttached") do |params|
           @frames[params["frameId"]] = { "parent_id" => params["parentFrameId"] }
         end
 
-        @client.on("Page.frameStartedLoading") do |params|
+        on("Page.frameStartedLoading") do |params|
           @waiting_frames << params["frameId"]
           @event.reset
         end
 
-        @client.on("Page.frameNavigated") do |params|
+        on("Page.frameNavigated") do |params|
           id = params["frame"]["id"]
           if frame = @frames[id]
             frame.merge!(params["frame"].select { |k, _| k == "name" || k == "url" })
           end
         end
 
-        @client.on("Page.frameScheduledNavigation") do |params|
+        on("Page.frameScheduledNavigation") do |params|
           @waiting_frames << params["frameId"]
           @event.reset
         end
 
-        @client.on("Page.frameStoppedLoading") do |params|
+        on("Page.frameStoppedLoading") do |params|
           # `DOM.performSearch` doesn't work without getting #document node first.
           # It returns node with nodeId 1 and nodeType 9 from which descend the
           # tree and we save it in a variable because if we call that again root
@@ -79,7 +81,17 @@ module Ferrum
           end
         end
 
-        @client.on("Runtime.executionContextCreated") do |params|
+        on("Network.requestWillBeSent") do |params|
+          if params["frameId"] == @frame_id
+            # Possible types:
+            # Document, Stylesheet, Image, Media, Font, Script, TextTrack, XHR,
+            # Fetch, EventSource, WebSocket, Manifest, SignedExchange, Ping,
+            # CSPViolationReport, Other
+            @event.reset if params["type"] == "Document"
+          end
+        end
+
+        on("Runtime.executionContextCreated") do |params|
           context_id = params.dig("context", "id")
           @execution_context_id ||= context_id
 
@@ -93,7 +105,7 @@ module Ferrum
           end
         end
 
-        @client.on("Runtime.executionContextDestroyed") do |params|
+        on("Runtime.executionContextDestroyed") do |params|
           context_id = params["executionContextId"]
 
           if @execution_context_id == context_id
@@ -104,7 +116,7 @@ module Ferrum
           frame["execution_context_id"] = nil if frame
         end
 
-        @client.on("Runtime.executionContextsCleared") do
+        on("Runtime.executionContextsCleared") do
           # If we didn't have time to set context id at the beginning we have
           # to set lock and release it when we set something.
           @execution_context_id = nil

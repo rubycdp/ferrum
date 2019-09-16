@@ -2,32 +2,45 @@
 
 require "time"
 
-module Ferrum::Network
-  class Request
-    attr_accessor :response, :error
+module Ferrum
+  class Network
+    class Request
+      def initialize(params)
+        @params = params
+        @request = @params["request"]
+      end
 
-    def initialize(data)
-      @data = data
-    end
+      def id
+        @params["requestId"]
+      end
 
-    def id
-      @data["id"]
-    end
+      def type
+        @params["type"]
+      end
 
-    def url
-      @data["url"]
-    end
+      def type?(value)
+        type.downcase == value.to_s.downcase
+      end
 
-    def method
-      @data["method"]
-    end
+      def frame_id
+        @params["frameId"]
+      end
 
-    def headers
-      @data["headers"]
-    end
+      def url
+        @request["url"]
+      end
 
-    def time
-      @time ||= Time.strptime(@data["time"].to_s, "%s")
+      def method
+        @request["method"]
+      end
+
+      def headers
+        @request["headers"]
+      end
+
+      def time
+        @time ||= Time.strptime(@params["wallTime"].to_s, "%s")
+      end
     end
   end
 end

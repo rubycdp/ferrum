@@ -159,15 +159,6 @@ browser.goto("https://github.com/")
 browser.refresh
 ```
 
-#### status : `Integer`
-
-Contains the status code of the response (e.g., 200 for a success).
-
-```ruby
-browser.goto("https://github.com/")
-browser.status # => 200
-```
-
 
 ## Finders
 
@@ -305,17 +296,90 @@ browser.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => 14983
 
 ## Network
 
-#### network_traffic : `Array<Network::Request>`
+browser.network
 
-Returns all information about network traffic as a request/response array.
+#### traffic `Array<Network::Exchange>`
 
-#### clear_network_traffic
+Returns all information about network traffic as an exchange object which in
+general is a triple `[request, response, error]`.
 
-Cleans up collected data.
+```ruby
+browser.goto("https://github.com/")
+browser.network.traffic # => [#<Ferrum::Network::Exchange:0x718cc0, ...]
+```
 
-#### response_headers : `Hash`
+#### exchange : `Network::Exchange`
 
-Returns all headers for a given request in `goto` method.
+Request, response and error triplet of main page. Has these the most important
+methods: `request`, `response`, `error` and `to_a`.
+
+```ruby
+browser.goto("https://github.com/")
+browser.network.exchange # => #<Ferrum::Network::Exchange:0x718cc0 @error=nil, @response=#<Ferrum::Network::Response...
+```
+
+#### status : `Integer`
+
+Contains the status code of the main page response (e.g., 200 for a
+success). This is just a shortcut for `exchange.response.status`.
+
+```ruby
+browser.goto("https://github.com/")
+browser.network.status # => 200
+```
+
+#### clear(type)
+
+Clear browser's cache or collected traffic.
+
+* type `Symbol` it is either `:traffic` or `:cache`
+
+```ruby
+traffic = browser.network.traffic # => []
+browser.goto("https://github.com/")
+traffic.size # => 51
+browser.network.clear(:traffic)
+traffic.size # => 0
+```
+
+#### intercept(\*\*options)
+
+Set request interception for given options. This method is only sets request
+interception, you should use `on` callback to catch requests and abort or
+continue them.
+
+* options `Hash`
+  * :pattern `String` \* by default
+  * :resource_type `Symbol` one of the [resource types](https://chromedevtools.github.io/devtools-protocol/tot/Network#type-ResourceType)
+
+```ruby
+browser = Ferrum::Browser.new
+browser.network.intercept
+browser.on(:request) do |request|
+  if request.match?(/bla-bla/)
+    request.abort
+  else
+    request.continue
+  end
+end
+browser.goto("https://google.com")
+```
+
+#### authorize(\*\*options)
+
+If site uses authorization you can provide credentials using this method.
+
+* options `Hash`
+  * :type `Symbol` `:server` | `:proxy` site or proxy authorization
+  * :user `String`
+  * :password `String`
+
+```ruby
+browser.network.authorize(user: "login", password: "pass")
+browser.goto("http://example.com/authenticated")
+puts browser.network.status # => 200
+puts browser.body # => Welcome, authenticated client
+```
 
 
 ### Mouse
@@ -546,18 +610,6 @@ end
 ```
 
 
-## Authorization
-
-#### authorize(\*\*options)
-
-If site uses authorization you can provide credentials using this method.
-
-* options `Hash`
-  * :type `Symbol` `:server` | `:proxy` site or proxy authorization
-  * :user `String`
-  * :password `String`
-
-
 ## Dialog
 
 #### accept(text)
@@ -577,37 +629,6 @@ browser.on(:dialog) do |dialog|
     dialog.accept
   else
     dialog.dismiss
-  end
-end
-browser.goto("https://google.com")
-```
-
-
-## Interception
-
-#### intercept_request(\*\*options)
-
-Set request interception for given options. This method is only sets request
-interception, you should use `on` callback to catch it.
-
-* options `Hash`
-  * :pattern `String` \* by default
-  * :resource_type `Symbol` one of the [resource types](https://chromedevtools.github.io/devtools-protocol/tot/Network#type-ResourceType)
-
-#### on(event)
-
-Set callback for given event.
-
-* event `Symbol`
-
-```ruby
-browser = Ferrum::Browser.new
-browser.intercept_request
-browser.on(:request_intercepted) do |request|
-  if request.match?(/bla-bla/)
-    request.abort
-  else
-    request.continue
   end
 end
 browser.goto("https://google.com")
