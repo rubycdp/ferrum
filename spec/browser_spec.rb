@@ -275,43 +275,6 @@ module Ferrum
       end
     end
 
-    it "can clear memory cache" do
-      browser.clear_memory_cache
-
-      browser.goto("/ferrum/cacheable")
-      first_request = browser.network_traffic.last
-      expect(browser.network_traffic.length).to eq(1)
-      expect(first_request.response.status).to eq(200)
-
-      browser.refresh
-      expect(browser.network_traffic.length).to eq(2)
-      expect(browser.network_traffic.last.response.status).to eq(304)
-
-      browser.clear_memory_cache
-
-      browser.refresh
-      another_request = browser.network_traffic.last
-      expect(browser.network_traffic.length).to eq(3)
-      expect(another_request.response.status).to eq(200)
-    end
-
-    context "status code support" do
-      it "determines status from the simple response" do
-        browser.goto("/ferrum/status/500")
-        expect(browser.status).to eq(500)
-      end
-
-      it "determines status code when the page has a few resources" do
-        browser.goto("/ferrum/with_different_resources")
-        expect(browser.status).to eq(200)
-      end
-
-      it "determines status code even after redirect" do
-        browser.goto("/ferrum/redirect")
-        expect(browser.status).to eq(200)
-      end
-    end
-
     it "allows the driver to have a fixed port" do
       begin
         browser = Browser.new(port: 12345)
@@ -528,26 +491,6 @@ module Ferrum
       browser.at_xpath("//a[text() = 'JS redirect']").click
       sleep 0.1
       expect(browser.body).to include("Hello world")
-    end
-
-    context "status support" do
-      it "determines status code when user goes to a page by using a link on it" do
-        browser.goto("/ferrum/with_different_resources")
-
-        browser.at_xpath("//a[text() = 'Go to 500']").click
-
-        expect(browser.status).to eq(500)
-      end
-
-      it "determines properly status when user goes through a few pages", skip: true do
-        browser.goto("/ferrum/with_different_resources")
-
-        browser.at_xpath("//a[text() = 'Go to 201']").click
-        browser.at_xpath("//a[text() = 'Do redirect']").click
-        browser.at_xpath("//a[text() = 'Go to 402']").click
-
-        expect(browser.status_code).to eq(402)
-      end
     end
 
     it "returns BR as new line in #text" do

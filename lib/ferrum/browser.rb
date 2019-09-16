@@ -16,15 +16,13 @@ module Ferrum
     extend Forwardable
     delegate %i[window_handle window_handles switch_to_window
                 open_new_window close_window within_window page] => :targets
-    delegate %i[goto back forward refresh status
+    delegate %i[goto back forward refresh
                 at_css at_xpath css xpath current_url title body
-                headers cookies network_traffic clear_network_traffic response_headers
-                intercept_request continue_request abort_request
+                headers cookies network
                 mouse keyboard
                 screenshot pdf
                 evaluate evaluate_on evaluate_async execute
                 frame_url frame_title within_frame
-                authorize
                 on] => :page
 
     attr_reader :client, :process, :logger, :js_errors, :slowmo, :base_url,
@@ -80,10 +78,6 @@ module Ferrum
     rescue DeadBrowserError
       restart
       raise
-    end
-
-    def clear_memory_cache
-      page.command("Network.clearBrowserCache")
     end
 
     def reset
