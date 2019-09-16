@@ -82,24 +82,27 @@ module Ferrum
 
     def subscribe
       @page.on("Network.requestWillBeSent") do |params|
-        # On redirects Chrome doesn't change `requestId`
-        if exchange = find_by(params["requestId"])
-          exchange.build_request(params)
-        else
-          exchange = Network::Exchange.new(params)
-          @exchange = exchange if exchange.navigation_request?(@page.frame_id)
-          @traffic << exchange
+        # On redirects Chrome doesn't change `requestId` and there's no
+        # `Network.responseReceived` event for such request. If there's already
+        # exchange object with this id then we got redirected and params has
+        # `redirectResponse` key which contains the response.
+        if exchange = first_by(params["requestId"])
+          exchange.build_response(params)
         end
+
+        exchange = Network::Exchange.new(params)
+        @exchange = exchange if exchange.navigation_request?(@page.frame_id)
+        @traffic << exchange
       end
 
       @page.on("Network.responseReceived") do |params|
-        if exchange = find_by(params["requestId"])
+        if exchange = last_by(params["requestId"])
           exchange.build_response(params)
         end
       end
 
       @page.on("Network.loadingFinished") do |params|
-        exchange = find_by(params["requestId"])
+        exchange = last_by(params["requestId"])
         if exchange && exchange.response
           exchange.response.body_size = params["encodedDataLength"]
         end
@@ -109,7 +112,7 @@ module Ferrum
         entry = params["entry"] || {}
         if entry["source"] == "network" &&
             entry["level"] == "error" &&
-            exchange = find_by(entry["networkRequestId"])
+            exchange = last_by(entry["networkRequestId"])
           exchange.build_error(entry)
         end
       end
@@ -127,8 +130,12 @@ module Ferrum
       end
     end
 
-    def find_by(request_id)
+    def first_by(request_id)
       @traffic.find { |e| e.request.id == request_id }
+    end
+
+    def last_by(request_id)
+      @traffic.select { |e| e.request.id == request_id }.last
     end
   end
 end

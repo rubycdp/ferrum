@@ -7,7 +7,7 @@ module Ferrum
 
       def initialize(params)
         @params = params
-        @response = params["response"]
+        @response = params["response"] || @params["redirectResponse"]
       end
 
       def id
@@ -35,7 +35,7 @@ module Ferrum
       end
 
       def content_type
-        @content_type ||= @response.dig("headers", "contentType").sub(/;.*\z/, "")
+        @content_type ||= @response.dig("headers", "contentType")&.sub(/;.*\z/, "")
       end
 
       # See https://crbug.com/883475
