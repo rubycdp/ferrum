@@ -252,8 +252,8 @@ browser.body # => '<html itemscope="" itemtype="http://schema.org/WebPage" lang=
 Saves screenshot on a disk or returns it as base64.
 
 * options `Hash`
-  * :path `String` to save a screenshot on the disk. If passed `:encoding` is
-    set to `:binary` automatically
+  * :path `String` to save a screenshot on the disk. `:encoding` will be set to
+    `:binary` automatically
   * :encoding `Symbol` `:base64` | `:binary` you can set it to return image as
     Base64
   * :format `String` "jpeg" | "png"

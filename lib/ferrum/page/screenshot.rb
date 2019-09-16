@@ -23,13 +23,13 @@ module Ferrum
 
       def save_file(path, data)
         bin = Base64.decode64(data)
+        return bin unless path
         File.open(path.to_s, "wb") { |f| f.write(bin) }
       end
 
       def common_options(encoding: :base64, path: nil, **_)
         encoding = encoding.to_sym
         encoding = :binary if path
-
         [path, encoding]
       end
 
