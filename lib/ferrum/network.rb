@@ -11,7 +11,7 @@ module Ferrum
                         XHR Fetch EventSource WebSocket Manifest
                         SignedExchange Ping CSPViolationReport Other].freeze
 
-    attr_reader :traffic, :exchange
+    attr_reader :traffic
 
     def initialize(page)
       @page = page
@@ -19,8 +19,16 @@ module Ferrum
       @exchange = nil
     end
 
+    def request
+      @exchange&.request
+    end
+
+    def response
+      @exchange&.response
+    end
+
     def status
-      @exchange&.response&.status
+      response&.status
     end
 
     def clear(type)

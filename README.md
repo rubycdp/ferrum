@@ -300,28 +300,36 @@ browser.network
 
 #### traffic `Array<Network::Exchange>`
 
-Returns all information about network traffic as an exchange object which in
-general is a triple `[request, response, error]`.
+Returns all information about network traffic as `Network::Exchange` instance
+which in general is a wrapper around `request`, `response` and `error`.
 
 ```ruby
 browser.goto("https://github.com/")
-browser.network.traffic # => [#<Ferrum::Network::Exchange:0x718cc0, ...]
+browser.network.traffic # => [#<Ferrum::Network::Exchange, ...]
 ```
 
-#### exchange : `Network::Exchange`
+#### request : `Network::Request`
 
-Request, response and error triplet of main page. Has these the most important
-methods: `request`, `response`, `error` and `to_a`.
+Page request of the main frame.
 
 ```ruby
 browser.goto("https://github.com/")
-browser.network.exchange # => #<Ferrum::Network::Exchange:0x718cc0 @error=nil, @response=#<Ferrum::Network::Response...
+browser.network.request # => #<Ferrum::Network::Request...
+```
+
+#### response : `Network::Response`
+
+Page response of the main frame.
+
+```ruby
+browser.goto("https://github.com/")
+browser.network.response # => #<Ferrum::Network::Response...
 ```
 
 #### status : `Integer`
 
 Contains the status code of the main page response (e.g., 200 for a
-success). This is just a shortcut for `exchange.response.status`.
+success). This is just a shortcut for `response.status`.
 
 ```ruby
 browser.goto("https://github.com/")
