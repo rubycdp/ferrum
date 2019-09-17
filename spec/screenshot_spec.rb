@@ -171,11 +171,11 @@ module Ferrum
           include_examples "when scale is set"
         end
 
-        context "when :paper_width and :paper_height are set" do
+        context "when :paperWidth and :paperHeight are set" do
           it "changes pdf size" do
             browser.goto("/ferrum/long_page")
 
-            browser.pdf(path: file, paper_width: 1.0, paper_height: 1.0)
+            browser.pdf(path: file, paperWidth: 1.0, paperHeight: 1.0)
 
             reader = PDF::Reader.new(file)
             reader.pages.each do |page|
@@ -183,6 +183,29 @@ module Ferrum
               width  = (bbox[2] - bbox[0]) / 72
               expect(width).to eq(1)
             end
+          end
+        end
+
+        context "when format is passed" do
+          it "changes pdf size to A0" do
+            browser.goto("/ferrum/long_page")
+
+            browser.pdf(path: file, format: :A0)
+
+            reader = PDF::Reader.new(file)
+            reader.pages.each do |page|
+              bbox   = page.attributes[:MediaBox]
+              width  = (bbox[2] - bbox[0]) / 72
+              expect(width.round(2)).to eq(33.10)
+            end
+          end
+
+          it "specifying format and paperWidth will cause exception" do
+            browser.goto("/ferrum/long_page")
+
+            expect {
+              browser.pdf(path: file, format: :A0, paperWidth: 1.0)
+            }.to raise_error RuntimeError
           end
         end
 
