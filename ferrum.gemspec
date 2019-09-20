@@ -30,8 +30,4 @@ Gem::Specification.new do |s|
   s.add_development_dependency "image_size",   "~> 2.0"
   s.add_development_dependency "pdf-reader",   "~> 2.2"
   s.add_development_dependency "chunky_png",   "~> 1.3"
-
-  if RUBY_PLATFORM !~ /java/
-    s.add_development_dependency "byebug",       "~> 10.0"
-  end
 end
