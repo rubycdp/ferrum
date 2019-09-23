@@ -171,11 +171,11 @@ module Ferrum
           include_examples "when scale is set"
         end
 
-        context "when :paperWidth and :paperHeight are set" do
+        context "when :paper_width and :paper_height are set" do
           it "changes pdf size" do
             browser.goto("/ferrum/long_page")
 
-            browser.pdf(path: file, paperWidth: 1.0, paperHeight: 1.0)
+            browser.pdf(path: file, paper_width: 1.0, paper_height: 1.0)
 
             reader = PDF::Reader.new(file)
             reader.pages.each do |page|
@@ -204,8 +204,33 @@ module Ferrum
             browser.goto("/ferrum/long_page")
 
             expect {
-              browser.pdf(path: file, format: :A0, paperWidth: 1.0)
+              browser.pdf(path: file, format: :A0, paper_width: 1.0)
             }.to raise_error RuntimeError
+          end
+
+          it "convert case correct", :aggregate_failures do
+            {
+              landscape: :landscape,
+              display_header_footer: :displayHeaderFooter,
+              print_background: :printBackground,
+              scale: :scale,
+              paper_width: :paperWidth,
+              paper_height: :paperHeight,
+              margin_top: :marginTop,
+              margin_bottom: :marginBottom,
+              margin_left: :marginLeft,
+              margin_right: :marginRight,
+              page_ranges: :pageRanges,
+              ignore_invalid_page_ranges: :ignoreInvalidPageRanges,
+              header_template: :headerTemplate,
+              footer_template: :footerTemplate,
+              prefer_css_page_size: :preferCSSPageSize,
+              transfer_mode: :transferMode
+            }.each do |key, value|
+              expect(
+                Ferrum::snake_to_camel_case key
+              ).to eq(value)
+            end
           end
         end
 

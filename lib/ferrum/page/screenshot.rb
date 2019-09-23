@@ -49,23 +49,26 @@ module Ferrum
       end
 
       def pdf_options(**opts)
-        options = {
-          landscape: false,
-          paperWidth: 8.5,
-          paperHeight: 11,
-          scale: 1.0
-        }
+        options = default_pdf_options
         if format = opts.delete(:format)
-          puts "format: #{format.inspect}"
-          raise "you can not specify format and dimensions" if opts[:paperWidth] || opts[:paperHeight]
+          raise "you can not specify format and dimensions" if opts[:paper_width] || opts[:paper_height]
           if dimension = PAPEP_FORMATS[format]
-            options[:paperWidth] = dimension[:width]
-            options[:paperHeight] = dimension[:height]
+            options[:paper_width] = dimension[:width]
+            options[:paper_height] = dimension[:height]
           else
             raise "Could not find format #{format}, existing once are #{PAPER_FORMATS.keys.join(", ")}"
           end
         end
-        options.merge(opts)
+        Ferrum::convert_option_hash options.merge(opts)
+      end
+
+      def default_pdf_options
+        {
+          landscape: false,
+          paper_width: 8.5,
+          paper_height: 11,
+          scale: 1.0
+        }
       end
 
       def screenshot_options(path = nil, format: nil, scale: 1.0, **opts)

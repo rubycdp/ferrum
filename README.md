@@ -285,14 +285,14 @@ Saves PDF on a disk or returns it as base64.
   * :scale `Float` zoom in/out
   * :format `symbol` standard paper sizes :letter, :legal, :tabloid, :ledger, :A0, :A1, :A2, :A3, :A4, :A5, :A6
 
-  * :paperWidth `Float` set paper width
-  * :paperHeight `Float` set paper height
+  * :paper_width `Float` set paper width
+  * :paper_height `Float` set paper height
   * See other [native options](https://chromedevtools.github.io/devtools-protocol/tot/Page#method-printToPDF) you can pass
 
 ```ruby
 browser.goto("https://google.com/")
 # Save to disk as a PDF
-browser.pdf(path: "google.pdf", paperWidth: 1.0, paperHeight: 1.0) # => 14983
+browser.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => 14983
 ```
 
 
