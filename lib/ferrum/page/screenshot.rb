@@ -19,6 +19,19 @@ module Ferrum
         save_file(path, data)
       end
 
+      def viewport_size
+        evaluate <<~JS
+          [window.innerWidth, window.innerHeight]
+        JS
+      end
+
+      def document_size
+        evaluate <<~JS
+          [document.documentElement.offsetWidth,
+           document.documentElement.offsetHeight]
+        JS
+      end
+
       private
 
       def save_file(path, data)
@@ -57,7 +70,7 @@ module Ferrum
         end
 
         if !!opts[:full]
-          width, height = evaluate("[document.documentElement.offsetWidth, document.documentElement.offsetHeight]")
+          width, height = document_size
           options.merge!(clip: { x: 0, y: 0, width: width, height: height, scale: scale }) if width > 0 && height > 0
         elsif opts[:selector]
           rect = evaluate("document.querySelector('#{opts[:selector]}').getBoundingClientRect()")
@@ -66,7 +79,7 @@ module Ferrum
 
         if scale != 1.0
           if !options[:clip]
-            width, height = evaluate("[document.documentElement.clientWidth, document.documentElement.clientHeight]")
+            width, height = viewport_size
             options[:clip] = { x: 0, y: 0, width: width, height: height }
           end
 

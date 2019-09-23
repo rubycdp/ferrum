@@ -14,8 +14,6 @@ require "ferrum/browser/client"
 
 module Ferrum
   class Page
-    NEW_WINDOW_WAIT = ENV.fetch("FERRUM_NEW_WINDOW_WAIT", 0.3).to_f
-
     class Event < Concurrent::Event
       def iteration
         synchronize { @iteration }
@@ -37,18 +35,13 @@ module Ferrum
                 :headers, :cookies, :network,
                 :mouse, :keyboard
 
-    def initialize(target_id, browser, new_window = false)
+    def initialize(target_id, browser)
       @target_id, @browser = target_id, browser
       @event = Event.new.tap(&:set)
 
       @frames = {}
       @waiting_frames ||= Set.new
       @frame_stack = []
-
-      # Dirty hack because new window doesn't have events at all
-      sleep(NEW_WINDOW_WAIT) if new_window
-
-      @session_id = @browser.command("Target.attachToTarget", targetId: @target_id)["sessionId"]
 
       host = @browser.process.host
       port = @browser.process.port
@@ -83,12 +76,7 @@ module Ferrum
 
     def close
       @headers.clear
-      @browser.command("Target.detachFromTarget", sessionId: @session_id)
       @browser.command("Target.closeTarget", targetId: @target_id)
-      close_connection
-    end
-
-    def close_connection
       @client.close
     end
 
@@ -171,10 +159,6 @@ module Ferrum
           # FIXME https://jvns.ca/blog/2015/11/27/why-rubys-timeout-is-dangerous-and-thread-dot-raise-is-terrifying/
           Thread.main.raise JavaScriptError.new(params.dig("exceptionDetails", "exception"))
         end
-      end
-
-      on("Page.windowOpen") do
-        @browser.targets.refresh
       end
 
       on("Page.navigatedWithinDocument") do

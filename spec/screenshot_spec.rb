@@ -15,9 +15,7 @@ module Ferrum
           create_screenshot(path: file)
 
           File.open(file, "rb") do |f|
-            expect(ImageSize.new(f.read).size).to eq(
-              browser.evaluate("[window.innerWidth, window.innerHeight]")
-            )
+            expect(ImageSize.new(f.read).size).to eq(browser.viewport_size)
           end
 
           create_screenshot(path: file, full: true)
@@ -35,9 +33,7 @@ module Ferrum
           create_screenshot(path: file, full: true)
 
           File.open(file, "rb") do |f|
-            expect(ImageSize.new(f.read).size).to eq(
-              browser.evaluate("[window.innerWidth, window.innerHeight]")
-            )
+            expect(ImageSize.new(f.read).size).to eq(browser.viewport_size)
           end
         end
 

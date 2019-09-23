@@ -83,25 +83,26 @@ module Ferrum
             "User-Agent" => "foo"
           )
           browser.goto("/ferrum/popup_headers")
-          browser.at_xpath("a[text()='pop up']").click
-          # browser.click_link("pop up")
-          browser.switch_to_window browser.windows.last
-          expect(browser.body).to include("USER_AGENT: foo")
-          expect(browser.body).to include("COOKIE: foo=bar")
-          expect(browser.body).to include("HOST: foo.com")
+          browser.at_xpath("//a[text()='pop up']").click
+
+          page, _ = browser.windows(:last)
+
+          expect(page.body).to include("USER_AGENT: foo")
+          expect(page.body).to include("COOKIE: foo=bar")
+          expect(page.body).to include("HOST: foo.com")
         end
 
         it "sets headers in existing windows" do
-          browser.open_new_window
-          browser.headers.set(
+          page = browser.create_page
+          page.headers.set(
             "Cookie" => "foo=bar",
             "Host" => "foo.com",
             "User-Agent" => "foo"
           )
-          browser.goto("/ferrum/headers")
-          expect(browser.body).to include("USER_AGENT: foo")
-          expect(browser.body).to include("COOKIE: foo=bar")
-          expect(browser.body).to include("HOST: foo.com")
+          page.goto("/ferrum/headers")
+          expect(page.body).to include("USER_AGENT: foo")
+          expect(page.body).to include("COOKIE: foo=bar")
+          expect(page.body).to include("HOST: foo.com")
 
           browser.switch_to_window browser.windows.last
           browser.goto("/ferrum/headers")
@@ -111,7 +112,7 @@ module Ferrum
         end
 
         it "keeps temporary headers local to the current window" do
-          browser.open_new_window
+          browser.create_page
           browser.headers.add("X-Custom-Header" => "1", permanent: false)
 
           browser.switch_to_window browser.windows.last
@@ -124,7 +125,7 @@ module Ferrum
         end
 
         it "does not mix temporary headers with permanent ones when propagating to other windows" do
-          browser.open_new_window
+          browser.create_page
           browser.headers.add("X-Custom-Header" => "1", permanent: false)
           browser.headers.add("Host" => "foo.com")
 
@@ -142,7 +143,7 @@ module Ferrum
         it "does not propagate temporary headers to new windows" do
           browser.goto
           browser.headers.add("X-Custom-Header" => "1", permanent: false)
-          browser.open_new_window
+          browser.create_page
 
           browser.switch_to_window browser.windows.last
           browser.goto("/ferrum/headers")
