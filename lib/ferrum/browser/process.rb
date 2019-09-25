@@ -84,6 +84,15 @@ module Ferrum
         end
       end
 
+      def self.directory_remover(path)
+        proc do
+          begin
+            FileUtils.remove_entry(path)
+          rescue Errno::ENOENT
+          end
+        end
+      end
+
       def self.detect_browser_path
         if RUBY_PLATFORM.include?("darwin")
           [
@@ -119,7 +128,9 @@ module Ferrum
         host = options.fetch(:host, BROWSER_HOST)
         @options.merge!("remote-debugging-address" => host)
 
-        @options.merge!("user-data-dir" => Dir.mktmpdir)
+        @temp_user_data_dir = Dir.mktmpdir
+        ObjectSpace.define_finalizer(self, self.class.directory_remover(@temp_user_data_dir))
+        @options.merge!("user-data-dir" => @temp_user_data_dir)
 
         @options = DEFAULT_OPTIONS.merge(@options)
 
@@ -158,8 +169,8 @@ module Ferrum
       end
 
       def stop
-        return unless @pid
-        kill
+        kill if @pid
+        remove_temp_user_data_dir if @temp_user_data_dir
         ObjectSpace.undefine_finalizer(self)
       end
 
@@ -173,6 +184,11 @@ module Ferrum
       def kill
         self.class.process_killer(@pid).call
         @pid = nil
+      end
+
+      def remove_temp_user_data_dir
+        self.class.directory_remover(@temp_user_data_dir).call
+        @temp_user_data_dir = nil
       end
 
       def parse_ws_url(read_io, timeout)
