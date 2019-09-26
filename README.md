@@ -23,10 +23,12 @@ There's no official Chrome or Chromium package for Linux don't install it this
 way because it either will be outdated or unofficial, both are bad. Download it
 from official [source](https://www.chromium.org/getting-involved/download-chromium).
 Chrome binary should be in the `PATH` or `BROWSER_PATH` or you can pass it as an
-option.
+option to browser instance `:browser_path`.
+
+Add this to your Gemfile:
 
 ``` ruby
-gem install "ferrum"
+gem "ferrum"
 ```
 
 Navigate to a website and save a screenshot:
@@ -640,4 +642,62 @@ browser.on(:dialog) do |dialog|
   end
 end
 browser.goto("https://google.com")
+```
+
+
+## Thread safety ##
+
+Ferrum is fully thread-safe. You can create one browser or a few as you wish and
+start playing around using threads. Example below shows how to create a few pages
+which share the same context. Context is similar to an incognito profile but you
+can have more than one, think of it like it's independent browser session:
+
+```ruby
+browser = Ferrum::Browser.new
+context = browser.contexts.create
+
+t1 = Thread.new(context) do |c|
+  page = c.create_page
+  page.goto("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
+  page.screenshot(path: "t1.png")
+end
+
+t2 = Thread.new(context) do |c|
+  page = c.create_page
+  page.goto("https://www.google.com/search?q=Ruby+static+typing")
+  page.screenshot(path: "t2.png")
+end
+
+t1.join
+t2.join
+
+context.dispose
+browser.quit
+```
+
+or you can create two independent contexts:
+
+```ruby
+browser = Ferrum::Browser.new
+
+t1 = Thread.new(browser) do |b|
+  context = b.contexts.create
+  page = context.create_page
+  page.goto("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
+  page.screenshot(path: "t1.png")
+  context.dispose
+end
+
+t2 = Thread.new(browser) do |b|
+  context = b.contexts.create
+  page = context.create_page
+  page.goto("https://www.google.com/search?q=Ruby+static+typing")
+  page.screenshot(path: "t2.png")
+  context.dispose
+end
+
+t1.join
+t2.join
+
+browser.quit
 ```

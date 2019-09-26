@@ -52,20 +52,18 @@ module Ferrum
         expect(browser.at_xpath("//a[@id='open-twice' and @confirmed='false']")).to be
       end
 
-      it "works with second window", skip: true do
+      it "works with second window" do
         browser.goto
 
-        popup = browser.window_opened_by do
-          browser.execute <<-JS
-            window.open("/ferrum/with_js", "popup")
-          JS
-        end
+        browser.execute <<-JS
+          window.open("/ferrum/with_js", "popup")
+        JS
 
-        browser.within_window(popup) do
-          browser.on(:dialog) { |d| d.accept }
-          browser.at_css("a#open-match").click
-          expect(browser.at_xpath("//a[@id='open-match' and @confirmed='true']")).to be
-        end
+        popup, _ = browser.windows(:last)
+
+        popup.on(:dialog) { |d| d.accept }
+        popup.at_css("a#open-match").click
+        expect(popup.at_xpath("//a[@id='open-match' and @confirmed='true']")).to be
 
         popup.close
       end

@@ -5,14 +5,9 @@ require "ferrum/node"
 
 module Ferrum
   class Error               < StandardError; end
-  class NoSuchWindowError   < Error; end
+  class NoSuchPageError     < Error; end
+  class NoSuchTargetError   < Error; end
   class NotImplementedError < Error; end
-
-  class EmptyTargetsError < Error
-    def initialize
-      super("There aren't targets available")
-    end
-  end
 
   class StatusError < Error
     def initialize(url)

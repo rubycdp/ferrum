@@ -76,7 +76,7 @@ module Ferrum
         when "Cannot find context with specified id"
           raise NoExecutionContextError.new(error)
         when "No target with given id found"
-          raise NoSuchWindowError
+          raise NoSuchPageError
         else
           raise BrowserError.new(error)
         end

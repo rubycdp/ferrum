@@ -3,7 +3,7 @@
 require "base64"
 require "forwardable"
 require "ferrum/page"
-require "ferrum/targets"
+require "ferrum/contexts"
 require "ferrum/browser/process"
 require "ferrum/browser/client"
 
@@ -14,19 +14,19 @@ module Ferrum
     BASE_URL_SCHEMA = %w[http https].freeze
 
     extend Forwardable
-    delegate %i[window_handle window_handles switch_to_window
-                open_new_window close_window within_window page] => :targets
+    delegate %i[default_context] => :contexts
+    delegate %i[targets create_target create_page page pages windows] => :default_context
     delegate %i[goto back forward refresh
                 at_css at_xpath css xpath current_url title body
                 headers cookies network
                 mouse keyboard
-                screenshot pdf
+                screenshot pdf viewport_size
                 evaluate evaluate_on evaluate_async execute
                 frame_url frame_title within_frame
                 on] => :page
 
-    attr_reader :client, :process, :logger, :js_errors, :slowmo, :base_url,
-                :options, :window_size
+    attr_reader :client, :process, :contexts, :logger, :js_errors,
+                :slowmo, :base_url, :options, :window_size
     attr_writer :timeout
 
     def initialize(options = nil)
@@ -82,7 +82,7 @@ module Ferrum
 
     def reset
       @window_size = @original_window_size
-      targets.reset
+      contexts.reset
     end
 
     def restart
@@ -93,11 +93,7 @@ module Ferrum
     def quit
       @client.close
       @process.stop
-      @client = @process = @targets = nil
-    end
-
-    def targets
-      @targets ||= Targets.new(self)
+      @client = @process = @contexts = nil
     end
 
     def resize(**options)
@@ -115,6 +111,7 @@ module Ferrum
       Ferrum.started
       @process = Process.start(@options)
       @client = Client.new(self, @process.ws_url, 0, false)
+      @contexts = Contexts.new(self)
     end
   end
 end

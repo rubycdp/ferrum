@@ -73,7 +73,7 @@ module Ferrum
           @authorized_ids[type] << request.interception_id
           request.continue(authChallengeResponse: response)
         elsif index + 1 < total
-          next # There are other callbacks that can handle this, skip
+          next # There are other callbacks that can handle this
         else
           request.continue
         end
