@@ -30,6 +30,10 @@ module Ferrum
         @request["url"]
       end
 
+      def url_fragment
+        @request["urlFragment"]
+      end
+
       def method
         @request["method"]
       end
