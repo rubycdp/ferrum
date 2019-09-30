@@ -65,6 +65,13 @@ module Ferrum
           @event.reset
         end
 
+        on("Page.navigatedWithinDocument") do
+          if @waiting_frames.include?(params["frameId"])
+            @waiting_frames.delete(params["frameId"])
+            @event.set if @waiting_frames.empty?
+          end
+        end
+
         on("Page.frameStoppedLoading") do |params|
           # `DOM.performSearch` doesn't work without getting #document node first.
           # It returns node with nodeId 1 and nodeType 9 from which descend the

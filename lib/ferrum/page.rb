@@ -161,10 +161,6 @@ module Ferrum
         end
       end
 
-      on("Page.navigatedWithinDocument") do
-        @event.set if @waiting_frames.empty?
-      end
-
       on("Page.domContentEventFired") do |params|
         # `frameStoppedLoading` doesn't occur if status isn't success
         if network.status != 200
