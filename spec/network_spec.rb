@@ -210,10 +210,8 @@ module Ferrum
         expect(browser.network.status).to eq(200)
         expect(browser.body).to include("We are loading some unwanted action here")
 
-        frame = browser.at_xpath("//iframe[@name = 'framename']")
-        browser.within_frame(frame) do
-          expect(browser.body).not_to include("We shouldn't see this.")
-        end
+        frame = browser.at_xpath("//iframe[@name = 'framename']").frame
+        expect(frame.body).not_to include("We shouldn't see this.")
       end
 
       it "supports wildcards" do
@@ -227,15 +225,11 @@ module Ferrum
         expect(browser.network.status).to eq(200)
         expect(browser.body).to include("We are loading some wanted action here")
 
-        frame = browser.at_xpath("//iframe[@name = 'framename']")
-        browser.within_frame(frame) do
-          expect(browser.body).not_to include("We should see this.")
-        end
+        frame = browser.at_xpath("//iframe[@name = 'framename']").frame
+        expect(frame.body).not_to include("We should see this.")
 
-        frame = browser.at_xpath("//iframe[@name = 'unwantedframe']")
-        browser.within_frame(frame) do
-          expect(browser.body).not_to include("We shouldn't see this.")
-        end
+        frame = browser.at_xpath("//iframe[@name = 'unwantedframe']").frame
+        expect(frame.body).not_to include("We shouldn't see this.")
       end
 
       it "allows whitelisted urls" do
@@ -249,15 +243,11 @@ module Ferrum
         expect(browser.network.status).to eq(200)
         expect(browser.body).to include("We are loading some wanted action here")
 
-        frame = browser.at_xpath("//iframe[@name = 'framename']")
-        browser.within_frame(frame) do
-          expect(browser.body).to include("We should see this.")
-        end
+        frame = browser.at_xpath("//iframe[@name = 'framename']").frame
+        expect(frame.body).to include("We should see this.")
 
-        frame = browser.at_xpath("//iframe[@name = 'unwantedframe']")
-        browser.within_frame(frame) do
-          expect(browser.body).not_to include("We shouldn't see this.")
-        end
+        frame = browser.at_xpath("//iframe[@name = 'unwantedframe']").frame
+        expect(frame.body).not_to include("We shouldn't see this.")
       end
 
       it "supports wildcards" do
@@ -271,15 +261,11 @@ module Ferrum
         expect(browser.network.status).to eq(200)
         expect(browser.body).to include("We are loading some wanted action here")
 
-        frame = browser.at_xpath("//iframe[@name = 'framename']")
-        browser.within_frame(frame) do
-          expect(browser.body).to include("We should see this.")
-        end
+        frame = browser.at_xpath("//iframe[@name = 'framename']").frame
+        expect(frame.body).to include("We should see this.")
 
-        frame = browser.at_xpath("//iframe[@name = 'unwantedframe']")
-        browser.within_frame(frame) do
-          expect(browser.body).to include("We shouldn't see this.")
-        end
+        frame = browser.at_xpath("//iframe[@name = 'unwantedframe']").frame
+        expect(frame.body).to include("We shouldn't see this.")
       end
     end
   end

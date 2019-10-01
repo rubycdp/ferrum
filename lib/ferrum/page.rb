@@ -1,14 +1,13 @@
 # frozen_string_literal: true
 
+require "forwardable"
 require "ferrum/mouse"
 require "ferrum/keyboard"
 require "ferrum/headers"
 require "ferrum/cookies"
 require "ferrum/dialog"
 require "ferrum/network"
-require "ferrum/page/dom"
-require "ferrum/page/runtime"
-require "ferrum/page/frame"
+require "ferrum/page/frames"
 require "ferrum/page/screenshot"
 require "ferrum/browser/client"
 
@@ -28,20 +27,22 @@ module Ferrum
       end
     end
 
-    include DOM, Runtime, Frame, Screenshot
+    extend Forwardable
+    delegate %i[at_css at_xpath css xpath
+                current_url current_title url title body
+                execution_id evaluate evaluate_on evaluate_async execute] => :main_frame
+
+    include Frames, Screenshot
 
     attr_accessor :referrer
     attr_reader :target_id, :browser,
                 :headers, :cookies, :network,
-                :mouse, :keyboard
+                :mouse, :keyboard, :event, :document_id
 
     def initialize(target_id, browser)
+      @frames = {}
       @target_id, @browser = target_id, browser
       @event = Event.new.tap(&:set)
-
-      @frames = {}
-      @waiting_frames ||= Set.new
-      @frame_stack = []
 
       host = @browser.process.host
       port = @browser.process.port
@@ -135,8 +136,7 @@ module Ferrum
     private
 
     def subscribe
-      super
-
+      frames_subscribe
       network.subscribe
 
       on("Network.loadingFailed") do |params|
@@ -144,7 +144,7 @@ module Ferrum
         # Set event as we aborted main request we are waiting for
         if network.request&.id == id && canceled == true
           @event.set
-          @document_id = get_document_id
+          get_document_id
         end
       end
 
@@ -165,7 +165,7 @@ module Ferrum
         # `frameStoppedLoading` doesn't occur if status isn't success
         if network.status != 200
           @event.set
-          @document_id = get_document_id
+          get_document_id
         end
       end
     end
@@ -198,7 +198,7 @@ module Ferrum
         # occurs and thus search for nodes cannot be completed. Here we check
         # the history and if the transitionType for example `link` then
         # content is already loaded and we can try to get the document.
-        @document_id = get_document_id
+        get_document_id
       end
     end
 
@@ -210,7 +210,7 @@ module Ferrum
         # We also evaluate script just in case because
         # `Page.addScriptToEvaluateOnNewDocument` doesn't work in popups.
         command("Runtime.evaluate", expression: extension,
-                                    contextId: execution_context_id,
+                                    contextId: execution_id,
                                     returnByValue: true)
       end
     end
@@ -237,7 +237,7 @@ module Ferrum
     end
 
     def get_document_id
-      command("DOM.getDocument", depth: 0).dig("root", "nodeId")
+      @document_id = command("DOM.getDocument", depth: 0).dig("root", "nodeId")
     end
   end
 end

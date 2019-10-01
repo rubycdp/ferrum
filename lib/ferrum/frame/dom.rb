@@ -18,13 +18,13 @@
 # inspected node (DOM.pushNodesByBackendIdsToFrontend) or described in more
 # details (DOM.describeNode).
 module Ferrum
-  class Page
+  class Frame
     module DOM
       def current_url
         evaluate("window.top.location.href")
       end
 
-      def title
+      def current_title
         evaluate("window.top.document.title")
       end
 
@@ -57,22 +57,23 @@ module Ferrum
             } else {
               throw error;
             }
-          }), timeout, selector, within)
+          }), @page.timeout, selector, within)
       end
 
+      # FIXME css doesn't work for a frame w/o execution_id
       def css(selector, within: nil)
-        node_id = within&.node_id || @document_id
+        node_id = within&.node_id || @page.document_id
 
-        ids = command("DOM.querySelectorAll",
-                      nodeId: node_id,
-                      selector: selector)["nodeIds"]
+        ids = @page.command("DOM.querySelectorAll",
+                            nodeId: node_id,
+                            selector: selector)["nodeIds"]
         ids.map { |id| build_node(id) }.compact
       end
 
       def at_css(selector, within: nil)
-        node_id = within&.node_id || @document_id
+        node_id = within&.node_id || @page.document_id
 
-        id = command("DOM.querySelector",
+        id = @page.command("DOM.querySelector",
                      nodeId: node_id,
                      selector: selector)["nodeId"]
         build_node(id)
@@ -81,8 +82,8 @@ module Ferrum
       private
 
       def build_node(node_id)
-        description = command("DOM.describeNode", nodeId: node_id)
-        Node.new(self, target_id, node_id, description["node"])
+        description = @page.command("DOM.describeNode", nodeId: node_id)
+        Node.new(self, @page.target_id, node_id, description["node"])
       end
     end
   end

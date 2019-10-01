@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Ferrum
-  class Page
+  class Frame
     module Runtime
       INTERMITTENT_ATTEMPTS = ENV.fetch("FERRUM_INTERMITTENT_ATTEMPTS", 6).to_i
       INTERMITTENT_SLEEP = ENV.fetch("FERRUM_INTERMITTENT_SLEEP", 0.1).to_f
@@ -49,13 +49,13 @@ module Ferrum
         attempts, sleep = INTERMITTENT_ATTEMPTS, INTERMITTENT_SLEEP
 
         Ferrum.with_attempts(errors: errors, max: attempts, wait: sleep) do
-          response = command("DOM.resolveNode", nodeId: node.node_id)
+          response = @page.command("DOM.resolveNode", nodeId: node.node_id)
           object_id = response.dig("object", "objectId")
           options = DEFAULT_OPTIONS.merge(objectId: object_id)
           options[:functionDeclaration] = options[:functionDeclaration] % expression
           options.merge!(returnByValue: by_value)
 
-          response = command("Runtime.callFunctionOn",
+          response = @page.command("Runtime.callFunctionOn",
                              wait: wait, **options)["result"]
                             .tap { |r| handle_error(r) }
 
@@ -76,10 +76,10 @@ module Ferrum
           params[:functionDeclaration] = params[:functionDeclaration] % expression
           params = params.merge(arguments: arguments)
           unless params[:executionContextId]
-            params = params.merge(executionContextId: execution_context_id)
+            params = params.merge(executionContextId: execution_id)
           end
 
-          response = command("Runtime.callFunctionOn",
+          response = @page.command("Runtime.callFunctionOn",
                              **params)["result"].tap { |r| handle_error(r) }
 
           handle ? handle_response(response) : response
@@ -115,9 +115,9 @@ module Ferrum
               # and node destroyed so we need to retrieve it each time for given id.
               # Though we can try to subscribe to `DOM.childNodeRemoved` and
               # `DOM.childNodeInserted` in the future.
-              node_id = command("DOM.requestNode", objectId: object_id)["nodeId"]
-              description = command("DOM.describeNode", nodeId: node_id)["node"]
-              Node.new(self, target_id, node_id, description)
+              node_id = @page.command("DOM.requestNode", objectId: object_id)["nodeId"]
+              description = @page.command("DOM.describeNode", nodeId: node_id)["node"]
+              Node.new(self, @page.target_id, node_id, description)
           when "array"
             reduce_props(object_id, []) do |memo, key, value|
               next(memo) unless (Integer(key) rescue nil)
@@ -140,7 +140,7 @@ module Ferrum
       def prepare_args(args)
         args.map do |arg|
           if arg.is_a?(Node)
-            resolved = command("DOM.resolveNode", nodeId: arg.node_id)
+            resolved = @page.command("DOM.resolveNode", nodeId: arg.node_id)
             { objectId: resolved["object"]["objectId"] }
           elsif arg.is_a?(Hash) && arg["objectId"]
             { objectId: arg["objectId"] }
@@ -154,7 +154,7 @@ module Ferrum
         if cyclic?(object_id).dig("result", "value")
           return "(cyclic structure)"
         else
-          props = command("Runtime.getProperties", objectId: object_id)
+          props = @page.command("Runtime.getProperties", objectId: object_id)
           props["result"].reduce(to) do |memo, prop|
             next(memo) unless prop["enumerable"]
             yield(memo, prop["name"], prop["value"])
@@ -163,7 +163,7 @@ module Ferrum
       end
 
       def cyclic?(object_id)
-        command("Runtime.callFunctionOn",
+        @page.command("Runtime.callFunctionOn",
                 objectId: object_id,
                 returnByValue: true,
                 functionDeclaration: <<~JS
