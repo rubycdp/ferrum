@@ -91,7 +91,7 @@ module Ferrum
         end
 
         exchange = Network::Exchange.new(params)
-        @exchange = exchange if exchange.navigation_request?(@page.frame_id)
+        @exchange = exchange if exchange.navigation_request?(@page.main_frame.id)
         @traffic << exchange
       end
 

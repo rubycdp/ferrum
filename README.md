@@ -221,20 +221,20 @@ browser.xpath("//a[@aria-label='Issues you created']") # => [Node]
 
 #### current_url : `String`
 
-Returns current window location href.
+Returns current top window location href.
 
 ```ruby
 browser.goto("https://google.com/")
 browser.current_url # => "https://www.google.com/"
 ```
 
-#### title : `String`
+#### current_title : `String`
 
-Returns current window title
+Returns current top window title
 
 ```ruby
 browser.goto("https://google.com/")
-browser.title # => "Google"
+browser.current_title # => "Google"
 ```
 
 #### body : `String`
@@ -604,19 +604,17 @@ browser.execute(%(1 + 1)) # => true
 
 ## Frames
 
-#### frame_url
-#### frame_title
-#### within_frame(frame, &block)
+#### frames
+#### main_frame
+#### frame_by
 
 Play around inside given frame
 
 ```ruby
 browser.goto("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
-frame = browser.at_xpath("//iframe")
-browser.within_frame(frame) do
-  puts browser.frame_title # => HTML Demo: <iframe>
-  puts browser.frame_url # => https://interactive-examples.mdn.mozilla.net/pages/tabbed/iframe.html
-end
+frame = browser.frames[1]
+puts frame.title # => HTML Demo: <iframe>
+puts frame.url # => https://interactive-examples.mdn.mozilla.net/pages/tabbed/iframe.html
 ```
 
 

@@ -21,8 +21,8 @@ module Ferrum
                 headers cookies network
                 mouse keyboard
                 screenshot pdf viewport_size
+                frames frame_by main_frame
                 evaluate evaluate_on evaluate_async execute
-                frame_url frame_title within_frame
                 on] => :page
 
     attr_reader :client, :process, :contexts, :logger, :js_errors,

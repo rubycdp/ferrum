@@ -4,14 +4,23 @@ module Ferrum
   class Node
     attr_reader :page, :target_id, :node_id, :description, :tag_name
 
-    def initialize(page, target_id, node_id, description)
-      @page, @target_id = page, target_id
+    def initialize(frame, target_id, node_id, description)
+      @page = frame.page
+      @target_id = target_id
       @node_id, @description = node_id, description
       @tag_name = description["nodeName"].downcase
     end
 
     def node?
       description["nodeType"] == 1 # nodeType: 3, nodeName: "#text" e.g.
+    end
+
+    def frame_id
+      description["frameId"]
+    end
+
+    def frame
+      page.frame_by(id: frame_id)
     end
 
     def focus
