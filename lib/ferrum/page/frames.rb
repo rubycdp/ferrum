@@ -26,7 +26,7 @@ module Ferrum
       def frames_subscribe
         on("Page.frameAttached") do |params|
           parent_frame_id, frame_id = params.values_at("parentFrameId", "frameId")
-          @frames[frame_id] = Frame.new(self, frame_id, parent_frame_id)
+          @frames[frame_id] = Frame.new(frame_id, self, parent_frame_id)
         end
 
         on("Page.frameStartedLoading") do |params|
@@ -59,7 +59,7 @@ module Ferrum
           # It returns node with nodeId 1 and nodeType 9 from which descend the
           # tree and we save it in a variable because if we call that again root
           # node will change the id and all subsequent nodes have to change id too.
-          if main_frame.id == params["frameId"]
+          if @main_frame.id == params["frameId"]
             @event.set if idling?
             get_document_id
           end
@@ -75,7 +75,7 @@ module Ferrum
         end
 
         on("Network.requestWillBeSent") do |params|
-          if params["frameId"] == main_frame.id
+          if params["frameId"] == @main_frame.id
             # Possible types:
             # Document, Stylesheet, Image, Media, Font, Script, TextTrack, XHR,
             # Fetch, EventSource, WebSocket, Manifest, SignedExchange, Ping,
@@ -87,7 +87,7 @@ module Ferrum
         on("Runtime.executionContextCreated") do |params|
           context_id = params.dig("context", "id")
           frame_id = params.dig("context", "auxData", "frameId")
-          frame = @frames[frame_id] || Frame.new(self, frame_id)
+          frame = @frames[frame_id] || Frame.new(frame_id, self)
           frame.execution_id = context_id
 
           @main_frame ||= frame
@@ -98,6 +98,10 @@ module Ferrum
           execution_id = params["executionContextId"]
           frame = frame_by(execution_id: execution_id)
           frame.execution_id = nil
+        end
+
+        on("Runtime.executionContextsCleared") do
+          @frames.delete_if { |_, f| !f.main? }
         end
       end
 
