@@ -13,6 +13,10 @@ module Ferrum
       @params = params
     end
 
+    def attached?
+      !!@page
+    end
+
     def page
       @page ||= begin
         # Dirty hack because new window doesn't have events at all
