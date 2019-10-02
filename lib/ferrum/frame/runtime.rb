@@ -154,7 +154,7 @@ module Ferrum
         if cyclic?(object_id).dig("result", "value")
           return "(cyclic structure)"
         else
-          props = @page.command("Runtime.getProperties", objectId: object_id)
+          props = @page.command("Runtime.getProperties", ownProperties: true, objectId: object_id)
           props["result"].reduce(to) do |memo, prop|
             next(memo) unless prop["enumerable"]
             yield(memo, prop["name"], prop["value"])

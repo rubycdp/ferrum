@@ -73,8 +73,7 @@ module Ferrum
           width, height = document_size
           options.merge!(clip: { x: 0, y: 0, width: width, height: height, scale: scale }) if width > 0 && height > 0
         elsif opts[:selector]
-          rect = evaluate("document.querySelector('#{opts[:selector]}').getBoundingClientRect()")
-          options.merge!(clip: { x: rect["x"], y: rect["y"], width: rect["width"], height: rect["height"], scale: scale })
+          options.merge!(clip: get_bounding_rect(opts[:selector]).merge(scale: scale))
         end
 
         if scale != 1.0
@@ -87,6 +86,18 @@ module Ferrum
         end
 
         options
+      end
+
+      def get_bounding_rect(selector)
+        rect = evaluate_async(%Q(
+          const rect = document
+                         .querySelector('#{selector}')
+                         .getBoundingClientRect();
+          const {x, y, width, height} = rect;
+          arguments[0]([x, y, width, height])
+        ), timeout)
+
+        { x: rect[0], y: rect[1], width: rect[2], height: rect[3] }
       end
     end
   end
