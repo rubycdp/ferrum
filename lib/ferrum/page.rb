@@ -172,9 +172,9 @@ module Ferrum
 
     def prepare_page
       command("Page.enable")
+      command("Runtime.enable")
       command("DOM.enable")
       command("CSS.enable")
-      command("Runtime.enable")
       command("Log.enable")
       command("Network.enable")
 

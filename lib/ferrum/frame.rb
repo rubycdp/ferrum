@@ -7,11 +7,12 @@ module Ferrum
   class Frame
     include DOM, Runtime
 
-    attr_reader :id, :parent_id, :page, :state, :name
+    attr_reader :id, :page, :parent_id, :state
     attr_writer :execution_id
+    attr_accessor :name
 
-    def initialize(page, id, parent_id = nil)
-      @page, @id, @parent_id = page, id, parent_id
+    def initialize(id, page, parent_id = nil)
+      @id, @page, @parent_id = id, page, parent_id
     end
 
     # Can be one of:
@@ -42,6 +43,10 @@ module Ferrum
     rescue NoExecutionContextError
       @page.event.reset
       @page.event.wait(@page.timeout) ? retry : raise
+    end
+
+    def inspect
+      %(#<#{self.class} @id=#{@id.inspect} @parent_id=#{@parent_id.inspect} @name=#{@name.inspect} @state=#{@state.inspect} @execution_id=#{@execution_id.inspect}>)
     end
   end
 end
