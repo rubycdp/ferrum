@@ -139,15 +139,6 @@ module Ferrum
       frames_subscribe
       network.subscribe
 
-      on("Network.loadingFailed") do |params|
-        id, canceled = params.values_at("requestId", "canceled")
-        # Set event as we aborted main request we are waiting for
-        if network.request&.id == id && canceled == true
-          @event.set
-          get_document_id
-        end
-      end
-
       if @browser.logger
         on("Runtime.consoleAPICalled") do |params|
           params["args"].each { |r| @browser.logger.puts(r["value"]) }

@@ -31,7 +31,7 @@ module Ferrum
       end
 
       def abort
-        continue(errorReason: "Aborted")
+        continue(errorReason: "BlockedByClient")
       end
 
       def url
