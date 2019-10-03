@@ -182,6 +182,54 @@ module Ferrum
           end
         end
 
+        context "when format is passed" do
+          it "changes pdf size to A0" do
+            browser.goto("/ferrum/long_page")
+
+            browser.pdf(path: file, format: :A0)
+
+            reader = PDF::Reader.new(file)
+            reader.pages.each do |page|
+              bbox   = page.attributes[:MediaBox]
+              width  = (bbox[2] - bbox[0]) / 72
+              expect(width.round(2)).to eq(33.10)
+            end
+          end
+
+          it "specifying format and paperWidth will cause exception" do
+            browser.goto("/ferrum/long_page")
+
+            expect {
+              browser.pdf(path: file, format: :A0, paper_width: 1.0)
+            }.to raise_error RuntimeError
+          end
+
+          it "convert case correct", :aggregate_failures do
+            {
+              landscape: :landscape,
+              display_header_footer: :displayHeaderFooter,
+              print_background: :printBackground,
+              scale: :scale,
+              paper_width: :paperWidth,
+              paper_height: :paperHeight,
+              margin_top: :marginTop,
+              margin_bottom: :marginBottom,
+              margin_left: :marginLeft,
+              margin_right: :marginRight,
+              page_ranges: :pageRanges,
+              ignore_invalid_page_ranges: :ignoreInvalidPageRanges,
+              header_template: :headerTemplate,
+              footer_template: :footerTemplate,
+              prefer_css_page_size: :preferCSSPageSize,
+              transfer_mode: :transferMode
+            }.each do |key, value|
+              expect(
+                Ferrum::snake_to_camel_case key
+              ).to eq(value)
+            end
+          end
+        end
+
         include_examples "screenshot screen"
 
         context "when encoding is base64" do

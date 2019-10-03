@@ -285,6 +285,8 @@ Saves PDF on a disk or returns it as base64.
     Base64
   * :landscape `Boolean` paper orientation. Defaults to false.
   * :scale `Float` zoom in/out
+  * :format `symbol` standard paper sizes :letter, :legal, :tabloid, :ledger, :A0, :A1, :A2, :A3, :A4, :A5, :A6
+
   * :paper_width `Float` set paper width
   * :paper_height `Float` set paper height
   * See other [native options](https://chromedevtools.github.io/devtools-protocol/tot/Page#method-printToPDF) you can pass

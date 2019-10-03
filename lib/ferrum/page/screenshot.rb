@@ -3,6 +3,21 @@
 module Ferrum
   class Page
     module Screenshot
+
+      PAPEP_FORMATS = {
+        letter:   { width:  8.50, height: 11.00 },
+        legal:    { width:  8.50, height: 14.00 },
+        tabloid:  { width: 11.00, height: 17.00 },
+        ledger:   { width: 17.00, height: 11.00 },
+        A0:       { width: 33.10, height: 46.80 },
+        A1:       { width: 23.40, height: 33.10 },
+        A2:       { width: 16.54, height: 23.40 },
+        A3:       { width: 11.70, height: 16.54 },
+        A4:       { width:  8.27, height: 11.70 },
+        A5:       { width:  5.83, height:  8.27 },
+        A6:       { width:  4.13, height:  5.83 },
+      };
+
       def screenshot(**opts)
         path, encoding = common_options(**opts)
         options = screenshot_options(path, **opts)
@@ -46,13 +61,27 @@ module Ferrum
         [path, encoding]
       end
 
-      def pdf_options(landscape: false, paper_width: 8.5, paper_height: 11, scale: 1.0, **opts)
-        options = {}
-        options[:landscape] = landscape
-        options[:paperWidth] = paper_width.to_f
-        options[:paperHeight] = paper_height.to_f
-        options[:scale] = scale.to_f
-        options.merge(opts)
+      def pdf_options(**opts)
+        options = default_pdf_options
+        if format = opts.delete(:format)
+          raise "you can not specify format and dimensions" if opts[:paper_width] || opts[:paper_height]
+          if dimension = PAPEP_FORMATS[format]
+            options[:paper_width] = dimension[:width]
+            options[:paper_height] = dimension[:height]
+          else
+            raise "Could not find format #{format}, existing once are #{PAPER_FORMATS.keys.join(", ")}"
+          end
+        end
+        Ferrum::convert_option_hash options.merge(opts)
+      end
+
+      def default_pdf_options
+        {
+          landscape: false,
+          paper_width: 8.5,
+          paper_height: 11,
+          scale: 1.0
+        }
       end
 
       def screenshot_options(path = nil, format: nil, scale: 1.0, **opts)
