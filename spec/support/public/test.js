@@ -1,3 +1,5 @@
+// This is test.js file content
+
 $(function() {
   $("#datepicker").datepicker();
 
