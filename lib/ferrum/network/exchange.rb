@@ -9,7 +9,8 @@ module Ferrum
     class Exchange
       attr_reader :request, :response, :error
 
-      def initialize(params)
+      def initialize(page, params)
+        @page = page
         @response = @error = nil
         build_request(params)
       end
@@ -19,7 +20,7 @@ module Ferrum
       end
 
       def build_response(params)
-        @response = Network::Response.new(params)
+        @response = Network::Response.new(@page, params)
       end
 
       def build_error(params)
@@ -37,6 +38,10 @@ module Ferrum
 
       def to_a
         [request, response, error]
+      end
+
+      def inspect
+        %(#<#{self.class} @id=#{@id.inspect} @request=#{@request.inspect} @response=#{@response.inspect} @error=#{@error.inspect}>)
       end
     end
   end

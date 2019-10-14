@@ -5,9 +5,10 @@ module Ferrum
     class Response
       attr_reader :body_size
 
-      def initialize(params)
+      def initialize(page, params)
+        @page = page
         @params = params
-        @response = params["response"] || @params["redirectResponse"]
+        @response = params["response"] || params["redirectResponse"]
       end
 
       def id
@@ -35,7 +36,7 @@ module Ferrum
       end
 
       def content_type
-        @content_type ||= @response.dig("headers", "contentType")&.sub(/;.*\z/, "")
+        @content_type ||= headers.find { |k, _| k.downcase == "content-type" }&.last&.sub(/;.*\z/, "")
       end
 
       # See https://crbug.com/883475
@@ -45,6 +46,19 @@ module Ferrum
       # headers sizes received by wire.
       def body_size=(size)
         @body_size = size - headers_size
+      end
+
+      def body
+        @body ||= begin
+          body, encoded = @page
+                            .command("Network.getResponseBody", requestId: id)
+                            .values_at("body", "base64Encoded")
+          encoded ? Base64.decode64(body) : body
+        end
+      end
+
+      def inspect
+        %(#<#{self.class} @id=#{@id.inspect} @params=#{@params.inspect} @response=#{@response.inspect}>)
       end
     end
   end

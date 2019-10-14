@@ -15,6 +15,25 @@ module Ferrum
       expect(urls.grep(%r{/ferrum/test.js$}).size).to eq(1)
     end
 
+    it "gets response body" do
+      browser.goto("/ferrum/with_js")
+      responses = traffic.map(&:response)
+
+      expect(responses.size).to eq(4)
+
+      expect(responses[0].url).to end_with("/ferrum/with_js")
+      expect(responses[0].body).to include("ferrum with_js")
+
+      expect(responses[1].url).to end_with("/ferrum/jquery.min.js")
+      expect(responses[1].body).to include("jQuery v1.11.3")
+
+      expect(responses[2].url).to end_with("/ferrum/jquery-ui.min.js")
+      expect(responses[2].body).to include("jQuery UI - v1.11.4")
+
+      expect(responses[3].url).to end_with("/ferrum/test.js")
+      expect(responses[3].body).to include("This is test.js file content")
+    end
+
     it "keeps track of blocked network traffic" do
       browser.network.intercept
       browser.on(:request) do |request|
