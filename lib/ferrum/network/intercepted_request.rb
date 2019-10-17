@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "base64"
+
 module Ferrum
   class Network
     class InterceptedRequest
@@ -19,6 +21,21 @@ module Ferrum
 
       def match?(regexp)
         !!url.match(regexp)
+      end
+
+      def respond(**options)
+        has_body = options.has_key?(:body)
+        headers = has_body ? { "content-length" => options.fetch(:body, '').length } : {}
+        headers = headers.merge(options.fetch(:responseHeaders, {}))
+
+        options = {responseCode: 200}.merge(options)
+        options = options.merge({
+          requestId: request_id,
+          responseHeaders: header_array(headers),
+        })
+        options = options.merge(body: Base64.encode64(options.fetch(:body, '')).strip) if has_body
+
+        @page.command("Fetch.fulfillRequest", **options)
       end
 
       def continue(**options)
@@ -52,6 +69,14 @@ module Ferrum
 
       def inspect
         %(#<#{self.class} @request_id=#{@request_id.inspect} @frame_id=#{@frame_id.inspect} @resource_type=#{@resource_type.inspect} @request=#{@request.inspect}>)
+      end
+
+      private
+
+      def header_array(values)
+        values.map do |key, value|
+          { name: String(key), value: String(value) }
+        end
       end
     end
   end

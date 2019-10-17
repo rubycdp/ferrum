@@ -286,6 +286,18 @@ module Ferrum
         frame = browser.at_xpath("//iframe[@name = 'unwantedframe']").frame
         expect(frame.body).to include("We shouldn't see this.")
       end
+
+      it "supports custom responses" do
+        browser.network.intercept
+        browser.on(:request) do |request|
+          request.respond(body: "<h1>content</h1>")
+        end
+
+        browser.goto("/ferrum/non_existing")
+
+        expect(browser.network.status).to eq(200)
+        expect(browser.body).to include("content")
+      end
     end
   end
 end
