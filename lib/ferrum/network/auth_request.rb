@@ -2,7 +2,7 @@
 
 module Ferrum
   class Network
-    class InterceptedRequest
+    class AuthRequest
       attr_accessor :request_id, :frame_id, :resource_type
 
       def initialize(page, params)
@@ -17,13 +17,17 @@ module Ferrum
         @params["isNavigationRequest"]
       end
 
+      def auth_challenge?(source)
+        @params.dig("authChallenge", "source")&.downcase&.to_s == source.to_s
+      end
+
       def match?(regexp)
         !!url.match(regexp)
       end
 
       def continue(**options)
         options = options.merge(requestId: request_id)
-        @page.command("Fetch.continueRequest", **options)
+        @page.command("Fetch.continueWithAuth", **options)
       end
 
       def abort

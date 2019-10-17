@@ -124,8 +124,13 @@ module Ferrum
           block.call(dialog, index, total)
         end
       when :request
-        @client.on("Network.requestIntercepted") do |params, index, total|
+        @client.on("Fetch.requestPaused") do |params, index, total|
           request = Network::InterceptedRequest.new(self, params)
+          block.call(request, index, total)
+        end
+      when :auth
+        @client.on("Fetch.authRequired") do |params, index, total|
+          request = Network::AuthRequest.new(self, params)
           block.call(request, index, total)
         end
       else

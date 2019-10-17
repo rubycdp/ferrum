@@ -2,6 +2,7 @@
 
 require "ferrum/network/exchange"
 require "ferrum/network/intercepted_request"
+require "ferrum/network/auth_request"
 
 module Ferrum
   class Network
@@ -51,7 +52,7 @@ module Ferrum
         pattern[:resourceType] = resource_type
       end
 
-      @page.command("Network.setRequestInterception", patterns: [pattern])
+      @page.command("Fetch.enable", handleAuthRequests: true, patterns: [pattern])
     end
 
     def authorize(user:, password:, type: :server)
@@ -64,18 +65,22 @@ module Ferrum
 
       intercept
 
-      @page.on(:request) do |request, index, total|
+      @page.on(:request) do |request|
+        request.continue
+      end
+
+      @page.on(:auth) do |request, index, total|
         if request.auth_challenge?(type)
           response = authorized_response(@authorized_ids[type],
-                                         request.interception_id,
+                                         request.request_id,
                                          user, password)
 
-          @authorized_ids[type] << request.interception_id
+          @authorized_ids[type] << request.request_id
           request.continue(authChallengeResponse: response)
         elsif index + 1 < total
           next # There are other callbacks that can handle this
         else
-          request.continue
+          request.abort
         end
       end
     end
@@ -118,8 +123,8 @@ module Ferrum
       end
     end
 
-    def authorized_response(ids, interception_id, username, password)
-      if ids.include?(interception_id)
+    def authorized_response(ids, request_id, username, password)
+      if ids.include?(request_id)
         { response: "CancelAuth" }
       elsif username && password
         { response: "ProvideCredentials",
