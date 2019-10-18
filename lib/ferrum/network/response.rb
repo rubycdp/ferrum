@@ -57,8 +57,16 @@ module Ferrum
         end
       end
 
+      def main?
+        @page.network.response == self
+      end
+
+      def ==(other)
+        id == other.id
+      end
+
       def inspect
-        %(#<#{self.class} @id=#{@id.inspect} @params=#{@params.inspect} @response=#{@response.inspect}>)
+        %(#<#{self.class} @params=#{@params.inspect} @response=#{@response.inspect}>)
       end
     end
   end
