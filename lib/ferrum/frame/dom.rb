@@ -28,6 +28,10 @@ module Ferrum
         evaluate("window.top.document.title")
       end
 
+      def doctype
+        evaluate("new XMLSerializer().serializeToString(document.doctype)")
+      end
+
       def body
         evaluate("document.documentElement.outerHTML")
       end
