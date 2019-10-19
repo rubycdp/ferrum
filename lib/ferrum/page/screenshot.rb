@@ -21,7 +21,7 @@ module Ferrum
       def screenshot(**opts)
         path, encoding = common_options(**opts)
         options = screenshot_options(path, **opts)
-        data = fetch_screenshot_capture(options, fullscreen: opts[:full])
+        data = screenshot_capture_data(options, **opts)
         return data if encoding == :base64
         save_file(path, data)
       end
@@ -129,15 +129,27 @@ module Ferrum
         { x: rect[0], y: rect[1], width: rect[2], height: rect[3] }
       end
 
-      def fetch_screenshot_capture(options, fullscreen: false)
-        current_viewport_size_values = viewport_size.dup
-        resize(fullscreen: true) if fullscreen
-        data = command("Page.captureScreenshot", **options).fetch("data")
-        if fullscreen
-          width, height = current_viewport_size_values
-          resize(width: width, height: height)
-        end
+      def screenshot_capture_data(options, **opts)
+        begin
+          if opts[:full]
+            fullscreen_screenshot_capture(**options)
+          else
+            screenshot_capture(**options)
+          end
+        end.fetch("data")
+      end
+
+      def fullscreen_screenshot_capture(**options)
+        current_viewport_sizes = viewport_size.dup
+        resize(fullscreen: true)
+        data = screenshot_capture(**options)
+        width, height = current_viewport_sizes
+        resize(width: width, height: height)
         data
+      end
+
+      def screenshot_capture(**options)
+        command("Page.captureScreenshot", **options)
       end
     end
   end
