@@ -137,24 +137,24 @@ module Ferrum
       def screenshot_capture_data(options, fullscreen:)
         begin
           if fullscreen
-            fullscreen_screenshot_capture(**options)
+            fullscreen_screenshot_capture(options)
           else
-            screenshot_capture(**options)
+            screenshot_capture(options)
           end
         end.fetch("data")
       end
 
-      def fullscreen_screenshot_capture(**options)
+      def fullscreen_screenshot_capture(options)
         current_viewport_sizes = viewport_size.dup
         resize(fullscreen: true)
-        screenshot_capture(**options)
+        screenshot_capture(options)
       ensure
         width, height = current_viewport_sizes
         resize(width: width, height: height)
       end
 
-      def screenshot_capture(**options)
-        command("Page.captureScreenshot", **options)
+      def screenshot_capture(options)
+        command("Page.captureScreenshot", options)
       end
     end
   end
