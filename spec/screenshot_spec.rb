@@ -126,6 +126,20 @@ module Ferrum
             expect(File.exist?(file)).to be true
             expect(browser.viewport_size).to eq([800, 200])
           end
+
+          it "returns correct document sizes even exception while fullscreen capturing" do
+            browser.goto "/ferrum/custom_html_size"
+            browser.resize width: 100, height: 100
+            allow(browser.page).to receive(:command).and_call_original
+            fullscreen_options = { format: "png", clip: { x: 0, y: 0, width: 1280, height: 1024, scale: 1.0 }}
+            expect(browser.page)
+              .to receive(:command)
+              .with("Page.captureScreenshot", fullscreen_options)
+              .and_raise(StandardError)
+            expect { browser.screenshot(path: file, full: true) }.to raise_exception(StandardError)
+            expect(File.exist?(file)).not_to be
+            expect(browser.viewport_size).to eq([100, 100])
+          end
         end
 
         it "supports screenshotting the page to file without extension when format is specified" do
