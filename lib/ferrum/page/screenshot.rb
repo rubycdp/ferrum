@@ -3,6 +3,12 @@
 module Ferrum
   class Page
     module Screenshot
+      DEFAULT_PDF_OPTIONS = {
+        landscape: false,
+        paper_width: 8.5,
+        paper_height: 11,
+        scale: 1.0
+      }.freeze
 
       PAPEP_FORMATS = {
         letter:   { width:  8.50, height: 11.00 },
@@ -16,7 +22,7 @@ module Ferrum
         A4:       { width:  8.27, height: 11.70 },
         A5:       { width:  5.83, height:  8.27 },
         A6:       { width:  4.13, height:  5.83 },
-      };
+      }.freeze
 
       def screenshot(**opts)
         path, encoding = common_options(**opts)
@@ -62,26 +68,20 @@ module Ferrum
       end
 
       def pdf_options(**opts)
-        options = default_pdf_options
-        if format = opts.delete(:format)
-          raise "you can not specify format and dimensions" if opts[:paper_width] || opts[:paper_height]
-          if dimension = PAPEP_FORMATS[format]
-            options[:paper_width] = dimension[:width]
-            options[:paper_height] = dimension[:height]
-          else
-            raise "Could not find format #{format}, existing once are #{PAPER_FORMATS.keys.join(", ")}"
-          end
-        end
-        Ferrum::convert_option_hash options.merge(opts)
-      end
+        format = opts.delete(:format)
+        options = DEFAULT_PDF_OPTIONS.merge(opts)
 
-      def default_pdf_options
-        {
-          landscape: false,
-          paper_width: 8.5,
-          paper_height: 11,
-          scale: 1.0
-        }
+        if format
+          if opts[:paper_width] || opts[:paper_height]
+            raise ArgumentError, "Specify :format or :paper_width, :paper_height"
+          end
+
+          dimension = PAPEP_FORMATS.fetch(format)
+          options.merge!(paper_width: dimension[:width],
+                         paper_height: dimension[:height])
+        end
+
+        options.map { |k, v| [to_camel_case(k), v] }.to_h
       end
 
       def screenshot_options(path = nil, format: nil, scale: 1.0, **opts)
@@ -127,6 +127,11 @@ module Ferrum
         ), timeout)
 
         { x: rect[0], y: rect[1], width: rect[2], height: rect[3] }
+      end
+
+      def to_camel_case(option)
+        return :preferCSSPageSize if option == :prefer_css_page_size
+        option.to_s.gsub(/(?:_|(\/))([a-z\d]*)/) { "#{$1}#{$2.capitalize}" }.to_sym
       end
 
       def screenshot_capture_data(options, fullscreen:)

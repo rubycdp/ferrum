@@ -209,8 +209,8 @@ module Ferrum
 
             reader = PDF::Reader.new(file)
             reader.pages.each do |page|
-              bbox   = page.attributes[:MediaBox]
-              width  = (bbox[2] - bbox[0]) / 72
+              bbox = page.attributes[:MediaBox]
+              width = (bbox[2] - bbox[0]) / 72
               expect(width).to eq(1)
             end
           end
@@ -224,8 +224,8 @@ module Ferrum
 
             reader = PDF::Reader.new(file)
             reader.pages.each do |page|
-              bbox   = page.attributes[:MediaBox]
-              width  = (bbox[2] - bbox[0]) / 72
+              bbox = page.attributes[:MediaBox]
+              width = (bbox[2] - bbox[0]) / 72
               expect(width.round(2)).to eq(33.10)
             end
           end
@@ -235,32 +235,44 @@ module Ferrum
 
             expect {
               browser.pdf(path: file, format: :A0, paper_width: 1.0)
-            }.to raise_error RuntimeError
+            }.to raise_error(ArgumentError)
           end
 
-          it "convert case correct", :aggregate_failures do
-            {
-              landscape: :landscape,
-              display_header_footer: :displayHeaderFooter,
-              print_background: :printBackground,
-              scale: :scale,
-              paper_width: :paperWidth,
-              paper_height: :paperHeight,
-              margin_top: :marginTop,
-              margin_bottom: :marginBottom,
-              margin_left: :marginLeft,
-              margin_right: :marginRight,
-              page_ranges: :pageRanges,
-              ignore_invalid_page_ranges: :ignoreInvalidPageRanges,
-              header_template: :headerTemplate,
-              footer_template: :footerTemplate,
-              prefer_css_page_size: :preferCSSPageSize,
-              transfer_mode: :transferMode
-            }.each do |key, value|
-              expect(
-                Ferrum::snake_to_camel_case key
-              ).to eq(value)
-            end
+          it "convert case correct" do
+            browser.goto("/ferrum/long_page")
+
+            allow(browser.page).to receive(:command).with("Page.printToPDF", {
+               displayHeaderFooter: false,
+               ignoreInvalidPageRanges: false,
+               landscape: false,
+               marginBottom: 0.4,
+               marginLeft: 0.4,
+               marginRight: 0.4,
+               marginTop: 0.4,
+               pageRanges: "",
+               paperHeight: 11,
+               paperWidth: 8.5,
+               path: file,
+               preferCSSPageSize: false,
+               printBackground: false,
+               scale: 1,
+               transferMode: "ReturnAsBase64"
+            }) { { "data" => "" } }
+
+            browser.pdf(path: file, landscape: false,
+                                    display_header_footer: false,
+                                    print_background: false,
+                                    scale: 1,
+                                    paper_width: 8.5,
+                                    paper_height: 11,
+                                    margin_top: 0.4,
+                                    margin_bottom: 0.4,
+                                    margin_left: 0.4,
+                                    margin_right: 0.4,
+                                    page_ranges: "",
+                                    ignore_invalid_page_ranges: false,
+                                    prefer_css_page_size: false,
+                                    transfer_mode: "ReturnAsBase64")
           end
         end
 
