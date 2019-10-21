@@ -110,20 +110,4 @@ module Ferrum
       retry
     end
   end
-
-  def self.snake_to_camel_case option
-    return :preferCSSPageSize if option == :prefer_css_page_size
-    option
-      .to_s
-      .gsub(/(?:_|(\/))([a-z\d]*)/) { "#{$1}#{$2.capitalize}" }
-      .to_sym
-  end
-
-  def self.convert_option_hash options
-    options
-      .map { |k,v|
-        [Ferrum::snake_to_camel_case(k), v]
-      }
-      .to_h
-  end
 end
