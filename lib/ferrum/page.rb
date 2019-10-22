@@ -86,13 +86,18 @@ module Ferrum
       @window_id, @bounds = result.values_at("windowId", "bounds")
 
       if fullscreen
+        width, height = document_size
         @browser.command("Browser.setWindowBounds", windowId: @window_id, bounds: { windowState: "fullscreen" })
-        override_device_metrics_sizes(*document_size)
       else
         @browser.command("Browser.setWindowBounds", windowId: @window_id, bounds: { windowState: "normal" })
         @browser.command("Browser.setWindowBounds", windowId: @window_id, bounds: { width: width, height: height, windowState: "normal" })
-        override_device_metrics_sizes(width, height)
       end
+
+      command("Emulation.setDeviceMetricsOverride", width: width,
+                                                    height: height,
+                                                    deviceScaleFactor: 1,
+                                                    mobile: false,
+                                                    fitWindow: false)
     end
 
     def refresh
@@ -235,11 +240,6 @@ module Ferrum
 
     def get_document_id
       @document_id = command("DOM.getDocument", depth: 0).dig("root", "nodeId")
-    end
-
-    def override_device_metrics_sizes(width, height)
-      options = { width: width, height: height, deviceScaleFactor: 1, mobile: false, fitWindow: false }
-      command("Emulation.setDeviceMetricsOverride", options)
     end
   end
 end

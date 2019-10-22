@@ -110,33 +110,39 @@ module Ferrum
 
         context "fullscreen" do
           it "supports screenshotting of fullscreen" do
-            browser.goto "/ferrum/custom_html_size"
+            browser.goto("/ferrum/custom_html_size")
             expect(browser.viewport_size).to eq([1024, 768])
+
             browser.screenshot(path: file, full: true)
+
             File.open(file, "rb") do |f|
               expect(ImageSize.new(f.read).size).to eq([1280, 1024])
             end
             expect(browser.viewport_size).to eq([1024, 768])
           end
 
-          it "does not change the current document sizes" do
+          it "keeps current viewport" do
             browser.goto
-            browser.resize width: 800, height: 200
+            browser.resize(width: 800, height: 200)
+
             browser.screenshot(path: file, full: true)
-            expect(File.exist?(file)).to be true
+
+            expect(File.exist?(file)).to be(true)
             expect(browser.viewport_size).to eq([800, 200])
           end
 
-          it "returns correct document sizes even exception while fullscreen capturing" do
-            browser.goto "/ferrum/custom_html_size"
-            browser.resize width: 100, height: 100
+          it "resets to previous viewport when exception is raised" do
+            browser.goto("/ferrum/custom_html_size")
+            browser.resize(width: 100, height: 100)
+
             allow(browser.page).to receive(:command).and_call_original
-            fullscreen_options = { format: "png", clip: { x: 0, y: 0, width: 1280, height: 1024, scale: 1.0 }}
-            expect(browser.page)
-              .to receive(:command)
-              .with("Page.captureScreenshot", fullscreen_options)
-              .and_raise(StandardError)
-            expect { browser.screenshot(path: file, full: true) }.to raise_exception(StandardError)
+            expect(browser.page).to receive(:command)
+              .with("Page.captureScreenshot", format: "png", clip: {
+                x: 0, y: 0, width: 1280, height: 1024, scale: 1.0
+              }).and_raise(StandardError)
+            expect { browser.screenshot(path: file, full: true) }
+              .to raise_exception(StandardError)
+
             expect(File.exist?(file)).not_to be
             expect(browser.viewport_size).to eq([100, 100])
           end
