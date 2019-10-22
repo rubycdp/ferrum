@@ -370,6 +370,8 @@ browser.network.intercept
 browser.on(:request) do |request|
   if request.match?(/bla-bla/)
     request.abort
+  elsif request.match?(/lorem/)
+    request.respond(body: "Lorem ipsum")
   else
     request.continue
   end

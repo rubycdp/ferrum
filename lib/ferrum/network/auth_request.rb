@@ -1,10 +1,8 @@
 # frozen_string_literal: true
 
-require "base64"
-
 module Ferrum
   class Network
-    class InterceptedRequest
+    class AuthRequest
       attr_accessor :request_id, :frame_id, :resource_type
 
       def initialize(page, params)
@@ -19,28 +17,17 @@ module Ferrum
         @params["isNavigationRequest"]
       end
 
+      def auth_challenge?(source)
+        @params.dig("authChallenge", "source")&.downcase&.to_s == source.to_s
+      end
+
       def match?(regexp)
         !!url.match(regexp)
       end
 
-      def respond(**options)
-        has_body = options.has_key?(:body)
-        headers = has_body ? { "content-length" => options.fetch(:body, '').length } : {}
-        headers = headers.merge(options.fetch(:responseHeaders, {}))
-
-        options = {responseCode: 200}.merge(options)
-        options = options.merge({
-          requestId: request_id,
-          responseHeaders: header_array(headers),
-        })
-        options = options.merge(body: Base64.encode64(options.fetch(:body, '')).strip) if has_body
-
-        @page.command("Fetch.fulfillRequest", **options)
-      end
-
       def continue(**options)
         options = options.merge(requestId: request_id)
-        @page.command("Fetch.continueRequest", **options)
+        @page.command("Fetch.continueWithAuth", **options)
       end
 
       def abort
@@ -69,14 +56,6 @@ module Ferrum
 
       def inspect
         %(#<#{self.class} @request_id=#{@request_id.inspect} @frame_id=#{@frame_id.inspect} @resource_type=#{@resource_type.inspect} @request=#{@request.inspect}>)
-      end
-
-      private
-
-      def header_array(values)
-        values.map do |key, value|
-          { name: String(key), value: String(value) }
-        end
       end
     end
   end
