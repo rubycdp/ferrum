@@ -27,7 +27,7 @@ module Ferrum
       def screenshot(**opts)
         path, encoding = common_options(**opts)
         options = screenshot_options(path, **opts)
-        data = command("Page.captureScreenshot", **options).fetch("data")
+        data = screenshot_capture_data(options, fullscreen: opts[:full])
         return data if encoding == :base64
         save_file(path, data)
       end
@@ -132,6 +132,29 @@ module Ferrum
       def to_camel_case(option)
         return :preferCSSPageSize if option == :prefer_css_page_size
         option.to_s.gsub(/(?:_|(\/))([a-z\d]*)/) { "#{$1}#{$2.capitalize}" }.to_sym
+      end
+
+      def screenshot_capture_data(options, fullscreen:)
+        begin
+          if fullscreen
+            fullscreen_screenshot_capture(options)
+          else
+            screenshot_capture(options)
+          end
+        end.fetch("data")
+      end
+
+      def fullscreen_screenshot_capture(options)
+        current_viewport_sizes = viewport_size.dup
+        resize(fullscreen: true)
+        screenshot_capture(options)
+      ensure
+        width, height = current_viewport_sizes
+        resize(width: width, height: height)
+      end
+
+      def screenshot_capture(options)
+        command("Page.captureScreenshot", options)
       end
     end
   end
