@@ -23,6 +23,7 @@ module Ferrum
                 screenshot pdf viewport_size
                 frames frame_by main_frame
                 evaluate evaluate_on evaluate_async execute
+                add_script_tag add_style_tag
                 on] => :page
 
     attr_reader :client, :process, :contexts, :logger, :js_errors,
