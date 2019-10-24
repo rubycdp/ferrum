@@ -605,6 +605,29 @@ simple value.
 browser.execute(%(1 + 1)) # => true
 ```
 
+#### add_script_tag(\*\*options) : `Boolean`
+
+* options `Hash`
+  * :url `String`
+  * :path `String`
+  * :content `String`
+  * :type `String` - `text/javascript` by default
+
+```ruby
+browser.add_script_tag(url: "http://example.com/stylesheet.css") # => true
+```
+
+#### add_style_tag(\*\*options) : `Boolean`
+
+* options `Hash`
+  * :url `String`
+  * :path `String`
+  * :content `String`
+
+```ruby
+browser.add_style_tag(content: "h1 { font-size: 40px; }") # => true
+```
+
 
 ## Frames
 

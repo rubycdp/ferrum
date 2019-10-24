@@ -242,6 +242,11 @@ module Ferrum
       File.read("#{FERRUM_PUBLIC}/test.js")
     end
 
+    get "/ferrum/add_style_tag.css" do
+      content_type :css
+      File.read("#{FERRUM_PUBLIC}/add_style_tag.css")
+    end
+
     get "/ferrum/jquery.min.js" do
       content_type :js
       File.read("#{FERRUM_PUBLIC}/jquery-1.11.3.min.js")
