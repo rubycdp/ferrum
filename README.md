@@ -17,6 +17,8 @@ this code inside in one form or another but the thing is you don't need capybara
 if you are going to crawl sites. You crawl, not test. Besides that clean
 lightweight API to browser is what Ruby was missing, so here it comes.
 
+If you like this project, please consider to [become a backer](https://www.patreon.com/rferrum) on Patreon.
+
 ## Install
 
 There's no official Chrome or Chromium package for Linux don't install it this
