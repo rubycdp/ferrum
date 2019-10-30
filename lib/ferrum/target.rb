@@ -4,6 +4,10 @@ module Ferrum
   class Target
     NEW_WINDOW_WAIT = ENV.fetch("FERRUM_NEW_WINDOW_WAIT", 0.3).to_f
 
+    # You can create page yourself and assign it to target, used in cuprite
+    # where we enhance page class and build page ourselves.
+    attr_writer :page
+
     def initialize(browser, params = nil)
       @browser = browser
       @params = params
@@ -19,8 +23,7 @@ module Ferrum
 
     def page
       @page ||= begin
-        # Dirty hack because new window doesn't have events at all
-        sleep(NEW_WINDOW_WAIT) if window?
+        maybe_sleep_if_new_window
         Page.new(id, @browser)
       end
     end
@@ -51,6 +54,11 @@ module Ferrum
 
     def window?
       !!opener_id
+    end
+
+    def maybe_sleep_if_new_window
+      # Dirty hack because new window doesn't have events at all
+      sleep(NEW_WINDOW_WAIT) if window?
     end
   end
 end
