@@ -11,11 +11,9 @@ module Ferrum
         @frames.values
       end
 
-      def frame_by(id: nil, execution_id: nil, name: nil)
+      def frame_by(id: nil, name: nil)
         if id
           @frames[id]
-        elsif execution_id
-          frames.find { |f| f.execution_id == execution_id }
         elsif name
           frames.find { |f| f.name == name }
         else
@@ -96,7 +94,7 @@ module Ferrum
 
         on("Runtime.executionContextDestroyed") do |params|
           execution_id = params["executionContextId"]
-          frame = frame_by(execution_id: execution_id)
+          frame = frames.find { |f| f.execution_id?(execution_id) }
           frame.execution_id = nil
         end
 
