@@ -57,7 +57,7 @@ module Ferrum
                   "example BROWSER_PATH=\"/Applications/Chromium.app/Contents/MacOS/Chromium\""
 
 
-      attr_reader :host, :port, :ws_url, :pid, :path, :options, :cmd
+      attr_reader :host, :port, :ws_url, :pid, :path, :options, :cmd, :default_user_agent
 
       def self.start(*args)
         new(*args).tap(&:start)
@@ -116,6 +116,7 @@ module Ferrum
           url = URI.join(options[:url].to_s, "/json/version")
           response = JSON.parse(::Net::HTTP.get(url))
           set_ws_url(response["webSocketDebuggerUrl"])
+          set_default_user_agent
           return
         end
 
@@ -163,6 +164,7 @@ module Ferrum
           ObjectSpace.define_finalizer(self, self.class.process_killer(@pid))
 
           parse_ws_url(read_io, @process_timeout)
+          set_default_user_agent
         ensure
           close_io(read_io, write_io)
         end
@@ -219,6 +221,14 @@ module Ferrum
         @ws_url = Addressable::URI.parse(url)
         @host = @ws_url.host
         @port = @ws_url.port
+      end
+
+      def set_default_user_agent
+        return unless ws_url.is_a? Addressable::URI
+
+        version_url = URI.parse(ws_url.merge(scheme: "http", path: "/json/version"))
+        response = JSON.parse(::Net::HTTP.get(version_url))
+        @default_user_agent = response["User-Agent"]
       end
 
       def close_io(*ios)

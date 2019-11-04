@@ -40,7 +40,7 @@ module Ferrum
 
     def set_overrides(user_agent: nil, accept_language: nil, platform: nil)
       options = Hash.new
-      options[:userAgent] = user_agent if user_agent
+      options[:userAgent] = user_agent || @page.browser.default_user_agent
       options[:acceptLanguage] = accept_language if accept_language
       options[:platform] if platform
 
