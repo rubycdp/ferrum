@@ -48,6 +48,13 @@ module Ferrum
         expect(browser.body).to include("APPENDED: true")
       end
 
+      it "sets accept-language even if user-agent is not provided" do
+        browser.headers.add("Accept-Language" => "esperanto")
+        browser.goto("/ferrum/headers")
+        expect(browser.body).to include("USER_AGENT: #{browser.default_user_agent}")
+        expect(browser.body).to match(/ACCEPT_LANGUAGE: esperanto/)
+      end
+
       it "sets headers on the initial request for referer only" do
         browser.headers.set("PermanentA" => "a")
         browser.headers.add("PermanentB" => "b")

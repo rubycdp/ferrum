@@ -25,6 +25,7 @@ module Ferrum
                 evaluate evaluate_on evaluate_async execute
                 add_script_tag add_style_tag
                 on] => :page
+    delegate %i[default_user_agent] => :process
 
     attr_reader :client, :process, :contexts, :logger, :js_errors,
                 :slowmo, :base_url, :options, :window_size
