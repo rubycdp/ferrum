@@ -232,7 +232,7 @@ module Ferrum
 
                     const seen = [];
                     function detectCycle(obj) {
-                      if (typeof obj === 'object') {
+                      if (typeof obj === "object") {
                         if (seen.indexOf(obj) !== -1) {
                           return true;
                         }

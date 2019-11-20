@@ -25,7 +25,7 @@ module Ferrum
 
       def respond(**options)
         has_body = options.has_key?(:body)
-        headers = has_body ? { "content-length" => options.fetch(:body, '').length } : {}
+        headers = has_body ? { "content-length" => options.fetch(:body, "").length } : {}
         headers = headers.merge(options.fetch(:responseHeaders, {}))
 
         options = {responseCode: 200}.merge(options)
@@ -33,7 +33,7 @@ module Ferrum
           requestId: request_id,
           responseHeaders: header_array(headers),
         })
-        options = options.merge(body: Base64.encode64(options.fetch(:body, '')).strip) if has_body
+        options = options.merge(body: Base64.encode64(options.fetch(:body, "")).strip) if has_body
 
         @page.command("Fetch.fulfillRequest", **options)
       end

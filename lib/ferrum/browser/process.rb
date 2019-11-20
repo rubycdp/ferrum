@@ -236,7 +236,7 @@ module Ferrum
           begin
             io.close unless io.closed?
           rescue IOError
-            raise unless RUBY_ENGINE == 'jruby'
+            raise unless RUBY_ENGINE == "jruby"
           end
         end
       end

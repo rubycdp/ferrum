@@ -104,6 +104,7 @@ module Ferrum
     def refresh
       command("Page.reload", wait: timeout)
     end
+    alias_method :reload, :refresh
 
     def back
       history_navigate(delta: -1)
@@ -111,6 +112,12 @@ module Ferrum
 
     def forward
       history_navigate(delta: 1)
+    end
+
+    def bypass_csp(value = true)
+      enabled = !!value
+      command("Page.setBypassCSP", enabled: enabled)
+      enabled
     end
 
     def command(method, wait: 0, **params)

@@ -628,6 +628,18 @@ browser.add_script_tag(url: "http://example.com/stylesheet.css") # => true
 
 ```ruby
 browser.add_style_tag(content: "h1 { font-size: 40px; }") # => true
+
+```
+#### bypass_csp(enabled) : `Boolean`
+
+* enabled `Boolean`, `true` by default
+
+```ruby
+browser.bypass_csp # => true
+browser.goto("https://github.com/ruby-concurrency/concurrent-ruby/blob/master/docs-source/promises.in.md")
+browser.refresh
+browser.add_script_tag(content: "window.__injected = 42")
+browser.evaluate("window.__injected") # => 42
 ```
 
 

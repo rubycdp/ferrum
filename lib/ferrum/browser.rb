@@ -16,14 +16,14 @@ module Ferrum
     extend Forwardable
     delegate %i[default_context] => :contexts
     delegate %i[targets create_target create_page page pages windows] => :default_context
-    delegate %i[goto back forward refresh
+    delegate %i[goto back forward refresh reload
                 at_css at_xpath css xpath current_url title body doctype
                 headers cookies network
                 mouse keyboard
                 screenshot pdf viewport_size
                 frames frame_by main_frame
                 evaluate evaluate_on evaluate_async execute
-                add_script_tag add_style_tag
+                add_script_tag add_style_tag bypass_csp
                 on] => :page
     delegate %i[default_user_agent] => :process
 

@@ -21,95 +21,102 @@ module Ferrum
     set :raise_errors, true
     set :show_exceptions, false
 
-    get '/' do
+    get "/" do
       response.set_cookie("cookie", value: "root cookie", domain: request.host, path: request.path)
-      'Hello world! <a href="with_html">Relative</a>'
+      %(Hello world! <a href="with_html">Relative</a>)
     end
 
-    get '/foo' do
-      'Another World'
+    get "/csp" do
+      headers["Content-Security-Policy"] = %(default-src "self")
+      "csp content"
     end
 
-    get '/redirect' do
-      redirect '/redirect_again'
+    get "/foo" do
+      "Another World"
     end
 
-    get '/redirect_again' do
-      redirect '/landed'
+    get "/redirect" do
+      redirect "/redirect_again"
     end
 
-    post '/redirect_307' do
-      redirect '/landed', 307
+    get "/redirect_again" do
+      redirect "/landed"
     end
 
-    post '/redirect_308' do
-      redirect '/landed', 308
+    post "/redirect_307" do
+      redirect "/landed", 307
     end
 
-    get '/referer_base' do
-      '<a href="/get_referer">direct link</a>' \
-      '<a href="/redirect_to_get_referer">link via redirect</a>' \
-      '<form action="/get_referer" method="get"><input type="submit"></form>'
+    post "/redirect_308" do
+      redirect "/landed", 308
     end
 
-    get '/redirect_to_get_referer' do
-      redirect '/get_referer'
+    get "/referer_base" do
+      <<~HERE.gsub(/\n/, "")
+        <a href="/get_referer">direct link</a>
+        <a href="/redirect_to_get_referer">link via redirect</a>
+        <form action="/get_referer" method="get"><input type="submit"></form>
+      HERE
     end
 
-    get '/get_referer' do
-      request.referer.nil? ? 'No referer' : "Got referer: #{request.referer}"
+    get "/redirect_to_get_referer" do
+      redirect "/get_referer"
     end
 
-    get '/host' do
+    get "/get_referer" do
+      request.referer.nil? ? "No referer" : "Got referer: #{request.referer}"
+    end
+
+    get "/host" do
       "Current host is #{request.scheme}://#{request.host}:#{request.port}"
     end
 
-    get '/redirect/:times/times' do
+    get "/redirect/:times/times" do
       times = params[:times].to_i
       if times.zero?
-        'redirection complete'
+        "redirection complete"
       else
         redirect "/redirect/#{times - 1}/times"
       end
     end
 
-    get '/landed' do
-      'You landed'
+    get "/landed" do
+      "You landed"
     end
 
-    post '/landed' do
+    post "/landed" do
       "You post landed: #{params.dig(:form, 'data')}"
     end
 
-    get '/with-quotes' do
+    get "/with-quotes" do
       %q("No," he said, "you can't do that.")
     end
 
-    get '/form/get' do
-      '<pre id="results">' + params[:form].to_yaml + '</pre>'
+    get "/form/get" do
+      %(<pre id="results">#{params[:form].to_yaml}</pre>)
     end
 
-    post '/relative' do
-      '<pre id="results">' + params[:form].to_yaml + '</pre>'
+    post "/relative" do
+      %(<pre id="results">#{params[:form].to_yaml}</pre>)
     end
 
-    get '/favicon.ico' do
+    get "/favicon.ico" do
       nil
     end
 
-    post '/redirect' do
-      redirect '/redirect_again'
+    post "/redirect" do
+      redirect "/redirect_again"
     end
 
-    delete '/delete' do
-      'The requested object was deleted'
+    delete "/delete" do
+      "The requested object was deleted"
     end
 
-    get '/delete' do
-      'Not deleted'
+    get "/delete" do
+      "Not deleted"
     end
 
-    get '/redirect_back' do
+    get "/redirect_back" do
       redirect back
     end
 
@@ -119,7 +126,7 @@ module Ferrum
 
     get "/slow_response" do
       sleep 2
-      'Finally!'
+      "Finally!"
     end
 
     get "/set_cookie" do
@@ -132,31 +139,31 @@ module Ferrum
       request.cookies["stealth"]
     end
 
-    get '/get_header' do
-      env['HTTP_FOO']
+    get "/get_header" do
+      env["HTTP_FOO"]
     end
 
-    get '/get_header_via_redirect' do
-      redirect '/get_header'
+    get "/get_header_via_redirect" do
+      redirect "/get_header"
     end
 
-    get '/error' do
-      raise TestAppError, 'some error'
+    get "/error" do
+      raise TestAppError, "some error"
     end
 
-    get '/other_error' do
-      raise TestAppOtherError.new('something', 'other error')
+    get "/other_error" do
+      raise TestAppOtherError.new("something", "other error")
     end
 
-    get '/load_error' do
+    get "/load_error" do
       raise LoadError
     end
 
-    get '/with.*html' do
+    get "/with.*html" do
       erb :with_html, locals: { referrer: request.referrer }
     end
 
-    get '/with_title' do
+    get "/with_title" do
       <<-HTML
         <title>#{params[:title] || 'Test Title'}</title>
         <body>
@@ -165,41 +172,40 @@ module Ferrum
       HTML
     end
 
-    get '/download.csv' do
-      content_type 'text/csv'
-      'This, is, comma, separated' \
-      'Thomas, Walpole, was , here'
+    get "/download.csv" do
+      content_type "text/csv"
+      "This, is, comma, separated"
     end
 
-    get '/:view' do |view|
+    get "/:view" do |view|
       erb view.to_sym, locals: { referrer: request.referrer }
     end
 
-    post '/form' do
+    post "/form" do
       self.class.form_post_count += 1
-      '<pre id="results">' + params[:form].merge('post_count' => self.class.form_post_count).to_yaml + '</pre>'
+      %(<pre id="results">#{params[:form].merge("post_count" => self.class.form_post_count).to_yaml}</pre>)
     end
 
-    post '/upload_empty' do
+    post "/upload_empty" do
       if params[:form][:file].nil?
-        'Successfully ignored empty file field.'
+        "Successfully ignored empty file field."
       else
-        'Something went wrong.'
+        "Something went wrong."
       end
     end
 
-    post '/upload' do
+    post "/upload" do
       begin
         buffer = []
         buffer << "Content-type: #{params.dig(:form, :document, :type)}"
         buffer << "File content: #{params.dig(:form, :document, :tempfile).read}"
-        buffer.join(' | ')
+        buffer.join(" | ")
       rescue StandardError
-        'No file uploaded'
+        "No file uploaded"
       end
     end
 
-    post '/upload_multiple' do
+    post "/upload_multiple" do
       begin
         docs = params.dig(:form, :multiple_documents)
         buffer = [docs.size.to_s]
@@ -207,13 +213,13 @@ module Ferrum
           buffer << "Content-type: #{doc[:type]}"
           buffer << "File content: #{doc[:tempfile].read}"
         end
-        buffer.join(' | ')
+        buffer.join(" | ")
       rescue StandardError
-        'No files uploaded'
+        "No files uploaded"
       end
     end
 
-    get '/apple-touch-icon-precomposed.png' do
+    get "/apple-touch-icon-precomposed.png" do
       halt(404)
     end
 

@@ -647,6 +647,18 @@ module Ferrum
       expect(browser.current_url).to eq(base_url("/bar2.html"))
     end
 
+    it "can bypass csp headers" do
+      browser.goto("/csp")
+      browser.add_script_tag(content: "window.__injected = 42")
+      expect(browser.evaluate("window.__injected")).to be_nil
+
+      browser.bypass_csp
+      browser.reload
+      browser.add_script_tag(content: "window.__injected = 42")
+
+      expect(browser.evaluate("window.__injected")).to eq(42)
+    end
+
     if Ferrum.mri? && !Ferrum.windows?
       require "pty"
       require "timeout"
