@@ -68,7 +68,9 @@ module Ferrum
     end
 
     def extensions
-      @extensions ||= Array(@options[:extensions]).map { |p| File.read(p) }
+      @extensions ||= Array(@options[:extensions]).map do |ext|
+        (ext.is_a?(Hash) && ext[:source]) || File.read(ext)
+      end
     end
 
     def timeout

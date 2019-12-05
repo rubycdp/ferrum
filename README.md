@@ -108,7 +108,9 @@ Ferrum::Browser.new(options)
   * `:browser_options` (Hash) - Additional command line options,
       [see them all](https://peter.sh/experiments/chromium-command-line-switches/)
       e.g. `{ "ignore-certificate-errors" => nil }`
-  * `:extensions` (Array) - An array of JS files to be preloaded into the browser
+  * `:extensions` (Array[String | Hash]) - An array of paths to files or JS
+      source code to be preloaded into the browser e.g.:
+      `["/path/to/script.js", { source: "window.secret = 'top'" }]`
   * `:port` (Integer) - Remote debugging port for headless Chrome
   * `:host` (String) - Remote debugging address for headless Chrome
   * `:url` (String) - URL for a running instance of Chrome. If this is set, a

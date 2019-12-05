@@ -130,7 +130,7 @@ module Ferrum
     end
 
     context "extending browser javascript" do
-      it "supports extending the browser's world" do
+      it "supports extending the browser's world with files" do
         begin
           browser = Browser.new(base_url: base_url,
                                 extensions: [File.expand_path("support/geolocation.js", __dir__)])
@@ -148,6 +148,19 @@ module Ferrum
           expect(
             browser.evaluate("navigator.geolocation")
           ).to_not eq(nil)
+        ensure
+          browser&.quit
+        end
+      end
+
+      it "supports extending the browser's world with source" do
+        begin
+          browser = Browser.new(base_url: base_url,
+                                extensions: [{source: "window.secret = 'top'"}])
+
+          browser.goto("/ferrum/requiring_custom_extension")
+
+          expect(browser.evaluate(%(window.secret))).to eq("top")
         ensure
           browser&.quit
         end
