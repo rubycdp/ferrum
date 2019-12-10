@@ -31,7 +31,7 @@ module Ferrum
   end
 
   class DeadBrowserError < Error
-    def initialize(message = "Browser is dead")
+    def initialize(message = "Browser is dead or given window is closed")
       super
     end
   end
