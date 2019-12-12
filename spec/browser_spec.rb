@@ -567,6 +567,8 @@ module Ferrum
           window.open("/ferrum/simple", "popup")
         JS
 
+        sleep 0.5 # https://github.com/ChromeDevTools/devtools-protocol/issues/145
+
         same, _ = browser.windows(:last)
         expect(same.body).to include("Test")
         same.close
