@@ -43,7 +43,9 @@ RSpec.configure do |config|
   end
 
   config.before(:all) do
-    @browser = Ferrum::Browser.new(base_url: Ferrum::Server.server.base_url)
+    base_url = Ferrum::Server.server.base_url
+    @browser = Ferrum::Browser.new(base_url: base_url,
+                                   process_timeout: 5)
   end
 
   config.after(:all) do
