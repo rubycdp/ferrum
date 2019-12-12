@@ -7,20 +7,26 @@ require "ferrum/browser/web_socket"
 module Ferrum
   class Browser
     class Client
+      INTERRUPTIONS = %w[Fetch.requestPaused Fetch.authRequired].freeze
+
       def initialize(browser, ws_url, start_id = 0, allow_slowmo = true)
         @command_id = start_id
         @pendings = Concurrent::Hash.new
         @browser = browser
         @slowmo = @browser.slowmo if allow_slowmo && @browser.slowmo > 0
         @ws = WebSocket.new(ws_url, @browser.logger)
-        @subscriber = Subscriber.new
+        @subscriber, @interruptor = Subscriber.build(2)
 
         @thread = Thread.new do
           Thread.current.abort_on_exception = true
-          Thread.current.report_on_exception = true if Thread.current.respond_to?(:report_on_exception=)
+          if Thread.current.respond_to?(:report_on_exception=)
+            Thread.current.report_on_exception = true
+          end
 
           while message = @ws.messages.pop
-            if message.key?("method")
+            if INTERRUPTIONS.include?(message["method"])
+              @interruptor.async.call(message)
+            elsif message.key?("method")
               @subscriber.async.call(message)
             else
               @pendings[message["id"]]&.set(message)
@@ -46,7 +52,12 @@ module Ferrum
       end
 
       def on(event, &block)
-        @subscriber.on(event, &block)
+        case event
+        when *INTERRUPTIONS
+          @interruptor.on(event, &block)
+        else
+          @subscriber.on(event, &block)
+        end
       end
 
       def close

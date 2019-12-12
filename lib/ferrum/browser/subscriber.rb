@@ -7,6 +7,10 @@ module Ferrum
     class Subscriber
       include Concurrent::Async
 
+      def self.build(size)
+        (0..size).map { new }
+      end
+
       def initialize
         super
         @on = Hash.new { |h, k| h[k] = [] }
