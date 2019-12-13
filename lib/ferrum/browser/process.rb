@@ -52,12 +52,22 @@ module Ferrum
         # "no-sandbox" => nil,
       }.freeze
 
+      MAC_BIN_PATH = [
+        "/Applications/Chromium.app/Contents/MacOS/Chromium",
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+      ].freeze
+      LINUX_BIN_PATH = %w[chromium google-chrome-unstable google-chrome-beta
+                          google-chrome chrome chromium-browser
+                          google-chrome-stable].freeze
+
       NOT_FOUND = "Could not find an executable for chrome. Try to make it " \
                   "available on the PATH or set environment varible for " \
-                  "example BROWSER_PATH=\"/Applications/Chromium.app/Contents/MacOS/Chromium\""
+                  "example BROWSER_PATH=\"#{MAC_BIN_PATH.first}\"".freeze
 
 
-      attr_reader :host, :port, :ws_url, :pid, :path, :options, :cmd, :default_user_agent
+      attr_reader :host, :port, :ws_url, :pid, :path, :options, :cmd,
+                  :default_user_agent, :browser_version, :protocol_version,
+                  :v8_version, :webkit_version
 
       def self.start(*args)
         new(*args).tap(&:start)
@@ -85,22 +95,14 @@ module Ferrum
       end
 
       def self.directory_remover(path)
-        proc do
-          begin
-            FileUtils.remove_entry(path)
-          rescue Errno::ENOENT
-          end
-        end
+        proc { FileUtils.remove_entry(path) rescue Errno::ENOENT }
       end
 
       def self.detect_browser_path
         if RUBY_PLATFORM.include?("darwin")
-          [
-            "/Applications/Chromium.app/Contents/MacOS/Chromium",
-            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-          ].find { |path| File.exist?(path) }
+          MAC_BIN_PATH.find { |path| File.exist?(path) }
         else
-          %w[chromium google-chrome-unstable google-chrome-beta google-chrome chrome chromium-browser google-chrome-stable].reduce(nil) do |path, exe|
+          LINUX_BIN_PATH.reduce(nil) do |path, exe|
             path = Cliver.detect(exe)
             break path if path
           end
@@ -116,7 +118,7 @@ module Ferrum
           url = URI.join(options[:url].to_s, "/json/version")
           response = JSON.parse(::Net::HTTP.get(url))
           set_ws_url(response["webSocketDebuggerUrl"])
-          set_default_user_agent
+          parse_browser_versions
           return
         end
 
@@ -129,9 +131,9 @@ module Ferrum
         host = options.fetch(:host, BROWSER_HOST)
         @options.merge!("remote-debugging-address" => host)
 
-        @temp_user_data_dir = Dir.mktmpdir
-        ObjectSpace.define_finalizer(self, self.class.directory_remover(@temp_user_data_dir))
-        @options.merge!("user-data-dir" => @temp_user_data_dir)
+        @user_data_dir = Dir.mktmpdir
+        ObjectSpace.define_finalizer(self, self.class.directory_remover(@user_data_dir))
+        @options.merge!("user-data-dir" => @user_data_dir)
 
         @options = DEFAULT_OPTIONS.merge(@options)
 
@@ -164,7 +166,7 @@ module Ferrum
           ObjectSpace.define_finalizer(self, self.class.process_killer(@pid))
 
           parse_ws_url(read_io, @process_timeout)
-          set_default_user_agent
+          parse_browser_versions
         ensure
           close_io(read_io, write_io)
         end
@@ -172,7 +174,7 @@ module Ferrum
 
       def stop
         kill if @pid
-        remove_temp_user_data_dir if @temp_user_data_dir
+        remove_user_data_dir if @user_data_dir
         ObjectSpace.undefine_finalizer(self)
       end
 
@@ -188,9 +190,9 @@ module Ferrum
         @pid = nil
       end
 
-      def remove_temp_user_data_dir
-        self.class.directory_remover(@temp_user_data_dir).call
-        @temp_user_data_dir = nil
+      def remove_user_data_dir
+        self.class.directory_remover(@user_data_dir).call
+        @user_data_dir = nil
       end
 
       def parse_ws_url(read_io, timeout)
@@ -223,12 +225,17 @@ module Ferrum
         @port = @ws_url.port
       end
 
-      def set_default_user_agent
-        return unless ws_url.is_a? Addressable::URI
+      def parse_browser_versions
+        return unless ws_url.is_a?(Addressable::URI)
 
         version_url = URI.parse(ws_url.merge(scheme: "http", path: "/json/version"))
         response = JSON.parse(::Net::HTTP.get(version_url))
+
+        @v8_version = response["V8-Version"]
+        @browser_version = response["Browser"]
+        @webkit_version = response["WebKit-Version"]
         @default_user_agent = response["User-Agent"]
+        @protocol_version = response["Protocol-Version"]
       end
 
       def close_io(*ios)
