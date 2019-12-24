@@ -93,24 +93,26 @@ Ferrum::Browser.new(options)
 ```
 
 * options `Hash`
-  * `:browser_path` (String) - Path to chrome binary, you can also set ENV
-      variable as `BROWSER_PATH=some/path/chrome bundle exec rspec`.
   * `:headless` (Boolean) - Set browser as headless or not, `true` by default.
-  * `:slowmo` (Integer | Float) - Set a delay to wait before sending command.
-      Usefull companion of headless option, so that you have time to see changes.
-  * `:logger` (Object responding to `puts`) - When present, debug output is
-      written to this object.
-  * `:timeout` (Numeric) - The number of seconds we'll wait for a response when
-      communicating with browser. Default is 5.
-  * `:js_errors` (Boolean) - When true, JavaScript errors get re-raised in Ruby.
   * `:window_size` (Array) - The dimensions of the browser window in which to
       test, expressed as a 2-element array, e.g. [1024, 768]. Default: [1024, 768]
-  * `:browser_options` (Hash) - Additional command line options,
-      [see them all](https://peter.sh/experiments/chromium-command-line-switches/)
-      e.g. `{ "ignore-certificate-errors" => nil }`
   * `:extensions` (Array[String | Hash]) - An array of paths to files or JS
       source code to be preloaded into the browser e.g.:
       `["/path/to/script.js", { source: "window.secret = 'top'" }]`
+  * `:logger` (Object responding to `puts`) - When present, debug output is
+      written to this object.
+  * `:slowmo` (Integer | Float) - Set a delay to wait before sending command.
+      Usefull companion of headless option, so that you have time to see changes.
+  * `:timeout` (Numeric) - The number of seconds we'll wait for a response when
+      communicating with browser. Default is 5.
+  * `:js_errors` (Boolean) - When true, JavaScript errors get re-raised in Ruby.
+  * `:browser_name` (Symbol) - `:chrome` by default, only experimental support
+      for `:firefox` for now.
+  * `:browser_path` (String) - Path to chrome binary, you can also set ENV
+      variable as `BROWSER_PATH=some/path/chrome bundle exec rspec`.
+  * `:browser_options` (Hash) - Additional command line options,
+      [see them all](https://peter.sh/experiments/chromium-command-line-switches/)
+      e.g. `{ "ignore-certificate-errors" => nil }`
   * `:port` (Integer) - Remote debugging port for headless Chrome
   * `:host` (String) - Remote debugging address for headless Chrome
   * `:url` (String) - URL for a running instance of Chrome. If this is set, a

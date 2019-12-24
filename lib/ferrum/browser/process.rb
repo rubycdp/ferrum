@@ -5,6 +5,9 @@ require "net/http"
 require "json"
 require "addressable"
 require "tmpdir"
+require "ferrum/browser/command"
+require "ferrum/browser/chrome"
+require "ferrum/browser/firefox"
 
 module Ferrum
   class Browser
@@ -12,60 +15,8 @@ module Ferrum
       KILL_TIMEOUT = 2
       WAIT_KILLED = 0.05
       PROCESS_TIMEOUT = ENV.fetch("FERRUM_PROCESS_TIMEOUT", 2).to_i
-      BROWSER_PATH = ENV["BROWSER_PATH"]
-      BROWSER_HOST = "127.0.0.1"
-      BROWSER_PORT = "0"
-      DEFAULT_OPTIONS = {
-        "headless" => nil,
-        "disable-gpu" => nil,
-        "hide-scrollbars" => nil,
-        "mute-audio" => nil,
-        "enable-automation" => nil,
-        "disable-web-security" => nil,
-        "disable-session-crashed-bubble" => nil,
-        "disable-breakpad" => nil,
-        "disable-sync" => nil,
-        "no-first-run" => nil,
-        "use-mock-keychain" => nil,
-        "keep-alive-for-test" => nil,
-        "disable-popup-blocking" => nil,
-        "disable-extensions" => nil,
-        "disable-hang-monitor" => nil,
-        "disable-features" => "site-per-process,TranslateUI",
-        "disable-translate" => nil,
-        "disable-background-networking" => nil,
-        "enable-features" => "NetworkService,NetworkServiceInProcess",
-        "disable-background-timer-throttling" => nil,
-        "disable-backgrounding-occluded-windows" => nil,
-        "disable-client-side-phishing-detection" => nil,
-        "disable-default-apps" => nil,
-        "disable-dev-shm-usage" => nil,
-        "disable-ipc-flooding-protection" => nil,
-        "disable-prompt-on-repost" => nil,
-        "disable-renderer-backgrounding" => nil,
-        "force-color-profile" => "srgb",
-        "metrics-recording-only" => nil,
-        "safebrowsing-disable-auto-update" => nil,
-        "password-store" => "basic",
-        # Note: --no-sandbox is not needed if you properly setup a user in the container.
-        # https://github.com/ebidel/lighthouse-ci/blob/master/builder/Dockerfile#L35-L40
-        # "no-sandbox" => nil,
-      }.freeze
 
-      MAC_BIN_PATH = [
-        "/Applications/Chromium.app/Contents/MacOS/Chromium",
-        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-      ].freeze
-      LINUX_BIN_PATH = %w[chromium google-chrome-unstable google-chrome-beta
-                          google-chrome chrome chromium-browser
-                          google-chrome-stable].freeze
-
-      NOT_FOUND = "Could not find an executable for chrome. Try to make it " \
-                  "available on the PATH or set environment varible for " \
-                  "example BROWSER_PATH=\"#{MAC_BIN_PATH.first}\"".freeze
-
-
-      attr_reader :host, :port, :ws_url, :pid, :path, :options, :cmd,
+      attr_reader :host, :port, :ws_url, :pid, :command,
                   :default_user_agent, :browser_version, :protocol_version,
                   :v8_version, :webkit_version
 
@@ -98,22 +49,7 @@ module Ferrum
         proc { FileUtils.remove_entry(path) rescue Errno::ENOENT }
       end
 
-      def self.detect_browser_path
-        if RUBY_PLATFORM.include?("darwin")
-          MAC_BIN_PATH.find { |path| File.exist?(path) }
-        else
-          LINUX_BIN_PATH.reduce(nil) do |path, exe|
-            path = Cliver.detect(exe)
-            break path if path
-          end
-        end
-      end
-
       def initialize(options)
-        @options = {}
-
-        @path = options[:browser_path] || BROWSER_PATH || self.class.detect_browser_path
-
         if options[:url]
           url = URI.join(options[:url].to_s, "/json/version")
           response = JSON.parse(::Net::HTTP.get(url))
@@ -122,31 +58,12 @@ module Ferrum
           return
         end
 
-        # Doesn't work on MacOS, so we need to set it by CDP as well
-        @options.merge!("window-size" => options[:window_size].join(","))
-
-        port = options.fetch(:port, BROWSER_PORT)
-        @options.merge!("remote-debugging-port" => port)
-
-        host = options.fetch(:host, BROWSER_HOST)
-        @options.merge!("remote-debugging-address" => host)
-
-        @user_data_dir = Dir.mktmpdir
-        ObjectSpace.define_finalizer(self, self.class.directory_remover(@user_data_dir))
-        @options.merge!("user-data-dir" => @user_data_dir)
-
-        @options = DEFAULT_OPTIONS.merge(@options)
-
-        unless options.fetch(:headless, true)
-          @options.delete("headless")
-          @options.delete("disable-gpu")
-        end
-
+        @logger = options[:logger]
         @process_timeout = options.fetch(:process_timeout, PROCESS_TIMEOUT)
 
-        @options.merge!(options.fetch(:browser_options, {}))
-
-        @logger = options[:logger]
+        tmpdir = Dir.mktmpdir
+        ObjectSpace.define_finalizer(self, self.class.directory_remover(tmpdir))
+        @command = Command.build(options, tmpdir)
       end
 
       def start
@@ -159,10 +76,7 @@ module Ferrum
           process_options[:pgroup] = true unless Ferrum.windows?
           process_options[:out] = process_options[:err] = write_io
 
-          raise Cliver::Dependency::NotFound.new(NOT_FOUND) unless @path
-
-          @cmd = [@path] + @options.map { |k, v| v.nil? ? "--#{k}" : "--#{k}=#{v}" }
-          @pid = ::Process.spawn(*@cmd, process_options)
+          @pid = ::Process.spawn(*@command.to_a, process_options)
           ObjectSpace.define_finalizer(self, self.class.process_killer(@pid))
 
           parse_ws_url(read_io, @process_timeout)
@@ -215,7 +129,7 @@ module Ferrum
 
         unless ws_url
           @logger.puts output if @logger
-          raise "Chrome process did not produce websocket url within #{timeout} seconds"
+          raise "Browser process did not produce websocket url within #{timeout} seconds"
         end
       end
 

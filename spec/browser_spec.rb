@@ -7,7 +7,7 @@ module Ferrum
     it "supports a custom path" do
       begin
         original_path = PROJECT_ROOT + "/spec/support/chrome_path"
-        File.write(original_path, browser.process.path)
+        File.write(original_path, browser.process.command.path)
 
         file = PROJECT_ROOT + "/spec/support/custom_chrome_called"
         path = PROJECT_ROOT + "/spec/support/custom_chrome"
