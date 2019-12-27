@@ -5,6 +5,7 @@ require "net/http"
 require "json"
 require "addressable"
 require "tmpdir"
+require "forwardable"
 require "ferrum/browser/command"
 require "ferrum/browser/chrome"
 require "ferrum/browser/firefox"
@@ -19,6 +20,10 @@ module Ferrum
       attr_reader :host, :port, :ws_url, :pid, :command,
                   :default_user_agent, :browser_version, :protocol_version,
                   :v8_version, :webkit_version
+
+
+      extend Forwardable
+      delegate path: :command
 
       def self.start(*args)
         new(*args).tap(&:start)
