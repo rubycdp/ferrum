@@ -136,7 +136,7 @@ module Ferrum
 
       def capture_screenshot(options, full)
         maybe_resize_fullscreen(full) do
-          command("Page.captureScreenshot", options)
+          command("Page.captureScreenshot", **options)
         end.fetch("data")
       end
 

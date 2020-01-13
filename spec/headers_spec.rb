@@ -41,7 +41,7 @@ module Ferrum
 
       it "adds new headers" do
         browser.headers.set("User-Agent" => "Browser", "YourName" => "your_value")
-        browser.headers.add("User-Agent" => "Super Browser", "Appended" => "true")
+        browser.headers.add({ "User-Agent" => "Super Browser", "Appended" => "true" })
         browser.goto("/ferrum/headers")
         expect(browser.body).to include("USER_AGENT: Super Browser")
         expect(browser.body).to include("YOURNAME: your_value")
@@ -49,7 +49,7 @@ module Ferrum
       end
 
       it "sets accept-language even if user-agent is not provided" do
-        browser.headers.add("Accept-Language" => "esperanto")
+        browser.headers.add({ "Accept-Language" => "esperanto" })
         browser.goto("/ferrum/headers")
         expect(browser.body).to include("USER_AGENT: #{browser.default_user_agent}")
         expect(browser.body).to match(/ACCEPT_LANGUAGE: esperanto/)
@@ -57,7 +57,7 @@ module Ferrum
 
       it "sets headers on the initial request for referer only" do
         browser.headers.set("PermanentA" => "a")
-        browser.headers.add("PermanentB" => "b")
+        browser.headers.add({ "PermanentB" => "b" })
         browser.headers.add({ "Referer" => "http://google.com" }, permanent: false)
         browser.headers.add({ "TempA" => "a" }, permanent: false) # simply ignored
 
