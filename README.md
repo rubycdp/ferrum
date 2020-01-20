@@ -12,12 +12,31 @@ It is Ruby clean and high-level API to Chrome. Runs headless by default,
 but you can configure it to run in a non-headless mode. All you need is Ruby and
 Chrome/Chromium. Ferrum connects to the browser via DevTools Protocol.
 
-Relation to [Cuprite](https://github.com/machinio/cuprite). Cuprite used to have
-this code inside in one form or another but the thing is you don't need capybara
-if you are going to crawl sites. You crawl, not test. Besides that clean
-lightweight API to browser is what Ruby was missing, so here it comes.
+[Cuprite](https://github.com/machinio/cuprite) used to have this code inside in
+one form or another but the thing is you don't need Capybara if you are going to
+crawl sites. You crawl, not test. Besides that clean lightweight API to browser
+is what Ruby was missing, so here it comes.
 
-If you like this project, please consider to [become a backer](https://www.patreon.com/rferrum) on Patreon.
+[Vessel](https://github.com/route/vessel) high-level web crawling framework
+based on Ferrum.
+
+If you like this project, please consider to _[become a backer](https://www.patreon.com/rferrum)_
+on Patreon.
+
+## Index
+
+* [Customization](https://github.com/route/ferrum#customization)
+* [Navigation](https://github.com/route/ferrum#navigation)
+* [Finders](https://github.com/route/ferrum#finders)
+* [Screenshots](https://github.com/route/ferrum#screenshots)
+* [Network](https://github.com/route/ferrum#network)
+* [Mouse](https://github.com/route/ferrum#mouse)
+* [Keyboard](https://github.com/route/ferrum#keyboard)
+* [Cookies](https://github.com/route/ferrum#cookies)
+* [Headers](https://github.com/route/ferrum#headers)
+* [JavaScript](https://github.com/route/ferrum#javascript)
+* [Frames](https://github.com/route/ferrum#frames)
+* [Dialog](https://github.com/route/ferrum#dialog)
 
 ## Install
 
