@@ -3,6 +3,9 @@
 require "ferrum/network/exchange"
 require "ferrum/network/intercepted_request"
 require "ferrum/network/auth_request"
+require "ferrum/network/error"
+require "ferrum/network/request"
+require "ferrum/network/response"
 
 module Ferrum
   class Network
@@ -18,6 +21,31 @@ module Ferrum
       @page = page
       @traffic = []
       @exchange = nil
+    end
+
+    def wait_for_idle(connections: 0, duration: 0.05, timeout: @page.browser.timeout)
+      start = Ferrum.monotonic_time
+
+      until idle?(connections)
+        raise TimeoutError if Ferrum.timeout?(start, timeout)
+        sleep(duration)
+      end
+    end
+
+    def idle?(connections = 0)
+      pending_connections <= connections
+    end
+
+    def total_connections
+      @traffic.size
+    end
+
+    def finished_connections
+      @traffic.count(&:finished?)
+    end
+
+    def pending_connections
+      total_connections - finished_connections
     end
 
     def request
@@ -87,27 +115,43 @@ module Ferrum
 
     def subscribe
       @page.on("Network.requestWillBeSent") do |params|
+        request = Network::Request.new(params)
+
+        # We can build exchange in two places, here on the event or when request
+        # is interrupted. So we have to be careful when to create new one. We
+        # create new exchange only if there's no with such id or there's but
+        # it's filled with request which means this one is new but has response
+        # for a redirect. So we assign response from the params to previous
+        # exchange and build new exchange to assign this request to it.
+        exchange = select(request.id).last
+        exchange = build_exchange(request.id) unless exchange&.blank?
+
         # On redirects Chrome doesn't change `requestId` and there's no
         # `Network.responseReceived` event for such request. If there's already
         # exchange object with this id then we got redirected and params has
         # `redirectResponse` key which contains the response.
-        if exchange = first_by(params["requestId"])
-          exchange.build_response(params)
+        if params["redirectResponse"]
+          previous_exchange = select(request.id)[-2]
+          response = Network::Response.new(@page, params)
+          previous_exchange.response = response
         end
 
-        exchange = Network::Exchange.new(@page, params)
-        @exchange = exchange if exchange.navigation_request?(@page.main_frame.id)
-        @traffic << exchange
+        exchange.request = request
+
+        if exchange.navigation_request?(@page.main_frame.id)
+          @exchange = exchange
+        end
       end
 
       @page.on("Network.responseReceived") do |params|
-        if exchange = last_by(params["requestId"])
-          exchange.build_response(params)
+        if exchange = select(params["requestId"]).last
+          response = Network::Response.new(@page, params)
+          exchange.response = response
         end
       end
 
       @page.on("Network.loadingFinished") do |params|
-        exchange = last_by(params["requestId"])
+        exchange = select(params["requestId"]).last
         if exchange && exchange.response
           exchange.response.body_size = params["encodedDataLength"]
         end
@@ -116,9 +160,10 @@ module Ferrum
       @page.on("Log.entryAdded") do |params|
         entry = params["entry"] || {}
         if entry["source"] == "network" &&
-            entry["level"] == "error" &&
-            exchange = last_by(entry["networkRequestId"])
-          exchange.build_error(entry)
+           entry["level"] == "error" &&
+           exchange = select(entry["networkRequestId"]).last
+          error = Network::Error.new(entry)
+          exchange.error = error
         end
       end
     end
@@ -135,12 +180,12 @@ module Ferrum
       end
     end
 
-    def first_by(request_id)
-      @traffic.find { |e| e.request.id == request_id }
+    def select(request_id)
+      @traffic.select { |e| e.id == request_id }
     end
 
-    def last_by(request_id)
-      @traffic.select { |e| e.request.id == request_id }.last
+    def build_exchange(id)
+      Network::Exchange.new(@page, id).tap { |e| @traffic << e }
     end
   end
 end

@@ -130,9 +130,12 @@ module Ferrum
     end
 
     get "/set_cookie" do
-      cookie_value = "test_cookie"
-      response.set_cookie("stealth", cookie_value)
-      "Cookie set to #{cookie_value}"
+      set_stealth_cookie
+    end
+
+    get "/set_cookie_slow" do
+      sleep 1
+      set_stealth_cookie
     end
 
     get "/get_cookie" do
@@ -323,6 +326,12 @@ module Ferrum
 
     def render_view(view)
       erb File.read("#{FERRUM_VIEWS}/#{view}.erb")
+    end
+
+    def set_stealth_cookie
+      cookie_value = "test_cookie"
+      response.set_cookie("stealth", cookie_value)
+      "Cookie set to #{cookie_value}"
     end
   end
 end

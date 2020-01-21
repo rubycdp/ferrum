@@ -5,14 +5,20 @@ require "base64"
 module Ferrum
   class Network
     class InterceptedRequest
-      attr_accessor :request_id, :frame_id, :resource_type
+      attr_accessor :request_id, :frame_id, :resource_type, :network_id, :status
 
       def initialize(page, params)
+        @status = nil
         @page, @params = page, params
         @request_id = params["requestId"]
         @frame_id = params["frameId"]
         @resource_type = params["resourceType"]
         @request = params["request"]
+        @network_id = params["networkId"]
+      end
+
+      def status?(value)
+        @status == value.to_sym
       end
 
       def navigation_request?
@@ -35,15 +41,18 @@ module Ferrum
         })
         options = options.merge(body: Base64.encode64(options.fetch(:body, "")).strip) if has_body
 
+        @status = :responded
         @page.command("Fetch.fulfillRequest", **options)
       end
 
       def continue(**options)
         options = options.merge(requestId: request_id)
+        @status = :continued
         @page.command("Fetch.continueRequest", **options)
       end
 
       def abort
+        @status = :aborted
         @page.command("Fetch.failRequest", requestId: request_id, errorReason: "BlockedByClient")
       end
 
