@@ -135,6 +135,17 @@ module Ferrum
       expect(browser.network.status).to eq(200)
     end
 
+    it "waits for network idle" do
+      browser.goto("/show_cookies")
+      expect(browser.body).not_to include("test_cookie")
+
+      browser.at_xpath("//button[text() = 'Set cookie slow']").click
+      browser.network.wait_for_idle
+      browser.refresh
+
+      expect(browser.body).to include("test_cookie")
+    end
+
     context "status code support" do
       it "determines status from the simple response" do
         browser.goto("/ferrum/status/500")

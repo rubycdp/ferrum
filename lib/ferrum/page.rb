@@ -140,6 +140,9 @@ module Ferrum
       when :request
         @client.on("Fetch.requestPaused") do |params, index, total|
           request = Network::InterceptedRequest.new(self, params)
+          exchange = network.select(request.network_id).last
+          exchange ||= network.build_exchange(request.network_id)
+          exchange.intercepted_request = request
           block.call(request, index, total)
         end
       when :auth

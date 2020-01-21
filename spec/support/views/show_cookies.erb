@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+    <script src="/ferrum/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+  </head>
+  <body>
+    <%= request.cookies["stealth"] %>
+    <button type="button" id="setCookie">Set cookie slow</button>
+    <script>
+      $("#setCookie").on("click", function(){
+        $.ajax("/set_cookie_slow");
+      })
+    </script>
+  </body>
+</html>

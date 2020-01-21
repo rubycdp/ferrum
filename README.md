@@ -365,6 +365,24 @@ browser.goto("https://github.com/")
 browser.network.status # => 200
 ```
 
+#### wait_for_idle(\*\*options)
+
+Waits for network idle or raises `Ferrum::TimeoutError` error
+
+* options `Hash`
+  * :connections `Integer` how many connections are allowed for network to be
+    idling, `0` by default
+  * :duration `Float` sleep for given amount of time and check again, `0.05` by
+    default
+  * :timeout `Float` during what time we try to check idle, `browser.timeout`
+    by default
+
+```ruby
+browser.goto("https://example.com/")
+browser.at_xpath("//a[text() = 'No UI changes button']").click
+browser.network.wait_for_idle
+```
+
 #### clear(type)
 
 Clear browser's cache or collected traffic.

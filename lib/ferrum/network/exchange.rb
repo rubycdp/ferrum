@@ -1,30 +1,16 @@
 # frozen_string_literal: true
 
-require "ferrum/network/error"
-require "ferrum/network/request"
-require "ferrum/network/response"
-
 module Ferrum
   class Network
     class Exchange
-      attr_reader :request, :response, :error
+      attr_reader :id
+      attr_accessor :intercepted_request
+      attr_accessor :request, :response, :error
 
-      def initialize(page, params)
-        @page = page
-        @response = @error = nil
-        build_request(params)
-      end
-
-      def build_request(params)
-        @request = Network::Request.new(params)
-      end
-
-      def build_response(params)
-        @response = Network::Response.new(@page, params)
-      end
-
-      def build_error(params)
-        @error = Network::Error.new(params)
+      def initialize(page, id)
+        @page, @id = page, id
+        @intercepted_request = nil
+        @request = @response = @error = nil
       end
 
       def navigation_request?(frame_id)
@@ -32,8 +18,16 @@ module Ferrum
           request.frame_id == frame_id
       end
 
+      def blank?
+        !request
+      end
+
       def blocked?
-        response.nil?
+        intercepted_request && intercepted_request.status?(:aborted)
+      end
+
+      def finished?
+        blocked? || response
       end
 
       def to_a
@@ -41,7 +35,12 @@ module Ferrum
       end
 
       def inspect
-        %(#<#{self.class} @id=#{@id.inspect} @request=#{@request.inspect} @response=#{@response.inspect} @error=#{@error.inspect}>)
+        "#<#{self.class} "\
+        "@id=#{@id.inspect} "\
+        "@intercepted_request=#{@intercepted_request.inspect} "\
+        "@request=#{@request.inspect} "\
+        "@response=#{@response.inspect} "\
+        "@error=#{@error.inspect}>"
       end
     end
   end
