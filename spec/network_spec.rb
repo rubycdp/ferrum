@@ -60,6 +60,15 @@ module Ferrum
       expect(traffic.last.error).to be
     end
 
+    it "captures connection refused errors" do
+      browser.goto("/ferrum/with_ajax_connection_refused")
+      expect(browser.at_xpath("//h1[text() = 'Error']")).to be
+
+      expect(traffic.last.error).to be
+      expect(traffic.last.response).to be_nil
+      expect(browser.network.pending_connections).to eq(0) # Will fail
+    end
+
     it "keeps a running list between multiple web page views" do
       browser.goto("/ferrum/with_js")
       expect(traffic.length).to eq(4)
