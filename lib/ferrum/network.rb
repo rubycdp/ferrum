@@ -159,9 +159,8 @@ module Ferrum
 
       @page.on("Log.entryAdded") do |params|
         entry = params["entry"] || {}
-        if entry["source"] == "network" &&
-           entry["level"] == "error" &&
-           exchange = select(entry["networkRequestId"]).last
+        if entry["source"] == "network" && entry["level"] == "error"
+          exchange = select(entry["networkRequestId"]).last
           error = Network::Error.new(entry)
           exchange.error = error
         end

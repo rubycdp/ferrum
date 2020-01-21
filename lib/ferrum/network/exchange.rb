@@ -27,7 +27,7 @@ module Ferrum
       end
 
       def finished?
-        blocked? || response
+        blocked? || response || error
       end
 
       def to_a
