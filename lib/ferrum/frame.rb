@@ -18,8 +18,6 @@ module Ferrum
     # Can be one of:
     # * started_loading
     # * navigated
-    # * scheduled_navigation
-    # * cleared_scheduled_navigation
     # * stopped_loading
     def state=(value)
       @state = value

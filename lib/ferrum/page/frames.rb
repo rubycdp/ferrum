@@ -40,18 +40,6 @@ module Ferrum
           frame.name = name unless name.to_s.empty?
         end
 
-        on("Page.frameScheduledNavigation") do |params|
-          frame = @frames[params["frameId"]]
-          frame.state = :scheduled_navigation
-          @event.reset
-        end
-
-        on("Page.frameClearedScheduledNavigation") do |params|
-          frame = @frames[params["frameId"]]
-          frame.state = :cleared_scheduled_navigation
-          @event.set if idling?
-        end
-
         on("Page.frameStoppedLoading") do |params|
           # `DOM.performSearch` doesn't work without getting #document node first.
           # It returns node with nodeId 1 and nodeType 9 from which descend the

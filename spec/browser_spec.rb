@@ -109,16 +109,6 @@ module Ferrum
       expect(browser.evaluate("window.result")).to eq(3)
     end
 
-    it "operates a timeout when communicating with browser" do
-      begin
-        prev_timeout = browser.timeout
-        browser.timeout = 0.1
-        expect { browser.goto("/ferrum/really_slow") }.to raise_error(TimeoutError)
-      ensure
-        browser.timeout = prev_timeout
-      end
-    end
-
     it "supports stopping the session", skip: Ferrum.windows? do
       browser = Browser.new
       pid = browser.process.pid
@@ -262,27 +252,36 @@ module Ferrum
           )
       end
 
-      it "reports open resource requests", skip: true do
-        old_timeout = browser.timeout
+      it "reports open resource requests" do
         begin
+          old_timeout = browser.timeout
           browser.timeout = 2
           expect do
             browser.goto("/ferrum/visit_timeout")
-          end.to raise_error(Ferrum::StatusError, %r{resources still waiting http://.*/ferrum/really_slow})
+          end.to raise_error(Ferrum::StatusError, %r{there are still pending connections: http://.*/ferrum/really_slow})
         ensure
           browser.timeout = old_timeout
         end
       end
 
-      it "does not report open resources where there are none", skip: true do
-        old_timeout = browser.timeout
+      it "reports open resource requests for main frame" do
         begin
-          browser.timeout = 2
-          expect do
-            browser.goto("/ferrum/really_slow")
-          end.to raise_error(Ferrum::StatusError) { |error|
-            expect(error.message).not_to include("resources still waiting")
-          }
+          prev_timeout = browser.timeout
+          browser.timeout = 0.1
+
+          expect { browser.goto("/ferrum/really_slow") }.to raise_error(
+            Ferrum::StatusError, %r{there are still pending connections: http://.*/ferrum/really_slow}
+          )
+        ensure
+          browser.timeout = prev_timeout
+        end
+      end
+
+      it "does not report open resources when there are none" do
+        begin
+          old_timeout = browser.timeout
+          browser.timeout = 4
+          expect { browser.goto("/ferrum/really_slow") }.not_to raise_error
         ensure
           browser.timeout = old_timeout
         end

@@ -179,9 +179,10 @@ module Ferrum
         expect(browser.network.status).to eq(500)
       end
 
-      it "determines properly status when user goes through a few pages", skip: true do
+      it "determines properly status when user goes through a few pages" do
         browser.goto("/ferrum/with_different_resources")
 
+        browser.at_xpath("//a[text() = 'Go to 200']").click
         browser.at_xpath("//a[text() = 'Go to 201']").click
         browser.at_xpath("//a[text() = 'Do redirect']").click
         browser.at_xpath("//a[text() = 'Go to 402']").click
