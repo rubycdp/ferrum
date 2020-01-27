@@ -13,6 +13,8 @@ require "ferrum/browser/client"
 
 module Ferrum
   class Page
+    GOTO_WAIT = ENV.fetch("FERRUM_GOTO_WAIT", 0.1).to_f
+
     class Event < Concurrent::Event
       def iteration
         synchronize { @iteration }
@@ -65,7 +67,7 @@ module Ferrum
     def goto(url = nil)
       options = { url: combine_url!(url) }
       options.merge!(referrer: referrer) if referrer
-      response = command("Page.navigate", wait: timeout, **options)
+      response = command("Page.navigate", wait: GOTO_WAIT, **options)
       # https://cs.chromium.org/chromium/src/net/base/net_error_list.h
       if %w[net::ERR_NAME_NOT_RESOLVED
             net::ERR_NAME_RESOLUTION_FAILED
@@ -74,6 +76,9 @@ module Ferrum
         raise StatusError, options[:url]
       end
       response["frameId"]
+    rescue TimeoutError
+      pendings = network.traffic.select(&:pending?).map { |e| e.request.url }
+      raise StatusError.new(options[:url], pendings) unless pendings.empty?
     end
 
     def close
@@ -124,8 +129,13 @@ module Ferrum
       iteration = @event.reset if wait > 0
       result = @client.command(method, params)
       if wait > 0
-        @event.wait(wait)
-        @event.wait(@browser.timeout) if iteration != @event.iteration
+        @event.wait(wait) # Wait a bit after command and check if iteration has
+                          # changed which means there was some network event for
+                          # the main frame and it started to load new content.
+        if iteration != @event.iteration
+          set = @event.wait(@browser.timeout)
+          raise TimeoutError unless set
+        end
       end
       result
     end
@@ -171,14 +181,6 @@ module Ferrum
         on("Runtime.exceptionThrown") do |params|
           # FIXME https://jvns.ca/blog/2015/11/27/why-rubys-timeout-is-dangerous-and-thread-dot-raise-is-terrifying/
           Thread.main.raise JavaScriptError.new(params.dig("exceptionDetails", "exception"))
-        end
-      end
-
-      on("Page.domContentEventFired") do |params|
-        # `frameStoppedLoading` doesn't occur if status isn't success
-        if network.status != 200
-          @event.set
-          get_document_id
         end
       end
     end

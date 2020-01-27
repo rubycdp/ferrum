@@ -10,8 +10,14 @@ module Ferrum
   class NotImplementedError < Error; end
 
   class StatusError < Error
-    def initialize(url)
-      super("Request to #{url} failed to reach server, check DNS and/or server status")
+    def initialize(url, pendings = [])
+      message = if pendings.empty?
+                  "Request to #{url} failed to reach server, check DNS and/or server status"
+                else
+                  "Request to #{url} reached server, but there are still pending connections: #{pendings.join(', ')}"
+                end
+
+      super(message)
     end
   end
 

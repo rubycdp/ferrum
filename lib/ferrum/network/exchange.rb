@@ -30,6 +30,10 @@ module Ferrum
         blocked? || response || error
       end
 
+      def pending?
+        !finished?
+      end
+
       def to_a
         [request, response, error]
       end
