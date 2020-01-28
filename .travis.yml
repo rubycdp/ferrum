@@ -9,7 +9,3 @@ rvm:
   - 2.4
   - 2.5
   - 2.6
-  - jruby-9.2.8.0
-matrix:
-  allow_failures:
-  - rvm: jruby-9.2.8.0
