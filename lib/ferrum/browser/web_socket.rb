@@ -11,12 +11,13 @@ module Ferrum
 
       attr_reader :url, :messages
 
-      def initialize(url, logger)
+      def initialize(url, max_receive_size, logger)
         @url      = url
         @logger   = logger
         uri       = URI.parse(@url)
         @sock     = TCPSocket.new(uri.host, uri.port)
-        @driver   = ::WebSocket::Driver.client(self)
+        max_receive_size ||= ::WebSocket::Driver::MAX_LENGTH
+        @driver   = ::WebSocket::Driver.client(self, max_length: max_receive_size)
         @messages = Queue.new
 
         @driver.on(:open,    &method(:on_open))
