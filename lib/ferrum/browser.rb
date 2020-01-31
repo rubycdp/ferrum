@@ -16,7 +16,7 @@ module Ferrum
     extend Forwardable
     delegate %i[default_context] => :contexts
     delegate %i[targets create_target create_page page pages windows] => :default_context
-    delegate %i[goto back forward refresh reload
+    delegate %i[goto back forward refresh reload stop
                 at_css at_xpath css xpath current_url title body doctype
                 headers cookies network
                 mouse keyboard

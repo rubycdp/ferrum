@@ -111,6 +111,10 @@ module Ferrum
     end
     alias_method :reload, :refresh
 
+    def stop
+      command("Page.stopLoading")
+    end
+
     def back
       history_navigate(delta: -1)
     end

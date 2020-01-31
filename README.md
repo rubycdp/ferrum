@@ -186,6 +186,15 @@ browser.goto("https://github.com/")
 browser.refresh
 ```
 
+#### stop
+
+Stop all navigations and loading pending resources on the page
+
+```ruby
+browser.goto("https://github.com/")
+browser.stop
+```
+
 
 ## Finders
 
