@@ -138,6 +138,9 @@ Ferrum::Browser.new(options)
       browser process will not be spawned.
   * `:process_timeout` (Integer) - How long to wait for the Chrome process to
       respond on startup
+  * `:ws_max_receive_size` (Integer) - How big messages to accept from Chrome
+      over the web socket, in bytes. Defaults to 64MB. Incoming messages larger
+      than this will cause a `Ferrum::DeadBrowserError`.
 
 
 #### The API below is for master branch and a subject to change before 1.0

@@ -14,7 +14,7 @@ module Ferrum
         @pendings = Concurrent::Hash.new
         @browser = browser
         @slowmo = @browser.slowmo if allow_slowmo && @browser.slowmo > 0
-        @ws = WebSocket.new(ws_url, @browser.logger)
+        @ws = WebSocket.new(ws_url, @browser.ws_max_receive_size, @browser.logger)
         @subscriber, @interruptor = Subscriber.build(2)
 
         @thread = Thread.new do
