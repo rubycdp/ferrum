@@ -39,7 +39,8 @@ module Ferrum
       @original_window_size = @window_size
 
       @options = Hash(options.merge(window_size: @window_size))
-      @logger, @timeout, @ws_max_receive_size = @options.values_at(:logger, :timeout, :ws_max_receive_size)
+      @logger, @timeout, @ws_max_receive_size =
+        @options.values_at(:logger, :timeout, :ws_max_receive_size)
       @js_errors = @options.fetch(:js_errors, false)
       @slowmo = @options[:slowmo].to_i
 
