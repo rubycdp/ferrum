@@ -20,6 +20,8 @@ is what Ruby was missing, so here it comes.
 [Vessel](https://github.com/route/vessel) high-level web crawling framework
 based on Ferrum.
 
+Supported by [Evrone](https://evrone.com/). What else [we build with Ruby on Rails](https://evrone.com/ruby). What else [we do at Evrone](https://evrone.com/cases#case-studies)
+
 If you like this project, please consider to _[become a backer](https://www.patreon.com/rferrum)_
 on Patreon.
 
