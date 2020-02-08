@@ -108,7 +108,9 @@ module Ferrum
       context "#add_script_tag" do
         it "adds by url" do
           browser.goto
-          expect { browser.evaluate("$('a').first().text()") }.to raise_error(Ferrum::JavaScriptError)
+          expect {
+            browser.evaluate("$('a').first().text()")
+          }.to raise_error(Ferrum::JavaScriptError)
 
           browser.add_script_tag(url: "/ferrum/jquery.min.js")
 
@@ -118,7 +120,9 @@ module Ferrum
         it "adds by path" do
           browser.goto
           path = "#{Ferrum::Application::FERRUM_PUBLIC}/jquery-1.11.3.min.js"
-          expect { browser.evaluate("$('a').first().text()") }.to raise_error(Ferrum::JavaScriptError)
+          expect {
+            browser.evaluate("$('a').first().text()")
+          }.to raise_error(Ferrum::JavaScriptError)
 
           browser.add_script_tag(path: path)
 

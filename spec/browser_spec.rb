@@ -6,11 +6,11 @@ module Ferrum
   describe Browser do
     it "supports a custom path" do
       begin
-        original_path = PROJECT_ROOT + "/spec/support/chrome_path"
+        original_path = "#{PROJECT_ROOT}/spec/support/chrome_path"
         File.write(original_path, browser.process.path)
 
-        file = PROJECT_ROOT + "/spec/support/custom_chrome_called"
-        path = PROJECT_ROOT + "/spec/support/custom_chrome"
+        file = "#{PROJECT_ROOT}/spec/support/custom_chrome_called"
+        path = "#{PROJECT_ROOT}/spec/support/custom_chrome"
 
         browser = Browser.new(browser_path: path)
 
@@ -43,6 +43,17 @@ module Ferrum
           browser&.quit
         end
       end
+    end
+
+    it "raises an error when browser is too slow" do
+      path = "#{PROJECT_ROOT}/spec/support/no_chrome"
+
+      expect {
+        browser = Browser.new(browser_path: path)
+      }.to raise_error(
+        Ferrum::ProcessTimeoutError,
+        "Browser did not produce websocket url within 2 seconds"
+      )
     end
 
     it "raises an error and restarts the client if the client dies while executing a command" do
@@ -170,33 +181,33 @@ module Ferrum
       let(:browser) { Browser.new(base_url: base_url, js_errors: true) }
 
       it "propagates a Javascript error to a ruby exception" do
-        expect do
+        expect {
           browser.execute(%(throw new Error("zomg")))
-        end.to raise_error(Ferrum::JavaScriptError) { |e|
+        }.to raise_error(Ferrum::JavaScriptError) { |e|
           expect(e.message).to include("Error: zomg")
         }
       end
 
       it "propagates an asynchronous Javascript error on the page to a ruby exception" do
-        expect do
+        expect {
           browser.execute "setTimeout(function() { omg }, 0)"
           sleep 0.01
           browser.execute ""
-        end.to raise_error(Ferrum::JavaScriptError, /ReferenceError.*omg/)
+        }.to raise_error(Ferrum::JavaScriptError, /ReferenceError.*omg/)
       end
 
       it "propagates a synchronous Javascript error on the page to a ruby exception" do
-        expect do
+        expect {
           browser.execute "omg"
-        end.to raise_error(Ferrum::JavaScriptError, /ReferenceError.*omg/)
+        }.to raise_error(Ferrum::JavaScriptError, /ReferenceError.*omg/)
       end
 
       it "does not re-raise a Javascript error if it is rescued" do
-        expect do
+        expect {
           browser.execute "setTimeout(function() { omg }, 0)"
           sleep 0.01
           browser.execute ""
-        end.to raise_error(Ferrum::JavaScriptError)
+        }.to raise_error(Ferrum::JavaScriptError)
 
         # should not raise again
         expect(browser.evaluate("1+1")).to eq(2)
@@ -245,20 +256,24 @@ module Ferrum
 
       it "has a descriptive message when DNS incorrect" do
         url = "http://nope:#{port}/"
-        expect { browser.goto(url) }
-          .to raise_error(
-            Ferrum::StatusError,
-            %(Request to #{url} failed to reach server, check DNS and/or server status)
-          )
+        expect {
+          browser.goto(url)
+        }.to raise_error(
+          Ferrum::StatusError,
+          %(Request to #{url} failed to reach server, check DNS and/or server status)
+        )
       end
 
       it "reports open resource requests" do
         begin
           old_timeout = browser.timeout
           browser.timeout = 2
-          expect do
+          expect {
             browser.goto("/ferrum/visit_timeout")
-          end.to raise_error(Ferrum::StatusError, %r{there are still pending connections: http://.*/ferrum/really_slow})
+          }.to raise_error(
+            Ferrum::StatusError,
+            %r{there are still pending connections: http://.*/ferrum/really_slow}
+          )
         ensure
           browser.timeout = old_timeout
         end
@@ -269,8 +284,11 @@ module Ferrum
           prev_timeout = browser.timeout
           browser.timeout = 0.1
 
-          expect { browser.goto("/ferrum/really_slow") }.to raise_error(
-            Ferrum::StatusError, %r{there are still pending connections: http://.*/ferrum/really_slow}
+          expect {
+            browser.goto("/ferrum/really_slow")
+          }.to raise_error(
+            Ferrum::StatusError,
+            %r{there are still pending connections: http://.*/ferrum/really_slow}
           )
         ensure
           browser.timeout = prev_timeout
@@ -318,8 +336,9 @@ module Ferrum
         browser = Browser.new(host: ENV["BROWSER_TEST_HOST"], port: 12345)
         browser.goto(base_url)
 
-        expect { TCPServer.new(ENV["BROWSER_TEST_HOST"], 12345) }
-          .to raise_error(Errno::EADDRINUSE)
+        expect {
+          TCPServer.new(ENV["BROWSER_TEST_HOST"], 12345)
+        }.to raise_error(Errno::EADDRINUSE)
       ensure
         browser&.quit
       end
@@ -441,9 +460,9 @@ module Ferrum
       end
 
       it "will timeout" do
-        expect do
+        expect {
           browser.evaluate_async("var callback=arguments[0]; setTimeout(function(){callback(true)}, 4000)", 1)
-        end.to raise_error Ferrum::ScriptTimeoutError
+        }.to raise_error(Ferrum::ScriptTimeoutError)
       end
     end
 
@@ -464,7 +483,9 @@ module Ferrum
       expect(browser.evaluate("new Array")).to eq([])
       expect(browser.evaluate("new Function")).to eq({})
 
-      expect { browser.evaluate(%(throw "smth")) }.to raise_error(Ferrum::JavaScriptError)
+      expect {
+        browser.evaluate(%(throw "smth"))
+      }.to raise_error(Ferrum::JavaScriptError)
     end
 
     it "ignores cyclic structure errors in evaluate" do

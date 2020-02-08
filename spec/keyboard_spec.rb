@@ -160,9 +160,9 @@ module Ferrum
 
       it "raises error for unknown keys" do
         input = browser.at_css("#empty_input")
-        expect do
+        expect {
           input.focus.type("abc", :blah)
-        end.to raise_error KeyError, "key not found: :blah"
+        }.to raise_error(KeyError, "key not found: :blah")
       end
     end
 

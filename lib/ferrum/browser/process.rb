@@ -133,8 +133,8 @@ module Ferrum
         end
 
         unless ws_url
-          @logger.puts output if @logger
-          raise ProcessTimeoutError, "Browser did not produce websocket url within #{timeout} seconds"
+          @logger.puts(output) if @logger
+          raise ProcessTimeoutError.new(timeout)
         end
       end
 

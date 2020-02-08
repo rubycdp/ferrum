@@ -37,8 +37,8 @@ module Ferrum
   end
 
   class ProcessTimeoutError < Error
-    def initialize(message = "Timed out waiting for browser process to start")
-      super
+    def initialize(timeout)
+      super("Browser did not produce websocket url within #{timeout} seconds")
     end
   end
 

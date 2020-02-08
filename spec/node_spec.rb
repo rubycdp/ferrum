@@ -24,8 +24,12 @@ module Ferrum
       browser.execute <<~JS
         document.querySelector("a[href=js_redirect]").style.display = "none"
       JS
-      expect { browser.at_xpath("//a[text()='JS redirect']").click }
-        .to raise_error(Ferrum::BrowserError, "Could not compute content quads.")
+      expect {
+        browser.at_xpath("//a[text()='JS redirect']").click
+      }.to raise_error(
+        Ferrum::BrowserError,
+        "Could not compute content quads."
+      )
     end
 
     it "hovers an element before clicking it" do
@@ -45,10 +49,11 @@ module Ferrum
         browser.goto("/ferrum/with_js")
       end
 
+      # FIXME:
       it "raises a MouseEventFailed error", skip: true do
-        # FIXME:
-        expect { browser.at_xpath("//a[text() = 'O hai']").click }
-          .to raise_error(Ferrum::MouseEventFailed)
+        expect {
+          browser.at_xpath("//a[text() = 'O hai']").click
+        }.to raise_error(Ferrum::MouseEventFailed)
       end
 
       context "and is then brought in" do
