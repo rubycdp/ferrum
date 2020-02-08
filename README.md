@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/route/ferrum.svg?branch=master)](https://travis-ci.org/route/ferrum)
 
-<img align="right" width="160" height="120"
+<img align="right" width="320" height="241"
      alt="Ferrum logo"
      src="https://raw.githubusercontent.com/route/ferrum/master/logo.svg?sanitize=true">
 
