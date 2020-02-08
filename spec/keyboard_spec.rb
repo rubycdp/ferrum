@@ -296,7 +296,7 @@ module Ferrum
 
       it "clears the input" do
         keys = Ferrum.mac? ? %i[Alt Shift Left] : %i[Ctrl Shift Left]
-        change_me.type(keys, :backspace)
+        change_me.type(2.times.map { keys }, :backspace)
         expect(change_me.value).to eq("")
       end
 
