@@ -36,6 +36,12 @@ module Ferrum
     end
   end
 
+  class ProcessTimeoutError < Error
+    def initialize(message = "Timed out waiting for browser process to start")
+      super
+    end
+  end
+
   class DeadBrowserError < Error
     def initialize(message = "Browser is dead or given window is closed")
       super
