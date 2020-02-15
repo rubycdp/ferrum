@@ -572,6 +572,8 @@ Sets given values as cookie
   * :value `String`
   * :domain `String`
   * :expires `Integer`
+  * :samesite `String`
+  * :httponly `Boolean`
 
 ```ruby
 browser.cookies.set(name: "stealth", value: "omg", domain: "google.com") # => true

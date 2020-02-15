@@ -27,7 +27,13 @@ module Ferrum
       end
 
       it "can set cookies with custom settings" do
-        browser.cookies.set(name: "stealth", value: "omg", path: "/ferrum")
+        browser.cookies.set(
+          name: "stealth",
+          value: "omg",
+          path: "/ferrum",
+          httponly: true,
+          samesite: "None"
+        )
 
         browser.goto("/get_cookie")
         expect(browser.body).to_not include("omg")
@@ -36,6 +42,8 @@ module Ferrum
         expect(browser.body).to include("omg")
 
         expect(browser.cookies["stealth"].path).to eq("/ferrum")
+        expect(browser.cookies["stealth"].httponly?).to be_truthy
+        expect(browser.cookies["stealth"].samesite).to eq("None")
       end
 
       it "can remove a cookie" do

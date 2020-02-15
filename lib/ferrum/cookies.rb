@@ -23,6 +23,10 @@ module Ferrum
         @attributes["path"]
       end
 
+      def samesite
+        @attributes["sameSite"]
+      end
+
       def size
         @attributes["size"]
       end
@@ -64,6 +68,9 @@ module Ferrum
       cookie[:name]   ||= name
       cookie[:value]  ||= value
       cookie[:domain] ||= default_domain
+
+      cookie[:httpOnly] = cookie.delete(:httponly) if cookie.key?(:httponly)
+      cookie[:sameSite] = cookie.delete(:samesite) if cookie.key?(:samesite)
 
       expires = cookie.delete(:expires).to_i
       cookie[:expires] = expires if expires > 0
