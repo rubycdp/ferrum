@@ -35,6 +35,15 @@ module Ferrum
       @parent_id.nil?
     end
 
+    def set_content(html)
+      evaluate_async(%(
+        document.open();
+        document.write(arguments[0]);
+        document.close();
+        arguments[1](true);
+      ), @page.timeout, html)
+    end
+
     def execution_id?(execution_id)
       @execution_id == execution_id
     end

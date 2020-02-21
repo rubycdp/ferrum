@@ -705,6 +705,12 @@ browser.evaluate("window.__injected") # => 42
 #### frames
 #### main_frame
 #### frame_by
+#### set_content(html)
+
+Sets a content of given frame
+
+  * html `String`
+
 
 Play around inside given frame
 

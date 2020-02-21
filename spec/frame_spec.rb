@@ -235,6 +235,12 @@ module Ferrum
         expect(frame.url).to end_with("/ferrum/slow")
         expect(browser.current_url).to end_with("/ferrum/frames")
       end
+
+      it "can set page content" do
+        browser.set_content(%(<html><head></head><body>Voila!</body></html>))
+
+        expect(browser.body).to include("Voila!")
+      end
     end
   end
 end
