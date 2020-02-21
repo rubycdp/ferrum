@@ -48,8 +48,8 @@ module Ferrum
 
       def document_size
         evaluate <<~JS
-          [document.documentElement.offsetWidth,
-           document.documentElement.offsetHeight]
+          [document.documentElement.scrollWidth,
+           document.documentElement.scrollHeight]
         JS
       end
 
