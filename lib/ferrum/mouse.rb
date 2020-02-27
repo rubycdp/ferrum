@@ -35,7 +35,7 @@ module Ferrum
     # FIXME: steps
     def move(x:, y:, steps: 1)
       @x, @y = x, y
-      @page.command("Input.dispatchMouseEvent", type: "mouseMoved", x: @x, y: @y)
+      @page.command("Input.dispatchMouseEvent", slowmoable: true, type: "mouseMoved", x: @x, y: @y)
       self
     end
 
@@ -45,7 +45,7 @@ module Ferrum
       button = validate_button(button)
       options = { x: @x, y: @y, type: type, button: button, clickCount: count }
       options.merge!(modifiers: modifiers) if modifiers
-      @page.command("Input.dispatchMouseEvent", wait: wait, **options)
+      @page.command("Input.dispatchMouseEvent", wait: wait, slowmoable: true, **options)
     end
 
     def validate_button(button)

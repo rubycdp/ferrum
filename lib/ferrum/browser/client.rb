@@ -9,11 +9,10 @@ module Ferrum
     class Client
       INTERRUPTIONS = %w[Fetch.requestPaused Fetch.authRequired].freeze
 
-      def initialize(browser, ws_url, start_id = 0, allow_slowmo = true)
-        @command_id = start_id
+      def initialize(browser, ws_url, id_starts_with: 0)
+        @command_id = id_starts_with
         @pendings = Concurrent::Hash.new
         @browser = browser
-        @slowmo = @browser.slowmo if allow_slowmo && @browser.slowmo > 0
         @ws = WebSocket.new(ws_url, @browser.ws_max_receive_size, @browser.logger)
         @subscriber, @interruptor = Subscriber.build(2)
 
@@ -39,7 +38,6 @@ module Ferrum
         pending = Concurrent::IVar.new
         message = build_message(method, params)
         @pendings[message[:id]] = pending
-        sleep(@slowmo) if @slowmo
         @ws.send_message(message)
         data = pending.value!(@browser.timeout)
         @pendings.delete(message[:id])

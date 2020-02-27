@@ -85,8 +85,8 @@ module Ferrum
           options.merge!(returnByValue: by_value)
 
           response = @page.command("Runtime.callFunctionOn",
-                             wait: wait, **options)["result"]
-                            .tap { |r| handle_error(r) }
+                                   wait: wait, slowmoable: true,
+                                   **options)["result"].tap { |r| handle_error(r) }
 
           by_value ? response.dig("value") : handle_response(response)
         end
@@ -136,8 +136,7 @@ module Ferrum
             params = params.merge(executionContextId: execution_id)
           end
 
-          response = @page.command("Runtime.callFunctionOn",
-                             **params)["result"].tap { |r| handle_error(r) }
+          response = @page.command("Runtime.callFunctionOn", slowmoable: true, **params)["result"].tap { |r| handle_error(r) }
 
           handle ? handle_response(response) : response
         end
