@@ -42,7 +42,7 @@ module Ferrum
       @logger, @timeout, @ws_max_receive_size =
         @options.values_at(:logger, :timeout, :ws_max_receive_size)
       @js_errors = @options.fetch(:js_errors, false)
-      @slowmo = @options[:slowmo].to_i
+      @slowmo = @options[:slowmo].to_f
 
       if @options.key?(:base_url)
         self.base_url = @options[:base_url]
