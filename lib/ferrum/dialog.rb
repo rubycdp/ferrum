@@ -14,11 +14,11 @@ module Ferrum
       options = { accept: true }
       response = prompt_text || default_prompt
       options.merge!(promptText: response) if response
-      @page.command("Page.handleJavaScriptDialog", **options)
+      @page.command("Page.handleJavaScriptDialog", slowmoable: true, **options)
     end
 
     def dismiss
-      @page.command("Page.handleJavaScriptDialog", accept: false)
+      @page.command("Page.handleJavaScriptDialog", slowmoable: true, accept: false)
     end
 
     def match?(regexp)

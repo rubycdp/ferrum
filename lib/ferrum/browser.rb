@@ -115,7 +115,7 @@ module Ferrum
     def start
       Ferrum.started
       @process = Process.start(@options)
-      @client = Client.new(self, @process.ws_url, 0, false)
+      @client = Client.new(self, @process.ws_url)
       @contexts = Contexts.new(self)
     end
   end

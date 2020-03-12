@@ -50,7 +50,7 @@ module Ferrum
       host = @browser.process.host
       port = @browser.process.port
       ws_url = "ws://#{host}:#{port}/devtools/page/#{@target_id}"
-      @client = Browser::Client.new(browser, ws_url, 1000)
+      @client = Browser::Client.new(browser, ws_url, id_starts_with: 1000)
 
       @mouse, @keyboard = Mouse.new(self), Keyboard.new(self)
       @headers, @cookies = Headers.new(self), Cookies.new(self)
@@ -99,7 +99,8 @@ module Ferrum
         @browser.command("Browser.setWindowBounds", windowId: @window_id, bounds: { width: width, height: height, windowState: "normal" })
       end
 
-      command("Emulation.setDeviceMetricsOverride", width: width,
+      command("Emulation.setDeviceMetricsOverride", slowmoable: true,
+                                                    width: width,
                                                     height: height,
                                                     deviceScaleFactor: 1,
                                                     mobile: false,
@@ -107,12 +108,12 @@ module Ferrum
     end
 
     def refresh
-      command("Page.reload", wait: timeout)
+      command("Page.reload", wait: timeout, slowmoable: true)
     end
     alias_method :reload, :refresh
 
     def stop
-      command("Page.stopLoading")
+      command("Page.stopLoading", slowmoable: true)
     end
 
     def back
@@ -129,9 +130,11 @@ module Ferrum
       enabled
     end
 
-    def command(method, wait: 0, **params)
+    def command(method, wait: 0, slowmoable: false, **params)
       iteration = @event.reset if wait > 0
+      sleep(@browser.slowmo) if slowmoable && @browser.slowmo > 0
       result = @client.command(method, params)
+
       if wait > 0
         @event.wait(wait) # Wait a bit after command and check if iteration has
                           # changed which means there was some network event for
@@ -240,7 +243,9 @@ module Ferrum
 
       if entry = entries[index + delta]
         # Potential wait because of network event
-        command("Page.navigateToHistoryEntry", wait: Mouse::CLICK_WAIT, entryId: entry["id"])
+        command("Page.navigateToHistoryEntry", wait: Mouse::CLICK_WAIT,
+                                               slowmoable: true,
+                                               entryId: entry["id"])
       end
     end
 
