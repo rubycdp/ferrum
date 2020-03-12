@@ -1,6 +1,6 @@
 # Ferrum - fearless Ruby Chrome driver
 
-[![Build Status](https://travis-ci.org/route/ferrum.svg?branch=master)](https://travis-ci.org/route/ferrum)
+[![Build Status](https://travis-ci.org/rubycdp/ferrum.svg?branch=master)](https://travis-ci.org/rubycdp/ferrum)
 
 <img align="right" width="320" height="241"
      alt="Ferrum logo"
