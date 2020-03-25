@@ -1,10 +1,11 @@
-# Ferrum - fearless Ruby Chrome driver
+# Ferrum - high-level API to control Chrome in Ruby
 
 [![Build Status](https://travis-ci.org/rubycdp/ferrum.svg?branch=master)](https://travis-ci.org/rubycdp/ferrum)
 
-<img align="right" width="320" height="241"
+<img align="right"
+     width="320" height="241"
      alt="Ferrum logo"
-     src="https://raw.githubusercontent.com/route/ferrum/master/logo.svg?sanitize=true">
+     src="https://raw.githubusercontent.com/rubycdp/ferrum/master/logo.svg?sanitize=true">
 
 As simple as Puppeteer, though even simpler.
 
@@ -12,47 +13,60 @@ It is Ruby clean and high-level API to Chrome. Runs headless by default,
 but you can configure it to run in a non-headless mode. All you need is Ruby and
 Chrome/Chromium. Ferrum connects to the browser via DevTools Protocol.
 
-[Cuprite](https://github.com/machinio/cuprite) used to have this code inside in
+[Cuprite](https://github.com/rubycdp/cuprite) used to have this code inside in
 one form or another but the thing is you don't need Capybara if you are going to
 crawl sites. You crawl, not test. Besides that clean lightweight API to browser
 is what Ruby was missing, so here it comes.
 
-[Vessel](https://github.com/route/vessel) high-level web crawling framework
+[Vessel](https://github.com/rubycdp/vessel) high-level web crawling framework
 based on Ferrum.
 
-Web design by [Evrone](https://evrone.com/), what else [we build with Ruby on Rails](https://evrone.com/ruby), what else [we do at Evrone](https://evrone.com/cases#case-studies).
+Web design by [Evrone](https://evrone.com/), what else
+[we build with Ruby on Rails](https://evrone.com/ruby), what else
+[we do at Evrone](https://evrone.com/cases#case-studies).
 
-If you like this project, please consider to _[become a backer](https://www.patreon.com/rferrum)_
-on Patreon.
+If you like this project, please consider to
+_[become a backer](https://www.patreon.com/rubycdp_ferrum)_ on Patreon.
+
 
 ## Index
 
-* [Customization](https://github.com/route/ferrum#customization)
-* [Navigation](https://github.com/route/ferrum#navigation)
-* [Finders](https://github.com/route/ferrum#finders)
-* [Screenshots](https://github.com/route/ferrum#screenshots)
-* [Network](https://github.com/route/ferrum#network)
-* [Mouse](https://github.com/route/ferrum#mouse)
-* [Keyboard](https://github.com/route/ferrum#keyboard)
-* [Cookies](https://github.com/route/ferrum#cookies)
-* [Headers](https://github.com/route/ferrum#headers)
-* [JavaScript](https://github.com/route/ferrum#javascript)
-* [Frames](https://github.com/route/ferrum#frames)
-* [Dialog](https://github.com/route/ferrum#dialog)
+* [Install](https://github.com/rubycdp/ferrum#install)
+* [Examples](https://github.com/rubycdp/ferrum#examples)
+* [Docker](https://github.com/rubycdp/ferrum#docker)
+* [Customization](https://github.com/rubycdp/ferrum#customization)
+* [Navigation](https://github.com/rubycdp/ferrum#navigation)
+* [Finders](https://github.com/rubycdp/ferrum#finders)
+* [Screenshots](https://github.com/rubycdp/ferrum#screenshots)
+* [Network](https://github.com/rubycdp/ferrum#network)
+* [Mouse](https://github.com/rubycdp/ferrum#mouse)
+* [Keyboard](https://github.com/rubycdp/ferrum#keyboard)
+* [Cookies](https://github.com/rubycdp/ferrum#cookies)
+* [Headers](https://github.com/rubycdp/ferrum#headers)
+* [JavaScript](https://github.com/rubycdp/ferrum#javascript)
+* [Frames](https://github.com/rubycdp/ferrum#frames)
+* [Dialog](https://github.com/rubycdp/ferrum#dialog)
+* [Thread safety](https://github.com/rubycdp/ferrum#thread-safety)
+* [License](https://github.com/rubycdp/ferrum#license)
+
 
 ## Install
 
 There's no official Chrome or Chromium package for Linux don't install it this
-way because it either will be outdated or unofficial, both are bad. Download it
-from official [source](https://www.chromium.org/getting-involved/download-chromium).
+way because it's either outdated or unofficial, both are bad. Download it from
+official [source](https://www.chromium.org/getting-involved/download-chromium).
 Chrome binary should be in the `PATH` or `BROWSER_PATH` or you can pass it as an
-option to browser instance `:browser_path`.
+option to browser instance see `:browser_path` in
+[Customization](https://github.com/rubycdp/ferrum#customization).
 
-Add this to your Gemfile:
+Add this to your `Gemfile` and run `bundle install`.
 
 ``` ruby
 gem "ferrum"
 ```
+
+
+## Examples
 
 Navigate to a website and save a screenshot:
 
@@ -70,7 +84,7 @@ browser = Ferrum::Browser.new
 browser.goto("https://google.com")
 input = browser.at_xpath("//div[@id='searchform']/form//input[@type='text']")
 input.focus.type("Ruby headless driver for Chrome", :Enter)
-browser.at_css("a > h3").text # => "route/ferrum: Ruby Chrome/Chromium driver - GitHub"
+browser.at_css("a > h3").text # => "rubycdp/ferrum: Ruby Chrome/Chromium driver - GitHub"
 browser.quit
 ```
 
@@ -105,7 +119,17 @@ browser.mouse
 browser.quit
 ```
 
-## Customization ##
+
+## Docker
+
+In docker as root you must pass the no-sandbox browser option:
+
+```ruby
+Ferrum::Browser.new(browser_options: { 'no-sandbox': nil })
+```
+
+
+## Customization
 
 You can customize options with the following code in your test setup:
 
@@ -129,7 +153,7 @@ Ferrum::Browser.new(options)
   * `:js_errors` (Boolean) - When true, JavaScript errors get re-raised in Ruby.
   * `:browser_name` (Symbol) - `:chrome` by default, only experimental support
       for `:firefox` for now.
-  * `:browser_path` (String) - Path to chrome binary, you can also set ENV
+  * `:browser_path` (String) - Path to Chrome binary, you can also set ENV
       variable as `BROWSER_PATH=some/path/chrome bundle exec rspec`.
   * `:browser_options` (Hash) - Additional command line options,
       [see them all](https://peter.sh/experiments/chromium-command-line-switches/)
@@ -143,9 +167,6 @@ Ferrum::Browser.new(options)
   * `:ws_max_receive_size` (Integer) - How big messages to accept from Chrome
       over the web socket, in bytes. Defaults to 64MB. Incoming messages larger
       than this will cause a `Ferrum::DeadBrowserError`.
-
-
-#### The API below is for master branch and a subject to change before 1.0
 
 
 ## Navigation
@@ -803,3 +824,27 @@ t2.join
 
 browser.quit
 ```
+
+
+## License
+
+Copyright 2018-2020 Machinio
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
