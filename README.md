@@ -7,19 +7,26 @@
      alt="Ferrum logo"
      src="https://raw.githubusercontent.com/rubycdp/ferrum/master/logo.svg?sanitize=true">
 
-As simple as Puppeteer, though even simpler.
+#### As simple as Puppeteer, though even simpler.
 
-It is Ruby clean and high-level API to Chrome. Runs headless by default,
-but you can configure it to run in a non-headless mode. All you need is Ruby and
-Chrome/Chromium. Ferrum connects to the browser via DevTools Protocol.
+It is Ruby clean and high-level API to Chrome. Runs headless by default, but you
+can configure it to run in a headful mode. All you need is Ruby and
+[Chrome](https://www.google.com/chrome/) or
+[Chromium](https://www.chromium.org/). Ferrum connects to the browser by [CDP
+protocol](https://chromedevtools.github.io/devtools-protocol/) and  there's _no_
+Selenium/WebDriver/ChromeDriver dependency. The emphasis was made on a raw CDP
+protocol because Chrome allows you to do so many things that are barely
+supported by WebDriver because it should have consistent design with other
+browsers.
 
-[Cuprite](https://github.com/rubycdp/cuprite) used to have this code inside in
-one form or another but the thing is you don't need Capybara if you are going to
-crawl sites. You crawl, not test. Besides that clean lightweight API to browser
-is what Ruby was missing, so here it comes.
+* [Cuprite](https://github.com/rubycdp/cuprite) is a pure Ruby driver for
+[Capybara](https://github.com/teamcapybara/capybara) based on Ferrum. If you are
+going to crawl sites you better use Ferrum or
+[Vessel](https://github.com/rubycdp/vessel) because you crawl, not test.
 
-[Vessel](https://github.com/rubycdp/vessel) high-level web crawling framework
-based on Ferrum.
+* [Vessel](https://github.com/rubycdp/vessel) high-level web crawling framework
+based on Ferrum. It looks like [Scrapy](https://scrapy.org/) except that it uses
+a real browser in order to grab data.
 
 Web design by [Evrone](https://evrone.com/), what else
 [we build with Ruby on Rails](https://evrone.com/ruby), what else
