@@ -29,7 +29,7 @@ module Ferrum
       end
 
       def doctype
-        evaluate("new XMLSerializer().serializeToString(document.doctype)")
+        evaluate("document.doctype && new XMLSerializer().serializeToString(document.doctype)")
       end
 
       def body
