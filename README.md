@@ -52,6 +52,7 @@ _[become a backer](https://www.patreon.com/rubycdp_ferrum)_ on Patreon.
 * [Headers](https://github.com/rubycdp/ferrum#headers)
 * [JavaScript](https://github.com/rubycdp/ferrum#javascript)
 * [Frames](https://github.com/rubycdp/ferrum#frames)
+* [Frame](https://github.com/rubycdp/ferrum#frame)
 * [Dialog](https://github.com/rubycdp/ferrum#dialog)
 * [Thread safety](https://github.com/rubycdp/ferrum#thread-safety)
 * [License](https://github.com/rubycdp/ferrum#license)
@@ -730,23 +731,146 @@ browser.evaluate("window.__injected") # => 42
 
 ## Frames
 
-#### frames
-#### main_frame
-#### frame_by
-#### set_content(html)
+#### frames : `Array[Frame] | []`
 
-Sets a content of given frame
+Returns all the frames current page have.
 
-  * html `String`
+```ruby
+browser.goto("https://www.w3schools.com/tags/tag_frame.asp")
+browser.frames # =>
+# [
+#   #<Ferrum::Frame @id="C6D104CE454A025FBCF22B98DE612B12" @parent_id=nil @name=nil @state=:stopped_loading @execution_id=1>,
+#   #<Ferrum::Frame @id="C09C4E4404314AAEAE85928EAC109A93" @parent_id="C6D104CE454A025FBCF22B98DE612B12" @state=:stopped_loading @execution_id=2>,
+#   #<Ferrum::Frame @id="2E9C7F476ED09D87A42F2FEE3C6FBC3C" @parent_id="C6D104CE454A025FBCF22B98DE612B12" @state=:stopped_loading @execution_id=3>,
+#   ...
+# ]
+```
+
+#### main_frame : `Frame`
+
+Returns page's main frame, the top of the tree and the parent of all frames.
+
+#### frame_by(\*\*options) : `Frame | nil`
+
+Find frame by given options.
+
+* options `Hash`
+  * :id `String` - Unique frame's id that browser provides
+  * :name `String` - Frame's name if there's one
+
+```ruby
+browser.frame_by(id: "C6D104CE454A025FBCF22B98DE612B12")
+```
 
 
-Play around inside given frame
+## Frame
+
+#### id : `String`
+
+Frame's unique id.
+
+#### parent_id : `String | nil`
+
+Parent frame id if this one is nested in another one.
+
+#### execution_id : `Integer`
+
+Execution context id which is used by JS, each frame has it's own context in
+which JS evaluates.
+
+#### name : `String | nil`
+
+If frame was given a name it should be here.
+
+#### state : `Symbol | nil`
+
+One of the states frame's in:
+
+* `:started_loading`
+* `:navigated`
+* `:stopped_loading`
+
+#### url : `String`
+
+Returns current frame's location href.
 
 ```ruby
 browser.goto("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
 frame = browser.frames[1]
-puts frame.title # => HTML Demo: <iframe>
-puts frame.url # => https://interactive-examples.mdn.mozilla.net/pages/tabbed/iframe.html
+frame.url # => https://interactive-examples.mdn.mozilla.net/pages/tabbed/iframe.html
+```
+
+#### title
+
+Returns current frame's title.
+
+```ruby
+browser.goto("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
+frame = browser.frames[1]
+frame.title # => HTML Demo: <iframe>
+```
+
+#### main? : `Boolean`
+
+If current frame is the main frame of the page (top of the tree).
+
+```ruby
+browser.goto("https://www.w3schools.com/tags/tag_frame.asp")
+frame = browser.frame_by(id: "C09C4E4404314AAEAE85928EAC109A93")
+frame.main? # => false
+```
+
+#### current_url : `String`
+
+Returns current frame's top window location href.
+
+```ruby
+browser.goto("https://www.w3schools.com/tags/tag_frame.asp")
+frame = browser.frame_by(id: "C09C4E4404314AAEAE85928EAC109A93")
+frame.current_url # => "https://www.w3schools.com/tags/tag_frame.asp"
+```
+
+#### current_title : `String`
+
+Returns current frame's top window title.
+
+```ruby
+browser.goto("https://www.w3schools.com/tags/tag_frame.asp")
+frame = browser.frame_by(id: "C09C4E4404314AAEAE85928EAC109A93")
+frame.current_title # => "HTML frame tag"
+```
+
+#### body : `String`
+
+Returns current frame's html.
+
+```ruby
+browser.goto("https://www.w3schools.com/tags/tag_frame.asp")
+frame = browser.frame_by(id: "C09C4E4404314AAEAE85928EAC109A93")
+frame.body # => "<html><head></head><body></body></html>"
+```
+
+#### doctype
+
+Returns current frame's doctype.
+
+```ruby
+browser.goto("https://www.w3schools.com/tags/tag_frame.asp")
+browser.main_frame.doctype # => "<!DOCTYPE html>"
+```
+
+#### set_content(html)
+
+Sets a content of a given frame.
+
+  * html `String`
+
+```ruby
+browser.goto("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
+frame = browser.frames[1]
+frame.body # <html lang="en"><head><style>body {transition: opacity ease-in 0.2s; }...
+frame.set_content("<html><head></head><body><p>lol</p></body></html>")
+frame.body # => <html><head></head><body><p>lol</p></body></html>
 ```
 
 
