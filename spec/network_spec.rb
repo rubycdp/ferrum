@@ -118,7 +118,7 @@ module Ferrum
         %r{/ferrum/jquery.min.js$}    => File.size(PROJECT_ROOT + "/spec/support/public/jquery-1.11.3.min.js"),
         %r{/ferrum/jquery-ui.min.js$} => File.size(PROJECT_ROOT + "/spec/support/public/jquery-ui-1.11.4.min.js"),
         %r{/ferrum/test.js$}          => File.size(PROJECT_ROOT + "/spec/support/public/test.js"),
-        %r{/ferrum/with_js$}          => 2325
+        %r{/ferrum/with_js$}          => 2343
       }
 
       resources_size.each do |resource, size|

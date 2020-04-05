@@ -36,58 +36,55 @@ module Ferrum
         evaluate("document.documentElement.outerHTML")
       end
 
-      def at_xpath(selector, within: nil)
-        xpath(selector, within: within).first
-      end
-
-      # FIXME: Check within
       def xpath(selector, within: nil)
-        evaluate_async(%(
-          try {
-            let selector = arguments[0];
-            let within = arguments[1] || document;
-            let results = [];
+        code = <<~JS
+          let selector = arguments[0];
+          let within = arguments[1] || document;
+          let results = [];
 
-            let xpath = document.evaluate(selector, within, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-            for (let i = 0; i < xpath.snapshotLength; i++) {
-              results.push(xpath.snapshotItem(i));
-            }
+          let xpath = document.evaluate(selector, within, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+          for (let i = 0; i < xpath.snapshotLength; i++) {
+            results.push(xpath.snapshotItem(i));
+          }
 
-            arguments[2](results);
-          } catch (error) {
-            // DOMException.INVALID_EXPRESSION_ERR is undefined, using pure code
-            if (error.code == DOMException.SYNTAX_ERR || error.code == 51) {
-              throw "Invalid Selector";
-            } else {
-              throw error;
-            }
-          }), @page.timeout, selector, within)
+          arguments[2](results);
+        JS
+
+        evaluate_async(code, @page.timeout, selector, within)
       end
 
-      # FIXME css doesn't work for a frame w/o execution_id
-      def css(selector, within: nil)
-        node_id = within&.node_id || @page.document_id
+      def at_xpath(selector, within: nil)
+        code = <<~JS
+          let selector = arguments[0];
+          let within = arguments[1] || document;
+          let xpath = document.evaluate(selector, within, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+          let result = xpath.snapshotItem(0);
+          arguments[2](result);
+        JS
 
-        ids = @page.command("DOM.querySelectorAll",
-                            nodeId: node_id,
-                            selector: selector)["nodeIds"]
-        ids.map { |id| build_node(id) }.compact
+        evaluate_async(code, @page.timeout, selector, within)
+      end
+
+      def css(selector, within: nil)
+        code = <<~JS
+          let selector = arguments[0];
+          let within = arguments[1] || document;
+          let results = within.querySelectorAll(selector);
+          arguments[2](results);
+        JS
+
+        evaluate_async(code, @page.timeout, selector, within)
       end
 
       def at_css(selector, within: nil)
-        node_id = within&.node_id || @page.document_id
+        code = <<~JS
+          let selector = arguments[0];
+          let within = arguments[1] || document;
+          let result = within.querySelector(selector);
+          arguments[2](result);
+        JS
 
-        id = @page.command("DOM.querySelector",
-                     nodeId: node_id,
-                     selector: selector)["nodeId"]
-        build_node(id)
-      end
-
-      private
-
-      def build_node(node_id)
-        description = @page.command("DOM.describeNode", nodeId: node_id)
-        Node.new(self, @page.target_id, node_id, description["node"])
+        evaluate_async(code, @page.timeout, selector, within)
       end
     end
   end

@@ -78,8 +78,8 @@ module Ferrum
     attr_reader :class_name, :message
 
     def initialize(response)
-      super
       @class_name, @message = response.values_at("className", "description")
+      super(response.merge("message" => @message))
     end
   end
 

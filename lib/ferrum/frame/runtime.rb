@@ -86,7 +86,9 @@ module Ferrum
 
           response = @page.command("Runtime.callFunctionOn",
                                    wait: wait, slowmoable: true,
-                                   **options)["result"].tap { |r| handle_error(r) }
+                                   **options)
+          handle_error(response)
+          response = response["result"]
 
           by_value ? response.dig("value") : handle_response(response)
         end
@@ -136,14 +138,19 @@ module Ferrum
             params = params.merge(executionContextId: execution_id)
           end
 
-          response = @page.command("Runtime.callFunctionOn", slowmoable: true, **params)["result"].tap { |r| handle_error(r) }
+          response = @page.command("Runtime.callFunctionOn",
+                                   slowmoable: true,
+                                   **params)
+          handle_error(response)
+          response = response["result"]
 
           handle ? handle_response(response) : response
         end
       end
 
       # FIXME: We should have a central place to handle all type of errors
-      def handle_error(result)
+      def handle_error(response)
+        result = response["result"]
         return if result["subtype"] != "error"
 
         case result["description"]
@@ -219,37 +226,38 @@ module Ferrum
       end
 
       def cyclic?(object_id)
-        @page.command("Runtime.callFunctionOn",
-                objectId: object_id,
-                returnByValue: true,
-                functionDeclaration: <<~JS
-                  function() {
-                    if (Array.isArray(this) &&
-                        this.every(e => e instanceof Node)) {
-                      return false;
-                    }
+        @page.command(
+          "Runtime.callFunctionOn",
+          objectId: object_id,
+          returnByValue: true,
+          functionDeclaration: <<~JS
+            function() {
+              if (Array.isArray(this) &&
+                  this.every(e => e instanceof Node)) {
+                return false;
+              }
 
-                    const seen = [];
-                    function detectCycle(obj) {
-                      if (typeof obj === "object") {
-                        if (seen.indexOf(obj) !== -1) {
-                          return true;
-                        }
-                        seen.push(obj);
-                        for (let key in obj) {
-                          if (obj.hasOwnProperty(key) && detectCycle(obj[key])) {
-                            return true;
-                          }
-                        }
-                      }
-
-                      return false;
-                    }
-
-                    return detectCycle(this);
+              const seen = [];
+              function detectCycle(obj) {
+                if (typeof obj === "object") {
+                  if (seen.indexOf(obj) !== -1) {
+                    return true;
                   }
-                JS
-               )
+                  seen.push(obj);
+                  for (let key in obj) {
+                    if (obj.hasOwnProperty(key) && detectCycle(obj[key])) {
+                      return true;
+                    }
+                  }
+                }
+
+                return false;
+              }
+
+              return detectCycle(this);
+            }
+          JS
+        )
       end
     end
   end

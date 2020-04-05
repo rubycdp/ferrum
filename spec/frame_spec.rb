@@ -253,6 +253,154 @@ module Ferrum
         browser.set_content("")
         expect(browser.doctype).to be_nil
       end
+
+      context "#xpath" do
+        it "returns given nodes" do
+          browser.goto("/ferrum/with_js")
+          p = browser.xpath("//p[@id='remove_me']")
+
+          expect(p.size).to eq(1)
+        end
+
+        it "supports within" do
+          browser.goto("/ferrum/with_js")
+          p = browser.xpath("//p[@id='with_content']").first
+
+          links = browser.xpath("./a", within: p)
+
+          expect(links.size).to eq(1)
+          expect(links.first.attribute(:id)).to eq("open-match")
+        end
+
+        it "throws an error on a wrong xpath" do
+          browser.goto("/ferrum/with_js")
+
+          expect {
+            browser.xpath("#remove_me")
+          }.to raise_error(Ferrum::JavaScriptError)
+        end
+
+        it "supports inside a given frame" do
+          browser.goto("/ferrum/frames")
+          browser.execute <<-JS
+            document.body.innerHTML += "<iframe src='/ferrum/buttons' id='buttons_frame'>"
+          JS
+
+          frame = browser.at_xpath("//iframe[@id='buttons_frame']").frame
+          expect(frame.xpath("//button").size).to eq(3)
+        end
+      end
+
+      context "#at_xpath" do
+        it "returns given nodes" do
+          browser.goto("/ferrum/with_js")
+          p = browser.at_xpath("//p[@id='remove_me']")
+
+          expect(p).not_to be_nil
+        end
+
+        it "supports within" do
+          browser.goto("/ferrum/with_js")
+          p = browser.at_xpath("//p[@id='with_content']")
+
+          link = browser.at_xpath("./a", within: p)
+
+          expect(link).not_to be_nil
+          expect(link.attribute(:id)).to eq("open-match")
+        end
+
+        it "throws an error on a wrong xpath" do
+          browser.goto("/ferrum/with_js")
+
+          expect {
+            browser.at_xpath("#remove_me")
+          }.to raise_error(Ferrum::JavaScriptError)
+        end
+
+        it "supports inside a given frame" do
+          browser.goto("/ferrum/frames")
+          browser.execute <<-JS
+            document.body.innerHTML += "<iframe src='/ferrum/buttons' id='buttons_frame'>"
+          JS
+
+          frame = browser.at_xpath("//iframe[@id='buttons_frame']").frame
+          expect(frame.at_xpath("//button[@id='click_me_123']")).not_to be_nil
+        end
+      end
+
+      context "#css" do
+        it "returns given nodes" do
+          browser.goto("/ferrum/with_js")
+          p = browser.css("p#remove_me")
+
+          expect(p.size).to eq(1)
+        end
+
+        it "supports within" do
+          browser.goto("/ferrum/with_js")
+          p = browser.css("p#with_content").first
+
+          links = browser.css("a", within: p)
+
+          expect(links.size).to eq(1)
+          expect(links.first.attribute(:id)).to eq("open-match")
+        end
+
+        it "throws an error on an invalid selector" do
+          browser.goto("/ferrum/table")
+
+          expect {
+            browser.css("table tr:last")
+          }.to raise_error(Ferrum::JavaScriptError)
+        end
+
+        it "supports inside a given frame" do
+          browser.goto("/ferrum/frames")
+          browser.execute <<-JS
+            document.body.innerHTML += "<iframe src='/ferrum/buttons' id='buttons_frame'>"
+          JS
+
+          frame = browser.at_css("iframe#buttons_frame").frame
+          expect(frame.css("button").size).to eq(3)
+        end
+      end
+
+      context "#at_css" do
+        it "returns given nodes" do
+          browser.goto("/ferrum/with_js")
+          p = browser.at_css("p#remove_me")
+
+          expect(p).not_to be_nil
+        end
+
+        it "supports within" do
+          browser.goto("/ferrum/with_js")
+          p = browser.at_css("p#with_content")
+
+          link = browser.at_css("a", within: p)
+
+          expect(link).not_to be_nil
+          expect(link.attribute(:id)).to eq("open-match")
+        end
+
+        it "throws an error on an invalid selector" do
+          browser.goto("/ferrum/table")
+
+          expect {
+            browser.at_css("table tr:last")
+          }.to raise_error(Ferrum::JavaScriptError)
+        end
+
+        it "supports inside a given frame" do
+          browser.goto("/ferrum/frames")
+          browser.execute <<-JS
+            document.body.innerHTML += "<iframe src='/ferrum/buttons' id='buttons_frame'>"
+          JS
+
+          frame = browser.at_css("iframe#buttons_frame").frame
+          expect(frame.at_css("button#click_me_123")).not_to be_nil
+        end
+      end
     end
   end
 end

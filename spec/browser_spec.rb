@@ -600,16 +600,6 @@ module Ferrum
       browser.attach_file "file", __FILE__
     end
 
-    it "throws an error on an invalid selector", skip: true do
-      browser.goto("/ferrum/table")
-      expect { browser.at_css("table tr:last") }.to raise_error(Ferrum::InvalidSelector)
-    end
-
-    it "throws an error on wrong xpath", skip: true do
-      browser.goto("/ferrum/with_js")
-      expect { browser.at_xpath("#remove_me") }.to raise_error(Ferrum::InvalidSelector)
-    end
-
     context "whitespace stripping tests", skip: true do
       before do
         browser.goto("/ferrum/filter_text_test")
