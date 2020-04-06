@@ -169,7 +169,7 @@ module Ferrum
       it "splits into steps" do
         browser.goto("/ferrum/simple")
         browser.mouse.move(x: 100, y: 100)
-        browser.evaluate_async(tracking_code, @page.timeout)
+        browser.evaluate_async(tracking_code, browser.timeout)
 
         browser.mouse.move(x: 200, y: 300, steps: 5)
 
