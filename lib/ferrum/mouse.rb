@@ -32,10 +32,21 @@ module Ferrum
       tap { mouse_event(type: "mouseReleased", **options) }
     end
 
-    # FIXME: steps
     def move(x:, y:, steps: 1)
+      from_x, from_y = @x, @y
       @x, @y = x, y
-      @page.command("Input.dispatchMouseEvent", slowmoable: true, type: "mouseMoved", x: @x, y: @y)
+
+      steps.times do |i|
+        new_x = from_x + (@x - from_x) * ((i + 1) / steps.to_f)
+        new_y = from_y + (@y - from_y) * ((i + 1) / steps.to_f)
+
+        @page.command("Input.dispatchMouseEvent",
+                      slowmoable: true,
+                      type: "mouseMoved",
+                      x: new_x.to_i,
+                      y: new_y.to_i)
+      end
+
       self
     end
 

@@ -154,5 +154,33 @@ module Ferrum
       browser.at_xpath("//a[text() = 'Link']").click
       expect(browser.body).to include("Hello world")
     end
+
+    context "#move" do
+      let(:tracking_code) {
+        <<~JS
+          window.result = [];
+          document.addEventListener("mousemove", e => {
+            window.result.push([e.clientX, e.clientY]);
+          });
+          arguments[0]();
+        JS
+      }
+
+      it "splits into steps" do
+        browser.goto("/ferrum/simple")
+        browser.mouse.move(x: 100, y: 100)
+        browser.evaluate_async(tracking_code, @page.timeout)
+
+        browser.mouse.move(x: 200, y: 300, steps: 5)
+
+        expect(browser.evaluate("window.result")).to eq([
+          [120, 140],
+          [140, 180],
+          [160, 220],
+          [180, 260],
+          [200, 300]
+        ])
+      end
+    end
   end
 end
