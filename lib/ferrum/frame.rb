@@ -8,7 +8,6 @@ module Ferrum
     include DOM, Runtime
 
     attr_reader :page, :parent_id, :state
-    attr_writer :execution_id
     attr_accessor :id, :name
 
     def initialize(id, page, parent_id = nil)
@@ -54,6 +53,14 @@ module Ferrum
     rescue NoExecutionContextError
       @page.event.reset
       @page.event.wait(@page.timeout) ? retry : raise
+    end
+
+    def set_execution_id(value)
+      @execution_id ||= value
+    end
+
+    def reset_execution_id
+      @execution_id = nil
     end
 
     def inspect

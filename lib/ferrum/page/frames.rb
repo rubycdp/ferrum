@@ -80,7 +80,7 @@ module Ferrum
           end
 
           frame = @frames[frame_id] || Frame.new(frame_id, self)
-          frame.execution_id = context_id
+          frame.set_execution_id(context_id)
 
           @frames[frame_id] ||= frame
         end
@@ -88,11 +88,12 @@ module Ferrum
         on("Runtime.executionContextDestroyed") do |params|
           execution_id = params["executionContextId"]
           frame = frames.find { |f| f.execution_id?(execution_id) }
-          frame.execution_id = nil
+          frame.reset_execution_id
         end
 
         on("Runtime.executionContextsCleared") do
           @frames.delete_if { |_, f| !f.main? }
+          @main_frame.reset_execution_id
         end
       end
 
