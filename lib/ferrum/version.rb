@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
 module Ferrum
-  VERSION = "0.7"
+  VERSION = "0.8"
 end
