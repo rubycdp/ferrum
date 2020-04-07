@@ -37,22 +37,23 @@ module Ferrum
 
     # mode: (:left | :right | :double)
     # keys: (:alt, (:ctrl | :control), (:meta | :command), :shift)
-    # offset: { :x, :y }
-    def click(mode: :left, keys: [], offset: {})
-      x, y = find_position(offset[:x], offset[:y])
+    # offset: { :x, :y, :position (:top | :center) }
+    def click(mode: :left, keys: [], offset: {}, delay: 0)
+      x, y = find_position(offset)
       modifiers = page.keyboard.modifiers(keys)
 
       case mode
       when :right
         page.mouse.move(x: x, y: y)
         page.mouse.down(button: :right, modifiers: modifiers)
+        sleep(delay)
         page.mouse.up(button: :right, modifiers: modifiers)
       when :double
         page.mouse.move(x: x, y: y)
         page.mouse.down(modifiers: modifiers, count: 2)
         page.mouse.up(modifiers: modifiers, count: 2)
       when :left
-        page.mouse.click(x: x, y: y, modifiers: modifiers)
+        page.mouse.click(x: x, y: y, modifiers: modifiers, delay: delay)
       end
 
       self
@@ -119,20 +120,31 @@ module Ferrum
       %(#<#{self.class} @target_id=#{@target_id.inspect} @node_id=#{@node_id} @description=#{@description.inspect}>)
     end
 
-    def find_position(offset_x = nil, offset_y = nil)
+    def find_position(x: nil, y: nil, position: :top)
+      offset_x, offset_y = x, y
       quads = get_content_quads
-      offset_x, offset_y = offset_x.to_i, offset_y.to_i
+      x = y = nil
 
-      if offset_x > 0 || offset_y > 0
+      if offset_x && offset_y && position == :top
         point = quads.first
-        [point[:x] + offset_x, point[:y] + offset_y]
+        x = point[:x] + offset_x.to_i
+        y = point[:y] + offset_y.to_i
       else
         x, y = quads.inject([0, 0]) do |memo, point|
           [memo[0] + point[:x],
            memo[1] + point[:y]]
         end
-        [x / 4, y / 4]
+
+        x = x / 4
+        y = y / 4
       end
+
+      if offset_x && offset_y && position == :center
+        x = x + offset_x.to_i
+        y = y + offset_y.to_i
+      end
+
+      [x, y]
     end
 
     private
