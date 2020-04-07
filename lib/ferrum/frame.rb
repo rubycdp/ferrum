@@ -7,9 +7,9 @@ module Ferrum
   class Frame
     include DOM, Runtime
 
-    attr_reader :id, :page, :parent_id, :state
+    attr_reader :page, :parent_id, :state
     attr_writer :execution_id
-    attr_accessor :name
+    attr_accessor :id, :name
 
     def initialize(id, page, parent_id = nil)
       @id, @page, @parent_id = id, page, parent_id

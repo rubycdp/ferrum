@@ -73,10 +73,15 @@ module Ferrum
         on("Runtime.executionContextCreated") do |params|
           context_id = params.dig("context", "id")
           frame_id = params.dig("context", "auxData", "frameId")
+
+          unless @main_frame.id
+            @main_frame.id = frame_id
+            @frames[frame_id] = @main_frame
+          end
+
           frame = @frames[frame_id] || Frame.new(frame_id, self)
           frame.execution_id = context_id
 
-          @main_frame ||= frame
           @frames[frame_id] ||= frame
         end
 

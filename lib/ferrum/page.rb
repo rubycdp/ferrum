@@ -44,6 +44,7 @@ module Ferrum
 
     def initialize(target_id, browser)
       @frames = {}
+      @main_frame = Frame.new(nil, self) 
       @target_id, @browser = target_id, browser
       @event = Event.new.tap(&:set)
 

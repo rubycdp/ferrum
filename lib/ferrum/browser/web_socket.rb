@@ -26,7 +26,9 @@ module Ferrum
 
         @thread = Thread.new do
           Thread.current.abort_on_exception = true
-          Thread.current.report_on_exception = true if Thread.current.respond_to?(:report_on_exception=)
+          if Thread.current.respond_to?(:report_on_exception=)
+            Thread.current.report_on_exception = true
+          end
 
           begin
             while data = @sock.readpartial(512)
