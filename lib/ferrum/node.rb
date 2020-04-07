@@ -39,7 +39,7 @@ module Ferrum
     # keys: (:alt, (:ctrl | :control), (:meta | :command), :shift)
     # offset: { :x, :y, :position (:top | :center) }
     def click(mode: :left, keys: [], offset: {}, delay: 0)
-      x, y = find_position(offset)
+      x, y = find_position(**offset)
       modifiers = page.keyboard.modifiers(keys)
 
       case mode
