@@ -1,3 +1,17 @@
+## [0.2.1] - (Sep 5, 2019) ##
+
+### Added
+
+- handle `EOFError/Errno::ECONNRESET/Errno::EPIPE` errors with rescue
+
+- description options of `Customization` in README
+
+### Changed
+
+- increased Browser::Process::PROCESS_TIMEOUT constant by 1
+
+- `Ferrum::Network::InterceptedRequest.rbmatch?` to handle cases for Ruby 2.3 and less
+ 
 ## [0.2.0] - (Sep 3, 2019) ##
 
 ### Added
@@ -170,6 +184,7 @@
 
     - classes of errors with a description of specific raises reasons
 
+[0.2.1]: https://github.com/rubycdp/ferrum/compare/v0.2...v0.2.1
 [0.2.0]: https://github.com/rubycdp/ferrum/compare/v0.1.2...v0.2
 [0.1.2]: https://github.com/rubycdp/ferrum/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/rubycdp/ferrum/compare/v0.1.0...v0.1.1
