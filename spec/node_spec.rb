@@ -83,6 +83,15 @@ module Ferrum
       expect(links.first.text).to eq("Open for match")
     end
 
+    it "picks option in select" do
+      browser.goto("/ferrum/form")
+      input = browser.at_xpath("//*[@id='form_title']")
+      expect(input.value).to eq "Mrs"
+      input.click
+      input.type("Miss", :Enter)
+      expect(input.value).to eq "Miss"
+    end
+
     context "when the element is not in the viewport" do
       before do
         browser.go_to("/ferrum/with_js")
