@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "spec_helper"
-
 module Ferrum
   describe Browser do
     context "dragging support", skip: true do

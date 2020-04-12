@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "spec_helper"
-
 module Ferrum
   describe Node do
     it "raises an error if the element has been removed from the DOM" do

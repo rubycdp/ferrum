@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "spec_helper"
-
 module Ferrum
   describe Keyboard do
     context "has ability to send keys" do

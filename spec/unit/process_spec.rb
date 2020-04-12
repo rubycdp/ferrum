@@ -1,7 +1,5 @@
 # # frozen_string_literal: true
 #
-# require "spec_helper"
-#
 # module Ferrum
 #   class Browser
 #     describe Process do
