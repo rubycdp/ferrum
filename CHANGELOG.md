@@ -1,3 +1,13 @@
+## [0.1.0] - (Aug 26, 2019) ##
+
+### Added
+
+- fires the `Ferrum::NodeError` on zero of node_id
+
+### Changed
+
+- basic description in README 
+
 ## [0.1.0.alpha] - (Aug 2, 2019) ##
 
 ### Added
@@ -24,4 +34,5 @@
 
     - classes of errors with a description of specific raises reasons
 
+[0.1.0]: https://github.com/rubycdp/ferrum/compare/v0.1.0.alpha...v0.1.0
 [0.1.0.alpha]: https://github.com/rubycdp/ferrum/releases/tag/v0.1.0.alpha
