@@ -1,3 +1,4 @@
 --color
 --fail-fast
 --format=doc
+--require spec_helper

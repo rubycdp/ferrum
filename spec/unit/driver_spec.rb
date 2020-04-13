@@ -1,7 +1,5 @@
 # # frozen_string_literal: true
 #
-# require "spec_helper"
-#
 # module Ferrum
 #   describe Driver do
 #     context "with no options" do

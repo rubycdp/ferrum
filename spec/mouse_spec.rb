@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "spec_helper"
-
 module Ferrum
   describe Mouse do
     context "mouse support", skip: true do
