@@ -19,7 +19,7 @@ module Ferrum
 
       attr_reader :host, :port, :ws_url, :pid, :command,
                   :default_user_agent, :browser_version, :protocol_version,
-                  :v8_version, :webkit_version
+                  :v8_version, :webkit_version, :environment
 
 
       extend Forwardable
@@ -63,6 +63,7 @@ module Ferrum
           return
         end
 
+        @environment = Ferrum::Browser::Environment.new(options)
         @logger = options[:logger]
         @process_timeout = options.fetch(:process_timeout, PROCESS_TIMEOUT)
 
@@ -81,7 +82,7 @@ module Ferrum
           process_options[:pgroup] = true unless Ferrum.windows?
           process_options[:out] = process_options[:err] = write_io
 
-          @pid = ::Process.spawn(*@command.to_a, process_options)
+          @pid = ::Process.spawn(@environment.to_h, *@command.to_a, process_options)
           ObjectSpace.define_finalizer(self, self.class.process_killer(@pid))
 
           parse_ws_url(read_io, @process_timeout)
@@ -94,6 +95,7 @@ module Ferrum
       def stop
         kill if @pid
         remove_user_data_dir if @user_data_dir
+        @environment.cleanup! if @environment
         ObjectSpace.undefine_finalizer(self)
       end
 
