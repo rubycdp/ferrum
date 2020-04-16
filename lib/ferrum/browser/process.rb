@@ -63,7 +63,7 @@ module Ferrum
           return
         end
 
-        @environment = Ferrum::Browser::Environment.new(options)
+        @environment = Environment.new(options)
         @logger = options[:logger]
         @process_timeout = options.fetch(:process_timeout, PROCESS_TIMEOUT)
 
