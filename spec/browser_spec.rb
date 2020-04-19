@@ -43,6 +43,16 @@ module Ferrum
       end
     end
 
+    it "ignores default options" do
+      begin
+        defaults = Browser::Options::Chrome.options.except("disable-web-security")
+        browser = Browser.new(ignore_default_browser_options: true, browser_options: defaults)
+        browser.goto(base_url("/ferrum/console_log"))
+      ensure
+        browser&.quit
+      end
+    end
+
     it "raises an error when browser is too slow" do
       path = "#{PROJECT_ROOT}/spec/support/no_chrome"
 

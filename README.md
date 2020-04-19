@@ -167,6 +167,10 @@ Ferrum::Browser.new(options)
   * `:browser_options` (Hash) - Additional command line options,
       [see them all](https://peter.sh/experiments/chromium-command-line-switches/)
       e.g. `{ "ignore-certificate-errors" => nil }`
+  * `:ignore_default_browser_options` (Boolean) - Ferrum has a number of default
+      options it passes to the browser, if you set this to `true` then only
+      options you put in `:browser_options` will be passed to the browser,
+      except required ones of course.
   * `:port` (Integer) - Remote debugging port for headless Chrome
   * `:host` (String) - Remote debugging address for headless Chrome
   * `:url` (String) - URL for a running instance of Chrome. If this is set, a

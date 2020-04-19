@@ -6,9 +6,10 @@ require "json"
 require "addressable"
 require "tmpdir"
 require "forwardable"
+require "ferrum/browser/options/base"
+require "ferrum/browser/options/chrome"
+require "ferrum/browser/options/firefox"
 require "ferrum/browser/command"
-require "ferrum/browser/chrome"
-require "ferrum/browser/firefox"
 
 module Ferrum
   class Browser
