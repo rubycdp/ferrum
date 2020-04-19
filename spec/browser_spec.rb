@@ -29,6 +29,25 @@ module Ferrum
       end
     end
 
+    context "disable-web-security flag" do
+      subject(:arguments) { ->(browser) { browser.command("Browser.getBrowserCommandLine")["arguments"] } }
+
+      it "enables by default" do
+        browser = Browser.new
+        expect(arguments[browser]).to include("--disable-web-security")
+      end
+
+      it "enables by passed flag as 'true'" do
+        browser = Browser.new('disable-web-security': true)
+        expect(arguments[browser]).to include("--disable-web-security")
+      end
+
+      it "disables by passed flag as 'false'" do
+        browser = Browser.new('disable-web-security': false)
+        expect(arguments[browser]).not_to include("--disable-web-security")
+      end
+    end
+
     context "output redirection" do
       let(:logger) { StringIO.new }
 

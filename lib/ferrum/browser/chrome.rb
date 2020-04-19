@@ -69,6 +69,10 @@ module Ferrum
           @flags.delete("disable-gpu")
         end
 
+        unless options.fetch(:"disable-web-security", true)
+          @flags.delete("disable-web-security")
+        end
+
         @flags.merge!(options.fetch(:browser_options, {}))
       end
     end
