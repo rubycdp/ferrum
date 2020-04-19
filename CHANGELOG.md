@@ -26,9 +26,9 @@
 
     - required `page, params` as init arguments
 
-    - `#accept` fires JS: `Page.handleJavaScriptDialog` as command on page instance with options which included `accept: true`
+    - `#accept` fires JS: `Page.handleJavaScriptDialog` as command on provided `Ferrum::Page` instance with options which included `accept: true`
 
-    - `#dismiss` fires JS: `Page.handleJavaScriptDialog` as command on page instance with `accept: false`
+    - `#dismiss` fires JS: `Page.handleJavaScriptDialog` as command on provided `Ferrum::Page` instance with `accept: false`
 
     - `#match?` compare message by passed regexp
 
@@ -106,9 +106,9 @@
 
 ### Changed
 
-- increased Browser::Process::PROCESS_TIMEOUT constant by 1
+- increased `Browser::Process::PROCESS_TIMEOUT` constant by 1
 
-- `Ferrum::Network::InterceptedRequest#match?` to handle cases for Ruby 2.3 and less
+- `Ferrum::Network::InterceptedRequest#match?` to handle cases for `Ruby 2.3` and less
  
 ## [0.2.0] - (Sep 3, 2019) ##
 
@@ -116,11 +116,11 @@
 
 - snippet examples of the actions in README
 
-- `Ferrum::Node#focus` - fires the `command` `DOM.focus` on Page instance
+- `Ferrum::Node#focus` - fires the `command` `DOM.focus` on `Ferrum::Page` instance
 
-- `Ferrum::Node#blur` - evaluates JS: `this.blur()` on Page instance
+- `Ferrum::Node#blur` - evaluates JS: `this.blur()` on `Ferrum::Page` instance
 
-- `Ferrum::Node#click` - fires the native `click` on Page instance
+- `Ferrum::Node#click` - fires the native `click` on `Ferrum::Page` instance
 
 - usage of `FERRUM_INTERMITTENT_ATTEMPTS` `ENV-var` on the rescue of runtime intermittent error
 
@@ -182,7 +182,7 @@
 
 - `Ferrum::Node::#click` getting the `mode` argument as option with `right/double/left` cases
 
-- `Ferrum::Page::Frame#switch_to_frame` into `Ferrum::Page::Frame#within_frame` with added case of ArgumentError
+- `Ferrum::Page::Frame#switch_to_frame` into `Ferrum::Page::Frame#within_frame` with added case of `ArgumentError`
 
 ### Removed
 
@@ -250,7 +250,7 @@
 
 ### Added
 
-- fires the `Ferrum::NodeError` on zero of node_id
+- fires the `Ferrum::NodeError` on zero of `node_id`
 
 ### Changed
 
@@ -264,21 +264,21 @@
 
     #### Modules:
 
-    - Ferrum
+    - `Ferrum`
 
-    - Ferrum::Network - simple requests/responses data store
+    - `Ferrum::Network` - simple requests/responses data store
 
     #### Classes:
 
-    - Ferrum::Browser - basic command interface
+    - `Ferrum::Browser` - basic command interface
 
-    - Ferrum::Cookie - simple store of the cookie attributes
+    - `Ferrum::Cookie` - simple store of the cookie attributes
 
-    - Ferrum::Node - abstract level of DOM-node with basic methods
+    - `Ferrum::Node` - abstract level of DOM-node with basic methods
 
-    - Ferrum::Page - basic object of the command references, which included DOM, network and browser logic
+    - `Ferrum::Page` - basic object of the command references, which included `DOM`, network and browser logic
 
-    - Ferrum::Targets - initialize of the `window` manager with a clean browser state
+    - `Ferrum::Targets` - initialize of the `window` manager with a clean browser state
 
     - classes of errors with a description of specific raises reasons
 
