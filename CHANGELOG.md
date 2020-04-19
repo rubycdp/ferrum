@@ -1,3 +1,101 @@
+## [0.3.0] - (Sep 12, 2019) ##
+
+### Added
+
+- CI build by TravisCI for ruby versions: `2.3/2.4/2.5/2.6/jruby-9.2.8.0`
+
+- fix specs with support of MacOS time formats
+
+- `Ferrum::Mouse::CLICK_WAIT` as `FERRUM_CLICK_WAIT` `ENV-var` with `0.1` as default value
+
+- `Ferrum::Browser#authorize` option `:type` with valid values `:server` (by default), `:proxy`
+
+- Logo :tada:
+
+- `Ferrum::Node#inner_text` - evaluates JS: `this.innerText` on Node instance
+
+- `Ferrum::Page::Runtime::INTERMITTENT_ATTEMPTS` as `FERRUM_INTERMITTENT_ATTEMPTS` `ENV-var` with `6` as default value
+
+- `Ferrum::Page::Runtime::INTERMITTENT_SLEEP` as `FERRUM_INTERMITTENT_SLEEP` `ENV-var` with `0.1` as default value
+
+- `Ferrum::Page#on` getting the `name` as option with `:dialog/:request_intercepted` cases & `block` as last argument
+
+- `Ferrum::Browser#on` - delegated actions to `Ferrum::Page` instance
+
+- `Ferrum::Dialog` object to handle JavaScript Dialog's
+
+    - required `page, params` as init arguments
+
+    - `#accept` fires JS: `Page.handleJavaScriptDialog` as command on page instance with options which included `accept: true`
+
+    - `#dismiss` fires JS: `Page.handleJavaScriptDialog` as command on page instance with `accept: false`
+
+    - `#match?` compare message by passed regexp
+
+    - description of `Dialog` feature in README
+
+- `Ferrum::Page::Event` extend of `Concurrent::Event` with implementation of `reset/wait` fix
+ 
+    - implement `Ferrum::Page::Event#iteration` to reuse `synchronize` block on `@iteration` value of `Concurrent::Event`
+
+    - redefinition of `Concurrent::Event#reset` - increase `@iteration` outside of `if @set` block
+
+- `FERRUM_PROCESS_TIMEOUT` `ENV-var` as `Ferrum::Browser::Process::PROCESS_TIMEOUT` with `2` as default value
+
+- Elapsed time implementation:
+
+    - `Ferrum::Browser::Process::WAIT_KILLED` with `0.05`
+    
+    - `Ferrum.monotonic_time` - delegation to `Concurrent` object
+
+    - `Ferrum.started` - class variable `@@started` as `monotonic_time`
+
+    - `Ferrum.elapsed_time` - a difference of `monotonic_time` as minuend and passed time as argument or `@@started` as subtrahend
+
+    - `Ferrum.timeout?` - boolean compare passed values `(start, timeout)` by `elapsed_time`
+
+- JRuby support by replaces of `::Process::CLOCK_MONOTONIC` usages according to `Elapsed-time` implementation
+
+### Changed
+
+- fix globally changing of Thread behaviour on options `abort_on_exception/report_on_exception`
+
+- `Ferrum::Page::Input#find_position` into `Ferrum::Node#find_position`
+
+- `Ferrum::Browser#scroll_to` into `Ferrum::Mouse#scroll_to`
+
+- option `:timeout` into `:wait` for `Ferrum::Page#command` / `Ferrum::Mouse#click`
+
+- description of `Authorization` options in README
+
+- `Ferrum::Page::Net#intercept_request` block as last argument into `Ferrum::Page::Net#on(:request_intercepted)` with passed block
+
+- `Ferrum::Browser::TIMEOUT` into `Ferrum::Browser::DEFAULT_TIMEOUT` as `FERRUM_DEFAULT_TIMEOUT` `ENV-var` with `5` as default value
+
+- usage of `Concurrent::Event` into `Ferrum::Page::Event` as `@event` of `Ferrum::Page` instance
+ 
+- `Ferrum::Page::NEW_WINDOW_BUG_SLEEP` into `Ferrum::Page::NEW_WINDOW_WAIT` as `FERRUM_NEW_WINDOW_WAIT` `ENV-var` with `0.3` as default value 
+
+### Removed
+
+- `Ferrum::Page::Input`
+
+- `Ferrum::Browser#proxy_authorize` / `Ferrum::Page::Net#proxy_authorize`
+
+- `Ferrum::ModalNotFoundError`
+
+- `Ferrum::Page#reset_modals` with delegation to `Ferrum::Browser`
+
+- `Ferrum::Page#find_modal` with delegation to `Ferrum::Browser`
+
+- `Ferrum::Page#accept_prompt` with delegation to `Ferrum::Browser`
+
+- `Ferrum::Page#dismiss_confirm` with delegation to `Ferrum::Browser`
+
+- `Ferrum::Page#accept_confirm` with delegation to `Ferrum::Browser`
+
+- `Ferrum::Browser#on_request_intercepted`
+
 ## [0.2.1] - (Sep 5, 2019) ##
 
 ### Added
