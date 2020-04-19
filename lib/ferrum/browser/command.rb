@@ -30,7 +30,13 @@ module Ferrum
         @path = options[:browser_path] || ENV["BROWSER_PATH"] || detect_path
         raise Cliver::Dependency::NotFound.new(NOT_FOUND) unless @path
 
-        combine_flags
+        combine_required_flags
+
+        if options[:default_browser_options]
+          @flags.merge!(options[:default_browser_options])
+        else
+          combine_default_flags
+        end
       end
 
       def to_a
@@ -48,7 +54,11 @@ module Ferrum
         end
       end
 
-      def combine_flags
+      def combine_required_flags
+        raise NotImplementedError
+      end
+
+      def combine_default_flags
         raise NotImplementedError
       end
     end

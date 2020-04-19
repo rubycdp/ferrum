@@ -50,7 +50,7 @@ module Ferrum
 
       private
 
-      def combine_flags
+      def combine_required_flags
         # Doesn't work on MacOS, so we need to set it by CDP as well
         @flags.merge!("window-size" => options[:window_size].join(","))
 
@@ -61,7 +61,9 @@ module Ferrum
         @flags.merge!("remote-debugging-address" => host)
 
         @flags.merge!("user-data-dir" => @user_data_dir)
+      end
 
+      def combine_default_flags
         @flags = DEFAULT_OPTIONS.merge(@flags)
 
         unless options.fetch(:headless, true)
