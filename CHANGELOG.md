@@ -1,3 +1,87 @@
+## [0.4.0] - (Sep 17, 2019) ##
+
+### Added
+
+- `Ferrum::Network` module - moved logic from `Ferrum::Page::Net` with addition changes
+
+- `Ferrum::Browser#network` - instance of `Ferrum::Network` from delegated `Ferrum::Page` instance
+
+- `Ferrum::Network#request` & `Ferrum::Network#response` - delegation to `Network::Exchange` instance
+
+- `Ferrum::Network#first_by` / `Ferrum::Network#last_by` - implemented searching by passed request_id in `Network::Exchange` instance 
+
+- `Ferrum::Browser#traffic` delegation to `Ferrum::Network` of `Network::Exchange` instances
+
+- `Ferrum::Network::Exchange` - simple request/response constructor with monitoring
+
+    - `#build_request` - instance of `Network::Request` with passed params
+    
+    - `#build_response` - instance of `Network::Response` with passed params
+
+    - `#build_error` - instance of `Network::Error` with passed params
+    
+    - `#navigation_request?` - the request verification on document by passed frame_id
+    
+    - `#blocked?` - boolean which becomes true when no the constructed response
+
+    - `#to_a` - returns array of constructed request/response/error instances
+
+- `Ferrum::Network::Request#type` - delegation to `type` of passed to instance params
+
+- `Ferrum::Network::Request#type?` - boolean compare with `type` of instance with passed type as argument
+
+- `Ferrum::Network::Request#frame_id` - delegation to `frameId` of passed to instance params
+
+- `Ferrum::Network::InterceptedRequest#abort` - fires `continue` method of instance with `errorReason` as `Aborted`   
+
+- `Ferrum::Network::InterceptedRequest#inspect` - simple implementation of native `inspect` method with returns of the current internal state  
+
+- `Ferrum::Page::Frame#frame_id` - reader to public available of `frameId` by `Ferrum::Page#frame_id`
+
+### Changed
+
+- description of `Network/Authorization/Interception` sections in README
+
+- `Ferrum::Browser#screenshot` & `Ferrum::Browser#pdf` methods are returns bin when no path is given
+
+- `Ferrum::Browser#status` delegated to `Ferrum::Network`
+
+- `Ferrum::Browser#authorize` delegated to `Ferrum::Network`
+
+- `Ferrum::Network` module into `class` approach for `InterceptedRequest/Request/Response/Error` classes
+
+- `Ferrum::Browser#intercept_request` into `Ferrum::Network#intercept`
+
+- `Ferrum::Browser#subscribe` into `Ferrum::Network#subscribe` with public available
+
+- `Ferrum::Browser#authorized_response` into `Ferrum::Network#authorized_response` with public available
+
+- `Ferrum::Browser#clear_memory_cache` & `Ferrum::Browser#clear_network_traffic`
+
+    merged to `Ferrum::Network#clear` with addition of `traffic` clear by the argument as symbol type of `traffic/cache`
+
+- `Ferrum::Network::Request#time` - use `wallTime` params fir time detection
+
+- `body_size` attribute writer of `Ferrum::Network::Response` with reduce of size on headers_size
+
+    to handle `encodedDataLength` when `Network.responseReceived` is not dispatched
+
+### Removed
+
+- `Ferrum::Network::Response#redirect_url`
+
+- `Ferrum::Page::Net`
+
+- `Ferrum::Browser#abort_request`
+
+- `Ferrum::Browser#continue_request`
+
+- `Ferrum::Browser#response_headers`
+
+- `Ferrum::Browser#network_traffic`
+
+- `Ferrum::Network::InterceptedRequest#is_navigation_request=` (attribute writer)
+
 ## [0.3.0] - (Sep 12, 2019) ##
 
 ### Added
@@ -282,6 +366,7 @@
 
     - classes of errors with a description of specific raises reasons
 
+[0.4.0]: https://github.com/rubycdp/ferrum/compare/v0.3...v0.4
 [0.3.0]: https://github.com/rubycdp/ferrum/compare/v0.2.1...v0.3
 [0.2.1]: https://github.com/rubycdp/ferrum/compare/v0.2...v0.2.1
 [0.2.0]: https://github.com/rubycdp/ferrum/compare/v0.1.2...v0.2
