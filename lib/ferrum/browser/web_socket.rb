@@ -8,6 +8,7 @@ module Ferrum
   class Browser
     class WebSocket
       WEBSOCKET_BUG_SLEEP = 0.01
+      SKIP_LOGGING_SCREENSHOTS = !ENV["FERRUM_LOGGING_SCREENSHOTS"]
 
       attr_reader :url, :messages
 
@@ -19,6 +20,10 @@ module Ferrum
         max_receive_size ||= ::WebSocket::Driver::MAX_LENGTH
         @driver   = ::WebSocket::Driver.client(self, max_length: max_receive_size)
         @messages = Queue.new
+
+        if SKIP_LOGGING_SCREENSHOTS
+          @screenshot_commands = Concurrent::Hash.new
+        end
 
         @driver.on(:open,    &method(:on_open))
         @driver.on(:message, &method(:on_message))
@@ -50,7 +55,14 @@ module Ferrum
       def on_message(event)
         data = JSON.parse(event.data)
         @messages.push(data)
-        @logger&.puts("    ◀ #{Ferrum.elapsed_time} #{event.data}\n")
+
+        output = event.data
+        if SKIP_LOGGING_SCREENSHOTS && @screenshot_commands[data["id"]]
+          @screenshot_commands.delete(data["id"])
+          output.sub!(/{"data":"(.*)"}/, %("Set FERRUM_LOGGING_SCREENSHOTS=true to see screenshots in Base64"))
+        end
+
+        @logger&.puts("    ◀ #{Ferrum.elapsed_time} #{output}\n")
       end
 
       def on_close(_event)
@@ -59,6 +71,10 @@ module Ferrum
       end
 
       def send_message(data)
+        if SKIP_LOGGING_SCREENSHOTS
+          @screenshot_commands[data[:id]] = true
+        end
+
         json = data.to_json
         @driver.text(json)
         @logger&.puts("\n\n▶ #{Ferrum.elapsed_time} #{json}")
