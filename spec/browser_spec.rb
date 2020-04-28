@@ -486,21 +486,29 @@ module Ferrum
       }.to raise_error(Ferrum::JavaScriptError)
     end
 
-    it "ignores cyclic structure errors in evaluate" do
-      code = <<-JS
-        (function() {
-          var a = {};
-          var b = {};
-          var c = {};
-          c.a = a;
-          a.a = a;
-          a.b = b;
-          a.c = c;
-          return a;
-        })()
-      JS
+    context "cyclic structure" do
+      let(:code) {
+        <<~JS
+          (function() {
+            var a = {};
+            var b = {};
+            var c = {};
+            c.a = a;
+            a.a = a;
+            a.b = b;
+            a.c = c;
+            return %s;
+          })()
+        JS
+      }
 
-      expect(browser.evaluate(code)).to eq("(cyclic structure)")
+      it "ignores objects in evaluate" do
+        expect(browser.evaluate(code % "a")).to eq(CyclicObject.instance)
+      end
+
+      it "ignores arrays in evaluate" do
+        expect(browser.evaluate(code % "[a]")).to eq([CyclicObject.instance])
+      end
     end
 
     it "synchronizes page loads properly" do

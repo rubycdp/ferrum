@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "singleton"
+
 module Ferrum
   class Frame
     module Runtime
@@ -215,7 +217,7 @@ module Ferrum
 
       def reduce_props(object_id, to)
         if cyclic?(object_id).dig("result", "value")
-          return "(cyclic structure)"
+          return to.is_a?(Array) ? [cyclic_object] : cyclic_object
         else
           props = @page.command("Runtime.getProperties", ownProperties: true, objectId: object_id)
           props["result"].reduce(to) do |memo, prop|
@@ -259,6 +261,18 @@ module Ferrum
           JS
         )
       end
+
+      def cyclic_object
+        CyclicObject.instance
+      end
+    end
+  end
+
+  class CyclicObject
+    include Singleton
+
+    def inspect
+      %(#<#{self.class} JavaScript object that cannot be represented in Ruby>)
     end
   end
 end
