@@ -90,7 +90,7 @@ Interact with a page:
 ```ruby
 browser = Ferrum::Browser.new
 browser.goto("https://google.com")
-input = browser.at_xpath("//div[@id='searchform']/form//input[@type='text']")
+input = browser.at_xpath("//input[@name='q']")
 input.focus.type("Ruby headless driver for Chrome", :Enter)
 browser.at_css("a > h3").text # => "rubycdp/ferrum: Ruby Chrome/Chromium driver - GitHub"
 browser.quit
