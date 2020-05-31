@@ -4,10 +4,9 @@ require "base64"
 require "forwardable"
 require "ferrum/page"
 require "ferrum/contexts"
+require "ferrum/browser/xvfb"
 require "ferrum/browser/process"
 require "ferrum/browser/client"
-require "ferrum/browser/environment"
-require "ferrum/xvfb/process"
 
 module Ferrum
   class Browser

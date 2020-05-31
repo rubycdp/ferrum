@@ -1,30 +1,69 @@
-module Ferrum::Xvfb
-  describe Process do
-    let(:default_options) { { window_size: [1024, 768 ] } }
-    let(:options) { default_options }
-    subject { described_class.new(options).start! }
+module Ferrum
+  describe Browser::Xvfb, skip: !Browser::Xvfb.xvfb_path do
+    let(:process) { xvfb_browser.process }
+    let(:xvfb_browser) { Browser.new(default_options.merge(options)) }
+    let(:default_options) { Hash(headless: :true, xvfb: true) }
 
-    after do
-      subject.clean_up_proc.call
-      expect(subject).not_to be_alive
-      expect(subject).not_to be_process_alive
-    end
+    context "headless" do
+      context "with window_size" do
+        let(:options) { Hash(window_size: [1400, 1400]) }
 
-    it "starts xvfb" do
-      subject
+        it "allows to run tests configured to xvfb" do
+          begin
+            xvfb_browser.goto(base_url)
 
-      expect(subject).to be_alive
-    end
-
-    context "no window size supplied" do
-      let(:default_options) { {} }
-
-      it "starts xvfb" do
-        subject
-
-        expect(subject.screen_size).to eq "1024x768x24"
-        expect(subject).to be_alive
+            expect(xvfb_browser.body).to include("Hello world!")
+            expect(process_alive?(process.xvfb.pid)).to be(true)
+            expect(process.xvfb.screen_size).to eq("1400x1400x24")
+            expect(process.xvfb.to_env).to eq("DISPLAY" => ":#{process.xvfb.display_id}")
+          ensure
+            xvfb_browser&.quit
+            expect(process_alive?(process.xvfb.pid)).to be(false)
+          end
+        end
       end
+
+      context "without window_size" do
+        let(:options) { Hash.new }
+
+        it "allows to run tests configured to xvfb" do
+          begin
+            xvfb_browser.goto(base_url)
+
+            expect(xvfb_browser.body).to include("Hello world!")
+            expect(process_alive?(process.xvfb.pid)).to be(true)
+            expect(process.xvfb.screen_size).to eq("1024x768x24")
+            expect(process.xvfb.to_env).to eq("DISPLAY" => ":#{process.xvfb.display_id}")
+          ensure
+            xvfb_browser&.quit
+            expect(process_alive?(process.xvfb.pid)).to be(false)
+          end
+        end
+      end
+    end
+
+    context "headful" do
+      let(:options) { Hash(headless: false) }
+
+      it "allows to run tests configured to xvfb" do
+        begin
+          xvfb_browser.goto(base_url)
+
+          expect(xvfb_browser.body).to include("Hello world!")
+          expect(process_alive?(process.xvfb.pid)).to be(true)
+          expect(process.xvfb.screen_size).to eq("1024x768x24")
+        ensure
+          xvfb_browser&.quit
+          expect(process_alive?(process.xvfb.pid)).to be(false)
+        end
+      end
+    end
+
+    def process_alive?(pid)
+      return false unless pid
+      ::Process.kill(0, pid) == 1
+    rescue Errno::ESRCH
+      false
     end
   end
 end

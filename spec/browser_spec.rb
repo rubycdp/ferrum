@@ -315,18 +315,6 @@ module Ferrum
       end
     end
 
-    it "allows the driver to run tests headless configured to xvfb" do
-      with_xvfb_browser do |url|
-        begin
-          browser = Browser.new(url: url)
-          browser.goto(base_url)
-          expect(browser.body).to include("Hello world!")
-        ensure
-          browser&.quit
-        end
-      end
-    end
-
     it "allows the driver to run tests on external process" do
       with_external_browser do |url|
         begin

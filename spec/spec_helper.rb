@@ -23,8 +23,8 @@ RSpec.shared_context "Global helpers" do
   end
 
   def with_external_browser(host: "127.0.0.1", port: 32001)
-    opts = { host: host, port: port, window_size: [1400, 1400], headless: true }
-    process = Ferrum::Browser::Process.new(opts)
+    options = { host: host, port: port, window_size: [1400, 1400], headless: true }
+    process = Ferrum::Browser::Process.new(options)
 
     begin
       process.start
@@ -32,20 +32,6 @@ RSpec.shared_context "Global helpers" do
     ensure
       process.stop
     end
-  end
-
-  def with_xvfb_browser(host: "127.0.0.1", port: 32001)
-    opts = { host: host, port: port, window_size: [1400, 1400], headless: :xvfb }
-    process = Ferrum::Browser::Process.new(opts)
-    begin
-      process.start
-      expect(process.environment.xvfb).to be_process_alive
-      yield "http://#{host}:#{port}"
-    ensure
-      process.stop
-    end
-
-    expect(process.environment.xvfb).not_to be_process_alive
   end
 end
 

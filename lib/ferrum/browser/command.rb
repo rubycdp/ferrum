@@ -33,6 +33,10 @@ module Ferrum
         combine_flags
       end
 
+      def xvfb?
+        !!@options[:xvfb]
+      end
+
       def to_a
         [path] + flags.map { |k, v| v.nil? ? "--#{k}" : "--#{k}=#{v}" }
       end
