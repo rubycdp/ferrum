@@ -13,7 +13,7 @@ module Ferrum
 
       def initialize
         super
-        @on = Hash.new { |h, k| h[k] = [] }
+        @on = Concurrent::Hash.new { |h, k| h[k] = Concurrent::Array.new }
       end
 
       def on(event, &block)
