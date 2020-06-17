@@ -39,7 +39,7 @@ module Ferrum
           requestId: request_id,
           responseHeaders: header_array(headers),
         })
-        options = options.merge(body: Base64.encode64(options.fetch(:body, "")).strip) if has_body
+        options = options.merge(body: Base64.strict_encode64(options.fetch(:body, ""))) if has_body
 
         @status = :responded
         @page.command("Fetch.fulfillRequest", **options)

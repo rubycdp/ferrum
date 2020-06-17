@@ -309,7 +309,7 @@ module Ferrum
       it "supports custom responses" do
         browser.network.intercept
         browser.on(:request) do |request|
-          request.respond(body: "<h1>content</h1>")
+          request.respond(body: "<h1>custom content that is more than 45 characters</h1>")
         end
 
         browser.goto("/ferrum/non_existing")
