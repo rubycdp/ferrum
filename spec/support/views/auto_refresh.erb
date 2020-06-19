@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+  <head>
+  </head>
+  <body>
+    <script>
+      var count = parseInt(localStorage.getItem("counter") || 0);
+      document.write(`Visited ${count} times`)
+
+      setTimeout(function () {
+        location.reload();
+      }, 1000)
+
+      window.addEventListener("unload", function() {
+        localStorage.setItem('counter', ++count)
+      }, false);
+    </script>
+  </body>
+</html>

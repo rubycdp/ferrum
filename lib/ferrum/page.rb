@@ -44,7 +44,7 @@ module Ferrum
 
     def initialize(target_id, browser)
       @frames = {}
-      @main_frame = Frame.new(nil, self) 
+      @main_frame = Frame.new(nil, self)
       @target_id, @browser = target_id, browser
       @event = Event.new.tap(&:set)
 
@@ -123,6 +123,12 @@ module Ferrum
 
     def forward
       history_navigate(delta: 1)
+    end
+
+    def wait_for_reload(sec = 1)
+      @event.reset if @event.set?
+      @event.wait(sec)
+      @event.set
     end
 
     def bypass_csp(value = true)

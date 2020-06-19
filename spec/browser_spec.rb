@@ -688,6 +688,15 @@ module Ferrum
       expect(browser.current_url).to eq(base_url("/bar2.html"))
     end
 
+    it "waits for page to be reloaded" do
+      browser.goto("/ferrum/auto_refresh")
+      expect(browser.body).to include("Visited 0 times")
+
+      browser.wait_for_reload(5)
+
+      expect(browser.body).to include("Visited 1 times")
+    end
+
     it "can bypass csp headers" do
       browser.goto("/csp")
       browser.add_script_tag(content: "window.__injected = 42")
