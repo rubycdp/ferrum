@@ -8,6 +8,7 @@ module Ferrum
   class NoSuchPageError     < Error; end
   class NoSuchTargetError   < Error; end
   class NotImplementedError < Error; end
+  class NodeIsMovingError   < Error; end
 
   class StatusError < Error
     def initialize(url, pendings = [])

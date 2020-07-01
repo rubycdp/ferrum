@@ -2,6 +2,9 @@
 
 module Ferrum
   class Node
+    MOVING_WAIT = ENV.fetch("FERRUM_NODE_MOVING_WAIT", 0.05).to_f
+    MOVING_ATTEMPTS = ENV.fetch("FERRUM_NODE_MOVING_ATTEMPTS", 5).to_f
+
     attr_reader :page, :target_id, :node_id, :description, :tag_name
 
     def initialize(frame, target_id, node_id, description)
@@ -122,7 +125,7 @@ module Ferrum
 
     def find_position(x: nil, y: nil, position: :top)
       offset_x, offset_y = x, y
-      quads = get_content_quads
+      quads = get_node_quads
       x = y = nil
 
       if offset_x && offset_y && position == :top
@@ -149,9 +152,20 @@ module Ferrum
 
     private
 
-    def get_content_quads
-      result = page.command("DOM.getContentQuads", nodeId: node_id)
-      raise "Node is either not visible or not an HTMLElement" if result["quads"].size == 0
+    def get_node_quads
+      prev_result = get_content_quads
+
+      result = Ferrum.with_attempts(errors: NodeIsMovingError, max: MOVING_ATTEMPTS, wait: 0) do
+        sleep(MOVING_WAIT)
+        current_result = get_content_quads
+
+        if current_result["quads"] != prev_result["quads"]
+          prev_result = current_result
+          raise NodeIsMovingError
+        end
+
+        current_result
+      end
 
       # FIXME: Case when a few quads returned
       result["quads"].map do |quad|
@@ -160,6 +174,12 @@ module Ferrum
          {x: quad[4], y: quad[5]},
          {x: quad[6], y: quad[7]}]
       end.first
+    end
+
+    def get_content_quads
+      result = page.command("DOM.getContentQuads", nodeId: node_id)
+      raise "Node is either not visible or not an HTMLElement" if result["quads"].size == 0
+      result
     end
   end
 end
