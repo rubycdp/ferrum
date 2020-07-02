@@ -2,8 +2,8 @@
 
 module Ferrum
   class Node
-    MOVING_WAIT = ENV.fetch("FERRUM_NODE_MOVING_WAIT", 0.05).to_f
-    MOVING_ATTEMPTS = ENV.fetch("FERRUM_NODE_MOVING_ATTEMPTS", 5).to_f
+    MOVING_WAIT = ENV.fetch("FERRUM_NODE_MOVING_WAIT", 0.01).to_f
+    MOVING_ATTEMPTS = ENV.fetch("FERRUM_NODE_MOVING_ATTEMPTS", 50).to_i
 
     attr_reader :page, :target_id, :node_id, :description, :tag_name
 
