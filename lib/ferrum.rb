@@ -49,8 +49,14 @@ module Ferrum
   end
 
   class NodeIsMovingError < Error
-    def initialize(node)
-      super("Node `#{node.inspect}` that you're trying to click is moving, hence we cannot")
+    def initialize(node, prev_pos, current_pos)
+      @node, @prev_pos, @current_pos = node, prev_pos, current_pos
+      super(message)
+    end
+
+    def message
+      "Node `#{@node.inspect}` that you're trying to click is moving, hence " \
+      "we cannot. Previosuly it was at #{@prev_pos} but now at #{@current_pos}."
     end
   end
 
