@@ -263,13 +263,20 @@ module Ferrum
       end
 
       it "has a descriptive message when DNS incorrect" do
-        url = "http://nope:#{port}/"
-        expect {
-          browser.goto(url)
-        }.to raise_error(
-          Ferrum::StatusError,
-          %(Request to #{url} failed to reach server, check DNS and/or server status)
-        )
+        begin
+          url = "http://nope:#{port}/"
+          old_timeout = browser.timeout
+          browser.timeout = 10 # DNS timeouts vary by platform
+
+          expect {
+            browser.goto(url)
+          }.to raise_error(
+            Ferrum::StatusError,
+            %(Request to #{url} failed to reach server, check DNS and/or server status)
+          )
+        ensure
+          browser.timeout = old_timeout
+        end
       end
 
       it "reports open resource requests" do
