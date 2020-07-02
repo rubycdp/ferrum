@@ -8,7 +8,6 @@ module Ferrum
   class NoSuchPageError     < Error; end
   class NoSuchTargetError   < Error; end
   class NotImplementedError < Error; end
-  class NodeIsMovingError   < Error; end
 
   class StatusError < Error
     def initialize(url, pendings = [])
@@ -46,6 +45,12 @@ module Ferrum
   class DeadBrowserError < Error
     def initialize(message = "Browser is dead or given window is closed")
       super
+    end
+  end
+
+  class NodeIsMovingError < Error
+    def initialize(node)
+      super("Node `#{node.inspect}` that you're trying to click is moving, hence we cannot")
     end
   end
 
