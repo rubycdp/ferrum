@@ -48,6 +48,19 @@ module Ferrum
     end
   end
 
+  class NodeIsMovingError < Error
+    def initialize(node, prev, current)
+      @node, @prev, @current = node, prev, current
+      super(message)
+    end
+
+    def message
+      "#{@node.inspect} that you're trying to click is moving, hence " \
+      "we cannot. Previosuly it was at #{@prev.inspect} but now at " \
+      "#{@current.inspect}."
+    end
+  end
+
   class BrowserError < Error
     attr_reader :response
 

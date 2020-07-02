@@ -2,6 +2,9 @@
 
 module Ferrum
   class Node
+    MOVING_WAIT = ENV.fetch("FERRUM_NODE_MOVING_WAIT", 0.01).to_f
+    MOVING_ATTEMPTS = ENV.fetch("FERRUM_NODE_MOVING_ATTEMPTS", 50).to_i
+
     attr_reader :page, :target_id, :node_id, :description, :tag_name
 
     def initialize(frame, target_id, node_id, description)
@@ -121,16 +124,42 @@ module Ferrum
     end
 
     def find_position(x: nil, y: nil, position: :top)
-      offset_x, offset_y = x, y
-      quads = get_content_quads
+      prev = get_content_quads
+
+      # FIXME: Case when a few quads returned
+      points = Ferrum.with_attempts(errors: NodeIsMovingError, max: MOVING_ATTEMPTS, wait: 0) do
+        sleep(MOVING_WAIT)
+        current = get_content_quads
+
+        if current != prev
+          error = NodeIsMovingError.new(self, prev, current)
+          prev = current
+          raise(error)
+        end
+
+        current
+      end.map { |q| to_points(q) }.first
+
+      get_position(points, x, y, position)
+    end
+
+    private
+
+    def get_content_quads
+      quads = page.command("DOM.getContentQuads", nodeId: node_id)["quads"]
+      raise "Node is either not visible or not an HTMLElement" if quads.size == 0
+      quads
+    end
+
+    def get_position(points, offset_x, offset_y, position)
       x = y = nil
 
       if offset_x && offset_y && position == :top
-        point = quads.first
+        point = points.first
         x = point[:x] + offset_x.to_i
         y = point[:y] + offset_y.to_i
       else
-        x, y = quads.inject([0, 0]) do |memo, point|
+        x, y = points.inject([0, 0]) do |memo, point|
           [memo[0] + point[:x],
            memo[1] + point[:y]]
         end
@@ -147,19 +176,11 @@ module Ferrum
       [x, y]
     end
 
-    private
-
-    def get_content_quads
-      result = page.command("DOM.getContentQuads", nodeId: node_id)
-      raise "Node is either not visible or not an HTMLElement" if result["quads"].size == 0
-
-      # FIXME: Case when a few quads returned
-      result["quads"].map do |quad|
-        [{x: quad[0], y: quad[1]},
-         {x: quad[2], y: quad[3]},
-         {x: quad[4], y: quad[5]},
-         {x: quad[6], y: quad[7]}]
-      end.first
+    def to_points(quad)
+      [{x: quad[0], y: quad[1]},
+       {x: quad[2], y: quad[3]},
+       {x: quad[4], y: quad[5]},
+       {x: quad[6], y: quad[7]}]
     end
   end
 end
