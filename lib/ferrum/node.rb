@@ -124,54 +124,42 @@ module Ferrum
     end
 
     def find_position(x: nil, y: nil, position: :top)
-      quads = node_quads(x, y)
-      get_position(quads, x, y)
+      prev = get_content_quads
+
+      # FIXME: Case when a few quads returned
+      points = Ferrum.with_attempts(errors: NodeIsMovingError, max: MOVING_ATTEMPTS, wait: 0) do
+        sleep(MOVING_WAIT)
+        current = get_content_quads
+
+        if current != prev
+          error = NodeIsMovingError.new(self, prev, current)
+          prev = current
+          raise(error)
+        end
+
+        current
+      end.map { |q| to_points(q) }.first
+
+      get_position(points, x, y, position)
     end
 
     private
 
     def get_content_quads
-      result = page.command("DOM.getContentQuads", nodeId: node_id)
-      raise "Node is either not visible or not an HTMLElement" if result["quads"].size == 0
-      result
+      quads = page.command("DOM.getContentQuads", nodeId: node_id)["quads"]
+      raise "Node is either not visible or not an HTMLElement" if quads.size == 0
+      quads
     end
 
-    def node_quads(x, y)
-      prev_result = get_content_quads
-
-      result = Ferrum.with_attempts(errors: NodeIsMovingError, max: MOVING_ATTEMPTS, wait: 0) do
-        sleep(MOVING_WAIT)
-        current_result = get_content_quads
-
-        if current_result["quads"] != prev_result["quads"]
-          prev_pos = get_position(prev_result, x, y)
-          current_pos = get_position(current_result, x, y)
-
-          prev_result = current_result
-          raise NodeIsMovingError.new(self, prev_pos, current_pos)
-        end
-
-        current_result
-      end
-
-      # FIXME: Case when a few quads returned
-      result["quads"].map do |quad|
-        [{x: quad[0], y: quad[1]},
-         {x: quad[2], y: quad[3]},
-         {x: quad[4], y: quad[5]},
-         {x: quad[6], y: quad[7]}]
-      end.first
-    end
-
-    def get_position(quads, offset_x, offset_y)
+    def get_position(points, offset_x, offset_y, position)
       x = y = nil
 
       if offset_x && offset_y && position == :top
-        point = quads.first
+        point = points.first
         x = point[:x] + offset_x.to_i
         y = point[:y] + offset_y.to_i
       else
-        x, y = quads.inject([0, 0]) do |memo, point|
+        x, y = points.inject([0, 0]) do |memo, point|
           [memo[0] + point[:x],
            memo[1] + point[:y]]
         end
@@ -186,6 +174,13 @@ module Ferrum
       end
 
       [x, y]
+    end
+
+    def to_points(quad)
+      [{x: quad[0], y: quad[1]},
+       {x: quad[2], y: quad[3]},
+       {x: quad[4], y: quad[5]},
+       {x: quad[6], y: quad[7]}]
     end
   end
 end
