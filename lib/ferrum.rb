@@ -56,7 +56,8 @@ module Ferrum
 
     def message
       "Node `#{@node.inspect}` that you're trying to click is moving, hence " \
-      "we cannot. Previosuly it was at #{@prev_pos} but now at #{@current_pos}."
+      "we cannot. Previosuly it was at #{@prev_pos.inspect} but now at " \
+      "#{@current_pos.inspect}."
     end
   end
 
