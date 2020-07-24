@@ -283,6 +283,7 @@ module Ferrum
           browser.execute <<-JS
             document.body.innerHTML += "<iframe src='/ferrum/buttons' id='buttons_frame'>"
           JS
+          browser.network.wait_for_idle
 
           frame = browser.at_xpath("//iframe[@id='buttons_frame']").frame
           expect(frame.xpath("//button").size).to eq(3)
@@ -320,6 +321,7 @@ module Ferrum
           browser.execute <<-JS
             document.body.innerHTML += "<iframe src='/ferrum/buttons' id='buttons_frame'>"
           JS
+          browser.network.wait_for_idle
 
           frame = browser.at_xpath("//iframe[@id='buttons_frame']").frame
           expect(frame.at_xpath("//button[@id='click_me_123']")).not_to be_nil
@@ -357,6 +359,7 @@ module Ferrum
           browser.execute <<-JS
             document.body.innerHTML += "<iframe src='/ferrum/buttons' id='buttons_frame'>"
           JS
+          browser.network.wait_for_idle
 
           frame = browser.at_css("iframe#buttons_frame").frame
           expect(frame.css("button").size).to eq(3)
@@ -394,6 +397,7 @@ module Ferrum
           browser.execute <<-JS
             document.body.innerHTML += "<iframe src='/ferrum/buttons' id='buttons_frame'>"
           JS
+          browser.network.wait_for_idle
 
           frame = browser.at_css("iframe#buttons_frame").frame
           expect(frame.at_css("button#click_me_123")).not_to be_nil
