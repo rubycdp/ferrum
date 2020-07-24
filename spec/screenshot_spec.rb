@@ -246,7 +246,7 @@ module Ferrum
           it "convert case correct" do
             browser.goto("/ferrum/long_page")
 
-            allow(browser.page).to receive(:command).with("Page.printToPDF", {
+            allow(browser.page).to receive(:command).with("Page.printToPDF", hash_including(
                displayHeaderFooter: false,
                ignoreInvalidPageRanges: false,
                landscape: false,
@@ -261,8 +261,11 @@ module Ferrum
                preferCSSPageSize: false,
                printBackground: false,
                scale: 1,
-               transferMode: "ReturnAsBase64"
-            }) { { "data" => "" } }
+            )) { { "stream" => "1" } }
+
+            allow(browser.page).to receive(:command).with("IO.read", hash_including(
+              handle: "1"
+            )) { { "data" => "", "base64Encoded" => false, "eof" => true } }
 
             browser.pdf(path: file, landscape: false,
                                     display_header_footer: false,
@@ -276,8 +279,7 @@ module Ferrum
                                     margin_right: 0.4,
                                     page_ranges: "",
                                     ignore_invalid_page_ranges: false,
-                                    prefer_css_page_size: false,
-                                    transfer_mode: "ReturnAsBase64")
+                                    prefer_css_page_size: false)
           end
         end
 
