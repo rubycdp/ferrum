@@ -36,12 +36,13 @@ module Ferrum
 
       def pdf(**opts)
         path, encoding = common_options(**opts)
-        options = pdf_options(**opts)
-        data = command("Page.printToPDF", **options).fetch("data")
-        return data if encoding == :base64
-
-        bin = Base64.decode64(data)
-        save_file(path, bin)
+        options = pdf_options(**opts).merge(transferMode: "ReturnAsStream")
+        stream_handle = command("Page.printToPDF", **options).fetch("stream")
+        if path
+          stream_to_file(stream_handle, path)
+        else
+          stream_to_memory(stream_handle)
+        end
       end
 
       def mhtml(path: nil)
@@ -68,6 +69,28 @@ module Ferrum
       def save_file(path, data)
         return data unless path
         File.open(path.to_s, "wb") { |f| f.write(data) }
+      end
+
+      def stream_to_file(stream_handle, path)
+        File.open(path, 'wb') do |output_file|
+          stream_to stream_handle, output_file
+        end
+      end
+
+      def stream_to_memory(stream_handle)
+        in_memory_data = ''
+        stream_to stream_handle, in_memory_data
+        in_memory_data
+      end
+
+      def stream_to(stream_handle, output)
+        loop do
+          read_result = command("IO.read", handle: stream_handle, size: 131072)
+          data_chunk = read_result['data']
+          data_chunk = Base64.decode64(data_chunk) if read_result['base64Encoded']
+          output << data_chunk
+          break if read_result['eof']
+        end
       end
 
       def common_options(encoding: :base64, path: nil, **_)
