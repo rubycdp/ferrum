@@ -1,3 +1,167 @@
+## [0.5.0] - (Sep 27, 2019) ##
+
+### Added
+
+- description of `Thread safety` approach section in README
+
+- `Ferrum::NoSuchTargetError`
+
+- `Ferrum::Network::Request#url_fragment` - delegation to `urlFragment` of instance `request`
+
+- The removing of temporary directory on `Ferrum::Browser::Process#stop`:
+
+    `Ferrum::Browser::Process.directory_remover` proc for remove entry with the passed path to the temporary directory as an argument
+
+- `Ferrum::Page#viewport_size` - evaluates JS: `innerWidth` and `innerHeight` values on `window` object
+
+- `Ferrum::Page#document_size` - evaluates JS: `offsetWidth` and `offsetHeight` values on `document.documentElement` object
+
+- `Ferrum::Browser#viewport_size` - delegation to `Ferrum::Page#viewport_size`
+
+- `Ferrum::Context` class implementation:
+
+    - initializer accepts three arguments:
+
+        - `browser` as first - instance of `Ferrum::Browser`
+
+        - `contexts` as second - instance of `Ferrum::Contexts`
+
+        - `id` as third - the value of browser command: `Target.createBrowserContext.browserContextId`
+
+    - includes `id` attribute reader - the passed argument: `id`
+
+    - includes `targets` attribute reader - the thread safe instance of hash
+
+    - includes `pendings` attribute reader - the thread safe instance of mutable variable
+
+    - includes `POSITION` constant - the freeze array of `first` `last` symbols  
+
+    - `#default_target` - memoization of `#create_target` result
+
+    - `#create_target` - assigns `target.id` as fetch of `targetId` from `Target.createTarget` with assign `target` from `targetInfo`
+
+    - `#page` - delegation to `default_target` of `Ferrum::Context`
+
+    - `#pages` - delegations to `page`'s taken from `Ferrum::Context#targets` as `values`
+ 
+    - `#windows` - delegations to `page`'s taken from `Ferrum::Context#targets` as `values` with `window?` truthy condition
+    
+        takes `position` as first argument and optional second argument `size` with `1` as default value
+           
+        may raise `ArgumentError` on the passed `position` which not included into `Ferrum::Context::POSITION` constant values
+
+    - `#create_page` - delegation to `target` with the `target` recreation by `Ferrum::Context#create_target`
+
+    - `#add_target` - creates new instance of `Ferrum::Target` with fill by `Ferrum::Target.window?` condition of:
+     
+        `targets` instance variable on `id` or `pendings` instance variable as replace of `@value`
+
+    - `#update_target` - updates specific `target` in `targets` instance variable by `target_id` and `params` which are passed as arguments  
+
+    - `#delete_target` - deletes from `targets` instance variable by passed `target_id` as argument
+
+    - `#dispose` - disposes from `contexts` instance variable by passed `id` as attribute reader
+
+    - `#inspect` - simple implementation of native `inspect` method with returns of the current internal state
+
+- `Ferrum::Target` class implementation:
+
+    - initializer accepts two arguments:
+
+        - `browser` as first - instance of `Ferrum::Browser`
+
+        - `params` as second (optional) - instance of `Ferrum::Contexts`
+
+    - `#update` - attribute writer for `params` instance variable by passed `params` as one argument 
+
+    - `#page` - new instance of `Ferrum::Page` created for specific `targetId`
+
+    - `#window?` - boolean of the check the exists of `Ferrum::Target#opener_id` 
+
+    - `#id` - delegation to `targetId` of passed to instance `params`
+
+    - `#type` - delegation to `type` of passed to instance `params`
+
+    - `#title` - delegation to `title` of passed to instance `params`
+
+    - `#url` - delegation to `url` of passed to instance `params`
+
+    - `#opener_id` - delegation to `openerId` of passed to instance `params`
+
+    - `#context_id` - delegation to `browserContextId` of passed to instance `params`
+
+- `Ferrum::Contexts` class implementation: (subscriber on `Target.targetCreated`)
+
+    - initializer accepts `browser` as the one argument
+
+    - includes `contexts` attribute reader - the thread safe instance of hash
+
+    - `#default_context` - memoization of `#create` result
+
+    - `#find_by` - finding the last match in `contexts` instance variable by match of passed `target_id` into `targets.keys`
+
+        required `target_id: value` argument
+    
+        returns `nil` on the not-matched case
+
+    - `#create` - assigns new instance of `Ferrum::Context` with fetched `browserContextId` from `Target.createBrowserContext` into `contexts` instance variable
+    
+        returns the created instance of `Ferrum::Context` 
+
+    - `#dispose` - removes specific `context` from `contexts` instance variable by passed `context_id` with fires `Target.disposeBrowserContext` browser command
+
+        returns `true` boolean on the success dispose
+
+    - `#reset` - nullify the `default_context` instance variable and fires the `dispose` method on each `context` in `contexts` instance variable
+
+- `Ferrum::Browser#contexts` - reader of `Ferrum::Contexts` instance:
+
+- `Ferrum::Browser#default_context` - delegation to `Ferrum::Browser#contexts`
+
+- the delegation to `Ferrum::Browser#default_context`:
+
+    - `Ferrum::Browser#create_target`
+    
+    - `Ferrum::Browser#create_page`
+
+    - `Ferrum::Browser#pages`
+
+    - `Ferrum::Browser#windows`
+
+### Changed
+
+- `Ferrum::NoSuchWindowError` into `NoSuchPageError`
+
+- `Ferrum::Page::NEW_WINDOW_WAIT` moved as unchanged to `Ferrum::Target`
+
+- `Ferrum::Browser#page` - the delegation from `Ferrum::Browser#targets` to `Ferrum::Browser#default_context`
+
+- `Ferrum::Browser#page` - from the instance of `Ferrum::Browser#targets` into delegation to `Ferrum::Browser#default_context`
+
+### Removed
+
+- `Ferrum::EmptyTargetsError`
+
+- the `hack` to handle `new window` which doesn't have events at all by `Ferrum::Page#session_id` with `Target.attachToTarget` and `Target.detachFromTarget` usage
+
+- `Ferrum::Page#close_connection` - the logic is moved to `Ferrum::Page#close` directly
+
+- the third argument (`new_window = false`) for `Ferrum::Page` initializer  
+
+- `Ferrum::Targets` class with the delegations to `Ferrum::Targets` instance in `Ferrum::Browser` instance:
+    
+    - `Ferrum::Browser#window_handle`
+    
+    - `Ferrum::Browser#window_handles`
+    
+    - `Ferrum::Browser#switch_to_window`
+    
+    - `Ferrum::Browser#open_new_window`
+    
+    - `Ferrum::Browser#close_window`
+    
+    - `Ferrum::Browser#within_window`
+
 ## [0.4.0] - (Sep 17, 2019) ##
 
 ### Added
@@ -366,6 +530,7 @@
 
     - classes of errors with a description of specific raises reasons
 
+[0.5.0]: https://github.com/rubycdp/ferrum/compare/v0.4...v0.5
 [0.4.0]: https://github.com/rubycdp/ferrum/compare/v0.3...v0.4
 [0.3.0]: https://github.com/rubycdp/ferrum/compare/v0.2.1...v0.3
 [0.2.1]: https://github.com/rubycdp/ferrum/compare/v0.2...v0.2.1
