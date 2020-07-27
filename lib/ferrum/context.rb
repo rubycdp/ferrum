@@ -42,9 +42,9 @@ module Ferrum
     end
 
     def create_target
-      target_id = @browser.command("Target.createTarget",
-                                   browserContextId: @id,
-                                   url: "about:blank")["targetId"]
+      @browser.command("Target.createTarget",
+                       browserContextId: @id,
+                       url: "about:blank")
       target = @pendings.take(@browser.timeout)
       raise NoSuchTargetError unless target.is_a?(Target)
       @targets[target.id] = target
