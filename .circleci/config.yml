@@ -1,15 +1,50 @@
 version: 2.1
+
 orbs:
   ruby: circleci/ruby@1.0.7
 
-jobs:
-  build:
+executors:
+  ruby:
     docker:
-      - image: circleci/ruby:2.7.1-stretch-node
-    executor: ruby/default
+      - image: circleci/ruby:buster-node-browsers
+
+commands:
+  create_artifact_folders:
+    steps:
+      - run:
+          name: Create artifacts folders
+          command: mkdir -p /home/circleci/project/tmp/{screenshots,logs}
+  store_screenshots_and_logs:
+    steps:
+      - store_artifacts:
+          path: /home/circleci/project/tmp/screenshots
+          destination: screenshots
+      - store_artifacts:
+          path: /home/circleci/project/tmp/logs
+          destination: logs
+
+jobs:
+  test:
+    parameters:
+      ruby-version:
+        type: string
+      gemfile:
+        type: string
+    executor: ruby
     steps:
       - checkout
-      - run:
-          name: Which bundler?
-          command: bundle -v
-      - ruby/bundle-install
+      - create_artifact_folders
+      - ruby/install:
+          version: << parameters.ruby-version >>
+      - run: bundle install
+      - run: bundle exec rake
+      - store_screenshots_and_logs
+
+workflows:
+  build:
+    jobs:
+      - test:
+          matrix:
+            parameters:
+              ruby-version: ["2.5", "2.6", "2.7"]
+              gemfile: ["gemfiles/websocket-driver-0.6.x.gemfile", "gemfiles/websocket-driver-0.7.x.gemfile"]

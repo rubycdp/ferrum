@@ -8,32 +8,7 @@ PROJECT_ROOT = File.expand_path("..", __dir__)
 
 require "ferrum"
 require "support/server"
-
-RSpec.shared_context "Global helpers" do
-  def server
-    Ferrum::Server.server
-  end
-
-  def base_url(*args)
-    server.base_url(*args)
-  end
-
-  def browser
-    @browser
-  end
-
-  def with_external_browser(host: "127.0.0.1", port: 32001)
-    options = { host: host, port: port, window_size: [1400, 1400], headless: true }
-    process = Ferrum::Browser::Process.new(options)
-
-    begin
-      process.start
-      yield "http://#{host}:#{port}"
-    ensure
-      process.stop
-    end
-  end
-end
+require "support/global_helpers"
 
 RSpec.configure do |config|
   config.include_context "Global helpers"
@@ -54,8 +29,14 @@ RSpec.configure do |config|
 
   config.before(:all) do
     base_url = Ferrum::Server.server.base_url
-    @browser = Ferrum::Browser.new(base_url: base_url,
-                                   process_timeout: 5)
+    options = { base_url: base_url, process_timeout: 5 }
+
+    if ENV['CI']
+      FERRUM_LOGGER = StringIO.new
+      options.merge!(logger: FERRUM_LOGGER)
+    end
+
+    @browser = Ferrum::Browser.new(**options)
   end
 
   config.after(:all) do
@@ -64,9 +45,33 @@ RSpec.configure do |config|
 
   config.before(:each) do
     server&.wait_for_pending_requests
+
+    if ENV['CI']
+      FERRUM_LOGGER.truncate(0)
+      FERRUM_LOGGER.rewind
+    end
   end
 
-  config.after(:each) do
+  config.after(:each) do |example|
+    if ENV['CI'] && example.exception
+      save_exception_aftifacts(browser, example.metadata)
+    end
+
     @browser.reset
+  end
+
+  def save_exception_aftifacts(browser, meta)
+    time_now = Time.now
+    filename = File.basename(meta[:file_path])
+    line_number = meta[:line_number]
+    timestamp = "#{time_now.strftime('%Y-%m-%d-%H-%M-%S.')}#{'%03d' % (time_now.usec/1000).to_i}"
+
+    screenshot_name = "screenshot-#{filename}-#{line_number}-#{timestamp}.png"
+    screenshot_path = "#{ENV["CIRCLE_ARTIFACTS"]}/screenshots/#{screenshot_name}"
+    browser.screenshot(path: screenshot_path, full: true)
+
+    log_name = "ferrum-#{filename}-#{line_number}-#{timestamp}.txt"
+    log_path = "#{ENV["CIRCLE_ARTIFACTS"]}/logs/#{log_name}"
+    File.open(log_path, 'wb') { |file| file.write(FERRUM_LOGGER.string) }
   end
 end
