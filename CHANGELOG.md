@@ -1,3 +1,177 @@
+## [0.6.0] - (Oct 29, 2019) ##
+
+### Added
+
+- description of `browser.add_script_tag/browser.add_style_tag` in README
+
+- `Ferrum::Target#attached?` - boolean of the check the exists of `Ferrum::Target#page`
+
+- `Ferrum::Page::Screenshot::DEFAULT_PDF_OPTIONS` - pdf settings constant
+
+- `Ferrum::Page::Screenshot::PAPEP_FORMATS` - available formats constant
+
+- `Ferrum::Page::Frames` module implementation:
+
+    - `#main_frame` - attribute reader as new instance of `Ferrum::Frame` created by `Runtime.executionContextCreated.context.auxData.frameId`
+
+    - `#frames` - results of delegated `#values` method into instance variable `frames`
+
+    - `#frame_by` - searching method by attributes: id, execution_id, name (optional)
+
+    - `#frames_subscribe` - apply listeners of 'Page/Network/Runtime' streams of the frame-related events
+
+- `Ferrum::Browser#add_script_tag` - delegation to `Ferrum::Page#add_script_tag`
+
+- `Ferrum::Browser#add_style_tag` - delegation to `Ferrum::Page#add_style_tag`
+
+- `Ferrum::Network::AuthRequest` class implementation:
+
+    - initializer accepts two arguments:
+
+        - `page` as first - instance of `Ferrum::Page`
+
+        - `params` as second - params from `on` subscriber "Fetch.authRequired"
+
+    - `#navigation_request?` - delegation to `isNavigationRequest` of passed to instance `params`
+
+    - `#auth_challenge?` - strict equal of `source` as argument with delegation to `authChallenge.source` of passed to instance `params`
+
+    - `#match?` - boolean match of `regexp` as argument with `#url`
+
+    - `#continue` - fires the `command` `Fetch.continueWithAuth` on `Ferrum::Page` instance with passed `options` as argument
+
+    - `#abort` - fires the `command` `Fetch.failRequest` on `Ferrum::Page` instance with errorReason: "BlockedByClient" on current `requestId`
+
+    - `#url` - delegation to `request.url` of passed to instance `params`
+
+    - `#method` - delegation to `request.method` of passed to instance `params`
+
+    - `#headers` - delegation to `request.headers` of passed to instance `params`
+
+    - `#initial_priority` - delegation to `request.initialPriority` of passed to instance `params`
+
+    - `#referrer_policy` - delegation to `request.referrerPolicy` of passed to instance `params`
+
+    - `#inspect` - simple implementation of native `inspect` method with returns of the current internal state
+
+### Changed
+
+- `Ferrum::Page::Screenshot#screenshot` - handle `:full` option
+
+- `Ferrum::Page::Frame` into `Ferrum::Frame`:
+
+    - initializer accepts three arguments:
+
+            - `id` as first - value of `Page.frameAttached.frameId`
+
+            - `page` as second - instance of `Ferrum::Page`
+
+            - `parent_id` as third - with `nil` as default value
+
+    - `Ferrum::Page::Frame#name/Ferrum::Page::Frame#name=` - class attribute accessor
+
+    - `Ferrum::Page::Frame#state=` - attribute writer for `state` instance variable
+
+        Can be one of: (started_loading/navigated/scheduled_navigation/cleared_scheduled_navigation/stopped_loading)
+
+    - `Ferrum::Page::Frame#main?` - boolean of the check the not existed parent_id instance variable
+
+    - `Ferrum::Page::Frame#execution_context_id` converted into `Ferrum::Frame#execution_id` with use `execution_id` instance variable
+
+    - `Ferrum::Page::Frame#frame_url` into `Ferrum::Frame#url` - 'document.location.href' reference
+
+    - `Ferrum::Page::Frame#frame_title` into `Ferrum::Frame#title` - 'document.title' reference
+
+    - `Ferrum::Page::Frame#inspect` - simple implementation of native `inspect` method with returns of the current internal state
+
+- `Ferrum::Page::DOM` into `Ferrum::Frame::DOM`:
+
+    - `Ferrum::Page::DOM#title` renamed into `Ferrum::Frame::DOM#current_title`
+
+    - `Ferrum::Frame::DOM#doctype` - serialized 'document.doctype' reference
+
+    - `Ferrum::Frame::DOM#css/Ferrum::Frame::DOM#at_css` - added `@page` references for command related methods
+
+- `Ferrum::Page::Runtime` into `Ferrum::Frame::Runtime`:
+
+    - `Ferrum::Frame::DOM#evaluate_on` - added `@page` references for command related methods
+
+    - `Ferrum::Frame::SCRIPT_SRC_TAG` - js implementation for: createElement <script>, fil in `src` with appendChild into document.head
+
+    - `Ferrum::Frame::SCRIPT_TEXT_TAG` - js implementation for: createElement <script>, fil in `text` with appendChild into document.head
+
+    - `Ferrum::Frame::STYLE_TAG` - js implementation for: createElement <style> with appendChild into document.head
+
+    - `Ferrum::Frame::LINK_TAG` - js implementation for: createElement <link>, fil in `href` with appendChild into document.head
+
+    - `Ferrum::Frame::Runtime#add_script_tag` - fires `evaluate_async` with passed args: url, path, content, type: "text/javascript"
+
+    - `Ferrum::Frame::Runtime#add_style_tag` - fires `evaluate_async` with passed args: url, path, content
+
+- `Ferrum::Network` - switch from deprecated `Network.continueInterceptedRequest` to `Fetch.continueRequest`
+
+- `Ferrum::Network::Exchange`:
+
+    - first argument `page` for initialize with fill `page` instance variable
+
+    - `#build_response` - fix arguments for `Network::Response.new`
+
+    - `#inspect` - simple implementation of native `inspect` method with returns of the current internal state
+
+- `Ferrum::Network::InterceptedRequest`:
+
+    - `#interception_id` into `#request_id` as `requestId` reference on passed `params`
+    
+    - `#respond` - the `custom request fulfilment support` implementation by fires the `command` `Fetch.failRequest` on `Ferrum::Page` instance with passed `options` as argument
+
+- `Ferrum::Network::Response`:
+
+    - first argument `page` for initialize with fill `page` instance variable
+
+    - `#body` - implementation of ability to get response body by fires the `command` `Network.getResponseBody` on `Ferrum::Page` instance with on specific `requestId`
+
+    - `#main?` - boolean of equals `page.network.response` and current class instance
+
+    - `#==` - boolean of equals passed argument object.id and current `requestId` from `params` instance variable
+
+    - `#inspect` - simple implementation of native `inspect` method with returns of the current internal state
+
+- `Ferrum::Node`:
+
+    - replaced first argument `page` into `frame` / `page` instance variable initialized as `frame.page`
+
+    - `#frame_id` - delegation to `frameId` of passed to instance `description`
+
+    - `#frame` - instance of frame from `page` instance found by `#frame_id`
+
+- `Ferrum::Page::Event` - add frames implementation:
+
+    - `event/document_id` attribute readers
+
+    - `#subscribe` listeners replaced with `#frames_subscribe` from included `Ferrum::Page::Frames` instance
+
+    - `#resize` - evaluate JS: document.documentElement.scrollWidth, document.documentElement.scrollHeight for fullscreen case
+
+### Removed
+
+- `Ferrum::Page`
+
+    - `#frame_name`
+
+    - `#frame_url`, with delegated `Ferrum::Browser#frame_url`
+
+    - `#frame_title`, with delegated `Ferrum::Browser#frame_title`
+
+    - `#within_frame`, with delegated `Ferrum::Browser#within_frame`
+
+- `Ferrum::Page::Event`:
+ 
+    - include DOM, Runtime, Frame
+
+    - `waiting_frames` instance variable
+
+    - `frame_stack` instance variable
+
 ## [0.5.0] - (Sep 27, 2019) ##
 
 ### Added
@@ -530,6 +704,7 @@
 
     - classes of errors with a description of specific raises reasons
 
+[0.6.0]: https://github.com/rubycdp/ferrum/compare/v0.5...v0.6
 [0.5.0]: https://github.com/rubycdp/ferrum/compare/v0.4...v0.5
 [0.4.0]: https://github.com/rubycdp/ferrum/compare/v0.3...v0.4
 [0.3.0]: https://github.com/rubycdp/ferrum/compare/v0.2.1...v0.3
