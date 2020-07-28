@@ -69,7 +69,7 @@ module Ferrum
         code = <<~JS
           let selector = arguments[0];
           let within = arguments[1] || document;
-          let results = within.querySelectorAll(selector);
+          let results = Array.from(within.querySelectorAll(selector));
           arguments[2](results);
         JS
 
