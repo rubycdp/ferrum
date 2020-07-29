@@ -64,6 +64,7 @@ module Ferrum
           return
         end
 
+        @user_data_dir = nil
         @logger = options[:logger]
         @process_timeout = options.fetch(:process_timeout, PROCESS_TIMEOUT)
 
