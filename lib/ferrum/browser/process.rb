@@ -64,12 +64,12 @@ module Ferrum
           return
         end
 
-        @user_data_dir = nil
         @logger = options[:logger]
         @process_timeout = options.fetch(:process_timeout, PROCESS_TIMEOUT)
 
         tmpdir = Dir.mktmpdir
         ObjectSpace.define_finalizer(self, self.class.directory_remover(tmpdir))
+        @user_data_dir = tmpdir
         @command = Command.build(options, tmpdir)
       end
 
