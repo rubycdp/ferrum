@@ -23,7 +23,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "concurrent-ruby",  "~> 1.1"
   s.add_runtime_dependency "addressable",      "~> 2.5"
 
-  s.add_development_dependency "rake",         "~> 12.3"
+  s.add_development_dependency "rake",         "~> 13.0"
   s.add_development_dependency "rspec",        "~> 3.8"
   s.add_development_dependency "sinatra",      "~> 2.0"
   s.add_development_dependency "puma",         "~> 4.1"
