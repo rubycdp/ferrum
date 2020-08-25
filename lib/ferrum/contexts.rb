@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "ferrum/context"
+require_relative "context"
 
 module Ferrum
   class Contexts
@@ -31,15 +31,14 @@ module Ferrum
 
     def dispose(context_id)
       context = @contexts[context_id]
-      @browser.command("Target.disposeBrowserContext",
-                       browserContextId: context.id)
+      @browser.command("Target.disposeBrowserContext", browserContextId: context.id)
       @contexts.delete(context_id)
       true
     end
 
     def reset
       @default_context = nil
-      @contexts.keys.each { |id| dispose(id) }
+      @contexts.each_key { |id| dispose(id) }
     end
 
     private
@@ -62,13 +61,13 @@ module Ferrum
       end
 
       @browser.client.on("Target.targetDestroyed") do |params|
-        if context = find_by(target_id: params["targetId"])
+        if (context = find_by(target_id: params["targetId"]))
           context.delete_target(params["targetId"])
         end
       end
 
       @browser.client.on("Target.targetCrashed") do |params|
-        if context = find_by(target_id: params["targetId"])
+        if (context = find_by(target_id: params["targetId"]))
           context.delete_target(params["targetId"])
         end
       end

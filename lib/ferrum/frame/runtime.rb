@@ -77,72 +77,70 @@ module Ferrum
 
       def evaluate_on(node:, expression:, by_value: true, wait: 0)
         errors = [NodeNotFoundError, NoExecutionContextError]
-        attempts, sleep = INTERMITTENT_ATTEMPTS, INTERMITTENT_SLEEP
+        intermittent_attempts = INTERMITTENT_ATTEMPTS
+        intermittent_sleep = INTERMITTENT_SLEEP
 
-        Ferrum.with_attempts(errors: errors, max: attempts, wait: sleep) do
+        Ferrum.with_attempts(errors: errors, max: intermittent_attempts, wait: intermittent_sleep) do
           response = @page.command("DOM.resolveNode", nodeId: node.node_id)
           object_id = response.dig("object", "objectId")
           options = DEFAULT_OPTIONS.merge(objectId: object_id)
           options[:functionDeclaration] = options[:functionDeclaration] % expression
           options.merge!(returnByValue: by_value)
 
-          response = @page.command("Runtime.callFunctionOn",
-                                   wait: wait, slowmoable: true,
-                                   **options)
+          response = @page.command("Runtime.callFunctionOn", wait: wait, slowmoable: true, **options)
           handle_error(response)
           response = response["result"]
 
-          by_value ? response.dig("value") : handle_response(response)
+          by_value ? response["value"] : handle_response(response)
         end
       end
 
       def add_script_tag(url: nil, path: nil, content: nil, type: "text/javascript")
-        expr, *args = if url
-                        [SCRIPT_SRC_TAG, url, type]
-                      elsif path || content
-                        if path
-                          content = File.read(path)
-                          content += "\n//# sourceURL=#{path}"
-                        end
-                        [SCRIPT_TEXT_TAG, content, type]
-                      end
+        expression, *args =
+          if url
+            [SCRIPT_SRC_TAG, url, type]
+          elsif path || content
+            if path
+              content = File.read(path)
+              content += "\n//# sourceURL=#{path}"
+            end
+            [SCRIPT_TEXT_TAG, content, type]
+          end
 
-        evaluate_async(expr, @page.timeout, *args)
+        evaluate_async(expression, @page.timeout, *args)
       end
 
       def add_style_tag(url: nil, path: nil, content: nil)
-        expr, *args = if url
-                        [LINK_TAG, url]
-                      elsif path || content
-                        if path
-                          content = File.read(path)
-                          content += "\n//# sourceURL=#{path}"
-                        end
-                        [STYLE_TAG, content]
-                      end
+        expression, *args =
+          if url
+            [LINK_TAG, url]
+          elsif path || content
+            if path
+              content = File.read(path)
+              content += "\n//# sourceURL=#{path}"
+            end
+            [STYLE_TAG, content]
+          end
 
-        evaluate_async(expr, @page.timeout, *args)
+        evaluate_async(expression, @page.timeout, *args)
       end
 
       private
 
       def call(*args, expression:, wait_time: nil, handle: true, **options)
         errors = [NodeNotFoundError, NoExecutionContextError]
-        attempts, sleep = INTERMITTENT_ATTEMPTS, INTERMITTENT_SLEEP
+        intermittent_attempts = INTERMITTENT_ATTEMPTS
+        intermittent_sleep = INTERMITTENT_SLEEP
 
-        Ferrum.with_attempts(errors: errors, max: attempts, wait: sleep) do
+        Ferrum.with_attempts(errors: errors, max: intermittent_attempts, wait: intermittent_sleep) do
           arguments = prepare_args(args)
           params = DEFAULT_OPTIONS.merge(options)
           expression = [wait_time, expression] if wait_time
           params[:functionDeclaration] = params[:functionDeclaration] % expression
           params = params.merge(arguments: arguments)
-          unless params[:executionContextId]
-            params = params.merge(executionContextId: execution_id)
-          end
+          params = params.merge(executionContextId: execution_id) unless params[:executionContextId]
 
-          response = @page.command("Runtime.callFunctionOn",
-                                   slowmoable: true,
-                                   **params)
+          response = @page.command("Runtime.callFunctionOn", slowmoable: true, **params)
           handle_error(response)
           response = response["result"]
 
@@ -176,16 +174,17 @@ module Ferrum
 
           case response["subtype"]
           when "node"
-              # We cannot store object_id in the node because page can be reloaded
-              # and node destroyed so we need to retrieve it each time for given id.
-              # Though we can try to subscribe to `DOM.childNodeRemoved` and
-              # `DOM.childNodeInserted` in the future.
-              node_id = @page.command("DOM.requestNode", objectId: object_id)["nodeId"]
-              description = @page.command("DOM.describeNode", nodeId: node_id)["node"]
-              Node.new(self, @page.target_id, node_id, description)
+            # We cannot store object_id in the node because page can be reloaded
+            # and node destroyed so we need to retrieve it each time for given id.
+            # Though we can try to subscribe to `DOM.childNodeRemoved` and
+            # `DOM.childNodeInserted` in the future.
+            node_id = @page.command("DOM.requestNode", objectId: object_id)["nodeId"]
+            description = @page.command("DOM.describeNode", nodeId: node_id)["node"]
+            Node.new(self, @page.target_id, node_id, description)
           when "array"
             reduce_props(object_id, []) do |memo, key, value|
-              next(memo) unless (Integer(key) rescue nil)
+              next(memo) unless key.match?(/\A\s*[-+]?\d+\s*\z/)
+
               value = value["objectId"] ? handle_response(value) : value["value"]
               memo.insert(key.to_i, value)
             end.compact
@@ -217,11 +216,12 @@ module Ferrum
 
       def reduce_props(object_id, to)
         if cyclic?(object_id).dig("result", "value")
-          return to.is_a?(Array) ? [cyclic_object] : cyclic_object
+          to.is_a?(Array) ? [cyclic_object] : cyclic_object
         else
           props = @page.command("Runtime.getProperties", ownProperties: true, objectId: object_id)
           props["result"].reduce(to) do |memo, prop|
             next(memo) unless prop["enumerable"]
+
             yield(memo, prop["name"], prop["value"])
           end
         end

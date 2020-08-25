@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 require "concurrent-ruby"
-require "ferrum/browser/subscriber"
-require "ferrum/browser/web_socket"
+require_relative "subscriber"
+require_relative "web_socket"
 
 module Ferrum
   class Browser
@@ -18,11 +18,9 @@ module Ferrum
 
         @thread = Thread.new do
           Thread.current.abort_on_exception = true
-          if Thread.current.respond_to?(:report_on_exception=)
-            Thread.current.report_on_exception = true
-          end
+          Thread.current.report_on_exception = true if Thread.current.respond_to?(:report_on_exception=)
 
-          while message = @ws.messages.pop
+          while (message = @ws.messages.pop)
             if INTERRUPTIONS.include?(message["method"])
               @interruptor.async.call(message)
             elsif message.key?("method")
@@ -44,6 +42,7 @@ module Ferrum
 
         raise DeadBrowserError if data.nil? && @ws.messages.closed?
         raise TimeoutError unless data
+
         error, response = data.values_at("error", "result")
         raise_browser_error(error) if error
         response

@@ -5,18 +5,13 @@ require "sinatra/base"
 module Ferrum
   class Application < Sinatra::Base
     configure { set :protection, except: :frame_options }
-    FERRUM_VIEWS  = File.dirname(__FILE__) + "/views"
-    FERRUM_PUBLIC = File.dirname(__FILE__) + "/public"
+    FERRUM_VIEWS  = "#{__dir__}/views"
+    FERRUM_PUBLIC = "#{__dir__}/public"
 
-    class TestAppError < Exception; end # rubocop:disable Lint/InheritException
-    class TestAppOtherError < Exception # rubocop:disable Lint/InheritException
-      def initialize(string1, msg)
-        @something = string1
-        @message = msg
-      end
-    end
+    class TestAppError < StandardError; end
+    class TestAppOtherError < StandardError; end
 
-    set :root, File.dirname(__FILE__)
+    set :root, __dir__
     set :static, true
     set :raise_errors, true
     set :show_exceptions, false
@@ -186,7 +181,8 @@ module Ferrum
 
     post "/form" do
       self.class.form_post_count += 1
-      %(<pre id="results">#{params[:form].merge("post_count" => self.class.form_post_count).to_yaml}</pre>)
+      results = params[:form].merge("post_count" => self.class.form_post_count).to_yaml
+      %(<pre id="results">#{results}</pre>)
     end
 
     post "/upload_empty" do
@@ -232,17 +228,18 @@ module Ferrum
 
     @form_post_count = 0
 
-
     helpers do
       def requires_credentials(login, password)
         return if authorized?(login, password)
+
         headers["WWW-Authenticate"] = %(Basic realm="Restricted Area")
         halt 401, "Not authorized\n"
       end
 
       def authorized?(login, password)
         @auth ||= Rack::Auth::Basic::Request.new(request.env)
-        @auth.provided? && @auth.basic? && @auth.credentials && (@auth.credentials == [login, password])
+        @auth.provided? && @auth.basic? && @auth.credentials &&
+          (@auth.credentials == [login, password])
       end
     end
 

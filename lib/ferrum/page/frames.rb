@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "ferrum/frame"
+require_relative "../frame"
 
 module Ferrum
   class Page
@@ -47,7 +47,7 @@ module Ferrum
           # node will change the id and all subsequent nodes have to change id too.
           if @main_frame.id == params["frameId"]
             @event.set if idling?
-            get_document_id
+            set_document_id
           end
 
           frame = @frames[params["frameId"]]
@@ -80,7 +80,7 @@ module Ferrum
           end
 
           frame = @frames[frame_id] || Frame.new(frame_id, self)
-          frame.set_execution_id(context_id)
+          frame.execution_id = context_id
 
           @frames[frame_id] ||= frame
         end

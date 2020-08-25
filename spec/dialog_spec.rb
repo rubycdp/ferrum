@@ -57,9 +57,9 @@ module Ferrum
           window.open("/ferrum/with_js", "popup")
         JS
 
-        popup, _ = browser.windows(:last)
+        popup, = browser.windows(:last)
 
-        popup.on(:dialog) { |d| d.accept }
+        popup.on(:dialog) { |d, *| d.accept }
         popup.at_css("a#open-match").click
         expect(popup.at_xpath("//a[@id='open-match' and @confirmed='true']")).to be
 

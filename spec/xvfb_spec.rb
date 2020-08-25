@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 module Ferrum
   describe Browser::Xvfb, skip: !Browser::Xvfb.xvfb_path do
     let(:process) { xvfb_browser.process }
     let(:xvfb_browser) { Browser.new(default_options.merge(options)) }
-    let(:default_options) { Hash(headless: :true, xvfb: true) }
+    let(:default_options) { Hash(headless: true, xvfb: true) }
 
     context "headless" do
       context "with window_size" do
@@ -24,7 +26,7 @@ module Ferrum
       end
 
       context "without window_size" do
-        let(:options) { Hash.new }
+        let(:options) { {} }
 
         it "allows to run tests configured to xvfb" do
           begin
@@ -61,6 +63,7 @@ module Ferrum
 
     def process_alive?(pid)
       return false unless pid
+
       ::Process.kill(0, pid) == 1
     rescue Errno::ESRCH
       false

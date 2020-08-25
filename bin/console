@@ -1,7 +1,9 @@
 #!/usr/bin/env ruby
 
+# frozen_string_literal: true
+
 require "irb"
 require "irb/completion"
-require "ferrum"
+require_relative "../lib/ferrum"
 
 IRB.start

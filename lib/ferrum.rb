@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "ferrum/browser"
-require "ferrum/node"
+require_relative "ferrum/browser"
+require_relative "ferrum/node"
 
 module Ferrum
   class Error               < StandardError; end
@@ -49,14 +49,16 @@ module Ferrum
   end
 
   class NodeIsMovingError < Error
-    def initialize(node, prev, current)
-      @node, @prev, @current = node, prev, current
+    def initialize(node, previous, current)
+      @node = node
+      @previous = previous
+      @current = current
       super(message)
     end
 
     def message
       "#{@node.inspect} that you're trying to click is moving, hence " \
-      "we cannot. Previosuly it was at #{@prev.inspect} but now at " \
+      "we cannot. Previously it was at #{@previous.inspect} but now at " \
       "#{@current.inspect}."
     end
   end
@@ -110,11 +112,11 @@ module Ferrum
     end
 
     def started
-      @@started ||= monotonic_time
+      @started ||= monotonic_time
     end
 
     def elapsed_time(start = nil)
-      monotonic_time - (start || @@started)
+      monotonic_time - (start || started)
     end
 
     def monotonic_time
@@ -130,6 +132,7 @@ module Ferrum
       yield
     rescue *Array(errors)
       raise if attempts >= max
+
       attempts += 1
       sleep(wait)
       retry

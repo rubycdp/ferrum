@@ -1,25 +1,21 @@
 # frozen_string_literal: true
 
-require "ferrum/frame/dom"
-require "ferrum/frame/runtime"
+require_relative "frame/dom"
+require_relative "frame/runtime"
 
 module Ferrum
   class Frame
-    include DOM, Runtime
+    include DOM
+    include Runtime
 
-    attr_reader :page, :parent_id, :state
-    attr_accessor :id, :name
+    attr_reader :page, :parent_id
+    attr_writer :execution_id
+    attr_accessor :id, :name, :state
 
     def initialize(id, page, parent_id = nil)
-      @id, @page, @parent_id = id, page, parent_id
-    end
-
-    # Can be one of:
-    # * started_loading
-    # * navigated
-    # * stopped_loading
-    def state=(value)
-      @state = value
+      @id = id
+      @page = page
+      @parent_id = parent_id
     end
 
     def url
@@ -34,7 +30,7 @@ module Ferrum
       @parent_id.nil?
     end
 
-    def set_content(html)
+    def content=(html)
       evaluate_async(%(
         document.open();
         document.write(arguments[0]);
@@ -49,14 +45,11 @@ module Ferrum
 
     def execution_id
       raise NoExecutionContextError unless @execution_id
+
       @execution_id
     rescue NoExecutionContextError
       @page.event.reset
       @page.event.wait(@page.timeout) ? retry : raise
-    end
-
-    def set_execution_id(value)
-      @execution_id ||= value
     end
 
     def reset_execution_id
@@ -64,7 +57,9 @@ module Ferrum
     end
 
     def inspect
-      %(#<#{self.class} @id=#{@id.inspect} @parent_id=#{@parent_id.inspect} @name=#{@name.inspect} @state=#{@state.inspect} @execution_id=#{@execution_id.inspect}>)
+      <<~OUTPUT
+        #<#{self.class} @id=#{@id.inspect} @parent_id=#{@parent_id.inspect} @name=#{@name.inspect} @state=#{@state.inspect} @execution_id=#{@execution_id.inspect}>
+      OUTPUT
     end
   end
 end

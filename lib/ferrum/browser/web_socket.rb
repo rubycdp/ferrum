@@ -13,17 +13,15 @@ module Ferrum
       attr_reader :url, :messages
 
       def initialize(url, max_receive_size, logger)
-        @url      = url
-        @logger   = logger
-        uri       = URI.parse(@url)
-        @sock     = TCPSocket.new(uri.host, uri.port)
+        @url = url
+        @logger = logger
+        uri = URI.parse(@url)
+        @sock = TCPSocket.new(uri.host, uri.port)
         max_receive_size ||= ::WebSocket::Driver::MAX_LENGTH
-        @driver   = ::WebSocket::Driver.client(self, max_length: max_receive_size)
+        @driver = ::WebSocket::Driver.client(self, max_length: max_receive_size)
         @messages = Queue.new
 
-        if SKIP_LOGGING_SCREENSHOTS
-          @screenshot_commands = Concurrent::Hash.new
-        end
+        @screenshot_commands = Concurrent::Hash.new if SKIP_LOGGING_SCREENSHOTS
 
         @driver.on(:open,    &method(:on_open))
         @driver.on(:message, &method(:on_message))
@@ -31,12 +29,10 @@ module Ferrum
 
         @thread = Thread.new do
           Thread.current.abort_on_exception = true
-          if Thread.current.respond_to?(:report_on_exception=)
-            Thread.current.report_on_exception = true
-          end
+          Thread.current.report_on_exception = true if Thread.current.respond_to?(:report_on_exception=)
 
           begin
-            while data = @sock.readpartial(512)
+            while (data = @sock.readpartial(512))
               @driver.parse(data)
             end
           rescue EOFError, Errno::ECONNRESET, Errno::EPIPE
@@ -71,9 +67,7 @@ module Ferrum
       end
 
       def send_message(data)
-        if SKIP_LOGGING_SCREENSHOTS
-          @screenshot_commands[data[:id]] = true
-        end
+        @screenshot_commands[data[:id]] = true if SKIP_LOGGING_SCREENSHOTS
 
         json = data.to_json
         @driver.text(json)

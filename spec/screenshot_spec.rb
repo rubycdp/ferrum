@@ -44,8 +44,8 @@ module Ferrum
           File.open(file, "rb") do |f|
             size = browser.evaluate <<-JS
               function() {
-                var ele  = document.getElementById("penultimate");
-                var rect = ele.getBoundingClientRect();
+                var element = document.getElementById("penultimate");
+                var rect = element.getBoundingClientRect();
                 return [rect.width, rect.height];
               }();
             JS
@@ -99,7 +99,7 @@ module Ferrum
           expect(File.exist?(file)).to be true
         end
 
-        it "supports screenshotting the page with a nonstring path" do
+        it "supports screenshotting the page with a non-string path" do
           browser.goto
 
           browser.screenshot(path: Pathname(file))
@@ -136,9 +136,12 @@ module Ferrum
 
             allow(browser.page).to receive(:command).and_call_original
             expect(browser.page).to receive(:command)
-              .with("Page.captureScreenshot", format: "png", clip: {
-                x: 0, y: 0, width: 1280, height: 1024, scale: 1.0
-              }).and_raise(StandardError)
+              .with(
+                "Page.captureScreenshot",
+                format: "png",
+                clip: { x: 0, y: 0, width: 1280, height: 1024, scale: 1.0 }
+              )
+              .and_raise(StandardError)
             expect { browser.screenshot(path: file, full: true) }
               .to raise_exception(StandardError)
 
@@ -149,7 +152,7 @@ module Ferrum
 
         it "supports screenshotting the page to file without extension when format is specified" do
           begin
-            file = PROJECT_ROOT + "/spec/tmp/screenshot"
+            file = "#{PROJECT_ROOT}/spec/tmp/screenshot"
             browser.goto
 
             browser.screenshot(path: file, format: "jpg")
@@ -161,8 +164,8 @@ module Ferrum
         end
 
         it "supports screenshotting the page with different quality settings" do
-          file2 = PROJECT_ROOT + "/spec/tmp/screenshot2.jpeg"
-          file3 = PROJECT_ROOT + "/spec/tmp/screenshot3.jpeg"
+          file2 = "#{PROJECT_ROOT}/spec/tmp/screenshot2.jpeg"
+          file3 = "#{PROJECT_ROOT}/spec/tmp/screenshot3.jpeg"
           FileUtils.rm_f([file2, file3])
 
           begin
@@ -170,7 +173,7 @@ module Ferrum
             browser.screenshot(path: file, quality: 0) # ignored for png
             browser.screenshot(path: file2) # defaults to a quality of 75
             browser.screenshot(path: file3, quality: 100)
-            expect(File.size(file)).to be > File.size(file2) # png by defult is bigger
+            expect(File.size(file)).to be > File.size(file2) # png by default is bigger
             expect(File.size(file2)).to be < File.size(file3)
           ensure
             FileUtils.rm_f([file2, file3])
@@ -182,8 +185,8 @@ module Ferrum
             browser.goto("/ferrum/zoom_test")
 
             black_pixels_count = lambda { |file|
-              img = ChunkyPNG::Image.from_file(file)
-              img.pixels.inject(0) { |i, p| p > 255 ? i + 1 : i }
+              image = ChunkyPNG::Image.from_file(file)
+              image.pixels.inject(0) { |i, p| p > 255 ? i + 1 : i }
             }
 
             browser.screenshot(path: file)
@@ -192,7 +195,7 @@ module Ferrum
             browser.screenshot(path: file, scale: scale)
             after = black_pixels_count[file]
 
-            expect(after.to_f / before.to_f).to eq(scale**2)
+            expect(after.to_f / before).to eq(scale**2)
           end
         end
 
@@ -238,46 +241,49 @@ module Ferrum
           it "specifying format and paperWidth will cause exception" do
             browser.goto("/ferrum/long_page")
 
-            expect {
-              browser.pdf(path: file, format: :A0, paper_width: 1.0)
-            }.to raise_error(ArgumentError)
+            expect { browser.pdf(path: file, format: :A0, paper_width: 1.0) }
+              .to raise_error(ArgumentError)
           end
 
           it "convert case correct" do
             browser.goto("/ferrum/long_page")
 
-            allow(browser.page).to receive(:command).with("Page.printToPDF", {
-               displayHeaderFooter: false,
-               ignoreInvalidPageRanges: false,
-               landscape: false,
-               marginBottom: 0.4,
-               marginLeft: 0.4,
-               marginRight: 0.4,
-               marginTop: 0.4,
-               pageRanges: "",
-               paperHeight: 11,
-               paperWidth: 8.5,
-               path: file,
-               preferCSSPageSize: false,
-               printBackground: false,
-               scale: 1,
-               transferMode: "ReturnAsBase64"
-            }) { { "data" => "" } }
+            allow(browser.page).to receive(:command).with(
+              "Page.printToPDF",
+              displayHeaderFooter: false,
+              ignoreInvalidPageRanges: false,
+              landscape: false,
+              marginBottom: 0.4,
+              marginLeft: 0.4,
+              marginRight: 0.4,
+              marginTop: 0.4,
+              pageRanges: "",
+              paperHeight: 11,
+              paperWidth: 8.5,
+              path: file,
+              preferCSSPageSize: false,
+              printBackground: false,
+              scale: 1,
+              transferMode: "ReturnAsBase64"
+            ) { { "data" => "" } }
 
-            browser.pdf(path: file, landscape: false,
-                                    display_header_footer: false,
-                                    print_background: false,
-                                    scale: 1,
-                                    paper_width: 8.5,
-                                    paper_height: 11,
-                                    margin_top: 0.4,
-                                    margin_bottom: 0.4,
-                                    margin_left: 0.4,
-                                    margin_right: 0.4,
-                                    page_ranges: "",
-                                    ignore_invalid_page_ranges: false,
-                                    prefer_css_page_size: false,
-                                    transfer_mode: "ReturnAsBase64")
+            browser.pdf(
+              path: file,
+              landscape: false,
+              display_header_footer: false,
+              print_background: false,
+              scale: 1,
+              paper_width: 8.5,
+              paper_height: 11,
+              margin_top: 0.4,
+              margin_bottom: 0.4,
+              margin_left: 0.4,
+              margin_right: 0.4,
+              page_ranges: "",
+              ignore_invalid_page_ranges: false,
+              prefer_css_page_size: false,
+              transfer_mode: "ReturnAsBase64"
+            )
           end
         end
 
@@ -288,7 +294,7 @@ module Ferrum
 
           def create_screenshot(path: file, **options)
             image = browser.screenshot(format: format, encoding: :base64, **options)
-            File.open(file, "wb") { |f| f.write Base64.decode64(image) }
+            File.open(path, "wb") { |f| f.write Base64.decode64(image) }
           end
 
           it "defaults to base64 when path isn't set" do

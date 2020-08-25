@@ -69,7 +69,7 @@ module Ferrum
       end
 
       it "can set cookies with an expires time" do
-        time = Time.at(Time.now.to_i + 10000)
+        time = Time.at(Time.now.to_i + 10_000)
         browser.goto
         browser.cookies.set(name: "foo", value: "bar", expires: time)
         expect(browser.cookies["foo"].expires).to eq(time)

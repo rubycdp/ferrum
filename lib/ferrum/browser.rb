@@ -2,11 +2,11 @@
 
 require "base64"
 require "forwardable"
-require "ferrum/page"
-require "ferrum/contexts"
-require "ferrum/browser/xvfb"
-require "ferrum/browser/process"
-require "ferrum/browser/client"
+require_relative "page"
+require_relative "contexts"
+require_relative "browser/xvfb"
+require_relative "browser/process"
+require_relative "browser/client"
 
 module Ferrum
   class Browser
@@ -19,7 +19,7 @@ module Ferrum
     delegate %i[targets create_target create_page page pages windows] => :default_context
     delegate %i[goto back forward refresh reload stop wait_for_reload
                 at_css at_xpath css xpath current_url current_title url title
-                body doctype set_content
+                body doctype content=
                 headers cookies network
                 mouse keyboard
                 screenshot pdf viewport_size
@@ -46,13 +46,11 @@ module Ferrum
       @js_errors = @options.fetch(:js_errors, false)
       @slowmo = @options[:slowmo].to_f
 
-      if @options.key?(:base_url)
-        self.base_url = @options[:base_url]
-      end
+      self.base_url = @options[:base_url] if @options.key?(:base_url)
 
       if ENV["FERRUM_DEBUG"] && !@logger
-        STDOUT.sync = true
-        @logger = STDOUT
+        $stdout.sync = true
+        @logger = $stdout
         @options[:logger] = @logger
       end
 

@@ -56,9 +56,7 @@ module Ferrum
     it "raises an error when browser is too slow" do
       path = "#{PROJECT_ROOT}/spec/support/no_chrome"
 
-      expect {
-        browser = Browser.new(browser_path: path)
-      }.to raise_error(
+      expect { Browser.new(browser_path: path) }.to raise_error(
         Ferrum::ProcessTimeoutError,
         "Browser did not produce websocket url within 2 seconds"
       )
@@ -119,7 +117,7 @@ module Ferrum
       expect(browser.body).to include("x: 100, y: 150")
     end
 
-    it "supports executing multiple lines of javascript" do
+    it "supports executing multiple lines of JavaScript" do
       browser.execute <<-JS
         var a = 1
         var b = 2
@@ -138,11 +136,12 @@ module Ferrum
       expect { Process.kill(0, pid) }.to raise_error(Errno::ESRCH)
     end
 
-    context "extending browser javascript" do
+    context "extending browser JavaScript" do
       it "supports extending the browser's world with files" do
         begin
-          browser = Browser.new(base_url: base_url,
-                                extensions: [File.expand_path("support/geolocation.js", __dir__)])
+          browser = Browser.new(
+            base_url: base_url, extensions: [File.expand_path("support/geolocation.js", __dir__)]
+          )
 
           browser.goto("/ferrum/requiring_custom_extension")
 
@@ -164,8 +163,9 @@ module Ferrum
 
       it "supports extending the browser's world with source" do
         begin
-          browser = Browser.new(base_url: base_url,
-                                extensions: [{source: "window.secret = 'top'"}])
+          browser = Browser.new(
+            base_url: base_url, extensions: [{ source: "window.secret = 'top'" }]
+          )
 
           browser.goto("/ferrum/requiring_custom_extension")
 
@@ -185,47 +185,43 @@ module Ferrum
       end
     end
 
-    context "javascript errors" do
+    context "JavaScript errors" do
       let(:browser) { Browser.new(base_url: base_url, js_errors: true) }
 
-      it "propagates a Javascript error to a ruby exception" do
-        expect {
-          browser.execute(%(throw new Error("zomg")))
-        }.to raise_error(Ferrum::JavaScriptError) { |e|
+      it "propagates a JavaScript error to a ruby exception" do
+        expect { browser.execute(%(throw new Error("zomg"))) }.to raise_error(Ferrum::JavaScriptError) do |e|
           expect(e.message).to include("Error: zomg")
-        }
+        end
       end
 
-      it "propagates an asynchronous Javascript error on the page to a ruby exception" do
-        expect {
+      it "propagates an asynchronous JavaScript error on the page to a ruby exception" do
+        expect do
           browser.execute "setTimeout(function() { omg }, 0)"
           sleep 0.01
           browser.execute ""
-        }.to raise_error(Ferrum::JavaScriptError, /ReferenceError.*omg/)
+        end.to raise_error(Ferrum::JavaScriptError, /ReferenceError.*omg/)
       end
 
-      it "propagates a synchronous Javascript error on the page to a ruby exception" do
-        expect {
-          browser.execute "omg"
-        }.to raise_error(Ferrum::JavaScriptError, /ReferenceError.*omg/)
+      it "propagates a synchronous JavaScript error on the page to a ruby exception" do
+        expect { browser.execute "omg" }.to raise_error(Ferrum::JavaScriptError, /ReferenceError.*omg/)
       end
 
-      it "does not re-raise a Javascript error if it is rescued" do
-        expect {
+      it "does not re-raise a JavaScript error if it is rescued" do
+        expect do
           browser.execute "setTimeout(function() { omg }, 0)"
           sleep 0.01
           browser.execute ""
-        }.to raise_error(Ferrum::JavaScriptError)
+        end.to raise_error(Ferrum::JavaScriptError)
 
         # should not raise again
         expect(browser.evaluate("1+1")).to eq(2)
       end
 
-      it "propagates a Javascript error during page load to a ruby exception" do
+      it "propagates a JavaScript error during page load to a ruby exception" do
         expect { browser.goto("/ferrum/js_error") }.to raise_error(Ferrum::JavaScriptError)
       end
 
-      it "does not propagate a Javascript error to ruby if error raising disabled" do
+      it "does not propagate a JavaScript error to ruby if error raising disabled" do
         begin
           browser = Browser.new(base_url: base_url, js_errors: false)
           browser.goto("/ferrum/js_error")
@@ -237,7 +233,7 @@ module Ferrum
         end
       end
 
-      it "does not propagate a Javascript error to ruby if error raising disabled and client restarted" do
+      it "does not propagate a JavaScript error to ruby if error raising disabled and client restarted" do
         begin
           browser = Browser.new(base_url: base_url, js_errors: false)
           browser.restart
@@ -264,9 +260,7 @@ module Ferrum
 
       it "has a descriptive message when DNS incorrect" do
         url = "http://nope:#{port}/"
-        expect {
-          browser.goto(url)
-        }.to raise_error(
+        expect { browser.goto(url) }.to raise_error(
           Ferrum::StatusError,
           %(Request to #{url} failed to reach server, check DNS and/or server status)
         )
@@ -276,9 +270,7 @@ module Ferrum
         begin
           old_timeout = browser.timeout
           browser.timeout = 2
-          expect {
-            browser.goto("/ferrum/visit_timeout")
-          }.to raise_error(
+          expect { browser.goto("/ferrum/visit_timeout") }.to raise_error(
             Ferrum::StatusError,
             %r{there are still pending connections: http://.*/ferrum/really_slow}
           )
@@ -289,17 +281,15 @@ module Ferrum
 
       it "reports open resource requests for main frame" do
         begin
-          prev_timeout = browser.timeout
+          previous_timeout = browser.timeout
           browser.timeout = 0.1
 
-          expect {
-            browser.goto("/ferrum/really_slow")
-          }.to raise_error(
+          expect { browser.goto("/ferrum/really_slow") }.to raise_error(
             Ferrum::StatusError,
             %r{there are still pending connections: http://.*/ferrum/really_slow}
           )
         ensure
-          browser.timeout = prev_timeout
+          browser.timeout = previous_timeout
         end
       end
 
@@ -316,10 +306,10 @@ module Ferrum
 
     it "allows the driver to have a fixed port" do
       begin
-        browser = Browser.new(port: 12345)
+        browser = Browser.new(port: 12_345)
         browser.goto(base_url)
 
-        expect { TCPServer.new("127.0.0.1", 12345) }.to raise_error(Errno::EADDRINUSE)
+        expect { TCPServer.new("127.0.0.1", 12_345) }.to raise_error(Errno::EADDRINUSE)
       ensure
         browser&.quit
       end
@@ -339,14 +329,12 @@ module Ferrum
 
     it "allows the driver to have a custom host", skip: ENV["BROWSER_TEST_HOST"].nil? do
       begin
-        # Use custom host "pointing" to localhost in /etc/hosts or iptables for this.
+        # Use custom host "pointing" to localhost in `/etc/hosts` or `iptables` for this.
         # https://superuser.com/questions/516208/how-to-change-ip-address-to-point-to-localhost
-        browser = Browser.new(host: ENV["BROWSER_TEST_HOST"], port: 12345)
+        browser = Browser.new(host: ENV["BROWSER_TEST_HOST"], port: 12_345)
         browser.goto(base_url)
 
-        expect {
-          TCPServer.new(ENV["BROWSER_TEST_HOST"], 12345)
-        }.to raise_error(Errno::EADDRINUSE)
+        expect { TCPServer.new(ENV["BROWSER_TEST_HOST"], 12_345) }.to raise_error(Errno::EADDRINUSE)
       ensure
         browser&.quit
       end
@@ -371,14 +359,18 @@ module Ferrum
 
       expect(browser.targets.size).to eq(3)
 
-      popup2, _ = browser.windows(:last)
+      popup2, = browser.windows(:last)
       expect(popup2.body).to include("Test")
       # Browser isn't dead, current page after executing JS closes connection
       # and we don't have a chance to push response to the Queue. Since the
       # queue and websocket are closed and response is nil the proper guess
       # would be that browser is dead, but in fact the page is dead and
       # browser is fully alive.
-      popup2.execute("window.close()") rescue Ferrum::DeadBrowserError
+      begin
+        popup2.execute("window.close()")
+      rescue Ferrum::DeadBrowserError
+        # Nothing to do
+      end
 
       sleep 0.1
 
@@ -468,9 +460,8 @@ module Ferrum
       end
 
       it "will timeout" do
-        expect {
-          browser.evaluate_async("var callback=arguments[0]; setTimeout(function(){callback(true)}, 4000)", 1)
-        }.to raise_error(Ferrum::ScriptTimeoutError)
+        expect { browser.evaluate_async("var callback=arguments[0]; setTimeout(function(){callback(true)}, 4000)", 1) }
+          .to raise_error(Ferrum::ScriptTimeoutError)
       end
     end
 
@@ -481,23 +472,21 @@ module Ferrum
       expect(browser.evaluate("undefined")).to eq(nil)
 
       expect(browser.evaluate("3;")).to eq(3)
-      expect(browser.evaluate("31337")).to eq(31337)
+      expect(browser.evaluate("31337")).to eq(31_337)
       expect(browser.evaluate(%("string"))).to eq("string")
       expect(browser.evaluate(%({foo: "bar"}))).to eq("foo" => "bar")
 
       expect(browser.evaluate("new Object")).to eq({})
       expect(browser.evaluate("new Date(2012, 0).toDateString()")).to eq("Sun Jan 01 2012")
-      expect(browser.evaluate("new Object({a: 1})")).to eq({"a" => 1})
+      expect(browser.evaluate("new Object({a: 1})")).to eq("a" => 1)
       expect(browser.evaluate("new Array")).to eq([])
       expect(browser.evaluate("new Function")).to eq({})
 
-      expect {
-        browser.evaluate(%(throw "smth"))
-      }.to raise_error(Ferrum::JavaScriptError)
+      expect { browser.evaluate(%(throw "smth")) }.to raise_error(Ferrum::JavaScriptError)
     end
 
     context "cyclic structure" do
-      let(:code) {
+      let(:code) do
         <<~JS
           (function() {
             var a = {};
@@ -510,7 +499,7 @@ module Ferrum
             return %s;
           })()
         JS
-      }
+      end
 
       it "ignores objects in evaluate" do
         expect(browser.evaluate(code % "a")).to eq(CyclicObject.instance)
@@ -549,22 +538,30 @@ module Ferrum
     context "current_url" do
       it "supports whitespace characters" do
         browser.goto("/ferrum/arbitrary_path/200/foo%20bar%20baz")
-        expect(browser.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo%20bar%20baz"))
+        expect(browser.current_url).to eq(
+          base_url("/ferrum/arbitrary_path/200/foo%20bar%20baz")
+        )
       end
 
       it "supports escaped characters" do
         browser.goto("/ferrum/arbitrary_path/200/foo?a%5Bb%5D=c")
-        expect(browser.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo?a%5Bb%5D=c"))
+        expect(browser.current_url).to eq(
+          base_url("/ferrum/arbitrary_path/200/foo?a%5Bb%5D=c")
+        )
       end
 
       it "supports url in parameter" do
         browser.goto("/ferrum/arbitrary_path/200/foo%20asd?a=http://example.com/asd%20asd")
-        expect(browser.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo%20asd?a=http://example.com/asd%20asd"))
+        expect(browser.current_url).to eq(
+          base_url("/ferrum/arbitrary_path/200/foo%20asd?a=http://example.com/asd%20asd")
+        )
       end
 
       it "supports restricted characters ' []:/+&='" do
         browser.goto("/ferrum/arbitrary_path/200/foo?a=%20%5B%5D%3A%2F%2B%26%3D")
-        expect(browser.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo?a=%20%5B%5D%3A%2F%2B%26%3D"))
+        expect(browser.current_url).to eq(
+          base_url("/ferrum/arbitrary_path/200/foo?a=%20%5B%5D%3A%2F%2B%26%3D")
+        )
       end
 
       it "returns about:blank when on about:blank" do
@@ -581,7 +578,7 @@ module Ferrum
           window.open("/ferrum/slow", "popup")
         JS
 
-        popup, _ = browser.windows(:last)
+        popup, = browser.windows(:last)
         expect(popup.body).to include("slow page")
         popup.close
       end
@@ -593,7 +590,7 @@ module Ferrum
           window.open("/ferrum/simple", "popup")
         JS
 
-        popup, _ = browser.windows(:last)
+        popup, = browser.windows(:last)
         expect(popup.body).to include("Test")
         popup.close
 
@@ -605,7 +602,7 @@ module Ferrum
 
         sleep 0.5 # https://github.com/ChromeDevTools/devtools-protocol/issues/145
 
-        same, _ = browser.windows(:last)
+        same, = browser.windows(:last)
         expect(same.body).to include("Test")
         same.close
       end
@@ -629,7 +626,7 @@ module Ferrum
         expect(browser.at_css("#bar").inner_text).to eq "bar"
       end
 
-      it "gets text stripped whitespace and then converts nbsp to space" do
+      it "gets text stripped whitespace and then converts `&nbsp;` to space" do
         expect(browser.at_css("#baz").inner_text).to eq " baz    "
       end
 
@@ -732,7 +729,7 @@ module Ferrum
 
         let(:script) do
           <<-RUBY
-            require "ferrum"
+            require "#{__dir__}/../lib/ferrum"
             browser = Ferrum::Browser.new
             browser.goto("http://example.com")
             puts "Please type enter"

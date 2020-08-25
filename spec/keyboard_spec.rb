@@ -124,7 +124,7 @@ module Ferrum
         expect(input.value).to eq("hello")
       end
 
-      it "generates correct events with keyCodes for modified puncation" do
+      it "generates correct events with keyCodes for modified punctuation" do
         input = browser.at_css("#empty_input")
 
         input.focus.type([:shift, "."], [:shift, "t"])
@@ -132,7 +132,7 @@ module Ferrum
         expect(browser.at_css("#key-events-output").text.strip).to eq("keydown:16 keydown:190 keydown:16 keydown:84")
       end
 
-      it "suuports snake_case sepcified keys (Capybara standard)" do
+      it "suports snake_case specified keys (Capybara standard)" do
         input = browser.at_css("#empty_input")
         input.focus.type(:PageUp, :page_up)
         expect(browser.at_css("#key-events-output").text.strip).to eq("keydown:33 keydown:33")
@@ -158,14 +158,12 @@ module Ferrum
 
       it "raises error for unknown keys" do
         input = browser.at_css("#empty_input")
-        expect {
-          input.focus.type("abc", :blah)
-        }.to raise_error(KeyError, "key not found: :blah")
+        expect { input.focus.type("abc", :blah) }.to raise_error(KeyError, "key not found: :blah")
       end
     end
 
     context "type" do
-      let(:delete_all) { [ [(Ferrum.mac? ? :alt : :ctrl), :shift, :right], :backspace ] }
+      let(:delete_all) { [[(Ferrum.mac? ? :alt : :ctrl), :shift, :right], :backspace] }
 
       before { browser.goto("/ferrum/set") }
 
@@ -175,7 +173,7 @@ module Ferrum
         expect(input.text).to eq("new text")
       end
 
-      it "sets multiple contenteditables' content" do
+      it "sets multiple contenteditable's content" do
         input = browser.at_css("#empty_div")
         input.focus.type("new text")
 
@@ -187,7 +185,7 @@ module Ferrum
         expect(input.text).to eq("replacement text")
       end
 
-      it "sets a content editable childs content" do
+      it "sets a content editable children content" do
         browser.goto("/orig_with_js")
         input = browser.at_css("#existing_content_editable_child")
         input.click.type(" WYSIWYG")
@@ -222,7 +220,7 @@ module Ferrum
 
         it "calls event handlers for each character input" do
           input.focus.type("abc").blur
-          expect(output.text.strip).to eq((["keydown keypress input keyup"] * 3).join(" ") + " change")
+          expect(output.text.strip).to eq("#{(['keydown keypress input keyup'] * 3).join(' ')} change")
           expect(input.value).to eq("abc")
         end
 

@@ -6,10 +6,10 @@ require "json"
 require "addressable"
 require "tmpdir"
 require "forwardable"
-require "ferrum/browser/options/base"
-require "ferrum/browser/options/chrome"
-require "ferrum/browser/options/firefox"
-require "ferrum/browser/command"
+require_relative "options/base"
+require_relative "options/chrome"
+require_relative "options/firefox"
+require_relative "command"
 
 module Ferrum
   class Browser
@@ -21,7 +21,6 @@ module Ferrum
       attr_reader :host, :port, :ws_url, :pid, :command,
                   :default_user_agent, :browser_version, :protocol_version,
                   :v8_version, :webkit_version, :xvfb
-
 
       extend Forwardable
       delegate path: :command
@@ -41,25 +40,33 @@ module Ferrum
               while ::Process.wait(pid, ::Process::WNOHANG).nil?
                 sleep(WAIT_KILLED)
                 next unless Ferrum.timeout?(start, KILL_TIMEOUT)
+
                 ::Process.kill("KILL", pid)
                 ::Process.wait(pid)
                 break
               end
             end
           rescue Errno::ESRCH, Errno::ECHILD
+            # It's already finished
           end
         end
       end
 
       def self.directory_remover(path)
-        proc { FileUtils.remove_entry(path) rescue Errno::ENOENT }
+        proc do
+          begin
+            FileUtils.remove_entry(path)
+          rescue Errno::ENOENT
+            # Does not exist
+          end
+        end
       end
 
       def initialize(options)
         if options[:url]
           url = URI.join(options[:url].to_s, "/json/version")
           response = JSON.parse(::Net::HTTP.get(url))
-          set_ws_url(response["webSocketDebuggerUrl"])
+          self.ws_url = response["webSocketDebuggerUrl"]
           parse_browser_versions
           return
         end
@@ -129,7 +136,7 @@ module Ferrum
         output = ""
         start = Ferrum.monotonic_time
         max_time = start + timeout
-        regexp = /DevTools listening on (ws:\/\/.*)/
+        regexp = %r{DevTools listening on (ws://.*)}
         while (now = Ferrum.monotonic_time) < max_time
           begin
             output += read_io.read_nonblock(512)
@@ -137,19 +144,19 @@ module Ferrum
             IO.select([read_io], nil, nil, max_time - now)
           else
             if output.match(regexp)
-              set_ws_url(output.match(regexp)[1].strip)
+              self.ws_url = output.match(regexp)[1].strip
               break
             end
           end
         end
 
-        unless ws_url
-          @logger.puts(output) if @logger
-          raise ProcessTimeoutError.new(timeout)
-        end
+        return if ws_url
+
+        @logger&.puts(output)
+        raise ProcessTimeoutError.new(timeout)
       end
 
-      def set_ws_url(url)
+      def ws_url=(url)
         @ws_url = Addressable::URI.parse(url)
         @host = @ws_url.host
         @port = @ws_url.port

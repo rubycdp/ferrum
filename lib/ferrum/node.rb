@@ -10,7 +10,8 @@ module Ferrum
     def initialize(frame, target_id, node_id, description)
       @page = frame.page
       @target_id = target_id
-      @node_id, @description = node_id, description
+      @node_id = node_id
+      @description = description
       @tag_name = description["nodeName"].downcase
     end
 
@@ -113,8 +114,9 @@ module Ferrum
 
     def ==(other)
       return false unless other.is_a?(Node)
-      # We compare backendNodeId because once nodeId is sent to frontend backend
-      # never returns same nodeId sending 0. In other words frontend is
+
+      # We compare backendNodeId because once nodeId is sent to front-end backend
+      # never returns same nodeId sending 0. In other words front-end is
       # responsible for keeping track of node ids.
       target_id == other.target_id && description["backendNodeId"] == other.description["backendNodeId"]
     end
@@ -124,30 +126,32 @@ module Ferrum
     end
 
     def find_position(x: nil, y: nil, position: :top)
-      prev = get_content_quads
+      previous = content_quads
 
       # FIXME: Case when a few quads returned
       points = Ferrum.with_attempts(errors: NodeIsMovingError, max: MOVING_ATTEMPTS, wait: 0) do
         sleep(MOVING_WAIT)
-        current = get_content_quads
+        current = content_quads
 
-        if current != prev
-          error = NodeIsMovingError.new(self, prev, current)
-          prev = current
+        if current != previous
+          error = NodeIsMovingError.new(self, previous, current)
+          previous = current
           raise(error)
         end
 
         current
-      end.map { |q| to_points(q) }.first
+      end
+      points = points.map! { |q| to_points(q) }.first
 
       get_position(points, x, y, position)
     end
 
     private
 
-    def get_content_quads
+    def content_quads
       quads = page.command("DOM.getContentQuads", nodeId: node_id)["quads"]
-      raise "Node is either not visible or not an HTMLElement" if quads.size == 0
+      raise "Node is either not visible or not an HTMLElement" if quads.size.zero?
+
       quads
     end
 
@@ -155,32 +159,34 @@ module Ferrum
       x = y = nil
 
       if offset_x && offset_y && position == :top
-        point = points.first
-        x = point[:x] + offset_x.to_i
-        y = point[:y] + offset_y.to_i
+        first_point = points.first
+        x = first_point[:x] + offset_x.to_i
+        y = first_point[:y] + offset_y.to_i
       else
         x, y = points.inject([0, 0]) do |memo, point|
           [memo[0] + point[:x],
            memo[1] + point[:y]]
         end
 
-        x = x / 4
-        y = y / 4
+        x /= 4
+        y /= 4
       end
 
       if offset_x && offset_y && position == :center
-        x = x + offset_x.to_i
-        y = y + offset_y.to_i
+        x += offset_x.to_i
+        y += offset_y.to_i
       end
 
       [x, y]
     end
 
     def to_points(quad)
-      [{x: quad[0], y: quad[1]},
-       {x: quad[2], y: quad[3]},
-       {x: quad[4], y: quad[5]},
-       {x: quad[6], y: quad[7]}]
+      [
+        { x: quad[0], y: quad[1] },
+        { x: quad[2], y: quad[3] },
+        { x: quad[4], y: quad[5] },
+        { x: quad[6], y: quad[7] }
+      ]
     end
   end
 end

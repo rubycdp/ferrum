@@ -10,25 +10,29 @@ module Ferrum
         scale: 1.0
       }.freeze
 
+      # https://github.com/rubocop-hq/rubocop/issues/8580
+      # rubocop:disable Layout/HashAlignment
       PAPEP_FORMATS = {
-        letter:   { width:  8.50, height: 11.00 },
-        legal:    { width:  8.50, height: 14.00 },
-        tabloid:  { width: 11.00, height: 17.00 },
-        ledger:   { width: 17.00, height: 11.00 },
-        A0:       { width: 33.10, height: 46.80 },
-        A1:       { width: 23.40, height: 33.10 },
-        A2:       { width: 16.54, height: 23.40 },
-        A3:       { width: 11.70, height: 16.54 },
-        A4:       { width:  8.27, height: 11.70 },
-        A5:       { width:  5.83, height:  8.27 },
-        A6:       { width:  4.13, height:  5.83 },
+        letter:  { width: 8.50,  height: 11.00 },
+        legal:   { width: 8.50,  height: 14.00 },
+        tabloid: { width: 11.00, height: 17.00 },
+        ledger:  { width: 17.00, height: 11.00 },
+        A0:      { width: 33.10, height: 46.80 },
+        A1:      { width: 23.40, height: 33.10 },
+        A2:      { width: 16.54, height: 23.40 },
+        A3:      { width: 11.70, height: 16.54 },
+        A4:      { width: 8.27,  height: 11.70 },
+        A5:      { width: 5.83,  height: 8.27 },
+        A6:      { width: 4.13,  height: 5.83 }
       }.freeze
+      # rubocop:enable Layout/HashAlignment
 
       def screenshot(**opts)
         path, encoding = common_options(**opts)
         options = screenshot_options(path, **opts)
         data = capture_screenshot(options, opts[:full])
         return data if encoding == :base64
+
         save_file(path, data)
       end
 
@@ -37,6 +41,7 @@ module Ferrum
         options = pdf_options(**opts)
         data = command("Page.printToPDF", **options).fetch("data")
         return data if encoding == :base64
+
         save_file(path, data)
       end
 
@@ -58,6 +63,7 @@ module Ferrum
       def save_file(path, data)
         bin = Base64.decode64(data)
         return bin unless path
+
         File.open(path.to_s, "wb") { |f| f.write(bin) }
       end
 
@@ -77,8 +83,7 @@ module Ferrum
           end
 
           dimension = PAPEP_FORMATS.fetch(format)
-          options.merge!(paper_width: dimension[:width],
-                         paper_height: dimension[:height])
+          options.merge!(paper_width: dimension[:width], paper_height: dimension[:height])
         end
 
         options.map { |k, v| [to_camel_case(k), v] }.to_h
@@ -90,23 +95,27 @@ module Ferrum
         format ||= path ? File.extname(path).delete(".") : "png"
         format = "jpeg" if format == "jpg"
         raise "Not supported options `:format` #{format}. jpeg | png" if format !~ /jpeg|png/i
+
         options.merge!(format: format)
 
-        options.merge!(quality: opts[:quality] ? opts[:quality] : 75) if format == "jpeg"
+        options.merge!(quality: opts.fetch(:quality, 75)) if format == "jpeg"
 
-        if !!opts[:full] && opts[:selector]
-          warn "Ignoring :selector in #screenshot since full: true was given at #{caller(1..1).first}"
-        end
+        full = opts.fetch(:full, false)
+        selector = opts[:selector]
 
-        if !!opts[:full]
+        if full
+          warn "Ignoring :selector in #screenshot since full: true was given at #{caller(1..1).first}" if selector
+
           width, height = document_size
-          options.merge!(clip: { x: 0, y: 0, width: width, height: height, scale: scale }) if width > 0 && height > 0
-        elsif opts[:selector]
-          options.merge!(clip: get_bounding_rect(opts[:selector]).merge(scale: scale))
+          if width.positive? && height.positive?
+            options.merge!(clip: { x: 0, y: 0, width: width, height: height, scale: scale })
+          end
+        elsif selector
+          options.merge!(clip: get_bounding_rect(selector).merge(scale: scale))
         end
 
-        if scale != 1.0
-          if !options[:clip]
+        if scale != 1
+          unless options[:clip]
             width, height = viewport_size
             options[:clip] = { x: 0, y: 0, width: width, height: height }
           end
@@ -118,10 +127,8 @@ module Ferrum
       end
 
       def get_bounding_rect(selector)
-        rect = evaluate_async(%Q(
-          const rect = document
-                         .querySelector('#{selector}')
-                         .getBoundingClientRect();
+        rect = evaluate_async(%(
+          const rect = document.querySelector('#{selector}').getBoundingClientRect();
           const {x, y, width, height} = rect;
           arguments[0]([x, y, width, height])
         ), timeout)
@@ -131,7 +138,8 @@ module Ferrum
 
       def to_camel_case(option)
         return :preferCSSPageSize if option == :prefer_css_page_size
-        option.to_s.gsub(/(?:_|(\/))([a-z\d]*)/) { "#{$1}#{$2.capitalize}" }.to_sym
+
+        option.to_s.gsub(%r{(?:_|(/))([a-z\d]*)}) { "#{Regexp.last_match(1)}#{Regexp.last_match(2).capitalize}" }.to_sym
       end
 
       def capture_screenshot(options, full)

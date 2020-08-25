@@ -106,9 +106,7 @@ module Ferrum
       context "#add_script_tag" do
         it "adds by url" do
           browser.goto
-          expect {
-            browser.evaluate("$('a').first().text()")
-          }.to raise_error(Ferrum::JavaScriptError)
+          expect { browser.evaluate("$('a').first().text()") }.to raise_error(Ferrum::JavaScriptError)
 
           browser.add_script_tag(url: "/ferrum/jquery.min.js")
 
@@ -118,9 +116,7 @@ module Ferrum
         it "adds by path" do
           browser.goto
           path = "#{Ferrum::Application::FERRUM_PUBLIC}/jquery-1.11.3.min.js"
-          expect {
-            browser.evaluate("$('a').first().text()")
-          }.to raise_error(Ferrum::JavaScriptError)
+          expect { browser.evaluate("$('a').first().text()") }.to raise_error(Ferrum::JavaScriptError)
 
           browser.add_script_tag(path: path)
 
@@ -137,13 +133,13 @@ module Ferrum
       end
 
       context "#add_style_tag" do
-        let(:font_size) {
+        let(:font_size) do
           <<~JS
             window
               .getComputedStyle(document.querySelector('a'))
               .getPropertyValue('font-size')
           JS
-        }
+        end
 
         it "adds by url" do
           browser.goto
@@ -202,7 +198,7 @@ module Ferrum
         browser.goto
 
         # The padding on the frame here is to differ the sizes of the two
-        # frames, ensuring that their offsets are being calculated seperately.
+        # frames, ensuring that their offsets are being calculated separately.
         # This avoids a false positive where the same frame"s offset is
         # calculated twice, but the click still works because both frames had
         # the same offset.
@@ -235,7 +231,7 @@ module Ferrum
       end
 
       it "can set page content" do
-        browser.set_content(%(<html><head></head><body>Voila!</body></html>))
+        browser.content = %(<html><head></head><body>Voila!</body></html>)
 
         expect(browser.body).to include("Voila!")
       end
@@ -244,27 +240,27 @@ module Ferrum
         browser.goto("/ferrum/frames")
         expect(browser.doctype).to eq("<!DOCTYPE html>")
 
-        doctype_40 = %(<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">)
-        browser.set_content(%(#{doctype_40}<html><head></head><body>Voila!</body></html>))
-        expect(browser.doctype).to eq(doctype_40)
+        doctype40 = %(<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">)
+        browser.content = %(#{doctype40}<html><head></head><body>Voila!</body></html>)
+        expect(browser.doctype).to eq(doctype40)
 
-        browser.set_content("")
+        browser.content = ""
         expect(browser.doctype).to be_nil
       end
 
       context "#xpath" do
         it "returns given nodes" do
           browser.goto("/ferrum/with_js")
-          p = browser.xpath("//p[@id='remove_me']")
+          result = browser.xpath("//p[@id='remove_me']")
 
-          expect(p.size).to eq(1)
+          expect(result.size).to eq(1)
         end
 
         it "supports within" do
           browser.goto("/ferrum/with_js")
-          p = browser.xpath("//p[@id='with_content']").first
+          result = browser.xpath("//p[@id='with_content']").first
 
-          links = browser.xpath("./a", within: p)
+          links = browser.xpath("./a", within: result)
 
           expect(links.size).to eq(1)
           expect(links.first.attribute(:id)).to eq("open-match")
@@ -273,9 +269,7 @@ module Ferrum
         it "throws an error on a wrong xpath" do
           browser.goto("/ferrum/with_js")
 
-          expect {
-            browser.xpath("#remove_me")
-          }.to raise_error(Ferrum::JavaScriptError)
+          expect { browser.xpath("#remove_me") }.to raise_error(Ferrum::JavaScriptError)
         end
 
         it "supports inside a given frame" do
@@ -293,16 +287,16 @@ module Ferrum
       context "#at_xpath" do
         it "returns given nodes" do
           browser.goto("/ferrum/with_js")
-          p = browser.at_xpath("//p[@id='remove_me']")
+          result = browser.at_xpath("//p[@id='remove_me']")
 
-          expect(p).not_to be_nil
+          expect(result).not_to be_nil
         end
 
         it "supports within" do
           browser.goto("/ferrum/with_js")
-          p = browser.at_xpath("//p[@id='with_content']")
+          result = browser.at_xpath("//p[@id='with_content']")
 
-          link = browser.at_xpath("./a", within: p)
+          link = browser.at_xpath("./a", within: result)
 
           expect(link).not_to be_nil
           expect(link.attribute(:id)).to eq("open-match")
@@ -311,9 +305,7 @@ module Ferrum
         it "throws an error on a wrong xpath" do
           browser.goto("/ferrum/with_js")
 
-          expect {
-            browser.at_xpath("#remove_me")
-          }.to raise_error(Ferrum::JavaScriptError)
+          expect { browser.at_xpath("#remove_me") }.to raise_error(Ferrum::JavaScriptError)
         end
 
         it "supports inside a given frame" do
@@ -331,16 +323,16 @@ module Ferrum
       context "#css" do
         it "returns given nodes" do
           browser.goto("/ferrum/with_js")
-          p = browser.css("p#remove_me")
+          result = browser.css("p#remove_me")
 
-          expect(p.size).to eq(1)
+          expect(result.size).to eq(1)
         end
 
         it "supports within" do
           browser.goto("/ferrum/with_js")
-          p = browser.css("p#with_content").first
+          result = browser.css("p#with_content").first
 
-          links = browser.css("a", within: p)
+          links = browser.css("a", within: result)
 
           expect(links.size).to eq(1)
           expect(links.first.attribute(:id)).to eq("open-match")
@@ -349,9 +341,7 @@ module Ferrum
         it "throws an error on an invalid selector" do
           browser.goto("/ferrum/table")
 
-          expect {
-            browser.css("table tr:last")
-          }.to raise_error(Ferrum::JavaScriptError)
+          expect { browser.css("table tr:last") }.to raise_error(Ferrum::JavaScriptError)
         end
 
         it "supports inside a given frame" do
@@ -369,16 +359,16 @@ module Ferrum
       context "#at_css" do
         it "returns given nodes" do
           browser.goto("/ferrum/with_js")
-          p = browser.at_css("p#remove_me")
+          result = browser.at_css("p#remove_me")
 
-          expect(p).not_to be_nil
+          expect(result).not_to be_nil
         end
 
         it "supports within" do
           browser.goto("/ferrum/with_js")
-          p = browser.at_css("p#with_content")
+          result = browser.at_css("p#with_content")
 
-          link = browser.at_css("a", within: p)
+          link = browser.at_css("a", within: result)
 
           expect(link).not_to be_nil
           expect(link.attribute(:id)).to eq("open-match")
@@ -387,9 +377,7 @@ module Ferrum
         it "throws an error on an invalid selector" do
           browser.goto("/ferrum/table")
 
-          expect {
-            browser.at_css("table tr:last")
-          }.to raise_error(Ferrum::JavaScriptError)
+          expect { browser.at_css("table tr:last") }.to raise_error(Ferrum::JavaScriptError)
         end
 
         it "supports inside a given frame" do

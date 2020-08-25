@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
 require "forwardable"
-require "ferrum/mouse"
-require "ferrum/keyboard"
-require "ferrum/headers"
-require "ferrum/cookies"
-require "ferrum/dialog"
-require "ferrum/network"
-require "ferrum/page/frames"
-require "ferrum/page/screenshot"
-require "ferrum/browser/client"
+require_relative "mouse"
+require_relative "keyboard"
+require_relative "headers"
+require_relative "cookies"
+require_relative "dialog"
+require_relative "network"
+require_relative "page/frames"
+require_relative "page/screenshot"
+require_relative "browser/client"
 
 module Ferrum
   class Page
@@ -31,11 +31,12 @@ module Ferrum
 
     extend Forwardable
     delegate %i[at_css at_xpath css xpath
-                current_url current_title url title body doctype set_content
+                current_url current_title url title body doctype content=
                 execution_id evaluate evaluate_on evaluate_async execute
                 add_script_tag add_style_tag] => :main_frame
 
-    include Frames, Screenshot
+    include Frames
+    include Screenshot
 
     attr_accessor :referrer
     attr_reader :target_id, :browser,
@@ -45,7 +46,8 @@ module Ferrum
     def initialize(target_id, browser)
       @frames = {}
       @main_frame = Frame.new(nil, self)
-      @target_id, @browser = target_id, browser
+      @target_id = target_id
+      @browser = browser
       @event = Event.new.tap(&:set)
 
       host = @browser.process.host
@@ -53,8 +55,10 @@ module Ferrum
       ws_url = "ws://#{host}:#{port}/devtools/page/#{@target_id}"
       @client = Browser::Client.new(browser, ws_url, id_starts_with: 1000)
 
-      @mouse, @keyboard = Mouse.new(self), Keyboard.new(self)
-      @headers, @cookies = Headers.new(self), Cookies.new(self)
+      @mouse = Mouse.new(self)
+      @keyboard = Keyboard.new(self)
+      @headers = Headers.new(self)
+      @cookies = Cookies.new(self)
       @network = Network.new(self)
 
       subscribe
@@ -76,6 +80,7 @@ module Ferrum
             net::ERR_CONNECTION_TIMED_OUT].include?(response["errorText"])
         raise StatusError, options[:url]
       end
+
       response["frameId"]
     rescue TimeoutError
       pendings = network.traffic.select(&:pending?).map { |e| e.request.url }
@@ -94,10 +99,22 @@ module Ferrum
 
       if fullscreen
         width, height = document_size
-        @browser.command("Browser.setWindowBounds", windowId: @window_id, bounds: { windowState: "fullscreen" })
+        @browser.command(
+          "Browser.setWindowBounds",
+          windowId: @window_id,
+          bounds: { windowState: "fullscreen" }
+        )
       else
-        @browser.command("Browser.setWindowBounds", windowId: @window_id, bounds: { windowState: "normal" })
-        @browser.command("Browser.setWindowBounds", windowId: @window_id, bounds: { width: width, height: height, windowState: "normal" })
+        @browser.command(
+          "Browser.setWindowBounds",
+          windowId: @window_id,
+          bounds: { windowState: "normal" }
+        )
+        @browser.command(
+          "Browser.setWindowBounds",
+          windowId: @window_id,
+          bounds: { width: width, height: height, windowState: "normal" }
+        )
       end
 
       command("Emulation.setDeviceMetricsOverride", slowmoable: true,
@@ -111,7 +128,7 @@ module Ferrum
     def refresh
       command("Page.reload", wait: timeout, slowmoable: true)
     end
-    alias_method :reload, :refresh
+    alias reload refresh
 
     def stop
       command("Page.stopLoading", slowmoable: true)
@@ -131,21 +148,22 @@ module Ferrum
       @event.set
     end
 
-    def bypass_csp(value = true)
-      enabled = !!value
+    def bypass_csp(enabled: true)
       command("Page.setBypassCSP", enabled: enabled)
       enabled
     end
 
     def command(method, wait: 0, slowmoable: false, **params)
-      iteration = @event.reset if wait > 0
-      sleep(@browser.slowmo) if slowmoable && @browser.slowmo > 0
+      iteration = @event.reset if wait.positive?
+      sleep(@browser.slowmo) if slowmoable && @browser.slowmo.positive?
       result = @client.command(method, params)
 
-      if wait > 0
-        @event.wait(wait) # Wait a bit after command and check if iteration has
-                          # changed which means there was some network event for
-                          # the main frame and it started to load new content.
+      if wait.positive?
+        # Wait a bit after command and check if iteration has
+        # changed which means there was some network event for
+        # the main frame and it started to load new content.
+        @event.wait(wait)
+
         if iteration != @event.iteration
           set = @event.wait(@browser.timeout)
           raise TimeoutError unless set
@@ -191,11 +209,11 @@ module Ferrum
         end
       end
 
-      if @browser.js_errors
-        on("Runtime.exceptionThrown") do |params|
-          # FIXME https://jvns.ca/blog/2015/11/27/why-rubys-timeout-is-dangerous-and-thread-dot-raise-is-terrifying/
-          Thread.main.raise JavaScriptError.new(params.dig("exceptionDetails", "exception"))
-        end
+      return unless @browser.js_errors
+
+      on("Runtime.exceptionThrown") do |params|
+        # FIXME: https://jvns.ca/blog/2015/11/27/why-rubys-timeout-is-dangerous-and-thread-dot-raise-is-terrifying/
+        Thread.main.raise JavaScriptError.new(params.dig("exceptionDetails", "exception"))
       end
     end
 
@@ -221,14 +239,15 @@ module Ferrum
       resize(width: width, height: height)
 
       response = command("Page.getNavigationHistory")
-      if response.dig("entries", 0, "transitionType") != "typed"
-        # If we create page by clicking links, submiting forms and so on it
-        # opens a new window for which `frameStoppedLoading` event never
-        # occurs and thus search for nodes cannot be completed. Here we check
-        # the history and if the transitionType for example `link` then
-        # content is already loaded and we can try to get the document.
-        get_document_id
-      end
+
+      return if response.dig("entries", 0, "transitionType") == "typed"
+
+      # If we create page by clicking links, submitting forms and so on it
+      # opens a new window for which `frameStoppedLoading` event never
+      # occurs and thus search for nodes cannot be completed. Here we check
+      # the history and if the transitionType for example `link` then
+      # content is already loaded and we can try to get the document.
+      set_document_id
     end
 
     def inject_extensions
@@ -248,12 +267,12 @@ module Ferrum
       history = command("Page.getNavigationHistory")
       index, entries = history.values_at("currentIndex", "entries")
 
-      if entry = entries[index + delta]
-        # Potential wait because of network event
-        command("Page.navigateToHistoryEntry", wait: Mouse::CLICK_WAIT,
-                                               slowmoable: true,
-                                               entryId: entry["id"])
-      end
+      return unless (entry = entries[index + delta])
+
+      # Potential wait because of network event
+      command("Page.navigateToHistoryEntry", wait: Mouse::CLICK_WAIT,
+                                             slowmoable: true,
+                                             entryId: entry["id"])
     end
 
     def combine_url!(url_or_path)
@@ -267,7 +286,7 @@ module Ferrum
       (nil_or_relative ? @browser.base_url.join(url.to_s) : url).to_s
     end
 
-    def get_document_id
+    def set_document_id
       @document_id = command("DOM.getDocument", depth: 0).dig("root", "nodeId")
     end
   end

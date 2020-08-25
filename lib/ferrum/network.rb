@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require "ferrum/network/exchange"
-require "ferrum/network/intercepted_request"
-require "ferrum/network/auth_request"
-require "ferrum/network/error"
-require "ferrum/network/request"
-require "ferrum/network/response"
+require_relative "network/exchange"
+require_relative "network/intercepted_request"
+require_relative "network/auth_request"
+require_relative "network/error"
+require_relative "network/request"
+require_relative "network/response"
 
 module Ferrum
   class Network
@@ -28,6 +28,7 @@ module Ferrum
 
       until idle?(connections)
         raise TimeoutError if Ferrum.timeout?(start, timeout)
+
         sleep(duration)
       end
     end
@@ -61,9 +62,7 @@ module Ferrum
     end
 
     def clear(type)
-      unless CLEAR_TYPE.include?(type)
-        raise ArgumentError, ":type should be in #{CLEAR_TYPE}"
-      end
+      raise ArgumentError, ":type should be in #{CLEAR_TYPE}" unless CLEAR_TYPE.include?(type)
 
       if type == :traffic
         @traffic.clear
@@ -76,26 +75,20 @@ module Ferrum
 
     def intercept(pattern: "*", resource_type: nil)
       pattern = { urlPattern: pattern }
-      if resource_type && RESOURCE_TYPES.include?(resource_type.to_s)
-        pattern[:resourceType] = resource_type
-      end
+      pattern[:resourceType] = resource_type if resource_type && RESOURCE_TYPES.include?(resource_type.to_s)
 
       @page.command("Fetch.enable", handleAuthRequests: true, patterns: [pattern])
     end
 
     def authorize(user:, password:, type: :server)
-      unless AUTHORIZE_TYPE.include?(type)
-        raise ArgumentError, ":type should be in #{AUTHORIZE_TYPE}"
-      end
+      raise ArgumentError, ":type should be in #{AUTHORIZE_TYPE}" unless AUTHORIZE_TYPE.include?(type)
 
       @authorized_ids ||= {}
       @authorized_ids[type] ||= []
 
       intercept
 
-      @page.on(:request) do |request|
-        request.continue
-      end
+      @page.on(:request) { |request, *| request.continue }
 
       @page.on(:auth) do |request, index, total|
         if request.auth_challenge?(type)
@@ -138,13 +131,11 @@ module Ferrum
 
         exchange.request = request
 
-        if exchange.navigation_request?(@page.main_frame.id)
-          @exchange = exchange
-        end
+        @exchange = exchange if exchange.navigation_request?(@page.main_frame.id)
       end
 
       @page.on("Network.responseReceived") do |params|
-        if exchange = select(params["requestId"]).last
+        if (exchange = select(params["requestId"]).last)
           response = Network::Response.new(@page, params)
           exchange.response = response
         end
@@ -152,9 +143,7 @@ module Ferrum
 
       @page.on("Network.loadingFinished") do |params|
         exchange = select(params["requestId"]).last
-        if exchange && exchange.response
-          exchange.response.body_size = params["encodedDataLength"]
-        end
+        exchange.response.body_size = params["encodedDataLength"] if exchange&.response
       end
 
       @page.on("Log.entryAdded") do |params|

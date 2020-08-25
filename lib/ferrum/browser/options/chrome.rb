@@ -35,7 +35,7 @@ module Ferrum
           "force-color-profile" => "srgb",
           "metrics-recording-only" => nil,
           "safebrowsing-disable-auto-update" => nil,
-          "password-store" => "basic",
+          "password-store" => "basic"
           # Note: --no-sandbox is not needed if you properly setup a user in the container.
           # https://github.com/ebidel/lighthouse-ci/blob/master/builder/Dockerfile#L35-L40
           # "no-sandbox" => nil,
@@ -60,9 +60,7 @@ module Ferrum
         end
 
         def merge_default(flags, options)
-          unless options.fetch(:headless, true)
-            defaults = except("headless", "disable-gpu")
-          end
+          defaults = except("headless", "disable-gpu") unless options.fetch(:headless, true)
 
           defaults ||= DEFAULT_OPTIONS
           defaults.merge(flags)

@@ -45,28 +45,22 @@ module Ferrum
         end
 
         it "detects if an element is obscured when clicking" do
-          expect {
-            browser.at_css("#one").click
-          }.to raise_error(Ferrum::MouseEventFailed) { |error|
+          expect { browser.at_css("#one").click }.to raise_error(Ferrum::MouseEventFailed) do |error|
             expect(error.selector).to eq("html body div#two.box")
             expect(error.message).to include("[200.0, 200.0]")
-          }
+          end
         end
 
         it "clicks in the center of an element" do
-          expect {
-            browser.at_css("#one").click
-          }.to raise_error(Ferrum::MouseEventFailed) { |error|
+          expect { browser.at_css("#one").click }.to raise_error(Ferrum::MouseEventFailed) do |error|
             expect(error.position).to eq([200, 200])
-          }
+          end
         end
 
         it "clicks in the center of an element within the viewport, if part is outside the viewport" do
           browser.resize(width: 200, height: 200)
 
-          expect {
-            browser.at_css("#one").click
-          }.to raise_error(Ferrum::MouseEventFailed) { |error|
+          expect { browser.at_css("#one").click }.to raise_error(Ferrum::MouseEventFailed) { |error|
             expect(error.position.first).to eq(100)
           }
         end
@@ -83,12 +77,10 @@ module Ferrum
         end
 
         it "detects if an element is obscured when clicking" do
-          expect {
-            browser.at_css("#one").click
-          }.to raise_error(Ferrum::MouseEventFailed) { |error|
+          expect { browser.at_css("#one").click }.to raise_error(Ferrum::MouseEventFailed) do |error|
             expect(error.selector).to eq("html body svg#svg.box")
             expect(error.message).to include("[200.0, 200.0]")
-          }
+          end
         end
       end
 
@@ -103,12 +95,10 @@ module Ferrum
         end
 
         it "doesn't click if the associated img is hidden" do
-          expect {
-            browser.at_css("map[name=testmap2] area[shape=circle]").click
-          }.to raise_error(Ferrum::ElementNotFound)
-          expect {
-            browser.at_css("map[name=testmap2] area[shape=circle]", visible: false).click
-          }.to raise_error(Ferrum::MouseEventFailed)
+          expect { browser.at_css("map[name=testmap2] area[shape=circle]").click }
+            .to raise_error(Ferrum::ElementNotFound)
+          expect { browser.at_css("map[name=testmap2] area[shape=circle]", visible: false).click }
+            .to raise_error(Ferrum::MouseEventFailed)
         end
       end
 
@@ -154,7 +144,7 @@ module Ferrum
     end
 
     context "#move" do
-      let(:tracking_code) {
+      let(:tracking_code) do
         <<~JS
           window.result = [];
           document.addEventListener("mousemove", e => {
@@ -162,7 +152,7 @@ module Ferrum
           });
           arguments[0]();
         JS
-      }
+      end
 
       it "splits into steps" do
         browser.goto("/ferrum/simple")

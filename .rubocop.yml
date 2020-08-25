@@ -1,0 +1,26 @@
+inherit_from: .rubocop_todo.yml
+
+AllCops:
+  TargetRubyVersion: 2.4
+  NewCops: enable
+
+Layout/FirstArrayElementIndentation:
+  EnforcedStyle: consistent
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Metrics/BlockLength:
+  Exclude:
+    - spec/**/*
+
+Naming/MethodParameterName:
+  AllowedNames:
+    - x
+    - y
+    - id
+    - to
+
+Naming/FileName:
+  Exclude:
+    - 'gemfiles/websocket-driver-*.gemfile'

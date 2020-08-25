@@ -33,8 +33,10 @@ module Ferrum
     end
 
     def move(x:, y:, steps: 1)
-      from_x, from_y = @x, @y
-      @x, @y = x, y
+      from_x = @x
+      from_y = @y
+      @x = x
+      @y = y
 
       steps.times do |i|
         new_x = from_x + (@x - from_x) * ((i + 1) / steps.to_f)
@@ -61,9 +63,8 @@ module Ferrum
 
     def validate_button(button)
       button = button.to_s
-      unless VALID_BUTTONS.include?(button)
-        raise "Invalid button: #{button}"
-      end
+      raise "Invalid button: #{button}" unless VALID_BUTTONS.include?(button)
+
       button
     end
   end
