@@ -497,27 +497,33 @@ module Ferrum
     end
 
     context "cyclic structure" do
-      let(:code) {
-        <<~JS
-          (function() {
-            var a = {};
-            var b = {};
-            var c = {};
-            c.a = a;
-            a.a = a;
-            a.b = b;
-            a.c = c;
-            return %s;
-          })()
-        JS
-      }
+      context "ignores seen" do
+        let(:code) {
+          <<~JS
+            (function() {
+              var a = {};
+              var b = {};
+              var c = {};
+              c.a = a;
+              a.a = a;
+              a.b = b;
+              a.c = c;
+              return %s;
+            })()
+          JS
+        }
 
-      it "ignores objects in evaluate" do
-        expect(browser.evaluate(code % "a")).to eq(CyclicObject.instance)
+        it "objects" do
+          expect(browser.evaluate(code % "a")).to eq(CyclicObject.instance)
+        end
+
+        it "arrays" do
+          expect(browser.evaluate(code % "[a]")).to eq([CyclicObject.instance])
+        end
       end
 
-      it "ignores arrays in evaluate" do
-        expect(browser.evaluate(code % "[a]")).to eq([CyclicObject.instance])
+      it "backtracks what it has seen" do
+        expect(browser.evaluate("(function() { var a = {}; return [a, a] })()")).to eq([{}, {}])
       end
     end
 
