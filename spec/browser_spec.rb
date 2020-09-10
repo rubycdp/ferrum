@@ -87,11 +87,13 @@ module Ferrum
       expect(browser.viewport_size).to eq([200, 400])
     end
 
-    it "allows the viewport to be resized by fullscreen" do
+    it "allows the viewport to be resized to fullscreen and back" do
       browser.goto("/ferrum/custom_html_size")
       expect(browser.viewport_size).to eq([1024, 768])
       browser.resize(fullscreen: true)
       expect(browser.viewport_size).to eq([1280, 1024])
+      browser.resize(width: 200, height: 400)
+      expect(browser.viewport_size).to eq([200, 400])
     end
 
     it "allows the page to be scrolled" do
