@@ -90,15 +90,14 @@ module Ferrum
     end
 
     def resize(width: nil, height: nil, fullscreen: false)
-      result = @browser.command("Browser.getWindowForTarget", targetId: @target_id)
-      @window_id, @bounds = result.values_at("windowId", "bounds")
+      @window_id = @browser.command("Browser.getWindowForTarget", targetId: @target_id)["windowId"]
 
       if fullscreen
         width, height = document_size
         @browser.command("Browser.setWindowBounds", windowId: @window_id, bounds: { windowState: "fullscreen" })
       else
         @browser.command("Browser.setWindowBounds", windowId: @window_id, bounds: { windowState: "normal" })
-        @browser.command("Browser.setWindowBounds", windowId: @window_id, bounds: { width: width, height: height, windowState: "normal" })
+        @browser.command("Browser.setWindowBounds", windowId: @window_id, bounds: { width: width, height: height })
       end
 
       command("Emulation.setDeviceMetricsOverride", slowmoable: true,

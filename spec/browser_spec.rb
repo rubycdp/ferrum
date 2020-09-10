@@ -99,11 +99,13 @@ module Ferrum
 
     context 'fullscreen' do
       shared_examples 'resize viewport by fullscreen' do
-        it "allows the viewport to be resized by fullscreen" do
+        it "allows the viewport to be resized to fullscreen and back" do
           expect(browser.viewport_size).to eq([1024, 768])
           browser.go_to(path)
           browser.resize(fullscreen: true)
           expect(browser.viewport_size).to eq(viewport_size)
+          browser.resize(width: 200, height: 400)
+          expect(browser.viewport_size).to eq([200, 400])
         end
       end
 
