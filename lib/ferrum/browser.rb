@@ -108,6 +108,14 @@ module Ferrum
       page.resize(**options)
     end
 
+    def get_position
+      page.get_position
+    end
+
+    def set_position(left, top)
+      page.set_position(left, top)
+    end
+
     def crash
       command("Browser.crash")
     end
