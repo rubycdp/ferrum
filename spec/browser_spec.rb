@@ -528,6 +528,14 @@ module Ferrum
       expect(browser.body).to include("Hello world")
     end
 
+    it "does not run into content quads error" do
+      browser.goto("/ferrum/index")
+      Node.any_instance.stub(:get_content_quads)
+                       .and_raise(Ferrum::BrowserError, 'message' => 'Could not compute content quads')
+      browser.at_xpath("//a[text() = 'JS redirect']").click
+      expect(browser.body).to include("Hello world")
+    end
+
     it "returns BR as new line in #text" do
       browser.goto("/ferrum/simple")
       el = browser.at_css("#break")
