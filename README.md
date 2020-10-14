@@ -347,6 +347,11 @@ browser.screenshot(path: "google.png") # => 134660
 browser.screenshot(path: "google.jpg") # => 30902
 # Save to Base64 the whole page not only viewport and reduce quality
 browser.screenshot(full: true, quality: 60) # "iVBORw0KGgoAAAANSUhEUgAABAAAAAMACAYAAAC6uhUNAAAAAXNSR0IArs4c6Q...
+
+# To have transparent background for PNGs run before screenshotting
+browser.command('Emulation.setDefaultBackgroundColorOverride', color: { r: 0, g: 0, b: 0, a: 0 }) 
+# To restore background run
+browser.command('Emulation.setDefaultBackgroundColorOverride') 
 ```
 
 #### pdf(\*\*options) : `String` | `Integer`
