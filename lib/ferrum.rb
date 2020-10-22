@@ -10,7 +10,10 @@ module Ferrum
   class NotImplementedError < Error; end
 
   class StatusError < Error
+    attr_reader :pendings
+
     def initialize(url, pendings = [])
+      @pendings = pendings
       message = if pendings.empty?
                   "Request to #{url} failed to reach server, check DNS and/or server status"
                 else
