@@ -3,7 +3,7 @@
 module Ferrum
   describe Node do
     it "raises an error if the element has been removed from the DOM" do
-      browser.goto("/ferrum/with_js")
+      browser.go_to("/ferrum/with_js")
       node = browser.at_css("#remove_me")
       expect(node.text).to eq("Remove me")
       browser.at_css("#remove").click
@@ -11,14 +11,14 @@ module Ferrum
     end
 
     it "raises an error if the element was on a previous page" do
-      browser.goto("/ferrum/index")
+      browser.go_to("/ferrum/index")
       node = browser.at_xpath(".//a")
       browser.execute "window.location = 'about:blank'"
       expect { node.text }.to raise_error(Ferrum::NodeNotFoundError)
     end
 
     it "raises an error if the element is not visible", skip: true do
-      browser.goto("/ferrum/index")
+      browser.go_to("/ferrum/index")
       browser.execute <<~JS
         document.querySelector("a[href=js_redirect]").style.display = "none"
       JS
@@ -31,20 +31,20 @@ module Ferrum
     end
 
     it "hovers an element before clicking it" do
-      browser.goto("/ferrum/with_js")
+      browser.go_to("/ferrum/with_js")
       browser.at_xpath("//a[span[text() = 'Hidden link']]").click
       expect(browser.current_url).to eq(base_url("/"))
     end
 
     it "works correctly when JSON is overwritten" do
-      browser.goto("/ferrum/index")
+      browser.go_to("/ferrum/index")
       browser.execute("JSON = {};")
       expect { browser.at_xpath("//a[text() = 'JS redirect']") }.not_to raise_error
     end
 
     context "when the element is not in the viewport" do
       before do
-        browser.goto("/ferrum/with_js")
+        browser.go_to("/ferrum/with_js")
       end
 
       # FIXME:
@@ -67,7 +67,7 @@ module Ferrum
 
     context "when the element is not in the viewport of parent element", skip: true do
       before do
-        browser.goto("/ferrum/scroll")
+        browser.go_to("/ferrum/scroll")
       end
 
       it "scrolls into view" do
@@ -84,7 +84,7 @@ module Ferrum
 
     describe "Node#[]" do
       before do
-        browser.goto("/ferrum/attributes_properties")
+        browser.go_to("/ferrum/attributes_properties")
       end
 
       it "gets normalized href" do
@@ -110,9 +110,9 @@ module Ferrum
 
     describe "Node#==" do
       it "does not equal a node from another page" do
-        browser.goto("/ferrum/simple")
+        browser.go_to("/ferrum/simple")
         el1 = browser.at_css("#nav")
-        browser.goto("/ferrum/set")
+        browser.go_to("/ferrum/set")
         el2 = browser.at_css("#filled_div")
         expect(el2 == el1).to be false
         expect(el1 == el2).to be false

@@ -4,7 +4,7 @@ module Ferrum
   describe Browser do
     context "cookies support" do
       it "returns set cookies" do
-        browser.goto("/set_cookie")
+        browser.go_to("/set_cookie")
 
         cookie = browser.cookies["stealth"]
         expect(cookie.name).to eq("stealth")
@@ -20,7 +20,7 @@ module Ferrum
 
       it "can set cookies" do
         browser.cookies.set(name: "stealth", value: "omg")
-        browser.goto("/get_cookie")
+        browser.go_to("/get_cookie")
         expect(browser.body).to include("omg")
       end
 
@@ -33,10 +33,10 @@ module Ferrum
           samesite: "None"
         )
 
-        browser.goto("/get_cookie")
+        browser.go_to("/get_cookie")
         expect(browser.body).to_not include("omg")
 
-        browser.goto("/ferrum/get_cookie")
+        browser.go_to("/ferrum/get_cookie")
         expect(browser.body).to include("omg")
 
         expect(browser.cookies["stealth"].path).to eq("/ferrum")
@@ -45,32 +45,32 @@ module Ferrum
       end
 
       it "can remove a cookie" do
-        browser.goto("/set_cookie")
+        browser.go_to("/set_cookie")
 
-        browser.goto("/get_cookie")
+        browser.go_to("/get_cookie")
         expect(browser.body).to include("test_cookie")
 
         browser.cookies.remove(name: "stealth")
 
-        browser.goto("/get_cookie")
+        browser.go_to("/get_cookie")
         expect(browser.body).to_not include("test_cookie")
       end
 
       it "can clear cookies" do
-        browser.goto("/set_cookie")
+        browser.go_to("/set_cookie")
 
-        browser.goto("/get_cookie")
+        browser.go_to("/get_cookie")
         expect(browser.body).to include("test_cookie")
 
         browser.cookies.clear
 
-        browser.goto("/get_cookie")
+        browser.go_to("/get_cookie")
         expect(browser.body).to_not include("test_cookie")
       end
 
       it "can set cookies with an expires time" do
         time = Time.at(Time.now.to_i + 10000)
-        browser.goto
+        browser.go_to
         browser.cookies.set(name: "foo", value: "bar", expires: time)
         expect(browser.cookies["foo"].expires).to eq(time)
       end
@@ -80,10 +80,10 @@ module Ferrum
         browser.cookies.set(name: "stealth", value: "127.0.0.1")
         browser.cookies.set(name: "stealth", value: "localhost", domain: "localhost")
 
-        browser.goto("http://localhost:#{port}/ferrum/get_cookie")
+        browser.go_to("http://localhost:#{port}/ferrum/get_cookie")
         expect(browser.body).to include("localhost")
 
-        browser.goto("http://127.0.0.1:#{port}/ferrum/get_cookie")
+        browser.go_to("http://127.0.0.1:#{port}/ferrum/get_cookie")
         expect(browser.body).to include("127.0.0.1")
       end
 
@@ -93,10 +93,10 @@ module Ferrum
           browser.cookies.set(name: "stealth", value: "123456", domain: "localhost")
 
           port = server.port
-          browser.goto("http://localhost:#{port}/ferrum/get_cookie")
+          browser.go_to("http://localhost:#{port}/ferrum/get_cookie")
           expect(browser.body).to include("123456")
 
-          browser.goto("http://127.0.0.1:#{port}/ferrum/get_cookie")
+          browser.go_to("http://127.0.0.1:#{port}/ferrum/get_cookie")
           expect(browser.body).not_to include("123456")
         ensure
           browser&.quit

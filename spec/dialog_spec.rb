@@ -4,7 +4,7 @@ module Ferrum
   describe Browser do
     context "dialog support" do
       it "matches on partial strings" do
-        browser.goto("/ferrum/with_js")
+        browser.go_to("/ferrum/with_js")
         browser.on(:dialog) do |dialog|
           if dialog.match?(Regexp.escape("[reg.exp] (chara©+er$)"))
             dialog.accept
@@ -19,7 +19,7 @@ module Ferrum
       end
 
       it "matches on regular expressions" do
-        browser.goto("/ferrum/with_js")
+        browser.go_to("/ferrum/with_js")
         browser.on(:dialog) do |dialog|
           if dialog.match?(/^.t.ext.*\[\w{3}\.\w{3}\]/i)
             dialog.accept
@@ -34,7 +34,7 @@ module Ferrum
       end
 
       it "works with nested modals" do
-        browser.goto("/ferrum/with_js")
+        browser.go_to("/ferrum/with_js")
         browser.on(:dialog) do |dialog|
           if dialog.match?("Are you sure?")
             dialog.accept
@@ -51,7 +51,7 @@ module Ferrum
       end
 
       it "works with second window" do
-        browser.goto
+        browser.go_to
 
         browser.execute <<-JS
           window.open("/ferrum/with_js", "popup")

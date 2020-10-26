@@ -3,7 +3,7 @@
 module Ferrum
   describe Browser do
     context "dragging support", skip: true do
-      before { browser.goto("/ferrum/drag") }
+      before { browser.go_to("/ferrum/drag") }
 
       it "supports drag_to" do
         draggable = browser.at_css("#drag_to #draggable")
