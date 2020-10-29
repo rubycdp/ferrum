@@ -10,7 +10,7 @@ module Ferrum
 
         it "allows to run tests configured to xvfb" do
           begin
-            xvfb_browser.goto(base_url)
+            xvfb_browser.go_to(base_url)
 
             expect(xvfb_browser.body).to include("Hello world!")
             expect(process_alive?(process.xvfb.pid)).to be(true)
@@ -28,7 +28,7 @@ module Ferrum
 
         it "allows to run tests configured to xvfb" do
           begin
-            xvfb_browser.goto(base_url)
+            xvfb_browser.go_to(base_url)
 
             expect(xvfb_browser.body).to include("Hello world!")
             expect(process_alive?(process.xvfb.pid)).to be(true)
@@ -47,7 +47,7 @@ module Ferrum
 
       it "allows to run tests configured to xvfb" do
         begin
-          xvfb_browser.goto(base_url)
+          xvfb_browser.go_to(base_url)
 
           expect(xvfb_browser.body).to include("Hello world!")
           expect(process_alive?(process.xvfb.pid)).to be(true)

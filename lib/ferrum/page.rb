@@ -65,7 +65,7 @@ module Ferrum
       @browser.timeout
     end
 
-    def goto(url = nil)
+    def go_to(url = nil)
       options = { url: combine_url!(url) }
       options.merge!(referrer: referrer) if referrer
       response = command("Page.navigate", wait: GOTO_WAIT, **options)
@@ -81,6 +81,7 @@ module Ferrum
       pendings = network.traffic.select(&:pending?).map { |e| e.request.url }
       raise StatusError.new(options[:url], pendings) unless pendings.empty?
     end
+    alias goto go_to
 
     def close
       @headers.clear

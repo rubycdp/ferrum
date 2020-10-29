@@ -4,7 +4,7 @@ module Ferrum
   describe Mouse do
     context "mouse support", skip: true do
       before do
-        browser.goto("/ferrum/click_test")
+        browser.go_to("/ferrum/click_test")
       end
 
       after do
@@ -25,7 +25,7 @@ module Ferrum
       end
 
       it "fixes some weird layout issue that we are not entirely sure about the reason for" do
-        browser.goto("/ferrum/datepicker")
+        browser.go_to("/ferrum/datepicker")
         browser.at_css("#datepicker").set("2012-05-11")
         browser.at_xpath("//a[text() = 'some link']").click
       end
@@ -93,7 +93,7 @@ module Ferrum
       end
 
       context "with image maps", skip: true do
-        before { browser.goto("/ferrum/image_map") }
+        before { browser.go_to("/ferrum/image_map") }
 
         it "can click" do
           browser.at_css("map[name=testmap] area[shape=circle]").click
@@ -114,7 +114,7 @@ module Ferrum
 
       context "double click tests" do
         before do
-          browser.goto("/ferrum/double_click_test")
+          browser.go_to("/ferrum/double_click_test")
         end
 
         it "double clicks properly" do
@@ -131,7 +131,7 @@ module Ferrum
     end
 
     it "has no trouble clicking elements when the size of a document changes", skip: true do
-      browser.goto("/ferrum/long_page")
+      browser.go_to("/ferrum/long_page")
       browser.at_css("#penultimate").click
       browser.execute <<~JS
         el = document.getElementById("penultimate")
@@ -142,13 +142,13 @@ module Ferrum
     end
 
     it "handles clicks where the target is in view, but the document is smaller than the viewport" do
-      browser.goto("/ferrum/simple")
+      browser.go_to("/ferrum/simple")
       browser.at_xpath("//a[text() = 'Link']").click
       expect(browser.body).to include("Hello world")
     end
 
     it "handles clicks where a parent element has a border" do
-      browser.goto("/ferrum/table")
+      browser.go_to("/ferrum/table")
       browser.at_xpath("//a[text() = 'Link']").click
       expect(browser.body).to include("Hello world")
     end
@@ -165,7 +165,7 @@ module Ferrum
       }
 
       it "splits into steps" do
-        browser.goto("/ferrum/simple")
+        browser.go_to("/ferrum/simple")
         browser.mouse.move(x: 100, y: 100)
         browser.evaluate_async(tracking_code, browser.timeout)
 
