@@ -1,3 +1,13 @@
+## [0.6.2] - (Oct 30, 2019) ##
+
+### Added
+
+- `Ferrum::Target`:
+    
+    - `#page=` attribute writer
+
+    - `#maybe_sleep_if_new_window` - sleep with `Ferrum::Target::NEW_WINDOW_WAIT` seconds by `Ferrum::Target#window?` condition
+
 ## [0.6.1] - (Oct 30, 2019) ##
 
 ### Added
@@ -718,6 +728,7 @@
 
     - classes of errors with a description of specific raises reasons
 
+[0.6.2]: https://github.com/rubycdp/ferrum/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/rubycdp/ferrum/compare/v0.6...v0.6.1
 [0.6.0]: https://github.com/rubycdp/ferrum/compare/v0.5...v0.6
 [0.5.0]: https://github.com/rubycdp/ferrum/compare/v0.4...v0.5
