@@ -1,3 +1,17 @@
+## [0.6.1] - (Oct 30, 2019) ##
+
+### Added
+
+- Patreon link
+
+- `Ferrum::Frame#execution_id?` - boolean of equals passed argument `execution_id` and current `execution_id` from current class instance
+
+### Changed
+
+- `Ferrum::Page::Frames` - fix missing frame:
+
+    - `#frame_by` - optional argument `execution_id` removed with change subscriber to search by `Ferrum::Frame#execution_id?`
+
 ## [0.6.0] - (Oct 29, 2019) ##
 
 ### Added
@@ -704,6 +718,7 @@
 
     - classes of errors with a description of specific raises reasons
 
+[0.6.1]: https://github.com/rubycdp/ferrum/compare/v0.6...v0.6.1
 [0.6.0]: https://github.com/rubycdp/ferrum/compare/v0.5...v0.6
 [0.5.0]: https://github.com/rubycdp/ferrum/compare/v0.4...v0.5
 [0.4.0]: https://github.com/rubycdp/ferrum/compare/v0.3...v0.4
