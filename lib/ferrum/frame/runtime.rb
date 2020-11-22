@@ -239,15 +239,13 @@ module Ferrum
                 return false;
               }
 
-              const seen = [];
-              function detectCycle(obj) {
+              function detectCycle(obj, seen) {
                 if (typeof obj === "object") {
                   if (seen.indexOf(obj) !== -1) {
                     return true;
                   }
-                  seen.push(obj);
                   for (let key in obj) {
-                    if (obj.hasOwnProperty(key) && detectCycle(obj[key])) {
+                    if (obj.hasOwnProperty(key) && detectCycle(obj[key], seen.concat([obj]))) {
                       return true;
                     }
                   }
@@ -256,7 +254,7 @@ module Ferrum
                 return false;
               }
 
-              return detectCycle(this);
+              return detectCycle(this, []);
             }
           JS
         )
