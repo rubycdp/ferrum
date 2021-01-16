@@ -67,6 +67,12 @@ module Ferrum
       expect(browser.network.idle?).to be true
     end
 
+    it "captures canceled requests" do
+      browser.go_to("/ferrum/with_ajax_connection_canceled")
+      expect(browser.at_xpath("//h1[text() = 'Canceled']")).to be
+      expect(browser.network.idle?).to be true
+    end
+
     it "keeps a running list between multiple web page views" do
       browser.go_to("/ferrum/with_js")
       expect(traffic.length).to eq(4)

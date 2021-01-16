@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+    <title>ferrum with_js</title>
+    <script src="/ferrum/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+  </head>
+  <body>
+    <h1>Here</h1>
+    <script>
+      $.ajax("http://localhost:12345/slow_response").abort();
+      $("h1").text("Canceled");
+    </script>
+  </body>
+</html>
