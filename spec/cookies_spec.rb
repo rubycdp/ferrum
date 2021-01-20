@@ -30,7 +30,7 @@ module Ferrum
           value: "omg",
           path: "/ferrum",
           httponly: true,
-          samesite: "None"
+          samesite: "Strict"
         )
 
         browser.go_to("/get_cookie")
@@ -41,7 +41,7 @@ module Ferrum
 
         expect(browser.cookies["stealth"].path).to eq("/ferrum")
         expect(browser.cookies["stealth"].httponly?).to be_truthy
-        expect(browser.cookies["stealth"].samesite).to eq("None")
+        expect(browser.cookies["stealth"].samesite).to eq("Strict")
       end
 
       it "can remove a cookie" do
