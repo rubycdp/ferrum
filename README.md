@@ -372,6 +372,18 @@ browser.go_to("https://google.com/")
 browser.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => 14983
 ```
 
+#### mhtml(\*\*options) : `String` | `Integer`
+
+Saves MHTML on a disk or returns it as a string.
+
+* options `Hash`
+  * :path `String` to save a file on the disk.
+
+```ruby
+browser.go_to("https://google.com/")
+browser.mhtml(path: "google.mhtml") # => 87742
+```
+
 
 ## Network
 

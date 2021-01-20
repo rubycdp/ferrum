@@ -22,7 +22,7 @@ module Ferrum
                 body doctype set_content
                 headers cookies network
                 mouse keyboard
-                screenshot pdf viewport_size
+                screenshot pdf mhtml viewport_size
                 frames frame_by main_frame
                 evaluate evaluate_on evaluate_async execute
                 add_script_tag add_style_tag bypass_csp

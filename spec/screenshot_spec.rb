@@ -87,7 +87,6 @@ module Ferrum
         end
 
         after do
-          FileUtils.rm_f("#{PROJECT_ROOT}/spec/tmp/screenshot.pdf")
           FileUtils.rm_f("#{PROJECT_ROOT}/spec/tmp/screenshot.png")
         end
 
@@ -206,6 +205,56 @@ module Ferrum
           include_examples "when scale is set"
         end
 
+        include_examples "screenshot screen"
+
+        context "when encoding is base64" do
+          let(:file) { "#{PROJECT_ROOT}/spec/tmp/screenshot.#{format}" }
+
+          def create_screenshot(path: file, **options)
+            image = browser.screenshot(format: format, encoding: :base64, **options)
+            File.open(file, "wb") { |f| f.write Base64.decode64(image) }
+          end
+
+          it "defaults to base64 when path isn't set" do
+            browser.go_to
+
+            screenshot = browser.screenshot(format: format)
+
+            expect(screenshot.length).to be > 100
+          end
+
+          it "supports screenshotting the page in base64" do
+            browser.go_to
+
+            screenshot = browser.screenshot(encoding: :base64)
+
+            expect(screenshot.length).to be > 100
+          end
+
+          context "png" do
+            let(:format) { :png }
+            after { FileUtils.rm_f(file) }
+
+            include_examples "screenshot screen"
+          end
+
+          context "jpeg" do
+            let(:format) { :jpeg }
+            after { FileUtils.rm_f(file) }
+
+            include_examples "screenshot screen"
+          end
+        end
+      end
+
+      describe "#pdf" do
+        let(:format) { :pdf }
+        let(:file) { "#{PROJECT_ROOT}/spec/tmp/screenshot.#{format}" }
+
+        after do
+          FileUtils.rm_f("#{PROJECT_ROOT}/spec/tmp/screenshot.pdf")
+        end
+
         context "when :paper_width and :paper_height are set" do
           it "changes pdf size" do
             browser.go_to("/ferrum/long_page")
@@ -280,46 +329,37 @@ module Ferrum
                                     transfer_mode: "ReturnAsBase64")
           end
         end
+      end
 
-        include_examples "screenshot screen"
+      describe "#mhtml" do
+        let(:format) { :mhtml }
+        let(:file) { "#{PROJECT_ROOT}/spec/tmp/screenshot.#{format}" }
 
-        context "when encoding is base64" do
-          let(:file) { "#{PROJECT_ROOT}/spec/tmp/screenshot.#{format}" }
+        after do
+          FileUtils.rm_f("#{PROJECT_ROOT}/spec/tmp/screenshot.mhtml")
+        end
 
-          def create_screenshot(path: file, **options)
-            image = browser.screenshot(format: format, encoding: :base64, **options)
-            File.open(file, "wb") { |f| f.write Base64.decode64(image) }
-          end
+        it "returns data" do
+          browser.go_to("/ferrum/simple")
 
-          it "defaults to base64 when path isn't set" do
-            browser.go_to
+          data = browser.mhtml
 
-            screenshot = browser.screenshot(format: format)
+          expect(data).to match(/\/ferrum\/simple/)
+          expect(data).to match(/mhtml.blink/)
+          expect(data).to match(/\<\!DOCTYPE html\>/)
+          expect(data).to match(/Foo\<br\>Bar/)
+        end
 
-            expect(screenshot.length).to be > 100
-          end
+        it "saves a file" do
+          browser.go_to("/ferrum/simple")
 
-          it "supports screenshotting the page in base64" do
-            browser.go_to
+          browser.mhtml(path: file)
 
-            screenshot = browser.screenshot(encoding: :base64)
-
-            expect(screenshot.length).to be > 100
-          end
-
-          context "png" do
-            let(:format) { :png }
-            after { FileUtils.rm_f(file) }
-
-            include_examples "screenshot screen"
-          end
-
-          context "jpeg" do
-            let(:format) { :jpeg }
-            after { FileUtils.rm_f(file) }
-
-            include_examples "screenshot screen"
-          end
+          content = File.read(file)
+          expect(content).to match(/\/ferrum\/simple/)
+          expect(content).to match(/mhtml.blink/)
+          expect(content).to match(/\<\!DOCTYPE html\>/)
+          expect(content).to match(/Foo\<br\>Bar/)
         end
       end
     end

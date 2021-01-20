@@ -29,7 +29,9 @@ module Ferrum
         options = screenshot_options(path, **opts)
         data = capture_screenshot(options, opts[:full])
         return data if encoding == :base64
-        save_file(path, data)
+
+        bin = Base64.decode64(data)
+        save_file(path, bin)
       end
 
       def pdf(**opts)
@@ -37,6 +39,14 @@ module Ferrum
         options = pdf_options(**opts)
         data = command("Page.printToPDF", **options).fetch("data")
         return data if encoding == :base64
+
+        bin = Base64.decode64(data)
+        save_file(path, bin)
+      end
+
+      def mhtml(path: nil)
+        data = command("Page.captureSnapshot", format: :mhtml).fetch("data")
+        return data if path.nil?
         save_file(path, data)
       end
 
@@ -56,9 +66,8 @@ module Ferrum
       private
 
       def save_file(path, data)
-        bin = Base64.decode64(data)
-        return bin unless path
-        File.open(path.to_s, "wb") { |f| f.write(bin) }
+        return data unless path
+        File.open(path.to_s, "wb") { |f| f.write(data) }
       end
 
       def common_options(encoding: :base64, path: nil, **_)
