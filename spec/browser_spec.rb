@@ -104,7 +104,7 @@ module Ferrum
 
       include_examples 'resize viewport by fullscreen' do
         let(:path) { "/ferrum/custom_html_size_100%" }
-        let(:viewport_size) { [1280, 1016] }
+        let(:viewport_size) { [1272, 1008] }
       end
     end
 

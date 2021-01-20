@@ -7,9 +7,17 @@
         height: 100%;
       }
 
+      body {
+        /*
+          deal with the default Chrome margins
+          https://source.chromium.org/chromium/chromium/src/+/master:third_party/blink/renderer/core/html/resources/html.css;
+        */
+        margin: 0;
+      }
+
       .spacer {
-        width:  1272px; /* using scrollWidth  adds 8px */
-        height: 1008px; /* using scrollHeight adds 16px */
+        width:  1272px;
+        height: 1008px;
       }
     </style>
   </head>
