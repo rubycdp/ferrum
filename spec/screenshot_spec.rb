@@ -115,7 +115,7 @@ module Ferrum
             browser.screenshot(path: file, full: true)
 
             File.open(file, "rb") do |f|
-              expect(ImageSize.new(f.read).size).to eq([1280, 1024])
+              expect(ImageSize.new(f.read).size).to eq([1280, 1016])
             end
             expect(browser.viewport_size).to eq([1024, 768])
           end
@@ -137,7 +137,7 @@ module Ferrum
             allow(browser.page).to receive(:command).and_call_original
             expect(browser.page).to receive(:command)
               .with("Page.captureScreenshot", format: "png", clip: {
-                x: 0, y: 0, width: 1280, height: 1024, scale: 1.0
+                x: 0, y: 0, width: 1280, height: 1016, scale: 1.0
               }).and_raise(StandardError)
             expect { browser.screenshot(path: file, full: true) }
               .to raise_exception(StandardError)
