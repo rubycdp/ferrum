@@ -69,7 +69,12 @@ module Ferrum
 
     it "captures canceled requests" do
       browser.go_to("/ferrum/with_ajax_connection_canceled")
-      expect(browser.at_xpath("//h1[text() = 'Canceled']")).to be
+
+      # FIXME: Hack to wait for content in the browser
+      Ferrum.with_attempts(errors: RuntimeError, max: 10, wait: 0.1) do
+        browser.at_xpath("//h1[text() = 'Canceled']") || raise("Node not found")
+      end
+
       expect(browser.network.idle?).to be true
     end
 

@@ -159,18 +159,25 @@ module Ferrum
 
       @page.on("Network.loadingFailed") do |params|
         exchange = select(params["requestId"]).last
+        exchange.error ||= Network::Error.new
 
-        if exchange && params['canceled']
-          exchange.error = :canceled
-        end
+        exchange.error.id = params["requestId"]
+        exchange.error.type = params["type"]
+        exchange.error.error_text = params["errorText"]
+        exchange.error.monotonic_time = params["timestamp"]
+        exchange.error.canceled = params["canceled"]
       end
 
       @page.on("Log.entryAdded") do |params|
         entry = params["entry"] || {}
         if entry["source"] == "network" && entry["level"] == "error"
           exchange = select(entry["networkRequestId"]).last
-          error = Network::Error.new(entry)
-          exchange.error = error
+          exchange.error ||= Network::Error.new
+
+          exchange.error.id = entry["networkRequestId"]
+          exchange.error.url = entry["url"]
+          exchange.error.description = entry["text"]
+          exchange.error.timestamp = entry["timestamp"]
         end
       end
     end

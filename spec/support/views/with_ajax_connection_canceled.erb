@@ -8,8 +8,11 @@
   <body>
     <h1>Here</h1>
     <script>
-      $.ajax("http://localhost:12345/slow_response").abort();
-      $("h1").text("Canceled");
+      let req = $.ajax("/ferrum/really_slow");
+      setTimeout(() => {
+        req.abort();
+        $("h1").text("Canceled");
+      }, 500);
     </script>
   </body>
 </html>

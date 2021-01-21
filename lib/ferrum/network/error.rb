@@ -3,24 +3,17 @@
 module Ferrum
   class Network
     class Error
-      def initialize(data)
-        @data = data
+      attr_writer :canceled
+      attr_reader :time, :timestamp
+      attr_accessor :id, :url, :type, :error_text, :monotonic_time, :description
+
+      def canceled?
+        @canceled
       end
 
-      def id
-        @data["networkRequestId"]
-      end
-
-      def url
-        @data["url"]
-      end
-
-      def description
-        @data["text"]
-      end
-
-      def time
-        @time ||= Time.strptime(@data["timestamp"].to_s, "%s")
+      def timestamp=(value)
+        @timestamp = value
+        @time = Time.strptime((value / 1000).to_s, "%s")
       end
     end
   end
