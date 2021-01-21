@@ -4,6 +4,8 @@
 - `Ferrum::Network::Exchange#xhr?` determines if the exchange is XHR
 - `Ferrum::Network::Request#xhr?` determines if the request is XHR
 - `Ferrum::Network::Response#loaded?` returns true if the response is fully loaded
+- `Ferrum::Node#in_viewport?` checks if the element in viewport (optional argument `scope` as `Ferrum::Node`)
+- `Ferrum::Node#scroll_into_view` - scrolls to element if needed (when it's not in the viewport)
 
 ### Changed
 

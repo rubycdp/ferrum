@@ -72,19 +72,33 @@ describe Ferrum::Node do
       end
     end
 
-    context "when the element is not in the viewport of parent element", skip: true do
-      before do
-        browser.go_to("/ferrum/scroll")
+    context "when the element is not in the viewport of parent element" do
+      before { page.go_to("/ferrum/scroll") }
+
+      it "scrolls into view if element outside viewport" do
+        link = page.at_xpath("//a[text() = 'Link outside viewport']")
+        link.click
+        expect(page.current_url).to eq(base_url("/ferrum/scroll"))
+
+        expect(link.in_viewport?).to eq(true)
+        box = page.at_xpath("//div[@id='overflow-box']")
+        expect(link.in_viewport?(of: box)).to eq(false)
+
+        link.scroll_into_view
+        expect(link.in_viewport?(of: box)).to eq(true)
+        link.click
+        expect(page.current_url).to eq(base_url("/"))
       end
 
-      it "scrolls into view", skip: "needs fix" do
-        browser.at_xpath("//a[text() = 'Link outside viewport']").click
-        expect(browser.current_url).to eq("/")
-      end
+      it "scrolls into view if element below the fold" do
+        link = page.at_xpath("//a[*//text() = 'Below the fold']")
+        expect(link.in_viewport?).to eq(false)
 
-      it "scrolls into view if scrollIntoViewIfNeeded fails" do
-        browser.click_link "Below the fold"
-        expect(browser.current_path).to eq("/")
+        link.scroll_into_view
+
+        expect(link.in_viewport?).to eq(true)
+        link.click
+        expect(page.current_url).to eq(base_url("/"))
       end
     end
   end
