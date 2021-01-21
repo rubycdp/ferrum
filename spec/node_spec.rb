@@ -71,12 +71,12 @@ module Ferrum
       end
 
       it "scrolls into view" do
-        browser.at_xpath("//a[text() = 'Link outside viewport']").click
+        browser.at_xpath("//a[text() = 'Link outside viewport']").click(mode: :force)
         expect(browser.current_url).to eq(base_url("/"))
       end
 
       it "scrolls into view if scrollIntoViewIfNeeded fails" do
-        browser.at_xpath("//a[*//text() = 'Below the fold']").click
+        browser.at_xpath("//a[*//text() = 'Below the fold']").click(mode: :force)
         expect(browser.current_url).to eq(base_url("/"))
       end
     end
