@@ -157,6 +157,14 @@ module Ferrum
         end
       end
 
+      @page.on("Network.loadingFailed") do |params|
+        exchange = select(params["requestId"]).last
+
+        if exchange && params['canceled']
+          exchange.error = :canceled
+        end
+      end
+
       @page.on("Log.entryAdded") do |params|
         entry = params["entry"] || {}
         if entry["source"] == "network" && entry["level"] == "error"
