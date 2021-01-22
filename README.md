@@ -32,9 +32,6 @@ Web design by [Evrone](https://evrone.com/), what else
 [we build with Ruby on Rails](https://evrone.com/ruby), what else
 [we do at Evrone](https://evrone.com/cases#case-studies).
 
-If you like this project, please consider to
-_[become a backer](https://www.patreon.com/rubycdp_ferrum)_ on Patreon.
-
 
 ## Index
 

@@ -3,7 +3,7 @@
 ### Added
 
 - `Ferrum::Target`:
-    
+
     - `#page=` attribute writer
 
     - `#maybe_sleep_if_new_window` - sleep with `Ferrum::Target::NEW_WINDOW_WAIT` seconds by `Ferrum::Target#window?` condition
@@ -11,8 +11,6 @@
 ## [0.6.1] - (Oct 30, 2019) ##
 
 ### Added
-
-- Patreon link
 
 - `Ferrum::Frame#execution_id?` - boolean of equals passed argument `execution_id` and current `execution_id` from current class instance
 
@@ -145,7 +143,7 @@
 - `Ferrum::Network::InterceptedRequest`:
 
     - `#interception_id` into `#request_id` as `requestId` reference on passed `params`
-    
+
     - `#respond` - the `custom request fulfilment support` implementation by fires the `command` `Fetch.failRequest` on `Ferrum::Page` instance with passed `options` as argument
 
 - `Ferrum::Network::Response`:
@@ -189,7 +187,7 @@
     - `#within_frame`, with delegated `Ferrum::Browser#within_frame`
 
 - `Ferrum::Page::Event`:
- 
+
     - include DOM, Runtime, Frame
 
     - `waiting_frames` instance variable
@@ -232,7 +230,7 @@
 
     - includes `pendings` attribute reader - the thread safe instance of mutable variable
 
-    - includes `POSITION` constant - the freeze array of `first` `last` symbols  
+    - includes `POSITION` constant - the freeze array of `first` `last` symbols
 
     - `#default_target` - memoization of `#create_target` result
 
@@ -241,20 +239,20 @@
     - `#page` - delegation to `default_target` of `Ferrum::Context`
 
     - `#pages` - delegations to `page`'s taken from `Ferrum::Context#targets` as `values`
- 
+
     - `#windows` - delegations to `page`'s taken from `Ferrum::Context#targets` as `values` with `window?` truthy condition
-    
+
         takes `position` as first argument and optional second argument `size` with `1` as default value
-           
+
         may raise `ArgumentError` on the passed `position` which not included into `Ferrum::Context::POSITION` constant values
 
     - `#create_page` - delegation to `target` with the `target` recreation by `Ferrum::Context#create_target`
 
     - `#add_target` - creates new instance of `Ferrum::Target` with fill by `Ferrum::Target.window?` condition of:
-     
+
         `targets` instance variable on `id` or `pendings` instance variable as replace of `@value`
 
-    - `#update_target` - updates specific `target` in `targets` instance variable by `target_id` and `params` which are passed as arguments  
+    - `#update_target` - updates specific `target` in `targets` instance variable by `target_id` and `params` which are passed as arguments
 
     - `#delete_target` - deletes from `targets` instance variable by passed `target_id` as argument
 
@@ -270,11 +268,11 @@
 
         - `params` as second (optional) - instance of `Ferrum::Contexts`
 
-    - `#update` - attribute writer for `params` instance variable by passed `params` as one argument 
+    - `#update` - attribute writer for `params` instance variable by passed `params` as one argument
 
     - `#page` - new instance of `Ferrum::Page` created for specific `targetId`
 
-    - `#window?` - boolean of the check the exists of `Ferrum::Target#opener_id` 
+    - `#window?` - boolean of the check the exists of `Ferrum::Target#opener_id`
 
     - `#id` - delegation to `targetId` of passed to instance `params`
 
@@ -299,12 +297,12 @@
     - `#find_by` - finding the last match in `contexts` instance variable by match of passed `target_id` into `targets.keys`
 
         required `target_id: value` argument
-    
+
         returns `nil` on the not-matched case
 
     - `#create` - assigns new instance of `Ferrum::Context` with fetched `browserContextId` from `Target.createBrowserContext` into `contexts` instance variable
-    
-        returns the created instance of `Ferrum::Context` 
+
+        returns the created instance of `Ferrum::Context`
 
     - `#dispose` - removes specific `context` from `contexts` instance variable by passed `context_id` with fires `Target.disposeBrowserContext` browser command
 
@@ -319,7 +317,7 @@
 - the delegation to `Ferrum::Browser#default_context`:
 
     - `Ferrum::Browser#create_target`
-    
+
     - `Ferrum::Browser#create_page`
 
     - `Ferrum::Browser#pages`
@@ -344,20 +342,20 @@
 
 - `Ferrum::Page#close_connection` - the logic is moved to `Ferrum::Page#close` directly
 
-- the third argument (`new_window = false`) for `Ferrum::Page` initializer  
+- the third argument (`new_window = false`) for `Ferrum::Page` initializer
 
 - `Ferrum::Targets` class with the delegations to `Ferrum::Targets` instance in `Ferrum::Browser` instance:
-    
+
     - `Ferrum::Browser#window_handle`
-    
+
     - `Ferrum::Browser#window_handles`
-    
+
     - `Ferrum::Browser#switch_to_window`
-    
+
     - `Ferrum::Browser#open_new_window`
-    
+
     - `Ferrum::Browser#close_window`
-    
+
     - `Ferrum::Browser#within_window`
 
 ## [0.4.0] - (Sep 17, 2019) ##
@@ -370,20 +368,20 @@
 
 - `Ferrum::Network#request` & `Ferrum::Network#response` - delegation to `Network::Exchange` instance
 
-- `Ferrum::Network#first_by` / `Ferrum::Network#last_by` - implemented searching by passed request_id in `Network::Exchange` instance 
+- `Ferrum::Network#first_by` / `Ferrum::Network#last_by` - implemented searching by passed request_id in `Network::Exchange` instance
 
 - `Ferrum::Browser#traffic` delegation to `Ferrum::Network` of `Network::Exchange` instances
 
 - `Ferrum::Network::Exchange` - simple request/response constructor with monitoring
 
     - `#build_request` - instance of `Network::Request` with passed params
-    
+
     - `#build_response` - instance of `Network::Response` with passed params
 
     - `#build_error` - instance of `Network::Error` with passed params
-    
+
     - `#navigation_request?` - the request verification on document by passed frame_id
-    
+
     - `#blocked?` - boolean which becomes true when no the constructed response
 
     - `#to_a` - returns array of constructed request/response/error instances
@@ -394,9 +392,9 @@
 
 - `Ferrum::Network::Request#frame_id` - delegation to `frameId` of passed to instance params
 
-- `Ferrum::Network::InterceptedRequest#abort` - fires `continue` method of instance with `errorReason` as `Aborted`   
+- `Ferrum::Network::InterceptedRequest#abort` - fires `continue` method of instance with `errorReason` as `Aborted`
 
-- `Ferrum::Network::InterceptedRequest#inspect` - simple implementation of native `inspect` method with returns of the current internal state  
+- `Ferrum::Network::InterceptedRequest#inspect` - simple implementation of native `inspect` method with returns of the current internal state
 
 - `Ferrum::Page::Frame#frame_id` - reader to public available of `frameId` by `Ferrum::Page#frame_id`
 
@@ -481,7 +479,7 @@
     - description of `Dialog` feature in README
 
 - `Ferrum::Page::Event` extend of `Concurrent::Event` with implementation of `reset/wait` fix
- 
+
     - implement `Ferrum::Page::Event#iteration` to reuse `synchronize` block on `@iteration` value of `Concurrent::Event`
 
     - redefinition of `Concurrent::Event#reset` - increase `@iteration` outside of `if @set` block
@@ -491,7 +489,7 @@
 - Elapsed time implementation:
 
     - `Ferrum::Browser::Process::WAIT_KILLED` with `0.05`
-    
+
     - `Ferrum.monotonic_time` - delegation to `Concurrent` object
 
     - `Ferrum.started` - class variable `@@started` as `monotonic_time`
@@ -519,8 +517,8 @@
 - `Ferrum::Browser::TIMEOUT` into `Ferrum::Browser::DEFAULT_TIMEOUT` as `FERRUM_DEFAULT_TIMEOUT` `ENV-var` with `5` as default value
 
 - usage of `Concurrent::Event` into `Ferrum::Page::Event` as `@event` of `Ferrum::Page` instance
- 
-- `Ferrum::Page::NEW_WINDOW_BUG_SLEEP` into `Ferrum::Page::NEW_WINDOW_WAIT` as `FERRUM_NEW_WINDOW_WAIT` `ENV-var` with `0.3` as default value 
+
+- `Ferrum::Page::NEW_WINDOW_BUG_SLEEP` into `Ferrum::Page::NEW_WINDOW_WAIT` as `FERRUM_NEW_WINDOW_WAIT` `ENV-var` with `0.3` as default value
 
 ### Removed
 
@@ -555,7 +553,7 @@
 - increased `Browser::Process::PROCESS_TIMEOUT` constant by 1
 
 - `Ferrum::Network::InterceptedRequest#match?` to handle cases for `Ruby 2.3` and less
- 
+
 ## [0.2.0] - (Sep 3, 2019) ##
 
 ### Added
@@ -570,7 +568,7 @@
 
 - usage of `FERRUM_INTERMITTENT_ATTEMPTS` `ENV-var` on the rescue of runtime intermittent error
 
-- implementation's of `Ferrum::Page::DOM#xpath` & `Ferrum::Page::DOM#at_xpath` 
+- implementation's of `Ferrum::Page::DOM#xpath` & `Ferrum::Page::DOM#at_xpath`
 
 - `Ferrum.with_attempts` - retry attempt with the sleep on the block passed as an argument
 
@@ -700,7 +698,7 @@
 
 ### Changed
 
-- basic description in README 
+- basic description in README
 
 ## [0.1.0.alpha] - (Aug 2, 2019) ##
 
