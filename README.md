@@ -154,7 +154,7 @@ Ferrum::Browser.new(options)
       `["/path/to/script.js", { source: "window.secret = 'top'" }]`
   * `:logger` (Object responding to `puts`) - When present, debug output is
       written to this object.
-  * `:slowmo` (Integer | Float) - Set a delay to wait before sending command.
+  * `:slowmo` (Integer | Float) - Set a delay in seconds to wait before sending command.
       Usefull companion of headless option, so that you have time to see changes.
   * `:timeout` (Numeric) - The number of seconds we'll wait for a response when
       communicating with browser. Default is 5.
