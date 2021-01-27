@@ -46,8 +46,6 @@ module Ferrum
       modifiers = page.keyboard.modifiers(keys)
 
       case mode
-      when :force
-        evaluate("this.click()")
       when :right
         page.mouse.move(x: x, y: y)
         page.mouse.down(button: :right, modifiers: modifiers)
@@ -66,6 +64,10 @@ module Ferrum
 
     def hover
       raise NotImplementedError
+    end
+
+    def school_into_view
+      tap { page.command("DOM.scrollIntoViewIfNeeded", nodeId: node_id) }
     end
 
     def select_file(value)
