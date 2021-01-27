@@ -30,6 +30,13 @@ module Ferrum
       tap { page.command("DOM.focus", slowmoable: true, nodeId: node_id) }
     end
 
+    def focusable?
+      focus
+      true
+    rescue BrowserError => e
+      e.message == "Element is not focusable" ? false : raise
+    end
+
     def blur
       tap { evaluate("this.blur()") }
     end
