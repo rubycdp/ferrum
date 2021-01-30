@@ -64,6 +64,16 @@ module Ferrum
       )
     end
 
+    it "includes the process output in the error" do
+      path = "#{PROJECT_ROOT}/spec/support/broken_chrome"
+
+      expect {
+        Browser.new(browser_path: path)
+      }.to raise_error(Ferrum::ProcessTimeoutError) do |ex|
+        expect(ex.output).to include "Broken Chrome error message"
+      end
+    end
+
     it "raises an error and restarts the client if the client dies while executing a command" do
       expect { browser.crash }.to raise_error(Ferrum::DeadBrowserError)
       browser.go_to

@@ -145,7 +145,7 @@ module Ferrum
 
         unless ws_url
           @logger.puts(output) if @logger
-          raise ProcessTimeoutError.new(timeout)
+          raise ProcessTimeoutError.new(timeout, output)
         end
       end
 

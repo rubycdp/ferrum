@@ -37,7 +37,10 @@ module Ferrum
   end
 
   class ProcessTimeoutError < Error
-    def initialize(timeout)
+    attr_reader :output
+
+    def initialize(timeout, output)
+      @output = output
       super("Browser did not produce websocket url within #{timeout} seconds")
     end
   end
