@@ -123,7 +123,19 @@ module Ferrum
           options[:clip].merge!(scale: scale)
         end
 
+        if validate_background_rgba_color(opts[:background_rgba_color])
+          raise ArgumentError, "Specify :background_rgba_color as [R,G,B,A] array"
+        end
+
         options
+      end
+
+      def validate_background_rgba_color(option)
+        option && !(
+          option.is_a?(Array) &&
+            option.size == 4 &&
+            option.all? { |value| value.is_a?(Integer) }
+        )
       end
 
       def get_bounding_rect(selector)

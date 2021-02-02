@@ -176,6 +176,32 @@ module Ferrum
           end
         end
 
+        context 'background_rgba_color option' do
+          shared_examples 'background_rgba_color ArgumentError' do
+            it 'raises ArgumentError with message' do
+              browser.go_to
+              expect {
+                browser.screenshot(path: file, background_rgba_color: background_rgba_color)
+              }.to raise_exception(ArgumentError, 'Specify :background_rgba_color as [R,G,B,A] array')
+            end
+          end
+
+          include_examples 'background_rgba_color ArgumentError' do
+            let(:background_rgba_color) do
+              r, g, b = 0, 0, 0
+              [r, g , b]
+            end
+          end
+
+          include_examples 'background_rgba_color ArgumentError' do
+            let(:background_rgba_color)  { '#FFF' }
+          end
+
+          include_examples 'background_rgba_color ArgumentError' do
+            let(:background_rgba_color)  { %w[0 0 0 0] }
+          end
+        end
+
         shared_examples "when scale is set" do
           it "changes image dimensions" do
             browser.go_to("/ferrum/zoom_test")
