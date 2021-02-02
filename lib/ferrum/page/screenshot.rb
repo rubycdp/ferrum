@@ -134,7 +134,7 @@ module Ferrum
         option && !(
           option.is_a?(Array) &&
             option.size == 4 &&
-            option.all? { |value| value.is_a?(Integer) }
+            option.all? { |value| value.is_a?(Numeric) }
         )
       end
 
