@@ -312,23 +312,24 @@ module Ferrum
                scale: 1,
             )) { { "stream" => "1" } }
 
-            allow(browser.page).to receive(:command).with("IO.read", hash_including(
-              handle: "1"
-            )) { { "data" => "", "base64Encoded" => false, "eof" => true } }
+            allow(browser.page).to receive(:command).with("IO.read", hash_including(handle: "1")) {
+              { "data" => "", "base64Encoded" => false, "eof" => true }
+            }
 
-            browser.pdf(path: file, landscape: false,
-                                    display_header_footer: false,
-                                    print_background: false,
-                                    scale: 1,
-                                    paper_width: 8.5,
-                                    paper_height: 11,
-                                    margin_top: 0.4,
-                                    margin_bottom: 0.4,
-                                    margin_left: 0.4,
-                                    margin_right: 0.4,
-                                    page_ranges: "",
-                                    ignore_invalid_page_ranges: false,
-                                    prefer_css_page_size: false)
+            browser.pdf(path: file,
+                        landscape: false,
+                        display_header_footer: false,
+                        print_background: false,
+                        scale: 1,
+                        paper_width: 8.5,
+                        paper_height: 11,
+                        margin_top: 0.4,
+                        margin_bottom: 0.4,
+                        margin_left: 0.4,
+                        margin_right: 0.4,
+                        page_ranges: "",
+                        ignore_invalid_page_ranges: false,
+                        prefer_css_page_size: false)
           end
         end
       end
