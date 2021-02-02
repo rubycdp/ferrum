@@ -145,9 +145,9 @@ module Ferrum
         option.to_s.gsub(/(?:_|(\/))([a-z\d]*)/) { "#{$1}#{$2.capitalize}" }.to_sym
       end
 
-      def capture_screenshot(options, full, background_rgba_color)
+      def capture_screenshot(options, full, background_color)
         maybe_resize_fullscreen(full) do
-          with_background_color(background_rgba_color) do
+          with_background_color(background_color) do
             command("Page.captureScreenshot", **options)
           end
         end.fetch("data")
