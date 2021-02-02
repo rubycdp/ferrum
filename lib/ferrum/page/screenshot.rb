@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ferrum/rbga"
+
 module Ferrum
   class Page
     module Screenshot
@@ -27,7 +29,7 @@ module Ferrum
       def screenshot(**opts)
         path, encoding = common_options(**opts)
         options = screenshot_options(path, **opts)
-        data = capture_screenshot(options, opts[:full], opts[:background_rgba_color])
+        data = capture_screenshot(options, opts[:full], opts[:background_color])
         return data if encoding == :base64
 
         bin = Base64.decode64(data)
@@ -123,19 +125,7 @@ module Ferrum
           options[:clip].merge!(scale: scale)
         end
 
-        if validate_background_rgba_color(opts[:background_rgba_color])
-          raise ArgumentError, "Specify :background_rgba_color as [R,G,B,A] array"
-        end
-
         options
-      end
-
-      def validate_background_rgba_color(option)
-        option && !(
-          option.is_a?(Array) &&
-            option.size == 4 &&
-            option.all? { |value| value.is_a?(Numeric) }
-        )
       end
 
       def get_bounding_rect(selector)
@@ -174,15 +164,16 @@ module Ferrum
         resize(width: width, height: height) if full
       end
 
-      def with_background_color(background_rgba_color)
-        if background_rgba_color
-          r, g, b, a = background_rgba_color
-          command('Emulation.setDefaultBackgroundColorOverride', color: { r: r, g: g, b: b, a: a })
+      def with_background_color(color)
+        if color
+          raise ArgumentError, "Accept Ferrum::RGBA class only" unless color.is_a?(RGBA)
+
+          command('Emulation.setDefaultBackgroundColorOverride', color: color.to_h)
         end
 
         yield
       ensure
-        command('Emulation.setDefaultBackgroundColorOverride') if background_rgba_color
+        command('Emulation.setDefaultBackgroundColorOverride') if color
       end
     end
   end

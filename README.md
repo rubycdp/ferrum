@@ -346,7 +346,7 @@ browser.screenshot(path: "google.jpg") # => 30902
 # Save to Base64 the whole page not only viewport and reduce quality
 browser.screenshot(full: true, quality: 60) # "iVBORw0KGgoAAAANSUhEUgAABAAAAAMACAYAAAC6uhUNAAAAAXNSR0IArs4c6Q...
 # Save with specific background color
-browser.screenshot(background_rgba_color: [0, 0, 0, 0.0]) 
+browser.screenshot(background_color: Ferrum::RGBA.new(0, 0, 0, 0.0)) 
 ```
 
 #### pdf(\*\*options) : `String` | `Integer`

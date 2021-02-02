@@ -3,6 +3,7 @@
 require "image_size"
 require "pdf/reader"
 require "chunky_png"
+require "ferrum/rbga"
 
 module Ferrum
   describe Browser do
@@ -176,43 +177,26 @@ module Ferrum
           end
         end
 
-        context 'background_rgba_color option' do
-          shared_examples 'background_rgba_color ArgumentError' do
-            it 'raises ArgumentError with message' do
-              browser.go_to
-              expect {
-                browser.screenshot(path: file, background_rgba_color: background_rgba_color)
-              }.to raise_exception(ArgumentError, 'Specify :background_rgba_color as [R,G,B,A] array')
-            end
-          end
-
-          include_examples 'background_rgba_color ArgumentError' do
-            let(:background_rgba_color) do
-              r, g, b = 0, 0, 0
-              [r, g, b]
-            end
-          end
-
-          include_examples 'background_rgba_color ArgumentError' do
-            let(:background_rgba_color) { '#FFF' }
-          end
-
-          include_examples 'background_rgba_color ArgumentError' do
-            let(:background_rgba_color) { %w[0 0 0 0] }
-          end
-
+        describe 'background_color option' do
           it 'supports screenshotting page with the specific background color' do
             begin
               file = PROJECT_ROOT + "/spec/tmp/screenshot.jpeg"
               browser.go_to
               browser.screenshot(path: file)
               content = File.read(file)
-              browser.screenshot(path: file, background_rgba_color: [0, 0, 0, 0.0])
+              browser.screenshot(path: file, background_color: RGBA.new(0, 0, 0, 0.0))
               content_with_specific_bc = File.read(file)
               expect(content).not_to eq(content_with_specific_bc)
             ensure
               FileUtils.rm_f([file])
             end
+          end
+
+          it 'raises ArgumentError with proper message' do
+            browser.go_to
+            expect {
+              browser.screenshot(path: file, background_color: '#FFF')
+            }.to raise_exception(ArgumentError, 'Accept Ferrum::RGBA class only')
           end
         end
 
