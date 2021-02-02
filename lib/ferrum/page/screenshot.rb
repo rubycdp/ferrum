@@ -27,7 +27,7 @@ module Ferrum
       def screenshot(**opts)
         path, encoding = common_options(**opts)
         options = screenshot_options(path, **opts)
-        data = capture_screenshot(options, opts[:full])
+        data = capture_screenshot(options, opts[:full], opts[:background_rgba_color])
         return data if encoding == :base64
 
         bin = Base64.decode64(data)
@@ -143,9 +143,11 @@ module Ferrum
         option.to_s.gsub(/(?:_|(\/))([a-z\d]*)/) { "#{$1}#{$2.capitalize}" }.to_sym
       end
 
-      def capture_screenshot(options, full)
+      def capture_screenshot(options, full, background_rgba_color)
         maybe_resize_fullscreen(full) do
-          command("Page.captureScreenshot", **options)
+          with_background_color(background_rgba_color) do
+            command("Page.captureScreenshot", **options)
+          end
         end.fetch("data")
       end
 
@@ -158,6 +160,17 @@ module Ferrum
         yield
       ensure
         resize(width: width, height: height) if full
+      end
+
+      def with_background_color(background_rgba_color)
+        if background_rgba_color
+          r, g, b, a = background_rgba_color
+          command('Emulation.setDefaultBackgroundColorOverride', color: { r: r, g: g, b: b, a: a })
+        end
+
+        yield
+      ensure
+        command('Emulation.setDefaultBackgroundColorOverride') if background_rgba_color
       end
     end
   end
