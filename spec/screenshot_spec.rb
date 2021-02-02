@@ -189,28 +189,30 @@ module Ferrum
           include_examples 'background_rgba_color ArgumentError' do
             let(:background_rgba_color) do
               r, g, b = 0, 0, 0
-              [r, g , b]
+              [r, g, b]
             end
           end
 
           include_examples 'background_rgba_color ArgumentError' do
-            let(:background_rgba_color)  { '#FFF' }
+            let(:background_rgba_color) { '#FFF' }
           end
 
           include_examples 'background_rgba_color ArgumentError' do
-            let(:background_rgba_color)  { %w[0 0 0 0] }
+            let(:background_rgba_color) { %w[0 0 0 0] }
           end
 
           it 'supports screenshotting page with the specific background color' do
-            file = PROJECT_ROOT + "/spec/tmp/screenshot.jpeg"
-            browser.go_to
-            browser.screenshot(path: file)
-            content = File.read(file)
-            browser.screenshot(path: file, background_rgba_color: [0, 0, 0, 0.0])
-            content_with_specific_bc = File.read(file)
-            expect(content).not_to eq(content_with_specific_bc)
-          ensure
-            FileUtils.rm_f([file])
+            begin
+              file = PROJECT_ROOT + "/spec/tmp/screenshot.jpeg"
+              browser.go_to
+              browser.screenshot(path: file)
+              content = File.read(file)
+              browser.screenshot(path: file, background_rgba_color: [0, 0, 0, 0.0])
+              content_with_specific_bc = File.read(file)
+              expect(content).not_to eq(content_with_specific_bc)
+            ensure
+              FileUtils.rm_f([file])
+            end
           end
         end
 
