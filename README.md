@@ -335,7 +335,7 @@ Saves screenshot on a disk or returns it as base64.
   * :full `Boolean` whether you need full page screenshot or a viewport
   * :selector `String` css selector for given element
   * :scale `Float` zoom in/out
-  * :background_rgba_color `Array` like `[R,G,B,A]` to have specific background color
+  * :background_color `Ferrum::RGBA.new(0, 0, 0, 0.0)` to have specific background color
 
 ```ruby
 browser.go_to("https://google.com/")
