@@ -426,6 +426,9 @@ module Ferrum
       browser.execute <<-JS
         window.open("/ferrum/simple", "popup1")
       JS
+
+      sleep 0.1
+
       browser.execute <<-JS
         window.open("/ferrum/simple", "popup2")
       JS
