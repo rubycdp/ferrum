@@ -423,10 +423,10 @@ module Ferrum
 
       expect(browser.targets.size).to eq(1)
 
-      browser.execute <<-JS
+      browser.evaluate <<-JS
         window.open("/ferrum/simple", "popup1")
       JS
-      browser.execute <<-JS
+      browser.evaluate <<-JS
         window.open("/ferrum/simple", "popup2")
       JS
 
