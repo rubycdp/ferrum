@@ -239,7 +239,7 @@ module Ferrum
           browser.execute "setTimeout(function() { omg }, 0)"
           sleep 0.01
           browser.execute ""
-        }.to raise_error(Ferrum::JavaScriptError)
+        }.to raise_error(Ferrum::JavaScriptError, /ReferenceError.*omg/)
 
         # should not raise again
         expect(browser.evaluate("1+1")).to eq(2)
