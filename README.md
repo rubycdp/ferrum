@@ -346,7 +346,7 @@ browser.screenshot(path: "google.jpg") # => 30902
 browser.screenshot(full: true, quality: 60) # "iVBORw0KGgoAAAANSUhEUgAABAAAAAMACAYAAAC6uhUNAAAAAXNSR0IArs4c6Q...
 ```
 
-#### pdf(\*\*options) : `String` | `Integer`
+#### pdf(\*\*options) : `String` | `Boolean`
 
 Saves PDF on a disk or returns it as base64.
 
@@ -366,7 +366,7 @@ Saves PDF on a disk or returns it as base64.
 ```ruby
 browser.go_to("https://google.com/")
 # Save to disk as a PDF
-browser.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => 14983
+browser.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => true
 ```
 
 #### mhtml(\*\*options) : `String` | `Integer`
