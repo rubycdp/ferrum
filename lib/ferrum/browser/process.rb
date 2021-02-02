@@ -64,7 +64,7 @@ module Ferrum
           return
         end
 
-        @xvfb = nil
+        @pid = @xvfb = @user_data_dir = nil
         @logger = options[:logger]
         @process_timeout = options.fetch(:process_timeout, PROCESS_TIMEOUT)
 

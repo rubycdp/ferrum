@@ -563,8 +563,9 @@ module Ferrum
 
     it "does not run into content quads error" do
       browser.go_to("/ferrum/index")
-      Node.any_instance.stub(:get_content_quads)
-                       .and_raise(Ferrum::BrowserError, 'message' => 'Could not compute content quads')
+
+      allow_any_instance_of(Node).to receive(:get_content_quads).and_raise(Ferrum::BrowserError, 'message' => 'Could not compute content quads')
+
       browser.at_xpath("//a[text() = 'JS redirect']").click
       expect(browser.body).to include("Hello world")
     end
