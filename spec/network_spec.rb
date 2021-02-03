@@ -328,6 +328,18 @@ module Ferrum
         expect(browser.network.status).to eq(200)
         expect(browser.body).to include("content")
       end
+
+      it "redefines existed handler" do
+        browser.network.intercept
+        browser.on(:request) do |request|
+          request.abort
+        end
+        browser.on(:request) do |request|
+          request.continue
+        end
+        browser.go_to("/ferrum/url_blacklist")
+        expect(browser.network.status).to eq(200)
+      end
     end
   end
 end

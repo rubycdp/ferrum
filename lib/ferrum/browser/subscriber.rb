@@ -17,7 +17,11 @@ module Ferrum
       end
 
       def on(event, &block)
-        @on[event] << block
+        if @on[event].empty?
+          @on[event] << block
+        else
+          @on[event] = [block]
+        end
         true
       end
 
