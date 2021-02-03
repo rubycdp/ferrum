@@ -3,6 +3,7 @@
 require "image_size"
 require "pdf/reader"
 require "chunky_png"
+require "ferrum/rbga"
 
 module Ferrum
   describe Browser do
@@ -173,6 +174,29 @@ module Ferrum
             expect(File.size(file2)).to be < File.size(file3)
           ensure
             FileUtils.rm_f([file2, file3])
+          end
+        end
+
+        describe 'background_color option' do
+          it 'supports screenshotting page with the specific background color' do
+            begin
+              file = PROJECT_ROOT + "/spec/tmp/screenshot.jpeg"
+              browser.go_to
+              browser.screenshot(path: file)
+              content = File.read(file)
+              browser.screenshot(path: file, background_color: RGBA.new(0, 0, 0, 0.0))
+              content_with_specific_bc = File.read(file)
+              expect(content).not_to eq(content_with_specific_bc)
+            ensure
+              FileUtils.rm_f([file])
+            end
+          end
+
+          it 'raises ArgumentError with proper message' do
+            browser.go_to
+            expect {
+              browser.screenshot(path: file, background_color: '#FFF')
+            }.to raise_exception(ArgumentError, 'Accept Ferrum::RGBA class only')
           end
         end
 

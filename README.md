@@ -335,6 +335,7 @@ Saves screenshot on a disk or returns it as base64.
   * :full `Boolean` whether you need full page screenshot or a viewport
   * :selector `String` css selector for given element
   * :scale `Float` zoom in/out
+  * :background_color `Ferrum::RGBA.new(0, 0, 0, 0.0)` to have specific background color
 
 ```ruby
 browser.go_to("https://google.com/")
@@ -344,6 +345,8 @@ browser.screenshot(path: "google.png") # => 134660
 browser.screenshot(path: "google.jpg") # => 30902
 # Save to Base64 the whole page not only viewport and reduce quality
 browser.screenshot(full: true, quality: 60) # "iVBORw0KGgoAAAANSUhEUgAABAAAAAMACAYAAAC6uhUNAAAAAXNSR0IArs4c6Q...
+# Save with specific background color
+browser.screenshot(background_color: Ferrum::RGBA.new(0, 0, 0, 0.0)) 
 ```
 
 #### pdf(\*\*options) : `String` | `Boolean`

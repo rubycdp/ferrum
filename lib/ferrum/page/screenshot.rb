@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ferrum/rbga"
+
 module Ferrum
   class Page
     module Screenshot
@@ -29,7 +31,7 @@ module Ferrum
       def screenshot(**opts)
         path, encoding = common_options(**opts)
         options = screenshot_options(path, **opts)
-        data = capture_screenshot(options, opts[:full])
+        data = capture_screenshot(options, opts[:full], opts[:background_color])
         return data if encoding == :base64
 
         bin = Base64.decode64(data)
@@ -170,9 +172,11 @@ module Ferrum
         option.to_s.gsub(/(?:_|(\/))([a-z\d]*)/) { "#{$1}#{$2.capitalize}" }.to_sym
       end
 
-      def capture_screenshot(options, full)
+      def capture_screenshot(options, full, background_color)
         maybe_resize_fullscreen(full) do
-          command("Page.captureScreenshot", **options)
+          with_background_color(background_color) do
+            command("Page.captureScreenshot", **options)
+          end
         end.fetch("data")
       end
 
@@ -185,6 +189,18 @@ module Ferrum
         yield
       ensure
         resize(width: width, height: height) if full
+      end
+
+      def with_background_color(color)
+        if color
+          raise ArgumentError, "Accept Ferrum::RGBA class only" unless color.is_a?(RGBA)
+
+          command('Emulation.setDefaultBackgroundColorOverride', color: color.to_h)
+        end
+
+        yield
+      ensure
+        command('Emulation.setDefaultBackgroundColorOverride') if color
       end
     end
   end
