@@ -90,14 +90,12 @@ module Ferrum
     end
 
     def resize(width: nil, height: nil, fullscreen: false)
-      @window_id = @browser.command("Browser.getWindowForTarget", targetId: @target_id)["windowId"]
-
       if fullscreen
         width, height = document_size
-        @browser.command("Browser.setWindowBounds", windowId: @window_id, bounds: { windowState: "fullscreen" })
+        set_window_bounds(windowState: "fullscreen")
       else
-        @browser.command("Browser.setWindowBounds", windowId: @window_id, bounds: { windowState: "normal" })
-        @browser.command("Browser.setWindowBounds", windowId: @window_id, bounds: { width: width, height: height })
+        set_window_bounds(windowState: "normal")
+        set_window_bounds(width: width, height: height)
       end
 
       command("Emulation.setDeviceMetricsOverride", slowmoable: true,
@@ -135,6 +133,14 @@ module Ferrum
       enabled = !!value
       command("Page.setBypassCSP", enabled: enabled)
       enabled
+    end
+
+    def window_id
+      @browser.command("Browser.getWindowForTarget", targetId: @target_id)["windowId"]
+    end
+
+    def set_window_bounds(bounds = {})
+      @browser.command("Browser.setWindowBounds", windowId: window_id, bounds: bounds)
     end
 
     def command(method, wait: 0, slowmoable: false, **params)
