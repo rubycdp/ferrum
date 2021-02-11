@@ -2,6 +2,15 @@
 
 module Ferrum
   describe Node do
+    describe "#at_xpath" do
+      it "matches the result within the node" do
+        browser.go_to("/ferrum/with_js")
+        p = browser.at_xpath("//p[@id='with_content']")
+        link = p.at_xpath(".//a")
+        expect(link.text).to eq("Open for match")
+      end
+    end
+
     it "raises an error if the element has been removed from the DOM" do
       browser.go_to("/ferrum/with_js")
       node = browser.at_css("#remove_me")

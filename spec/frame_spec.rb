@@ -204,7 +204,7 @@ module Ferrum
           browser.go_to("/ferrum/with_js")
           p = browser.xpath("//p[@id='with_content']").first
 
-          links = browser.xpath("./a", within: p)
+          links = p.xpath("//a")
 
           expect(links.size).to eq(1)
           expect(links.first.attribute(:id)).to eq("open-match")
@@ -242,7 +242,7 @@ module Ferrum
           browser.go_to("/ferrum/with_js")
           p = browser.at_xpath("//p[@id='with_content']")
 
-          link = browser.at_xpath("./a", within: p)
+          link = p.at_xpath("//a")
 
           expect(link).not_to be_nil
           expect(link.attribute(:id)).to eq("open-match")
@@ -280,7 +280,7 @@ module Ferrum
           browser.go_to("/ferrum/with_js")
           p = browser.css("p#with_content").first
 
-          links = browser.css("a", within: p)
+          links = p.css("div a")
 
           expect(links.size).to eq(1)
           expect(links.first.attribute(:id)).to eq("open-match")
@@ -318,7 +318,7 @@ module Ferrum
           browser.go_to("/ferrum/with_js")
           p = browser.at_css("p#with_content")
 
-          link = browser.at_css("a", within: p)
+          link = p.at_css("a")
 
           expect(link).not_to be_nil
           expect(link.attribute(:id)).to eq("open-match")
