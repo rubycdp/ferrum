@@ -346,7 +346,7 @@ browser.screenshot(path: "google.jpg") # => 30902
 # Save to Base64 the whole page not only viewport and reduce quality
 browser.screenshot(full: true, quality: 60) # "iVBORw0KGgoAAAANSUhEUgAABAAAAAMACAYAAAC6uhUNAAAAAXNSR0IArs4c6Q...
 # Save with specific background color
-browser.screenshot(background_color: Ferrum::RGBA.new(0, 0, 0, 0.0)) 
+browser.screenshot(background_color: Ferrum::RGBA.new(0, 0, 0, 0.0))
 ```
 
 #### pdf(\*\*options) : `String` | `Boolean`
@@ -484,7 +484,7 @@ end
 browser.go_to("https://google.com")
 ```
 
-#### authorize(\*\*options)
+#### authorize(\*\*options, &block)
 
 If site uses authorization you can provide credentials using this method.
 
@@ -492,13 +492,21 @@ If site uses authorization you can provide credentials using this method.
   * :type `Symbol` `:server` | `:proxy` site or proxy authorization
   * :user `String`
   * :password `String`
+* &block passes authenticated request, which you must subsequently allow or deny, if you don't
+care about unwanted requests call `continue`.
 
 ```ruby
-browser.network.authorize(user: "login", password: "pass")
+browser.network.authorize(user: "login", password: "pass") do |request|
+  request.continue
+end
 browser.go_to("http://example.com/authenticated")
 puts browser.network.status # => 200
 puts browser.body # => Welcome, authenticated client
 ```
+
+You used to call `authorize` method without block, but since it's implemented using request interception there could be
+a collision with another part of your code that also uses request interception, so that authorize allows the request
+while your code denies but it's too late. The block is mandatory now.
 
 
 ### Mouse

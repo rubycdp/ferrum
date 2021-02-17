@@ -209,7 +209,9 @@ module Ferrum
       end
 
       it "allows with given credentials" do
-        browser.network.authorize(user: "login", password: "pass")
+        browser.network.authorize(user: "login", password: "pass") do |request|
+          request.continue
+        end
 
         browser.go_to("/ferrum/basic_auth")
 
@@ -218,7 +220,9 @@ module Ferrum
       end
 
       it "allows even overwriting headers" do
-        browser.network.authorize(user: "login", password: "pass")
+        browser.network.authorize(user: "login", password: "pass") do |request|
+          request.continue
+        end
         browser.headers.set("Cuprite" => "true")
 
         browser.go_to("/ferrum/basic_auth")
@@ -228,7 +232,9 @@ module Ferrum
       end
 
       it "denies with wrong credentials" do
-        browser.network.authorize(user: "user", password: "pass!")
+        browser.network.authorize(user: "user", password: "pass!") do |request|
+          request.continue
+        end
 
         browser.go_to("/ferrum/basic_auth")
 
@@ -237,7 +243,9 @@ module Ferrum
       end
 
       it "allows on POST request" do
-        browser.network.authorize(user: "login", password: "pass")
+        browser.network.authorize(user: "login", password: "pass") do |request|
+          request.continue
+        end
 
         browser.go_to("/ferrum/basic_auth")
         browser.at_css(%([type="submit"])).click

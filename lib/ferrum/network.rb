@@ -83,7 +83,7 @@ module Ferrum
       @page.command("Fetch.enable", handleAuthRequests: true, patterns: [pattern])
     end
 
-    def authorize(user:, password:, type: :server)
+    def authorize(user:, password:, type: :server, &block)
       unless AUTHORIZE_TYPE.include?(type)
         raise ArgumentError, ":type should be in #{AUTHORIZE_TYPE}"
       end
@@ -93,8 +93,14 @@ module Ferrum
 
       intercept
 
-      @page.on(:request) do |request|
-        request.continue
+      if block_given?
+        @page.on(:request, &block)
+      else
+        warn "[DEPRECATION] `authorize` without `&block` is deprecated. Please see details https://github.com/rubycdp/ferrum#authorizeoptions"
+
+        @page.on(:request) do |request|
+          request.continue
+        end
       end
 
       @page.on(:auth) do |request, index, total|
