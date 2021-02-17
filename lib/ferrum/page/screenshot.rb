@@ -38,7 +38,7 @@ module Ferrum
         save_file(path, bin)
       end
 
-    def pdf(**opts)
+      def pdf(**opts)
         path, encoding = common_options(**opts)
         options = pdf_options(**opts).merge(transferMode: "ReturnAsStream")
         handle = command("Page.printToPDF", **options).fetch("stream")
