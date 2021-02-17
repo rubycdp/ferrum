@@ -16,8 +16,12 @@ module Ferrum
         @on = Concurrent::Hash.new { |h, k| h[k] = Concurrent::Array.new }
       end
 
-      def on(event, &block)
-        @on[event] = [block]
+      def on(event, redefine: false, &block)
+        if redefine
+          @on[event] = [block]
+        else
+          @on[event] << block
+        end
         true
       end
 

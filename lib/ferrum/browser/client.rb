@@ -49,12 +49,12 @@ module Ferrum
         response
       end
 
-      def on(event, &block)
+      def on(event, redefine: false, &block)
         case event
         when *INTERRUPTIONS
-          @interruptor.on(event, &block)
+          @interruptor.on(event, redefine: redefine, &block)
         else
-          @subscriber.on(event, &block)
+          @subscriber.on(event, redefine: redefine, &block)
         end
       end
 

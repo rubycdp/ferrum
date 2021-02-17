@@ -329,12 +329,12 @@ module Ferrum
         expect(browser.body).to include("content")
       end
 
-      it "redefines existed handler" do
+      it "redefines existed handler by 'redefine' flag" do
         browser.network.intercept
         browser.on(:request) do |request|
           request.abort
         end
-        browser.on(:request) do |request|
+        browser.on(:request, redefine: true) do |request|
           request.continue
         end
         browser.go_to("/ferrum/url_blacklist")

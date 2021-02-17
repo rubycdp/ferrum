@@ -155,15 +155,15 @@ module Ferrum
       result
     end
 
-    def on(name, &block)
+    def on(name, redefine: false, &block)
       case name
       when :dialog
-        @client.on("Page.javascriptDialogOpening") do |params, index, total|
+        @client.on("Page.javascriptDialogOpening", redefine: redefine) do |params, index, total|
           dialog = Dialog.new(self, params)
           block.call(dialog, index, total)
         end
       when :request
-        @client.on("Fetch.requestPaused") do |params, index, total|
+        @client.on("Fetch.requestPaused", redefine: redefine) do |params, index, total|
           request = Network::InterceptedRequest.new(self, params)
           exchange = network.select(request.network_id).last
           exchange ||= network.build_exchange(request.network_id)
@@ -171,12 +171,12 @@ module Ferrum
           block.call(request, index, total)
         end
       when :auth
-        @client.on("Fetch.authRequired") do |params, index, total|
+        @client.on("Fetch.authRequired", redefine: redefine) do |params, index, total|
           request = Network::AuthRequest.new(self, params)
           block.call(request, index, total)
         end
       else
-        @client.on(name, &block)
+        @client.on(name, redefine: redefine, &block)
       end
     end
 
