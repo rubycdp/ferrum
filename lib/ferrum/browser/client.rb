@@ -58,6 +58,10 @@ module Ferrum
         end
       end
 
+      def subscribed?(event)
+        [@interruptor, @subscriber].any? { |s| s.subscribed?(event) }
+      end
+
       def close
         @ws.close
         # Give a thread some time to handle a tail of messages

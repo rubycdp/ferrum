@@ -97,8 +97,8 @@ module Ferrum
       expect(browser.viewport_size).to eq([200, 400])
     end
 
-    context 'fullscreen' do
-      shared_examples 'resize viewport by fullscreen' do
+    context "fullscreen" do
+      shared_examples "resize viewport by fullscreen" do
         it "allows the viewport to be resized by fullscreen" do
           expect(browser.viewport_size).to eq([1024, 768])
           browser.go_to(path)
@@ -107,12 +107,12 @@ module Ferrum
         end
       end
 
-      include_examples 'resize viewport by fullscreen' do
+      include_examples "resize viewport by fullscreen" do
         let(:path) { "/ferrum/custom_html_size" }
         let(:viewport_size) { [1280, 1024] }
       end
 
-      include_examples 'resize viewport by fullscreen' do
+      include_examples "resize viewport by fullscreen" do
         let(:path) { "/ferrum/custom_html_size_100%" }
         let(:viewport_size) { [1272, 1008] }
       end
@@ -564,7 +564,7 @@ module Ferrum
     it "does not run into content quads error" do
       browser.go_to("/ferrum/index")
 
-      allow_any_instance_of(Node).to receive(:get_content_quads).and_raise(Ferrum::BrowserError, 'message' => 'Could not compute content quads')
+      allow_any_instance_of(Node).to receive(:get_content_quads).and_raise(Ferrum::BrowserError, "message" => "Could not compute content quads")
 
       browser.at_xpath("//a[text() = 'JS redirect']").click
       expect(browser.body).to include("Hello world")

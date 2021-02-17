@@ -83,9 +83,13 @@ module Ferrum
       @page.command("Fetch.enable", handleAuthRequests: true, patterns: [pattern])
     end
 
-    def authorize(user:, password:, type: :server)
+    def authorize(user:, password:, type: :server, &block)
       unless AUTHORIZE_TYPE.include?(type)
         raise ArgumentError, ":type should be in #{AUTHORIZE_TYPE}"
+      end
+
+      if !block_given? && !@page.subscribed?("Fetch.requestPaused")
+        raise ArgumentError, "Block is missing, call `authorize(...) { |r| r.continue } or subscribe to `on(:request)` events before calling it"
       end
 
       @authorized_ids ||= {}
@@ -93,9 +97,7 @@ module Ferrum
 
       intercept
 
-      @page.on(:request) do |request|
-        request.continue
-      end
+      @page.on(:request, &block)
 
       @page.on(:auth) do |request, index, total|
         if request.auth_challenge?(type)
