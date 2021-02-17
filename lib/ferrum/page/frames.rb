@@ -75,7 +75,7 @@ module Ferrum
           frame_id = params.dig("context", "auxData", "frameId")
 
           unless @main_frame.id
-            root_frame = command('Page.getFrameTree').dig('frameTree', 'frame', 'id')
+            root_frame = command("Page.getFrameTree").dig("frameTree", "frame", "id")
             if frame_id == root_frame
               @main_frame.id = frame_id
               @frames[frame_id] = @main_frame

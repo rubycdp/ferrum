@@ -27,9 +27,11 @@ module Ferrum
         expect(frame.url).to end_with("/ferrum/get_cookie")
       end
 
-      it 'finds main frame properly' do
-        browser.goto("/ferrum/popup_frames")
+      it "finds main frame properly" do
+        browser.go_to("/ferrum/popup_frames")
+
         browser.at_xpath("//a[text()='pop up']").click
+
         expect(browser.pages.size).to eq(2)
         opened_page = browser.pages.last
         expect(opened_page.main_frame.url).to end_with("/frames")
