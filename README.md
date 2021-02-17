@@ -1,7 +1,5 @@
 # Ferrum - high-level API to control Chrome in Ruby
 
-[![CircleCI](https://circleci.com/gh/rubycdp/ferrum.svg?style=shield)](https://circleci.com/gh/rubycdp/ferrum)
-
 <img align="right"
      width="320" height="241"
      alt="Ferrum logo"

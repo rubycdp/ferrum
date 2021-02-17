@@ -67,11 +67,10 @@ RSpec.configure do |config|
     timestamp = "#{time_now.strftime("%Y-%m-%d-%H-%M-%S.")}#{"%03d" % (time_now.usec/1000).to_i}"
 
     screenshot_name = "screenshot-#{filename}-#{line_number}-#{timestamp}.png"
-    screenshot_path = "#{ENV["CIRCLE_ARTIFACTS"]}/screenshots/#{screenshot_name}"
+    screenshot_path = "/tmp/ferrum/#{screenshot_name}"
     browser.screenshot(path: screenshot_path, full: true)
 
-    log_name = "ferrum-#{filename}-#{line_number}-#{timestamp}.txt"
-    log_path = "#{ENV["CIRCLE_ARTIFACTS"]}/logs/#{log_name}"
-    File.open(log_path, "wb") { |file| file.write(FERRUM_LOGGER.string) }
+    log_name = "logfile-#{filename}-#{line_number}-#{timestamp}.txt"
+    File.open("/tmp/ferrum/#{log_name}", "wb") { |file| file.write(FERRUM_LOGGER.string) }
   end
 end
