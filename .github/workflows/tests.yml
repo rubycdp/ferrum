@@ -1,0 +1,38 @@
+name: Tests
+on: [push]
+
+jobs:
+  tests:
+    name: Tests
+
+    strategy:
+      fail-fast: false
+      matrix:
+        gemfile: [websocket-driver-0.6.x, websocket-driver-0.7.x]
+        ruby: [2.5, 2.6, 2.7]
+
+    runs-on: ubuntu-latest
+    env:
+      FERRUM_PROCESS_TIMEOUT: 20
+      BUNDLE_GEMFILE: .github/gemfiles/${{ matrix.gemfile }}.gemfile
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+
+      - run: mkdir -p /tmp/ferrum
+
+      - name: Run tests
+        run: bundle exec rake
+
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v2
+        if: ${{ failure() }}
+        with:
+          name: footprints
+          path: /tmp/ferrum/
