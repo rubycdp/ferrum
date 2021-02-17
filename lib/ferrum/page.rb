@@ -180,6 +180,10 @@ module Ferrum
       end
     end
 
+    def subscribed?(event)
+      @client.subscribed?(event)
+    end
+
     private
 
     def subscribe

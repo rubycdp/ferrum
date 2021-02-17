@@ -88,20 +88,16 @@ module Ferrum
         raise ArgumentError, ":type should be in #{AUTHORIZE_TYPE}"
       end
 
+      if !block_given? && !@page.subscribed?("Fetch.requestPaused")
+        raise ArgumentError, "Block is missing, call `authorize(...) { |r| r.continue } or subscribe to `on(:request)` events before calling it"
+      end
+
       @authorized_ids ||= {}
       @authorized_ids[type] ||= []
 
       intercept
 
-      if block_given?
-        @page.on(:request, &block)
-      else
-        warn "[DEPRECATION] `authorize` without `&block` is deprecated. Please see details https://github.com/rubycdp/ferrum#authorizeoptions"
-
-        @page.on(:request) do |request|
-          request.continue
-        end
-      end
+      @page.on(:request, &block)
 
       @page.on(:auth) do |request, index, total|
         if request.auth_challenge?(type)

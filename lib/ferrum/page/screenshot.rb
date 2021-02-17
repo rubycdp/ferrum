@@ -195,12 +195,12 @@ module Ferrum
         if color
           raise ArgumentError, "Accept Ferrum::RGBA class only" unless color.is_a?(RGBA)
 
-          command('Emulation.setDefaultBackgroundColorOverride', color: color.to_h)
+          command("Emulation.setDefaultBackgroundColorOverride", color: color.to_h)
         end
 
         yield
       ensure
-        command('Emulation.setDefaultBackgroundColorOverride') if color
+        command("Emulation.setDefaultBackgroundColorOverride") if color
       end
     end
   end

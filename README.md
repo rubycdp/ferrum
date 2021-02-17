@@ -486,22 +486,41 @@ browser.go_to("https://google.com")
 
 #### authorize(\*\*options, &block)
 
-If site uses authorization you can provide credentials using this method.
+If site or proxy uses authorization you can provide credentials using this method.
 
 * options `Hash`
   * :type `Symbol` `:server` | `:proxy` site or proxy authorization
   * :user `String`
   * :password `String`
-* &block passes authenticated request, which you must subsequently allow or deny, if you don't
-care about unwanted requests call `continue`.
+* &block accepts authenticated request, which you must subsequently allow or deny, if you don't
+care about unwanted requests just call `request.continue`.
 
 ```ruby
-browser.network.authorize(user: "login", password: "pass") do |request|
-  request.continue
-end
+browser.network.authorize(user: "login", password: "pass") { |req| req.continue }
 browser.go_to("http://example.com/authenticated")
 puts browser.network.status # => 200
 puts browser.body # => Welcome, authenticated client
+```
+
+Since Chrome implements authorize using request interception you must continue or abort authorized requests. If you
+already have code that uses interception you can use `authorize` without block, but if not you are obliged to pass
+block, so this is version doesn't pass block and can work just fine:
+
+```ruby
+browser = Ferrum::Browser.new
+browser.network.intercept
+browser.on(:request) do |request|
+  if request.resource_type == "Image"
+    request.abort
+  else
+    request.continue
+  end
+end
+
+browser.network.authorize(user: "login", password: "pass", type: :proxy)
+
+browser.go_to("https://google.com")
+
 ```
 
 You used to call `authorize` method without block, but since it's implemented using request interception there could be

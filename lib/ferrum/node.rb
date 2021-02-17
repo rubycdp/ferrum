@@ -142,7 +142,7 @@ module Ferrum
 
       get_position(points, x, y, position)
     rescue Ferrum::BrowserError => e
-      return raise unless e.message&.include?('Could not compute content quads')
+      return raise unless e.message&.include?("Could not compute content quads")
 
       find_position_via_js
     end
@@ -151,8 +151,8 @@ module Ferrum
 
     def find_position_via_js
       [
-        evaluate('this.getBoundingClientRect().left + window.pageXOffset + (this.offsetWidth / 2)'), # x
-        evaluate('this.getBoundingClientRect().top + window.pageYOffset + (this.offsetHeight / 2)') # y
+        evaluate("this.getBoundingClientRect().left + window.pageXOffset + (this.offsetWidth / 2)"), # x
+        evaluate("this.getBoundingClientRect().top + window.pageYOffset + (this.offsetHeight / 2)") # y
       ]
     end
 

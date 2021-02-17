@@ -201,6 +201,25 @@ module Ferrum
     end
 
     context "authentication support" do
+      it "raises error when authorize is without block" do
+        expect {
+          browser.network.authorize(user: "login", password: "pass")
+        }.to raise_exception(ArgumentError, "Block is missing, call `authorize(...) { |r| r.continue } or subscribe to `on(:request)` events before calling it")
+      end
+
+      it "raises no error when authorize is with block" do
+        expect {
+          browser.network.authorize(user: "login", password: "pass") { |r| r.continue }
+        }.not_to raise_error
+      end
+
+      it "raises no error when authorize is without block but subscribed to events" do
+        expect {
+          browser.on(:request) { |r| r.continue }
+          browser.network.authorize(user: "login", password: "pass")
+        }.not_to raise_error
+      end
+
       it "denies without credentials" do
         browser.go_to("/ferrum/basic_auth")
 
