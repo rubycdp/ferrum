@@ -24,7 +24,7 @@ module Ferrum
                 mouse keyboard
                 screenshot pdf mhtml viewport_size
                 frames frame_by main_frame
-                evaluate evaluate_on evaluate_async execute
+                evaluate evaluate_on evaluate_async execute evaluate_func
                 add_script_tag add_style_tag bypass_csp
                 on goto] => :page
     delegate %i[default_user_agent] => :process

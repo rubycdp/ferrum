@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Ferrum
-  describe Browser do
+  describe Frame do
     context "frame support" do
       it "supports selection by index" do
         browser.go_to("/ferrum/frames")
@@ -110,76 +110,6 @@ module Ferrum
           JS
           frame = browser.at_xpath("//iframe[@name='frame']").frame
           expect(frame.body).to include("Hello Frame")
-        end
-      end
-
-      context "#add_script_tag" do
-        it "adds by url" do
-          browser.go_to
-          expect {
-            browser.evaluate("$('a').first().text()")
-          }.to raise_error(Ferrum::JavaScriptError)
-
-          browser.add_script_tag(url: "/ferrum/jquery.min.js")
-
-          expect(browser.evaluate("$('a').first().text()")).to eq("Relative")
-        end
-
-        it "adds by path" do
-          browser.go_to
-          path = "#{Ferrum::Application::FERRUM_PUBLIC}/jquery-1.11.3.min.js"
-          expect {
-            browser.evaluate("$('a').first().text()")
-          }.to raise_error(Ferrum::JavaScriptError)
-
-          browser.add_script_tag(path: path)
-
-          expect(browser.evaluate("$('a').first().text()")).to eq("Relative")
-        end
-
-        it "adds by content" do
-          browser.go_to
-
-          browser.add_script_tag(content: "function yay() { return 'yay!'; }")
-
-          expect(browser.evaluate("yay()")).to eq("yay!")
-        end
-      end
-
-      context "#add_style_tag" do
-        let(:font_size) {
-          <<~JS
-            window
-              .getComputedStyle(document.querySelector('a'))
-              .getPropertyValue('font-size')
-          JS
-        }
-
-        it "adds by url" do
-          browser.go_to
-          expect(browser.evaluate(font_size)).to eq("16px")
-
-          browser.add_style_tag(url: "/ferrum/add_style_tag.css")
-
-          expect(browser.evaluate(font_size)).to eq("50px")
-        end
-
-        it "adds by path" do
-          browser.go_to
-          path = "#{Ferrum::Application::FERRUM_PUBLIC}/add_style_tag.css"
-          expect(browser.evaluate(font_size)).to eq("16px")
-
-          browser.add_style_tag(path: path)
-
-          expect(browser.evaluate(font_size)).to eq("50px")
-        end
-
-        it "adds by content" do
-          browser.go_to
-
-          browser.add_style_tag(content: "a { font-size: 20px; }")
-
-          expect(browser.evaluate(font_size)).to eq("20px")
         end
       end
 

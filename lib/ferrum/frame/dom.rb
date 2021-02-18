@@ -37,54 +37,54 @@ module Ferrum
       end
 
       def xpath(selector, within: nil)
-        code = <<~JS
-          let selector = arguments[0];
-          let within = arguments[1] || document;
-          let results = [];
+        expr = <<~JS
+          function(selector, within) {
+            let results = [];
+            within ||= document
 
-          let xpath = document.evaluate(selector, within, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-          for (let i = 0; i < xpath.snapshotLength; i++) {
-            results.push(xpath.snapshotItem(i));
+            let xpath = document.evaluate(selector, within, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+            for (let i = 0; i < xpath.snapshotLength; i++) {
+              results.push(xpath.snapshotItem(i));
+            }
+
+            return results;
           }
-
-          arguments[2](results);
         JS
 
-        evaluate_async(code, @page.timeout, selector, within)
+        evaluate_func(expr, selector, within)
       end
 
       def at_xpath(selector, within: nil)
-        code = <<~JS
-          let selector = arguments[0];
-          let within = arguments[1] || document;
-          let xpath = document.evaluate(selector, within, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-          let result = xpath.snapshotItem(0);
-          arguments[2](result);
+        expr = <<~JS
+          function(selector, within) {
+            within ||= document
+            let xpath = document.evaluate(selector, within, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+            return xpath.snapshotItem(0);
+          }
         JS
-
-        evaluate_async(code, @page.timeout, selector, within)
+        evaluate_func(expr, selector, within)
       end
 
       def css(selector, within: nil)
-        code = <<~JS
-          let selector = arguments[0];
-          let within = arguments[1] || document;
-          let results = Array.from(within.querySelectorAll(selector));
-          arguments[2](results);
+        expr = <<~JS
+          function(selector, within) {
+            within ||= document
+            return Array.from(within.querySelectorAll(selector));
+          }
         JS
 
-        evaluate_async(code, @page.timeout, selector, within)
+        evaluate_func(expr, selector, within)
       end
 
       def at_css(selector, within: nil)
-        code = <<~JS
-          let selector = arguments[0];
-          let within = arguments[1] || document;
-          let result = within.querySelector(selector);
-          arguments[2](result);
+        expr = <<~JS
+          function(selector, within) {
+            within ||= document
+            return within.querySelector(selector);
+          }
         JS
 
-        evaluate_async(code, @page.timeout, selector, within)
+        evaluate_func(expr, selector, within)
       end
     end
   end

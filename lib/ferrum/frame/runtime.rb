@@ -3,35 +3,18 @@
 require "singleton"
 
 module Ferrum
+  class CyclicObject
+    include Singleton
+
+    def inspect
+      %(#<#{self.class} JavaScript object that cannot be represented in Ruby>)
+    end
+  end
+
   class Frame
     module Runtime
       INTERMITTENT_ATTEMPTS = ENV.fetch("FERRUM_INTERMITTENT_ATTEMPTS", 6).to_i
       INTERMITTENT_SLEEP = ENV.fetch("FERRUM_INTERMITTENT_SLEEP", 0.1).to_f
-
-      EXECUTE_OPTIONS = {
-        returnByValue: true,
-        functionDeclaration: %(function() { %s })
-      }.freeze
-      DEFAULT_OPTIONS = {
-        functionDeclaration: %(function() { return %s })
-      }.freeze
-      EVALUATE_ASYNC_OPTIONS = {
-        awaitPromise: true,
-        functionDeclaration: %(
-          function() {
-           return new Promise((__resolve, __reject) => {
-             try {
-               arguments[arguments.length] = r => __resolve(r);
-               arguments.length = arguments.length + 1;
-               setTimeout(() => __reject(new Error("timed out promise")), %s);
-               %s
-             } catch(error) {
-               __reject(error);
-             }
-           });
-          }
-        )
-      }.freeze
 
       SCRIPT_SRC_TAG = <<~JS
         const script = document.createElement("script");
@@ -63,37 +46,45 @@ module Ferrum
       JS
 
       def evaluate(expression, *args)
-        call(*args, expression: expression)
+        expression = "function() { return %s }" % expression
+        call(expression: expression, arguments: args)
       end
 
-      def evaluate_async(expression, wait_time, *args)
-        call(*args, expression: expression, wait_time: wait_time * 1000, **EVALUATE_ASYNC_OPTIONS)
+      def evaluate_async(expression, wait, *args)
+        template = <<~JS
+          function() {
+            return new Promise((__f, __r) => {
+              try {
+                arguments[arguments.length] = r => __f(r);
+                arguments.length = arguments.length + 1;
+                setTimeout(() => __r(new Error("timed out promise")), %s);
+                %s
+              } catch(error) {
+                __r(error);
+              }
+            });
+          }
+        JS
+
+        expression = template % [wait * 1000, expression]
+        call(expression: expression, arguments: args, awaitPromise: true)
       end
 
       def execute(expression, *args)
-        call(*args, expression: expression, handle: false, **EXECUTE_OPTIONS)
+        expression = "function() { %s }" % expression
+        call(expression: expression, arguments: args, handle: false, returnByValue: true)
         true
       end
 
+      def evaluate_func(expression, *args, on: nil)
+        call(expression: expression, arguments: args, on: on)
+      end
+
       def evaluate_on(node:, expression:, by_value: true, wait: 0)
-        errors = [NodeNotFoundError, NoExecutionContextError]
-        attempts, sleep = INTERMITTENT_ATTEMPTS, INTERMITTENT_SLEEP
-
-        Ferrum.with_attempts(errors: errors, max: attempts, wait: sleep) do
-          response = @page.command("DOM.resolveNode", nodeId: node.node_id)
-          object_id = response.dig("object", "objectId")
-          options = DEFAULT_OPTIONS.merge(objectId: object_id)
-          options[:functionDeclaration] = options[:functionDeclaration] % expression
-          options.merge!(returnByValue: by_value)
-
-          response = @page.command("Runtime.callFunctionOn",
-                                   wait: wait, slowmoable: true,
-                                   **options)
-          handle_error(response)
-          response = response["result"]
-
-          by_value ? response.dig("value") : handle_response(response)
-        end
+        options = { handle: true }
+        expression = "function() { return %s }" % expression
+        options = { handle: false, returnByValue: true } if by_value
+        call(expression: expression, on: node, wait: wait, **options)
       end
 
       def add_script_tag(url: nil, path: nil, content: nil, type: "text/javascript")
@@ -126,27 +117,32 @@ module Ferrum
 
       private
 
-      def call(*args, expression:, wait_time: nil, handle: true, **options)
+      def call(expression:, arguments: [], on: nil, wait: 0, handle: true, **options)
+        params = options.dup
         errors = [NodeNotFoundError, NoExecutionContextError]
         attempts, sleep = INTERMITTENT_ATTEMPTS, INTERMITTENT_SLEEP
 
         Ferrum.with_attempts(errors: errors, max: attempts, wait: sleep) do
-          arguments = prepare_args(args)
-          params = DEFAULT_OPTIONS.merge(options)
-          expression = [wait_time, expression] if wait_time
-          params[:functionDeclaration] = params[:functionDeclaration] % expression
-          params = params.merge(arguments: arguments)
-          unless params[:executionContextId]
-            params = params.merge(executionContextId: execution_id)
+          if on
+            response = @page.command("DOM.resolveNode", nodeId: on.node_id)
+            object_id = response.dig("object", "objectId")
+            params.merge!(objectId: object_id)
+          elsif params[:executionContextId].nil?
+            params.merge!(executionContextId: execution_id)
+          else
+            # executionContextId is passed, nop
           end
 
+          params.merge!(functionDeclaration: expression,
+                        arguments: prepare_args(arguments))
+
           response = @page.command("Runtime.callFunctionOn",
-                                   slowmoable: true,
+                                   wait: wait, slowmoable: true,
                                    **params)
           handle_error(response)
           response = response["result"]
 
-          handle ? handle_response(response) : response
+          handle ? handle_response(response) : response.dig("value")
         end
       end
 
@@ -263,14 +259,6 @@ module Ferrum
       def cyclic_object
         CyclicObject.instance
       end
-    end
-  end
-
-  class CyclicObject
-    include Singleton
-
-    def inspect
-      %(#<#{self.class} JavaScript object that cannot be represented in Ruby>)
     end
   end
 end

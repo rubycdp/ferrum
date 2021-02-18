@@ -32,7 +32,7 @@ module Ferrum
     extend Forwardable
     delegate %i[at_css at_xpath css xpath
                 current_url current_title url title body doctype set_content
-                execution_id evaluate evaluate_on evaluate_async execute
+                execution_id evaluate evaluate_on evaluate_async execute evaluate_func
                 add_script_tag add_style_tag] => :main_frame
 
     include Frames, Screenshot
