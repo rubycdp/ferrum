@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FERRUM_PROCESS_TIMEOUT: 20
+      FERRUM_DEFAULT_TIMEOUT: 10
       BUNDLE_GEMFILE: .github/gemfiles/${{ matrix.gemfile }}.gemfile
     steps:
       - name: Checkout code
