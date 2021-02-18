@@ -10,17 +10,20 @@ module Ferrum
   class NotImplementedError < Error; end
 
   class StatusError < Error
+    def initialize(url, message = nil)
+      super(message || "Request to #{url} failed to reach server, check DNS and server status")
+    end
+  end
+
+  class PendingConnectionsError < StatusError
     attr_reader :pendings
 
     def initialize(url, pendings = [])
       @pendings = pendings
-      message = if pendings.empty?
-                  "Request to #{url} failed to reach server, check DNS and/or server status"
-                else
-                  "Request to #{url} reached server, but there are still pending connections: #{pendings.join(', ')}"
-                end
 
-      super(message)
+      message = "Request to #{url} reached server, but there are still pending connections: #{pendings.join(', ')}"
+
+      super(url, message)
     end
   end
 

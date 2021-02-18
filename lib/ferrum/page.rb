@@ -78,8 +78,10 @@ module Ferrum
       end
       response["frameId"]
     rescue TimeoutError
-      pendings = network.traffic.select(&:pending?).map { |e| e.request.url }
-      raise StatusError.new(options[:url], pendings) unless pendings.empty?
+      if @browser.pending_connection_errors
+        pendings = network.traffic.select(&:pending?).map { |e| e.request.url }
+        raise PendingConnectionsError.new(options[:url], pendings) unless pendings.empty?
+      end
     end
     alias goto go_to
 
