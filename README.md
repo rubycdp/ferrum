@@ -157,6 +157,9 @@ Ferrum::Browser.new(options)
   * `:timeout` (Numeric) - The number of seconds we'll wait for a response when
       communicating with browser. Default is 5.
   * `:js_errors` (Boolean) - When true, JavaScript errors get re-raised in Ruby.
+  * `:pending_connection_errors` (Boolean) - When main frame is still waiting for slow responses while timeout is
+      reached `PendingConnectionsError` is raised. It's better to figure out why you have slow responses and fix or
+      block them rather than turn this setting off. Default is true.
   * `:browser_name` (Symbol) - `:chrome` by default, only experimental support
       for `:firefox` for now.
   * `:browser_path` (String) - Path to Chrome binary, you can also set ENV

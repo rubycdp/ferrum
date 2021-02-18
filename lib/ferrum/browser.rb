@@ -29,7 +29,7 @@ module Ferrum
                 on goto] => :page
     delegate %i[default_user_agent] => :process
 
-    attr_reader :client, :process, :contexts, :logger, :js_errors,
+    attr_reader :client, :process, :contexts, :logger, :js_errors, :pending_connection_errors,
                 :slowmo, :base_url, :options, :window_size, :ws_max_receive_size
     attr_writer :timeout
 
@@ -44,6 +44,7 @@ module Ferrum
       @logger, @timeout, @ws_max_receive_size =
         @options.values_at(:logger, :timeout, :ws_max_receive_size)
       @js_errors = @options.fetch(:js_errors, false)
+      @pending_connection_errors = @options.fetch(:pending_connection_errors, true)
       @slowmo = @options[:slowmo].to_f
 
       if @options.key?(:base_url)
