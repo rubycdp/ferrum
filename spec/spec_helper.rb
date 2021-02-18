@@ -17,19 +17,19 @@ RSpec.configure do |config|
     @server = Ferrum::Server.boot
 
     begin
-      browser = Ferrum::Browser.new(process_timeout: 5)
+      browser = Ferrum::Browser.new
       puts "Browser: #{browser.process.browser_version}"
       puts "Protocol: #{browser.process.protocol_version}"
       puts "V8: #{browser.process.v8_version}"
       puts "Webkit: #{browser.process.webkit_version}"
     ensure
-      browser.quit
+      browser&.quit
     end
   end
 
   config.before(:all) do
     base_url = Ferrum::Server.server.base_url
-    options = { base_url: base_url, process_timeout: 5 }
+    options = { base_url: base_url }
 
     if ENV["CI"]
       FERRUM_LOGGER = StringIO.new

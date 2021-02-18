@@ -143,15 +143,6 @@ module Ferrum
       expect(browser.body).to include("x: 100, y: 150")
     end
 
-    it "supports executing multiple lines of javascript" do
-      browser.execute <<-JS
-        var a = 1
-        var b = 2
-        window.result = a + b
-      JS
-      expect(browser.evaluate("window.result")).to eq(3)
-    end
-
     it "supports stopping the session", skip: Ferrum.windows? do
       browser = Browser.new
       pid = browser.process.pid
@@ -472,99 +463,6 @@ module Ferrum
         localStorage.getItem("key");
       JS
       expect(value).to be_nil
-    end
-
-    context "evaluate" do
-      it "can return an element" do
-        browser.go_to("/ferrum/type")
-        element = browser.evaluate(%(document.getElementById("empty_input")))
-        expect(element).to eq(browser.at_css("#empty_input"))
-      end
-
-      it "can return structures with elements" do
-        browser.go_to("/ferrum/type")
-        result = browser.evaluate <<~JS
-          {
-            a: document.getElementById("empty_input"),
-            b: { c: document.querySelectorAll("#empty_textarea, #filled_textarea") }
-          }
-        JS
-
-        expect(result).to eq(
-          "a" => browser.at_css("#empty_input"),
-          "b" => {
-            "c" => browser.css("#empty_textarea, #filled_textarea")
-          }
-        )
-      end
-    end
-
-    context "evaluate_async" do
-      it "handles evaluate_async value properly" do
-        expect(browser.evaluate_async("arguments[0](null)", 5)).to be_nil
-        expect(browser.evaluate_async("arguments[0](false)", 5)).to be false
-        expect(browser.evaluate_async("arguments[0](true)", 5)).to be true
-        expect(browser.evaluate_async(%(arguments[0]({foo: "bar"})), 5)).to eq("foo" => "bar")
-      end
-
-      it "will timeout" do
-        expect {
-          browser.evaluate_async("var callback=arguments[0]; setTimeout(function(){callback(true)}, 4000)", 1)
-        }.to raise_error(Ferrum::ScriptTimeoutError)
-      end
-    end
-
-    it "handles evaluate values properly" do
-      expect(browser.evaluate("null")).to be_nil
-      expect(browser.evaluate("false")).to be false
-      expect(browser.evaluate("true")).to be true
-      expect(browser.evaluate("undefined")).to eq(nil)
-
-      expect(browser.evaluate("3;")).to eq(3)
-      expect(browser.evaluate("31337")).to eq(31337)
-      expect(browser.evaluate(%("string"))).to eq("string")
-      expect(browser.evaluate(%({foo: "bar"}))).to eq("foo" => "bar")
-
-      expect(browser.evaluate("new Object")).to eq({})
-      expect(browser.evaluate("new Date(2012, 0).toDateString()")).to eq("Sun Jan 01 2012")
-      expect(browser.evaluate("new Object({a: 1})")).to eq({"a" => 1})
-      expect(browser.evaluate("new Array")).to eq([])
-      expect(browser.evaluate("new Function")).to eq({})
-
-      expect {
-        browser.evaluate(%(throw "smth"))
-      }.to raise_error(Ferrum::JavaScriptError)
-    end
-
-    context "cyclic structure" do
-      context "ignores seen" do
-        let(:code) {
-          <<~JS
-            (function() {
-              var a = {};
-              var b = {};
-              var c = {};
-              c.a = a;
-              a.a = a;
-              a.b = b;
-              a.c = c;
-              return %s;
-            })()
-          JS
-        }
-
-        it "objects" do
-          expect(browser.evaluate(code % "a")).to eq(CyclicObject.instance)
-        end
-
-        it "arrays" do
-          expect(browser.evaluate(code % "[a]")).to eq([CyclicObject.instance])
-        end
-      end
-
-      it "backtracks what it has seen" do
-        expect(browser.evaluate("(function() { var a = {}; return [a, a] })()")).to eq([{}, {}])
-      end
     end
 
     it "synchronizes page loads properly" do
