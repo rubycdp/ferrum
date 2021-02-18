@@ -57,7 +57,7 @@ module Ferrum
       path = "#{PROJECT_ROOT}/spec/support/no_chrome"
 
       expect {
-        Browser.new(browser_path: path)
+        Browser.new(browser_path: path, process_timeout: 2)
       }.to raise_error(
         Ferrum::ProcessTimeoutError,
         "Browser did not produce websocket url within 2 seconds"
