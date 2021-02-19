@@ -205,6 +205,25 @@ module Ferrum
           browser&.quit
         end
       end
+
+      it 'supports user Javascript' do
+        begin
+          javascript = <<~JS
+            Object.defineProperty(navigator, 'languages', {
+              get: function() { return ['tlh']; }
+            });
+          JS
+
+          browser = Browser.new.tap { |b| b.evaluate_on_new_document(javascript) }
+          browser.go_to(base_url('/ferrum/with_user_js'))
+
+          browser_language = browser.evaluate('document.getElementById("browser-languages").innerHTML')
+
+          expect(browser_language).to eq('tlh')
+        ensure
+          browser&.quit
+        end
+      end
     end
 
     context "javascript errors" do
