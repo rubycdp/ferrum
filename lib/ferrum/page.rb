@@ -268,7 +268,7 @@ module Ferrum
       nil_or_relative = url.nil? || url.relative?
 
       if nil_or_relative && !@browser.base_url
-        raise "Set :base_url browser's option or use absolute url in `goto`, you passed: #{url_or_path}"
+        raise "Set :base_url browser's option or use absolute url in `go_to`, you passed: #{url_or_path}"
       end
 
       (nil_or_relative ? @browser.base_url.join(url.to_s) : url).to_s
