@@ -184,7 +184,7 @@ Ferrum::Browser.new(options)
 
 ## Navigation
 
-#### goto(url) : `String`
+#### go_to(url) : `String`
 
 Navigate page to.
 
@@ -959,13 +959,13 @@ context = browser.contexts.create
 
 t1 = Thread.new(context) do |c|
   page = c.create_page
-  page.goto("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
+  page.go_to("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
   page.screenshot(path: "t1.png")
 end
 
 t2 = Thread.new(context) do |c|
   page = c.create_page
-  page.goto("https://www.google.com/search?q=Ruby+static+typing")
+  page.go_to("https://www.google.com/search?q=Ruby+static+typing")
   page.screenshot(path: "t2.png")
 end
 
@@ -984,7 +984,7 @@ browser = Ferrum::Browser.new
 t1 = Thread.new(browser) do |b|
   context = b.contexts.create
   page = context.create_page
-  page.goto("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
+  page.go_to("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
   page.screenshot(path: "t1.png")
   context.dispose
 end
@@ -992,7 +992,7 @@ end
 t2 = Thread.new(browser) do |b|
   context = b.contexts.create
   page = context.create_page
-  page.goto("https://www.google.com/search?q=Ruby+static+typing")
+  page.go_to("https://www.google.com/search?q=Ruby+static+typing")
   page.screenshot(path: "t2.png")
   context.dispose
 end
