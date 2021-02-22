@@ -60,7 +60,7 @@ module Ferrum
         Browser.new(browser_path: path, process_timeout: 2)
       }.to raise_error(
         Ferrum::ProcessTimeoutError,
-        "Browser did not produce websocket url within 2 seconds"
+        "Browser did not produce websocket url within 2 seconds, try to increase `:process_timeout`. See https://github.com/rubycdp/ferrum#customization"
       )
     end
 

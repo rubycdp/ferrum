@@ -47,7 +47,7 @@ module Ferrum
 
     def initialize(timeout, output)
       @output = output
-      super("Browser did not produce websocket url within #{timeout} seconds")
+      super("Browser did not produce websocket url within #{timeout} seconds, try to increase `:process_timeout`. See https://github.com/rubycdp/ferrum#customization")
     end
   end
 
