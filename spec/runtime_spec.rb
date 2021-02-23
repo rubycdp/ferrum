@@ -2,13 +2,15 @@
 
 module Ferrum
   describe Frame::Runtime do
-    it "supports executing multiple lines of javascript" do
-      browser.execute <<-JS
-        var a = 1
-        var b = 2
-        window.result = a + b
-      JS
-      expect(browser.evaluate("window.result")).to eq(3)
+    context "execute" do
+      it "supports executing multiple lines of javascript" do
+        browser.execute <<-JS
+          var a = 1
+          var b = 2
+          window.result = a + b
+        JS
+        expect(browser.evaluate("window.result")).to eq(3)
+      end
     end
 
     context "evaluate" do
