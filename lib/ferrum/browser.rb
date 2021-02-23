@@ -17,19 +17,19 @@ module Ferrum
     extend Forwardable
     delegate %i[default_context] => :contexts
     delegate %i[targets create_target create_page page pages windows] => :default_context
-    delegate %i[goto back forward refresh reload stop wait_for_reload
+    delegate %i[go_to back forward refresh reload stop wait_for_reload
                 at_css at_xpath css xpath current_url current_title url title
                 body doctype set_content
                 headers cookies network
                 mouse keyboard
-                screenshot pdf viewport_size
+                screenshot pdf mhtml viewport_size
                 frames frame_by main_frame
-                evaluate evaluate_on evaluate_async execute
+                evaluate evaluate_on evaluate_async execute evaluate_func
                 add_script_tag add_style_tag bypass_csp
-                on] => :page
+                on goto] => :page
     delegate %i[default_user_agent] => :process
 
-    attr_reader :client, :process, :contexts, :logger, :js_errors,
+    attr_reader :client, :process, :contexts, :logger, :js_errors, :pending_connection_errors,
                 :slowmo, :base_url, :options, :window_size, :ws_max_receive_size
     attr_writer :timeout
 
@@ -44,6 +44,7 @@ module Ferrum
       @logger, @timeout, @ws_max_receive_size =
         @options.values_at(:logger, :timeout, :ws_max_receive_size)
       @js_errors = @options.fetch(:js_errors, false)
+      @pending_connection_errors = @options.fetch(:pending_connection_errors, true)
       @slowmo = @options[:slowmo].to_f
 
       if @options.key?(:base_url)

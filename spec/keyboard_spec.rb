@@ -3,7 +3,7 @@
 module Ferrum
   describe Keyboard do
     context "has ability to send keys" do
-      before { browser.goto("/ferrum/type") }
+      before { browser.go_to("/ferrum/type") }
 
       it "sends keys to empty input" do
         input = browser.at_css("#empty_input")
@@ -167,7 +167,7 @@ module Ferrum
     context "type" do
       let(:delete_all) { [ [(Ferrum.mac? ? :alt : :ctrl), :shift, :right], :backspace ] }
 
-      before { browser.goto("/ferrum/set") }
+      before { browser.go_to("/ferrum/set") }
 
       it "sets contenteditable's content" do
         input = browser.at_css("#filled_div")
@@ -188,7 +188,7 @@ module Ferrum
       end
 
       it "sets a content editable childs content" do
-        browser.goto("/orig_with_js")
+        browser.go_to("/orig_with_js")
         input = browser.at_css("#existing_content_editable_child")
         input.click.type(" WYSIWYG")
         expect(input.text).to eq("Content WYSIWYG")
@@ -198,7 +198,7 @@ module Ferrum
         let(:input) { browser.at_css("#input") }
         let(:output) { browser.at_css("#output") }
 
-        before { browser.goto("/ferrum/input_events") }
+        before { browser.go_to("/ferrum/input_events") }
 
         it "calls event handlers in the correct order" do
           input.focus.type("a").blur
@@ -239,7 +239,7 @@ module Ferrum
       let(:change_me) { browser.at_css("#change_me") }
 
       before do
-        browser.goto("/ferrum/with_js")
+        browser.go_to("/ferrum/with_js")
         change_me.focus.type("Hello!")
       end
 
@@ -318,7 +318,7 @@ module Ferrum
     end
 
     context "date_fields" do
-      before { browser.goto("/ferrum/date_fields") }
+      before { browser.go_to("/ferrum/date_fields") }
 
       it "sets a date" do
         input = browser.at_css("#date_field")

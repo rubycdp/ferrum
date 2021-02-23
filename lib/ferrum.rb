@@ -10,14 +10,20 @@ module Ferrum
   class NotImplementedError < Error; end
 
   class StatusError < Error
-    def initialize(url, pendings = [])
-      message = if pendings.empty?
-                  "Request to #{url} failed to reach server, check DNS and/or server status"
-                else
-                  "Request to #{url} reached server, but there are still pending connections: #{pendings.join(', ')}"
-                end
+    def initialize(url, message = nil)
+      super(message || "Request to #{url} failed to reach server, check DNS and server status")
+    end
+  end
 
-      super(message)
+  class PendingConnectionsError < StatusError
+    attr_reader :pendings
+
+    def initialize(url, pendings = [])
+      @pendings = pendings
+
+      message = "Request to #{url} reached server, but there are still pending connections: #{pendings.join(', ')}"
+
+      super(url, message)
     end
   end
 
@@ -37,8 +43,11 @@ module Ferrum
   end
 
   class ProcessTimeoutError < Error
-    def initialize(timeout)
-      super("Browser did not produce websocket url within #{timeout} seconds")
+    attr_reader :output
+
+    def initialize(timeout, output)
+      @output = output
+      super("Browser did not produce websocket url within #{timeout} seconds, try to increase `:process_timeout`. See https://github.com/rubycdp/ferrum#customization")
     end
   end
 

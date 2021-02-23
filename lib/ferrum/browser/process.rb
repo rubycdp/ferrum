@@ -16,7 +16,7 @@ module Ferrum
     class Process
       KILL_TIMEOUT = 2
       WAIT_KILLED = 0.05
-      PROCESS_TIMEOUT = ENV.fetch("FERRUM_PROCESS_TIMEOUT", 2).to_i
+      PROCESS_TIMEOUT = ENV.fetch("FERRUM_PROCESS_TIMEOUT", 10).to_i
 
       attr_reader :host, :port, :ws_url, :pid, :command,
                   :default_user_agent, :browser_version, :protocol_version,
@@ -64,6 +64,7 @@ module Ferrum
           return
         end
 
+        @pid = @xvfb = @user_data_dir = nil
         @logger = options[:logger]
         @process_timeout = options.fetch(:process_timeout, PROCESS_TIMEOUT)
 
@@ -145,7 +146,7 @@ module Ferrum
 
         unless ws_url
           @logger.puts(output) if @logger
-          raise ProcessTimeoutError.new(timeout)
+          raise ProcessTimeoutError.new(timeout, output)
         end
       end
 

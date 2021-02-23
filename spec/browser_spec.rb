@@ -35,7 +35,7 @@ module Ferrum
       it "supports capturing console.log" do
         begin
           browser = Browser.new(logger: logger)
-          browser.goto(base_url("/ferrum/console_log"))
+          browser.go_to(base_url("/ferrum/console_log"))
           expect(logger.string).to include("Hello world")
         ensure
           browser&.quit
@@ -47,7 +47,7 @@ module Ferrum
       begin
         defaults = Browser::Options::Chrome.options.except("disable-web-security")
         browser = Browser.new(ignore_default_browser_options: true, browser_options: defaults)
-        browser.goto(base_url("/ferrum/console_log"))
+        browser.go_to(base_url("/ferrum/console_log"))
       ensure
         browser&.quit
       end
@@ -57,16 +57,26 @@ module Ferrum
       path = "#{PROJECT_ROOT}/spec/support/no_chrome"
 
       expect {
-        browser = Browser.new(browser_path: path)
+        Browser.new(browser_path: path, process_timeout: 2)
       }.to raise_error(
         Ferrum::ProcessTimeoutError,
-        "Browser did not produce websocket url within 2 seconds"
+        "Browser did not produce websocket url within 2 seconds, try to increase `:process_timeout`. See https://github.com/rubycdp/ferrum#customization"
       )
+    end
+
+    it "includes the process output in the error" do
+      path = "#{PROJECT_ROOT}/spec/support/broken_chrome"
+
+      expect {
+        Browser.new(browser_path: path)
+      }.to raise_error(Ferrum::ProcessTimeoutError) do |ex|
+        expect(ex.output).to include "Broken Chrome error message"
+      end
     end
 
     it "raises an error and restarts the client if the client dies while executing a command" do
       expect { browser.crash }.to raise_error(Ferrum::DeadBrowserError)
-      browser.goto
+      browser.go_to
       expect(browser.body).to include("Hello world")
     end
 
@@ -76,26 +86,45 @@ module Ferrum
     end
 
     it "has a viewport size of 1024x768 by default" do
-      browser.goto
+      browser.go_to
 
       expect(browser.viewport_size).to eq([1024, 768])
     end
 
     it "allows the viewport to be resized" do
-      browser.goto
+      browser.go_to
       browser.resize(width: 200, height: 400)
       expect(browser.viewport_size).to eq([200, 400])
     end
 
-    it "allows the viewport to be resized to fullscreen and back" do
-      browser.goto("/ferrum/custom_html_size")
-      expect(browser.viewport_size).to eq([1024, 768])
-      browser.resize(fullscreen: true)
-      expect(browser.viewport_size).to eq([1280, 1024])
-      browser.resize(width: 200, height: 400)
-      expect(browser.viewport_size).to eq([200, 400])
-    end
+    context "fullscreen" do
+      shared_examples "resize viewport by fullscreen" do
+        it "allows the viewport to be resized by fullscreen" do
+          expect(browser.viewport_size).to eq([1024, 768])
+          browser.go_to(path)
+          browser.resize(fullscreen: true)
+          expect(browser.viewport_size).to eq(viewport_size)
+        end
+      end
 
+      include_examples "resize viewport by fullscreen" do
+        let(:path) { "/ferrum/custom_html_size" }
+        let(:viewport_size) { [1280, 1024] }
+      end
+
+      include_examples "resize viewport by fullscreen" do
+        let(:path) { "/ferrum/custom_html_size_100%" }
+        let(:viewport_size) { [1272, 1008] }
+      end
+
+      it "resizes to 'normal' from 'fullscreen' window state" do
+        browser.go_to(path)
+        browser.resize(fullscreen: true)
+        browser.resize(width: 200, height: 400)
+        expect(browser.viewport_size).to eq([200, 400])
+      end
+    end
+    
     it "allows the window to be positioned" do
       left, top = browser.get_position
       browser.set_position left + 10, top + 20
@@ -103,7 +132,7 @@ module Ferrum
     end
 
     it "allows the page to be scrolled" do
-      browser.goto("/ferrum/long_page")
+      browser.go_to("/ferrum/long_page")
       browser.resize(width: 10, height: 10)
       browser.mouse.scroll_to(200, 100)
       expect(
@@ -114,7 +143,7 @@ module Ferrum
     it "supports specifying viewport size with an option" do
       begin
         browser = Browser.new(window_size: [800, 600])
-        browser.goto(base_url)
+        browser.go_to(base_url)
         expect(browser.viewport_size).to eq([800, 600])
       ensure
         browser&.quit
@@ -122,18 +151,9 @@ module Ferrum
     end
 
     it "supports clicking precise coordinates" do
-      browser.goto("/ferrum/click_coordinates")
+      browser.go_to("/ferrum/click_coordinates")
       browser.mouse.click(x: 100, y: 150)
       expect(browser.body).to include("x: 100, y: 150")
-    end
-
-    it "supports executing multiple lines of javascript" do
-      browser.execute <<-JS
-        var a = 1
-        var b = 2
-        window.result = a + b
-      JS
-      expect(browser.evaluate("window.result")).to eq(3)
     end
 
     it "supports stopping the session", skip: Ferrum.windows? do
@@ -152,7 +172,7 @@ module Ferrum
           browser = Browser.new(base_url: base_url,
                                 extensions: [File.expand_path("support/geolocation.js", __dir__)])
 
-          browser.goto("/ferrum/requiring_custom_extension")
+          browser.go_to("/ferrum/requiring_custom_extension")
 
           expect(
             browser.body
@@ -175,7 +195,7 @@ module Ferrum
           browser = Browser.new(base_url: base_url,
                                 extensions: [{source: "window.secret = 'top'"}])
 
-          browser.goto("/ferrum/requiring_custom_extension")
+          browser.go_to("/ferrum/requiring_custom_extension")
 
           expect(browser.evaluate(%(window.secret))).to eq("top")
         ensure
@@ -186,7 +206,7 @@ module Ferrum
       it "errors when extension is unavailable" do
         begin
           browser = Browser.new(extensions: [File.expand_path("../support/non_existent.js", __dir__)])
-          expect { browser.goto }.to raise_error(Errno::ENOENT)
+          expect { browser.go_to }.to raise_error(Errno::ENOENT)
         ensure
           browser&.quit
         end
@@ -223,20 +243,20 @@ module Ferrum
           browser.execute "setTimeout(function() { omg }, 0)"
           sleep 0.01
           browser.execute ""
-        }.to raise_error(Ferrum::JavaScriptError)
+        }.to raise_error(Ferrum::JavaScriptError, /ReferenceError.*omg/)
 
         # should not raise again
         expect(browser.evaluate("1+1")).to eq(2)
       end
 
       it "propagates a Javascript error during page load to a ruby exception" do
-        expect { browser.goto("/ferrum/js_error") }.to raise_error(Ferrum::JavaScriptError)
+        expect { browser.go_to("/ferrum/js_error") }.to raise_error(Ferrum::JavaScriptError)
       end
 
       it "does not propagate a Javascript error to ruby if error raising disabled" do
         begin
           browser = Browser.new(base_url: base_url, js_errors: false)
-          browser.goto("/ferrum/js_error")
+          browser.go_to("/ferrum/js_error")
           browser.execute "setTimeout(function() { omg }, 0)"
           sleep 0.1
           expect(browser.body).to include("hello")
@@ -249,7 +269,7 @@ module Ferrum
         begin
           browser = Browser.new(base_url: base_url, js_errors: false)
           browser.restart
-          browser.goto("/ferrum/js_error")
+          browser.go_to("/ferrum/js_error")
           browser.execute "setTimeout(function() { omg }, 0)"
           sleep 0.1
           expect(browser.body).to include("hello")
@@ -263,20 +283,23 @@ module Ferrum
       let(:port) { server.port }
 
       it "do not occur when DNS correct" do
-        expect { browser.goto("http://localhost:#{port}/") }.not_to raise_error
+        expect { browser.go_to("http://localhost:#{port}/") }.not_to raise_error
       end
 
       it "handles when DNS incorrect" do
-        expect { browser.goto("http://nope:#{port}/") }.to raise_error(Ferrum::StatusError)
+        expect { browser.go_to("http://nope:#{port}/") }.to raise_error(
+          Ferrum::StatusError,
+          %r{Request to http://nope:\d+/ failed to reach server, check DNS and server status}
+        )
       end
 
       it "has a descriptive message when DNS incorrect" do
         url = "http://nope:#{port}/"
         expect {
-          browser.goto(url)
+          browser.go_to(url)
         }.to raise_error(
           Ferrum::StatusError,
-          %(Request to #{url} failed to reach server, check DNS and/or server status)
+          %r{Request to http://nope:#{port}/ failed to reach server, check DNS and server status}
         )
       end
 
@@ -285,10 +308,10 @@ module Ferrum
           old_timeout = browser.timeout
           browser.timeout = 2
           expect {
-            browser.goto("/ferrum/visit_timeout")
+            browser.go_to("/ferrum/visit_timeout")
           }.to raise_error(
-            Ferrum::StatusError,
-            %r{there are still pending connections: http://.*/ferrum/really_slow}
+            Ferrum::PendingConnectionsError,
+            %r{Request to http://.*/ferrum/visit_timeout reached server, but there are still pending connections: http://.*/ferrum/really_slow}
           )
         ensure
           browser.timeout = old_timeout
@@ -301,10 +324,10 @@ module Ferrum
           browser.timeout = 0.1
 
           expect {
-            browser.goto("/ferrum/really_slow")
+            browser.go_to("/ferrum/really_slow")
           }.to raise_error(
-            Ferrum::StatusError,
-            %r{there are still pending connections: http://.*/ferrum/really_slow}
+            Ferrum::PendingConnectionsError,
+            %r{Request to http://.*/ferrum/really_slow reached server, but there are still pending connections: http://.*/ferrum/really_slow}
           )
         ensure
           browser.timeout = prev_timeout
@@ -315,9 +338,19 @@ module Ferrum
         begin
           old_timeout = browser.timeout
           browser.timeout = 4
-          expect { browser.goto("/ferrum/really_slow") }.not_to raise_error
+          expect { browser.go_to("/ferrum/really_slow") }.not_to raise_error
         ensure
           browser.timeout = old_timeout
+        end
+      end
+
+      it "does not report open resources when pending_connection_errors is set to false" do
+        begin
+          browser = Browser.new(base_url: base_url, pending_connection_errors: false, timeout: 0.1)
+
+          expect { browser.go_to("/ferrum/really_slow") }.not_to raise_error
+        ensure
+          browser&.quit
         end
       end
     end
@@ -325,7 +358,7 @@ module Ferrum
     it "allows the driver to have a fixed port" do
       begin
         browser = Browser.new(port: 12345)
-        browser.goto(base_url)
+        browser.go_to(base_url)
 
         expect { TCPServer.new("127.0.0.1", 12345) }.to raise_error(Errno::EADDRINUSE)
       ensure
@@ -337,7 +370,7 @@ module Ferrum
       with_external_browser do |url|
         begin
           browser = Browser.new(url: url)
-          browser.goto(base_url)
+          browser.go_to(base_url)
           expect(browser.body).to include("Hello world!")
         ensure
           browser&.quit
@@ -350,7 +383,7 @@ module Ferrum
         # Use custom host "pointing" to localhost in /etc/hosts or iptables for this.
         # https://superuser.com/questions/516208/how-to-change-ip-address-to-point-to-localhost
         browser = Browser.new(host: ENV["BROWSER_TEST_HOST"], port: 12345)
-        browser.goto(base_url)
+        browser.go_to(base_url)
 
         expect {
           TCPServer.new(ENV["BROWSER_TEST_HOST"], 12345)
@@ -361,7 +394,7 @@ module Ferrum
     end
 
     it "lists the open windows" do
-      browser.goto
+      browser.go_to
 
       browser.execute <<~JS
         window.open("/ferrum/simple", "popup")
@@ -395,7 +428,7 @@ module Ferrum
 
     context "a new window inherits settings" do
       it "inherits size" do
-        browser.goto
+        browser.go_to
         browser.resize(width: 1200, height: 800)
         page = browser.create_page
         expect(page.viewport_size).to eq [1200, 800]
@@ -403,13 +436,16 @@ module Ferrum
     end
 
     it "resizes windows" do
-      browser.goto
+      browser.go_to
 
       expect(browser.targets.size).to eq(1)
 
       browser.execute <<-JS
         window.open("/ferrum/simple", "popup1")
       JS
+
+      sleep 0.1
+
       browser.execute <<-JS
         window.open("/ferrum/simple", "popup2")
       JS
@@ -423,7 +459,7 @@ module Ferrum
     end
 
     it "clears local storage after reset" do
-      browser.goto
+      browser.go_to
       browser.execute <<~JS
         localStorage.setItem("key", "value");
       JS
@@ -435,155 +471,77 @@ module Ferrum
 
       browser.reset
 
-      browser.goto
+      browser.go_to
       value = browser.evaluate <<~JS
         localStorage.getItem("key");
       JS
       expect(value).to be_nil
     end
 
-    context "evaluate" do
-      it "can return an element" do
-        browser.goto("/ferrum/type")
-        element = browser.evaluate(%(document.getElementById("empty_input")))
-        expect(element).to eq(browser.at_css("#empty_input"))
-      end
-
-      it "can return structures with elements" do
-        browser.goto("/ferrum/type")
-        result = browser.evaluate <<~JS
-          {
-            a: document.getElementById("empty_input"),
-            b: { c: document.querySelectorAll("#empty_textarea, #filled_textarea") }
-          }
-        JS
-
-        expect(result).to eq(
-          "a" => browser.at_css("#empty_input"),
-          "b" => {
-            "c" => browser.css("#empty_textarea, #filled_textarea")
-          }
-        )
-      end
-    end
-
-    context "evaluate_async" do
-      it "handles evaluate_async value properly" do
-        expect(browser.evaluate_async("arguments[0](null)", 5)).to be_nil
-        expect(browser.evaluate_async("arguments[0](false)", 5)).to be false
-        expect(browser.evaluate_async("arguments[0](true)", 5)).to be true
-        expect(browser.evaluate_async(%(arguments[0]({foo: "bar"})), 5)).to eq("foo" => "bar")
-      end
-
-      it "will timeout" do
-        expect {
-          browser.evaluate_async("var callback=arguments[0]; setTimeout(function(){callback(true)}, 4000)", 1)
-        }.to raise_error(Ferrum::ScriptTimeoutError)
-      end
-    end
-
-    it "handles evaluate values properly" do
-      expect(browser.evaluate("null")).to be_nil
-      expect(browser.evaluate("false")).to be false
-      expect(browser.evaluate("true")).to be true
-      expect(browser.evaluate("undefined")).to eq(nil)
-
-      expect(browser.evaluate("3;")).to eq(3)
-      expect(browser.evaluate("31337")).to eq(31337)
-      expect(browser.evaluate(%("string"))).to eq("string")
-      expect(browser.evaluate(%({foo: "bar"}))).to eq("foo" => "bar")
-
-      expect(browser.evaluate("new Object")).to eq({})
-      expect(browser.evaluate("new Date(2012, 0).toDateString()")).to eq("Sun Jan 01 2012")
-      expect(browser.evaluate("new Object({a: 1})")).to eq({"a" => 1})
-      expect(browser.evaluate("new Array")).to eq([])
-      expect(browser.evaluate("new Function")).to eq({})
-
-      expect {
-        browser.evaluate(%(throw "smth"))
-      }.to raise_error(Ferrum::JavaScriptError)
-    end
-
-    context "cyclic structure" do
-      let(:code) {
-        <<~JS
-          (function() {
-            var a = {};
-            var b = {};
-            var c = {};
-            c.a = a;
-            a.a = a;
-            a.b = b;
-            a.c = c;
-            return %s;
-          })()
-        JS
-      }
-
-      it "ignores objects in evaluate" do
-        expect(browser.evaluate(code % "a")).to eq(CyclicObject.instance)
-      end
-
-      it "ignores arrays in evaluate" do
-        expect(browser.evaluate(code % "[a]")).to eq([CyclicObject.instance])
-      end
-    end
-
     it "synchronizes page loads properly" do
-      browser.goto("/ferrum/index")
+      browser.go_to("/ferrum/index")
       browser.at_xpath("//a[text() = 'JS redirect']").click
       sleep 0.1
       expect(browser.body).to include("Hello world")
     end
 
+    it "does not run into content quads error" do
+      browser.go_to("/ferrum/index")
+
+      allow_any_instance_of(Node).to receive(:get_content_quads).and_raise(Ferrum::BrowserError, "message" => "Could not compute content quads")
+
+      browser.at_xpath("//a[text() = 'JS redirect']").click
+      expect(browser.body).to include("Hello world")
+    end
+
     it "returns BR as new line in #text" do
-      browser.goto("/ferrum/simple")
+      browser.go_to("/ferrum/simple")
       el = browser.at_css("#break")
       expect(el.inner_text).to eq("Foo\nBar")
       expect(browser.at_css("#break").text).to eq("FooBar")
     end
 
     it "handles hash changes" do
-      browser.goto("/#omg")
+      browser.go_to("/#omg")
       expect(browser.current_url).to match(%r{/#omg$})
       browser.execute <<-JS
         window.onhashchange = function() { window.last_hashchange = window.location.hash }
       JS
-      browser.goto("/#foo")
+      browser.go_to("/#foo")
       expect(browser.current_url).to match(%r{/#foo$})
       expect(browser.evaluate("window.last_hashchange")).to eq("#foo")
     end
 
     context "current_url" do
       it "supports whitespace characters" do
-        browser.goto("/ferrum/arbitrary_path/200/foo%20bar%20baz")
+        browser.go_to("/ferrum/arbitrary_path/200/foo%20bar%20baz")
         expect(browser.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo%20bar%20baz"))
       end
 
       it "supports escaped characters" do
-        browser.goto("/ferrum/arbitrary_path/200/foo?a%5Bb%5D=c")
+        browser.go_to("/ferrum/arbitrary_path/200/foo?a%5Bb%5D=c")
         expect(browser.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo?a%5Bb%5D=c"))
       end
 
       it "supports url in parameter" do
-        browser.goto("/ferrum/arbitrary_path/200/foo%20asd?a=http://example.com/asd%20asd")
+        browser.go_to("/ferrum/arbitrary_path/200/foo%20asd?a=http://example.com/asd%20asd")
         expect(browser.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo%20asd?a=http://example.com/asd%20asd"))
       end
 
       it "supports restricted characters ' []:/+&='" do
-        browser.goto("/ferrum/arbitrary_path/200/foo?a=%20%5B%5D%3A%2F%2B%26%3D")
+        browser.go_to("/ferrum/arbitrary_path/200/foo?a=%20%5B%5D%3A%2F%2B%26%3D")
         expect(browser.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo?a=%20%5B%5D%3A%2F%2B%26%3D"))
       end
 
       it "returns about:blank when on about:blank" do
-        browser.goto("about:blank")
+        browser.go_to("about:blank")
         expect(browser.current_url).to eq("about:blank")
       end
     end
 
     context "window switching support" do
       it "waits for the window to load" do
-        browser.goto
+        browser.go_to
 
         browser.execute <<-JS
           window.open("/ferrum/slow", "popup")
@@ -595,7 +553,7 @@ module Ferrum
       end
 
       it "can access a second window of the same name" do
-        browser.goto
+        browser.go_to
 
         browser.execute <<-JS
           window.open("/ferrum/simple", "popup")
@@ -620,13 +578,13 @@ module Ferrum
     end
 
     it "handles obsolete node during an attach_file", skip: true do
-      browser.goto("/ferrum/attach_file")
+      browser.go_to("/ferrum/attach_file")
       browser.attach_file "file", __FILE__
     end
 
     context "whitespace stripping tests", skip: true do
       before do
-        browser.goto("/ferrum/filter_text_test")
+        browser.go_to("/ferrum/filter_text_test")
       end
 
       it "gets text" do
@@ -648,7 +606,7 @@ module Ferrum
 
     context "supports accessing element properties" do
       before do
-        browser.goto("/ferrum/attributes_properties")
+        browser.go_to("/ferrum/attributes_properties")
       end
 
       it "gets property innerHTML" do
@@ -669,7 +627,7 @@ module Ferrum
 
     context "SVG tests" do
       before do
-        browser.goto("/ferrum/svg_test")
+        browser.go_to("/ferrum/svg_test")
       end
 
       it "gets text from tspan node" do
@@ -678,7 +636,7 @@ module Ferrum
     end
 
     it "can go back when history state has been pushed" do
-      browser.goto
+      browser.go_to
       browser.execute(%(window.history.pushState({foo: "bar"}, "title", "bar2.html");))
       expect(browser.current_url).to eq(base_url("/bar2.html"))
       expect { browser.back }.not_to raise_error
@@ -686,7 +644,7 @@ module Ferrum
     end
 
     it "can go forward when history state is used" do
-      browser.goto
+      browser.go_to
       browser.execute(%(window.history.pushState({foo: "bar"}, "title", "bar2.html");))
       expect(browser.current_url).to eq(base_url("/bar2.html"))
       # don't use #back here to isolate the test
@@ -697,7 +655,7 @@ module Ferrum
     end
 
     it "waits for page to be reloaded" do
-      browser.goto("/ferrum/auto_refresh")
+      browser.go_to("/ferrum/auto_refresh")
       expect(browser.body).to include("Visited 0 times")
 
       browser.wait_for_reload(5)
@@ -706,7 +664,7 @@ module Ferrum
     end
 
     it "can bypass csp headers" do
-      browser.goto("/csp")
+      browser.go_to("/csp")
       browser.add_script_tag(content: "window.__injected = 42")
       expect(browser.evaluate("window.__injected")).to be_nil
 
@@ -742,7 +700,7 @@ module Ferrum
           <<-RUBY
             require "ferrum"
             browser = Ferrum::Browser.new
-            browser.goto("http://example.com")
+            browser.go_to("http://example.com")
             puts "Please type enter"
             sleep 1
             browser.current_url

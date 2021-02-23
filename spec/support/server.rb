@@ -64,6 +64,7 @@ module Ferrum
       @host = host
       @port = port || find_available_port(host)
       @app = app || Application.new
+      @server_thread = nil
     end
 
     def base_url(path = nil)

@@ -83,9 +83,13 @@ module Ferrum
       @page.command("Fetch.enable", handleAuthRequests: true, patterns: [pattern])
     end
 
-    def authorize(user:, password:, type: :server)
+    def authorize(user:, password:, type: :server, &block)
       unless AUTHORIZE_TYPE.include?(type)
         raise ArgumentError, ":type should be in #{AUTHORIZE_TYPE}"
+      end
+
+      if !block_given? && !@page.subscribed?("Fetch.requestPaused")
+        raise ArgumentError, "Block is missing, call `authorize(...) { |r| r.continue } or subscribe to `on(:request)` events before calling it"
       end
 
       @authorized_ids ||= {}
@@ -93,9 +97,7 @@ module Ferrum
 
       intercept
 
-      @page.on(:request) do |request|
-        request.continue
-      end
+      @page.on(:request, &block)
 
       @page.on(:auth) do |request, index, total|
         if request.auth_challenge?(type)
@@ -157,12 +159,27 @@ module Ferrum
         end
       end
 
+      @page.on("Network.loadingFailed") do |params|
+        exchange = select(params["requestId"]).last
+        exchange.error ||= Network::Error.new
+
+        exchange.error.id = params["requestId"]
+        exchange.error.type = params["type"]
+        exchange.error.error_text = params["errorText"]
+        exchange.error.monotonic_time = params["timestamp"]
+        exchange.error.canceled = params["canceled"]
+      end
+
       @page.on("Log.entryAdded") do |params|
         entry = params["entry"] || {}
         if entry["source"] == "network" && entry["level"] == "error"
           exchange = select(entry["networkRequestId"]).last
-          error = Network::Error.new(entry)
-          exchange.error = error
+          exchange.error ||= Network::Error.new
+
+          exchange.error.id = entry["networkRequestId"]
+          exchange.error.url = entry["url"]
+          exchange.error.description = entry["text"]
+          exchange.error.timestamp = entry["timestamp"]
         end
       end
     end

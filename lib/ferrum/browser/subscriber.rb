@@ -21,6 +21,10 @@ module Ferrum
         true
       end
 
+      def subscribed?(event)
+        @on.key?(event)
+      end
+
       def call(message)
         method, params = message.values_at("method", "params")
         total = @on[method].size

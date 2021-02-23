@@ -11,6 +11,7 @@ module Ferrum
     attr_accessor :id, :name
 
     def initialize(id, page, parent_id = nil)
+      @execution_id = nil
       @id, @page, @parent_id = id, page, parent_id
     end
 

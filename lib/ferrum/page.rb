@@ -32,7 +32,7 @@ module Ferrum
     extend Forwardable
     delegate %i[at_css at_xpath css xpath
                 current_url current_title url title body doctype set_content
-                execution_id evaluate evaluate_on evaluate_async execute
+                execution_id evaluate evaluate_on evaluate_async execute evaluate_func
                 add_script_tag add_style_tag] => :main_frame
 
     include Frames, Screenshot
@@ -65,7 +65,7 @@ module Ferrum
       @browser.timeout
     end
 
-    def goto(url = nil)
+    def go_to(url = nil)
       options = { url: combine_url!(url) }
       options.merge!(referrer: referrer) if referrer
       response = command("Page.navigate", wait: GOTO_WAIT, **options)
@@ -78,9 +78,12 @@ module Ferrum
       end
       response["frameId"]
     rescue TimeoutError
-      pendings = network.traffic.select(&:pending?).map { |e| e.request.url }
-      raise StatusError.new(options[:url], pendings) unless pendings.empty?
+      if @browser.pending_connection_errors
+        pendings = network.traffic.select(&:pending?).map { |e| e.request.url }
+        raise PendingConnectionsError.new(options[:url], pendings) unless pendings.empty?
+      end
     end
+    alias goto go_to
 
     def close
       @headers.clear
@@ -89,14 +92,12 @@ module Ferrum
     end
 
     def resize(width: nil, height: nil, fullscreen: false)
-      @window_id = @browser.command("Browser.getWindowForTarget", targetId: @target_id)["windowId"]
-
       if fullscreen
         width, height = document_size
-        @browser.command("Browser.setWindowBounds", windowId: @window_id, bounds: { windowState: "fullscreen" })
+        set_window_bounds(windowState: "fullscreen")
       else
-        @browser.command("Browser.setWindowBounds", windowId: @window_id, bounds: { windowState: "normal" })
-        @browser.command("Browser.setWindowBounds", windowId: @window_id, bounds: { width: width, height: height })
+        set_window_bounds(windowState: "normal")
+        set_window_bounds(width: width, height: height)
       end
 
       command("Emulation.setDeviceMetricsOverride", slowmoable: true,
@@ -146,6 +147,14 @@ module Ferrum
       enabled
     end
 
+    def window_id
+      @browser.command("Browser.getWindowForTarget", targetId: @target_id)["windowId"]
+    end
+
+    def set_window_bounds(bounds = {})
+      @browser.command("Browser.setWindowBounds", windowId: window_id, bounds: bounds)
+    end
+
     def command(method, wait: 0, slowmoable: false, **params)
       iteration = @event.reset if wait > 0
       sleep(@browser.slowmo) if slowmoable && @browser.slowmo > 0
@@ -186,6 +195,10 @@ module Ferrum
       else
         @client.on(name, &block)
       end
+    end
+
+    def subscribed?(event)
+      @client.subscribed?(event)
     end
 
     private
@@ -270,7 +283,7 @@ module Ferrum
       nil_or_relative = url.nil? || url.relative?
 
       if nil_or_relative && !@browser.base_url
-        raise "Set :base_url browser's option or use absolute url in `goto`, you passed: #{url_or_path}"
+        raise "Set :base_url browser's option or use absolute url in `go_to`, you passed: #{url_or_path}"
       end
 
       (nil_or_relative ? @browser.base_url.join(url.to_s) : url).to_s

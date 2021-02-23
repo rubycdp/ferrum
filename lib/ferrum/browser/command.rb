@@ -4,7 +4,7 @@ module Ferrum
   class Browser
     class Command
       NOT_FOUND = "Could not find an executable for the browser. Try to make " \
-                  "it available on the PATH or set environment varible for " \
+                  "it available on the PATH or set environment variable for " \
                   "example BROWSER_PATH=\"/usr/bin/chrome\"".freeze
 
       # Currently only these browsers support CDP:
