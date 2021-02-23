@@ -116,6 +116,13 @@ module Ferrum
         let(:path) { "/ferrum/custom_html_size_100%" }
         let(:viewport_size) { [1272, 1008] }
       end
+
+      it "resizes to 'normal' from 'fullscreen' window state" do
+        browser.go_to(path)
+        browser.resize(fullscreen: true)
+        browser.resize(width: 200, height: 400)
+        expect(browser.viewport_size).to eq([200, 400])
+      end
     end
 
     it "allows the page to be scrolled" do
