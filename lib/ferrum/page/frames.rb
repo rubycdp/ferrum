@@ -71,12 +71,14 @@ module Ferrum
         end
 
         on("Runtime.executionContextCreated") do |params|
+          setting_up_main_frame = false
           context_id = params.dig("context", "id")
           frame_id = params.dig("context", "auxData", "frameId")
 
           unless @main_frame.id
             root_frame = command("Page.getFrameTree").dig("frameTree", "frame", "id")
             if frame_id == root_frame
+              setting_up_main_frame = true
               @main_frame.id = frame_id
               @frames[frame_id] = @main_frame
             end
@@ -84,6 +86,9 @@ module Ferrum
 
           frame = @frames[frame_id] || Frame.new(frame_id, self)
           frame.set_execution_id(context_id)
+
+          # Set event because `execution_id` might raise NoExecutionContextError
+          @event.set if setting_up_main_frame
 
           @frames[frame_id] ||= frame
         end
