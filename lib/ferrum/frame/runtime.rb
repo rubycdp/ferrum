@@ -122,20 +122,22 @@ module Ferrum
         attempts, sleep = INTERMITTENT_ATTEMPTS, INTERMITTENT_SLEEP
 
         Ferrum.with_attempts(errors: errors, max: attempts, wait: sleep) do
+          params = options.dup
+
           if on
             response = @page.command("DOM.resolveNode", nodeId: on.node_id)
             object_id = response.dig("object", "objectId")
-            options.merge!(objectId: object_id)
-          else
-            options.merge!(executionContextId: execution_id)
+            params = params.merge(objectId: object_id)
           end
 
-          options.merge!(functionDeclaration: expression,
-                         arguments: prepare_args(arguments))
+          if params[:executionContextId].nil? && params[:objectId].nil?
+            params = params.merge(executionContextId: execution_id)
+          end
 
           response = @page.command("Runtime.callFunctionOn",
                                    wait: wait, slowmoable: true,
-                                   **options)
+                                   **params.merge(functionDeclaration: expression,
+                                                  arguments: prepare_args(arguments)))
           handle_error(response)
           response = response["result"]
 
