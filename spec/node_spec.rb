@@ -155,5 +155,19 @@ module Ferrum
         expect(el1 == el2).to be false
       end
     end
+
+    describe "#focusable?" do
+      before do
+        browser.go_to("/ferrum/form")
+      end
+
+      context "with hidden input" do
+        it { expect(browser.at_css("#hidden_input").focusable?).to eq(false) }
+      end
+
+      context "with regular input" do
+        it { expect(browser.at_css("#form_name").focusable?).to eq(true) }
+      end
+    end
   end
 end
