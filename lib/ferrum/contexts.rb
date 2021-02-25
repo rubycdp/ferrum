@@ -7,7 +7,7 @@ module Ferrum
     attr_reader :contexts
 
     def initialize(browser)
-      @contexts = Concurrent::Hash.new
+      @contexts = Concurrent::Map.new
       @browser = browser
       subscribe
       discover
@@ -18,7 +18,9 @@ module Ferrum
     end
 
     def find_by(target_id:)
-      @contexts.find { |_, c| c.targets.keys.include?(target_id) }&.last
+      context = nil
+      @contexts.each_value { |c| context = c if c.has_target?(target_id) }
+      context
     end
 
     def create
