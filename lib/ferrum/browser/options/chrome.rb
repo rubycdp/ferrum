@@ -36,6 +36,7 @@ module Ferrum
           "metrics-recording-only" => nil,
           "safebrowsing-disable-auto-update" => nil,
           "password-store" => "basic",
+          "no-startup-window" => nil,
           # Note: --no-sandbox is not needed if you properly setup a user in the container.
           # https://github.com/ebidel/lighthouse-ci/blob/master/builder/Dockerfile#L35-L40
           # "no-sandbox" => nil,
