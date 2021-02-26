@@ -234,6 +234,14 @@ browser.go_to("https://github.com/")
 browser.stop
 ```
 
+#### position
+
+Set the position for the browser window bounds
+
+```ruby
+browser.position = { left: 10, top: 20 }
+browser.position # => [10, 20]
+```
 
 ## Finders
 
