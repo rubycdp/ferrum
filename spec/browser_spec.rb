@@ -206,20 +206,19 @@ module Ferrum
         end
       end
 
-      it 'supports user Javascript' do
+      it "supports evaluation of JavaScript before page loads" do
         begin
-          javascript = <<~JS
-            Object.defineProperty(navigator, 'languages', {
-              get: function() { return ['tlh']; }
+          browser = Browser.new(base_url: base_url)
+
+          browser.evaluate_on_new_document <<~JS
+            Object.defineProperty(navigator, "languages", {
+              get: function() { return ["tlh"]; }
             });
           JS
 
-          browser = Browser.new.tap { |b| b.evaluate_on_new_document(javascript) }
-          browser.go_to(base_url('/ferrum/with_user_js'))
-
-          browser_language = browser.evaluate('document.getElementById("browser-languages").innerHTML')
-
-          expect(browser_language).to eq('tlh')
+          browser.go_to("/ferrum/with_user_js")
+          language = browser.at_xpath("//*[@id='browser-languages']/text()").text
+          expect(language).to eq("tlh")
         ensure
           browser&.quit
         end

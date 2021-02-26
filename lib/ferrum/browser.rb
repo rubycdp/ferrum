@@ -77,8 +77,8 @@ module Ferrum
       end
     end
 
-    def evaluate_on_new_document(javascript)
-      extensions << javascript
+    def evaluate_on_new_document(expression)
+      extensions << expression
     end
 
     def timeout
