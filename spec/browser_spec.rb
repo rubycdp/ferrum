@@ -126,9 +126,10 @@ module Ferrum
     end
 
     it "allows the window to be positioned" do
-      left, top = browser.position
-      browser.position = { left: left + 10, top: top + 20 }
-      expect(browser.position).to eq([left + 10, top + 20])
+      expect(browser.position).to eq([0, 0])
+      expect { browser.position = { left: 10, top: 20 } }.
+        to change { browser.position }
+      expect(browser.position).to eq([10, 20])
     end
 
     it "allows the page to be scrolled" do
