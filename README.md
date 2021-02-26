@@ -234,12 +234,23 @@ browser.go_to("https://github.com/")
 browser.stop
 ```
 
-#### position
+#### position = \*\*options
 
-Set the position for the browser window bounds
+Set the position for the browser window
+
+* options `Hash`
+  * :left `Integer`
+  * :top `Integer`
 
 ```ruby
 browser.position = { left: 10, top: 20 }
+```
+
+#### position : `Array<Integer>`
+
+Get the position for the browser window
+
+```ruby
 browser.position # => [10, 20]
 ```
 
