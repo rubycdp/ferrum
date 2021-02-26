@@ -124,11 +124,11 @@ module Ferrum
         expect(browser.viewport_size).to eq([200, 400])
       end
     end
-    
+
     it "allows the window to be positioned" do
-      left, top = browser.get_position
-      browser.set_position left + 10, top + 20
-      expect(browser.get_position).to eq([left + 10, top + 20])
+      left, top = browser.position
+      browser.position = { left: left + 10, top: top + 20 }
+      expect(browser.position).to eq([left + 10, top + 20])
     end
 
     it "allows the page to be scrolled" do
