@@ -740,6 +740,20 @@ simple value.
 browser.execute(%(1 + 1)) # => true
 ```
 
+#### evaluate_on_new_document(expression)
+
+Evaluate JavaScript to modify things before a page load
+
+* expression `String` should be valid JavaScript
+
+```ruby
+browser.evaluate_on_new_document <<~JS
+  Object.defineProperty(navigator, "languages", {
+    get: function() { return ["tlh"]; }
+  });
+JS
+```
+
 #### add_script_tag(\*\*options) : `Boolean`
 
 * options `Hash`

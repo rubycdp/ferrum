@@ -72,6 +72,10 @@ module Ferrum
       @contexts.dispose(@id)
     end
 
+    def has_target?(target_id)
+      @targets.keys.include?(target_id)
+    end
+
     def inspect
       %(#<#{self.class} @id=#{@id.inspect} @targets=#{@targets.inspect} @default_target=#{@default_target.inspect}>)
     end

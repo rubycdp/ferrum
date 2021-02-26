@@ -77,6 +77,10 @@ module Ferrum
       end
     end
 
+    def evaluate_on_new_document(expression)
+      extensions << expression
+    end
+
     def timeout
       @timeout || DEFAULT_TIMEOUT
     end

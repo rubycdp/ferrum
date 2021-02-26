@@ -118,27 +118,26 @@ module Ferrum
       private
 
       def call(expression:, arguments: [], on: nil, wait: 0, handle: true, **options)
-        params = options.dup
         errors = [NodeNotFoundError, NoExecutionContextError]
         attempts, sleep = INTERMITTENT_ATTEMPTS, INTERMITTENT_SLEEP
 
         Ferrum.with_attempts(errors: errors, max: attempts, wait: sleep) do
+          params = options.dup
+
           if on
             response = @page.command("DOM.resolveNode", nodeId: on.node_id)
             object_id = response.dig("object", "objectId")
-            params.merge!(objectId: object_id)
-          elsif params[:executionContextId].nil?
-            params.merge!(executionContextId: execution_id)
-          else
-            # executionContextId is passed, nop
+            params = params.merge(objectId: object_id)
           end
 
-          params.merge!(functionDeclaration: expression,
-                        arguments: prepare_args(arguments))
+          if params[:executionContextId].nil? && params[:objectId].nil?
+            params = params.merge(executionContextId: execution_id)
+          end
 
           response = @page.command("Runtime.callFunctionOn",
                                    wait: wait, slowmoable: true,
-                                   **params)
+                                   **params.merge(functionDeclaration: expression,
+                                                  arguments: prepare_args(arguments)))
           handle_error(response)
           response = response["result"]
 

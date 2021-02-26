@@ -211,6 +211,24 @@ module Ferrum
           browser&.quit
         end
       end
+
+      it "supports evaluation of JavaScript before page loads" do
+        begin
+          browser = Browser.new(base_url: base_url)
+
+          browser.evaluate_on_new_document <<~JS
+            Object.defineProperty(navigator, "languages", {
+              get: function() { return ["tlh"]; }
+            });
+          JS
+
+          browser.go_to("/ferrum/with_user_js")
+          language = browser.at_xpath("//*[@id='browser-languages']/text()").text
+          expect(language).to eq("tlh")
+        ensure
+          browser&.quit
+        end
+      end
     end
 
     context "javascript errors" do

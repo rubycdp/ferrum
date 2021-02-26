@@ -42,6 +42,43 @@ module Ferrum
       expect { browser.at_xpath("//a[text() = 'JS redirect']") }.not_to raise_error
     end
 
+    it "#at_xpath searches relatively current node" do
+      browser.go_to("/ferrum/with_js")
+
+      p = browser.at_xpath("//p[@id='with_content']")
+
+      expect(p.at_xpath("a").text).to eq("Open for match")
+      expect(p.at_xpath(".//a").text).to eq("Open for match")
+    end
+
+    it "#xpath searches relatively current node" do
+      browser.go_to("/ferrum/with_js")
+
+      p = browser.at_xpath("//p[@id='with_content']")
+      links = p.xpath("a")
+
+      expect(links.size).to eq(1)
+      expect(links.first.text).to eq("Open for match")
+    end
+
+    it "#at_css searches relatively current node" do
+      browser.go_to("/ferrum/with_js")
+
+      p = browser.at_css("p#with_content")
+
+      expect(p.at_css("a").text).to eq("Open for match")
+    end
+
+    it "#css searches relatively current node" do
+      browser.go_to("/ferrum/with_js")
+
+      p = browser.at_xpath("//p[@id='with_content']")
+      links = p.css("a")
+
+      expect(links.size).to eq(1)
+      expect(links.first.text).to eq("Open for match")
+    end
+
     context "when the element is not in the viewport" do
       before do
         browser.go_to("/ferrum/with_js")
@@ -116,6 +153,20 @@ module Ferrum
         el2 = browser.at_css("#filled_div")
         expect(el2 == el1).to be false
         expect(el1 == el2).to be false
+      end
+    end
+
+    describe "#focusable?" do
+      before do
+        browser.go_to("/ferrum/form")
+      end
+
+      context "with hidden input" do
+        it { expect(browser.at_css("#hidden_input").focusable?).to eq(false) }
+      end
+
+      context "with regular input" do
+        it { expect(browser.at_css("#form_name").focusable?).to eq(true) }
       end
     end
   end
