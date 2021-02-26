@@ -124,7 +124,6 @@ browser.mouse
 browser.quit
 ```
 
-
 ## Docker
 
 In docker as root you must pass the no-sandbox browser option:
@@ -775,6 +774,18 @@ browser.add_script_tag(content: "window.__injected = 42")
 browser.evaluate("window.__injected") # => 42
 ```
 
+#### evaluate_on_new_document(javascript)
+
+Evaluate JavaScript to modify things before a page load:
+
+```ruby
+javascript = <<~JS
+    Object.defineProperty(navigator, 'languages', {
+      get: function() { return ['tlh']; }
+    });
+  JS
+browser.evaluate_on_new_document javascript
+```
 
 ## Frames
 
