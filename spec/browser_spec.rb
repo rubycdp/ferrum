@@ -125,6 +125,13 @@ module Ferrum
       end
     end
 
+    it "allows the window to be positioned" do
+      expect(browser.position).to eq([0, 0])
+      expect { browser.position = { left: 10, top: 20 } }.
+        to change { browser.position }
+      expect(browser.position).to eq([10, 20])
+    end
+
     it "allows the page to be scrolled" do
       browser.go_to("/ferrum/long_page")
       browser.resize(width: 10, height: 10)

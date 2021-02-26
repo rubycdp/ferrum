@@ -108,6 +108,14 @@ module Ferrum
                                                     fitWindow: false)
     end
 
+    def position
+      @browser.command("Browser.getWindowBounds", windowId: window_id).fetch("bounds").values_at("left", "top")
+    end
+
+    def position=(left:, top:)
+      @browser.command("Browser.setWindowBounds", windowId: window_id, bounds: { left: left, top: top })
+    end
+
     def refresh
       command("Page.reload", wait: timeout, slowmoable: true)
     end

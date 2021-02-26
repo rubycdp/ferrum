@@ -26,7 +26,7 @@ module Ferrum
                 frames frame_by main_frame
                 evaluate evaluate_on evaluate_async execute evaluate_func
                 add_script_tag add_style_tag bypass_csp
-                on goto] => :page
+                on goto position position=] => :page
     delegate %i[default_user_agent] => :process
 
     attr_reader :client, :process, :contexts, :logger, :js_errors, :pending_connection_errors,
