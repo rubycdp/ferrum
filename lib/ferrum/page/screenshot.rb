@@ -12,7 +12,7 @@ module Ferrum
         scale: 1.0
       }.freeze
 
-      PAPEP_FORMATS = {
+      PAPER_FORMATS = {
         letter:   { width:  8.50, height: 11.00 },
         legal:    { width:  8.50, height: 14.00 },
         tabloid:  { width: 11.00, height: 17.00 },
@@ -114,7 +114,7 @@ module Ferrum
             raise ArgumentError, "Specify :format or :paper_width, :paper_height"
           end
 
-          dimension = PAPEP_FORMATS.fetch(format)
+          dimension = PAPER_FORMATS.fetch(format)
           options.merge!(paper_width: dimension[:width],
                          paper_height: dimension[:height])
         end
