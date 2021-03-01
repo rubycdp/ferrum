@@ -30,7 +30,7 @@
 
 - `Ferrum::Page::Screenshot::DEFAULT_PDF_OPTIONS` - pdf settings constant
 
-- `Ferrum::Page::Screenshot::PAPEP_FORMATS` - available formats constant
+- `Ferrum::Page::Screenshot::PAPER_FORMATS` - available formats constant
 
 - `Ferrum::Page::Frames` module implementation:
 
