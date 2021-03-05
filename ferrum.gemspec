@@ -15,6 +15,13 @@ Gem::Specification.new do |s|
   s.license       = "MIT"
   s.require_paths = ["lib"]
   s.files         = Dir["{lib}/**/*"] + %w[LICENSE README.md]
+  s.metadata = {
+    "homepage_uri" => "https://ferrum.rocks/",
+    "bug_tracker_uri" => "https://github.com/rubycdp/ferrum/issues",
+    "documentation_uri" => "https://github.com/rubycdp/ferrum/blob/master/README.md",
+    "changelog_uri" => "https://github.com/rubycdp/ferrum/blob/master/CHANGELOG.md",
+    "source_code_uri" => "https://github.com/rubycdp/ferrum",
+  }
 
   s.required_ruby_version = ">= 2.3.0"
 
