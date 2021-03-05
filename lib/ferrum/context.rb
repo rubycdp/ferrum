@@ -10,7 +10,7 @@ module Ferrum
 
     def initialize(browser, contexts, id)
       @browser, @contexts, @id = browser, contexts, id
-      @targets = Concurrent::Hash.new
+      @targets = Concurrent::Map.new
       @pendings = Concurrent::MVar.new
     end
 
@@ -47,14 +47,14 @@ module Ferrum
                        url: "about:blank")
       target = @pendings.take(@browser.timeout)
       raise NoSuchTargetError unless target.is_a?(Target)
-      @targets[target.id] = target
+      @targets.put_if_absent(target.id, target)
       target
     end
 
     def add_target(params)
       target = Target.new(@browser, params)
       if target.window?
-        @targets[target.id] = target
+        @targets.put_if_absent(target.id, target)
       else
         @pendings.put(target, @browser.timeout)
       end
@@ -73,7 +73,7 @@ module Ferrum
     end
 
     def has_target?(target_id)
-      @targets.keys.include?(target_id)
+      !!@targets[target_id]
     end
 
     def inspect
