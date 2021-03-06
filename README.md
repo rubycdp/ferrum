@@ -49,6 +49,7 @@ Web design by [Evrone](https://evrone.com/), what else
 * [Frames](https://github.com/rubycdp/ferrum#frames)
 * [Frame](https://github.com/rubycdp/ferrum#frame)
 * [Dialog](https://github.com/rubycdp/ferrum#dialog)
+* [Animation](https://github.com/rubycdp/ferrum#animation)
 * [Thread safety](https://github.com/rubycdp/ferrum#thread-safety)
 * [Development](https://github.com/rubycdp/ferrum#development)
 * [Contributing](https://github.com/rubycdp/ferrum#contributing)
@@ -976,6 +977,28 @@ browser.on(:dialog) do |dialog|
   end
 end
 browser.go_to("https://google.com")
+```
+
+## Animation
+
+You can slow down or speed up CSS animations.
+
+#### playback_rate : `Integer`
+
+Returns playback rate for CSS animations, defaults to `1`.
+
+
+#### playback_rate = value
+
+Sets playback rate of CSS animations
+
+  * value `Integer`
+
+```ruby
+browser = Ferrum::Browser.new
+browser.playback_rate = 2000
+browser.go_to("https://google.com")
+browser.playback_rate # => 2000
 ```
 
 
