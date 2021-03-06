@@ -9,6 +9,7 @@ require "ferrum/dialog"
 require "ferrum/network"
 require "ferrum/page/frames"
 require "ferrum/page/screenshot"
+require "ferrum/page/animation"
 require "ferrum/browser/client"
 
 module Ferrum
@@ -35,7 +36,7 @@ module Ferrum
                 execution_id evaluate evaluate_on evaluate_async execute evaluate_func
                 add_script_tag add_style_tag] => :main_frame
 
-    include Frames, Screenshot
+    include Frames, Screenshot, Animation
 
     attr_accessor :referrer
     attr_reader :target_id, :browser,

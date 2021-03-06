@@ -30,6 +30,7 @@ RSpec.configure do |config|
   config.before(:all) do
     base_url = Ferrum::Server.server.base_url
     options = { base_url: base_url }
+    options.merge!(headless: false) if ENV["HEADLESS"] == "false"
 
     if ENV["CI"]
       FERRUM_LOGGER = StringIO.new
