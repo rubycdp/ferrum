@@ -50,6 +50,7 @@ Web design by [Evrone](https://evrone.com/), what else
 * [Frame](https://github.com/rubycdp/ferrum#frame)
 * [Dialog](https://github.com/rubycdp/ferrum#dialog)
 * [Animation](https://github.com/rubycdp/ferrum#animation)
+* [Node](https://github.com/rubycdp/ferrum#node)
 * [Thread safety](https://github.com/rubycdp/ferrum#thread-safety)
 * [Development](https://github.com/rubycdp/ferrum#development)
 * [Contributing](https://github.com/rubycdp/ferrum#contributing)
@@ -979,6 +980,7 @@ end
 browser.go_to("https://google.com")
 ```
 
+
 ## Animation
 
 You can slow down or speed up CSS animations.
@@ -1000,6 +1002,32 @@ browser.playback_rate = 2000
 browser.go_to("https://google.com")
 browser.playback_rate # => 2000
 ```
+
+
+## Node
+
+#### node? : `Boolean`
+#### frame_id
+#### frame
+#### focus
+#### focusable?
+#### moving? : `Boolean`
+#### wait_for_stop_moving
+#### blur
+#### type
+#### click
+#### hover
+#### select_file
+#### at_xpath
+#### at_css
+#### xpath
+#### css
+#### text
+#### inner_text
+#### value
+#### property
+#### attribute
+#### evaluate
 
 
 ## Thread safety ##

@@ -2,8 +2,8 @@
 
 module Ferrum
   class Node
-    MOVING_WAIT = ENV.fetch("FERRUM_NODE_MOVING_WAIT", 0.01).to_f
-    MOVING_ATTEMPTS = ENV.fetch("FERRUM_NODE_MOVING_ATTEMPTS", 50).to_i
+    MOVING_WAIT_DELAY = ENV.fetch("FERRUM_NODE_MOVING_WAIT", 0.01).to_f
+    MOVING_WAIT_ATTEMPTS = ENV.fetch("FERRUM_NODE_MOVING_ATTEMPTS", 50).to_i
 
     attr_reader :page, :target_id, :node_id, :description, :tag_name
 
@@ -35,6 +35,19 @@ module Ferrum
       true
     rescue BrowserError => e
       e.message == "Element is not focusable" ? false : raise
+    end
+
+    def wait_for_stop_moving(delay: MOVING_WAIT_DELAY, attempts: MOVING_WAIT_ATTEMPTS)
+      Ferrum.with_attempts(errors: NodeMovingError, max: attempts, wait: 0) do
+        previous, current = get_content_quads_with(delay: delay)
+        raise NodeMovingError.new(self, previous, current) if previous != current
+        current
+      end
+    end
+
+    def moving?(delay: MOVING_WAIT_DELAY)
+      previous, current = get_content_quads_with(delay: delay)
+      previous == current
     end
 
     def blur
@@ -131,42 +144,34 @@ module Ferrum
     end
 
     def find_position(x: nil, y: nil, position: :top)
-      prev = get_content_quads
-
-      # FIXME: Case when a few quads returned
-      points = Ferrum.with_attempts(errors: NodeIsMovingError, max: MOVING_ATTEMPTS, wait: 0) do
-        sleep(MOVING_WAIT)
-        current = get_content_quads
-
-        if current != prev
-          error = NodeIsMovingError.new(self, prev, current)
-          prev = current
-          raise(error)
-        end
-
-        current
-      end.map { |q| to_points(q) }.first
-
+      points = wait_for_stop_moving.map { |q| to_points(q) }.first
       get_position(points, x, y, position)
-    rescue Ferrum::BrowserError => e
-      return raise unless e.message&.include?("Could not compute content quads")
-
-      find_position_via_js
+    rescue CoordinatesNotFoundError
+      x, y = get_bounding_rect_coordinates
+      raise if x == 0 && y == 0
+      [x, y]
     end
 
     private
 
-    def find_position_via_js
-      [
-        evaluate("this.getBoundingClientRect().left + window.pageXOffset + (this.offsetWidth / 2)"), # x
-        evaluate("this.getBoundingClientRect().top + window.pageYOffset + (this.offsetHeight / 2)") # y
-      ]
+    def get_bounding_rect_coordinates
+      evaluate <<~JS
+        [this.getBoundingClientRect().left + window.pageXOffset + (this.offsetWidth / 2),
+         this.getBoundingClientRect().top + window.pageYOffset + (this.offsetHeight / 2)]
+      JS
     end
 
     def get_content_quads
       quads = page.command("DOM.getContentQuads", nodeId: node_id)["quads"]
-      raise "Node is either not visible or not an HTMLElement" if quads.size == 0
+      raise CoordinatesNotFoundError, "Node is either not visible or not an HTMLElement" if quads.size == 0
       quads
+    end
+
+    def get_content_quads_with(delay: MOVING_WAIT_DELAY)
+      previous = get_content_quads
+      sleep(delay)
+      current = get_content_quads
+      [previous, current]
     end
 
     def get_position(points, offset_x, offset_y, position)

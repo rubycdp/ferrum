@@ -17,16 +17,20 @@ module Ferrum
       expect { node.text }.to raise_error(Ferrum::NodeNotFoundError)
     end
 
-    it "raises an error if the element is not visible", skip: true do
+    it "raises an error if the element is not visible" do
       browser.go_to("/ferrum/index")
+
       browser.execute <<~JS
         document.querySelector("a[href=js_redirect]").style.display = "none"
       JS
+
+      sleep 0.2 # Wait for node to disappear
+
       expect {
         browser.at_xpath("//a[text()='JS redirect']").click
       }.to raise_error(
-        Ferrum::BrowserError,
-        "Could not compute content quads."
+        Ferrum::CoordinatesNotFoundError,
+        "Could not compute content quads"
       )
     end
 
