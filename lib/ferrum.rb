@@ -57,7 +57,7 @@ module Ferrum
     end
   end
 
-  class NodeIsMovingError < Error
+  class NodeMovingError < Error
     def initialize(node, prev, current)
       @node, @prev, @current = node, prev, current
       super(message)
@@ -67,6 +67,12 @@ module Ferrum
       "#{@node.inspect} that you're trying to click is moving, hence " \
       "we cannot. Previosuly it was at #{@prev.inspect} but now at " \
       "#{@current.inspect}."
+    end
+  end
+
+  class CoordinatesNotFoundError < Error
+    def initialize(message = "Could not compute content quads")
+      super
     end
   end
 

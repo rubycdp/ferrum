@@ -90,6 +90,8 @@ module Ferrum
           raise NoExecutionContextError.new(error)
         when "No target with given id found"
           raise NoSuchPageError
+        when /Could not compute content quads/
+          raise CoordinatesNotFoundError
         else
           raise BrowserError.new(error)
         end
