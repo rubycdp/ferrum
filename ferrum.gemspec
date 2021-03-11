@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.files         = Dir["{lib}/**/*"] + %w[LICENSE README.md]
   s.metadata = {
-    "homepage_uri" => "https://ferrum.rocks/",
+    "homepage_uri" => "https://ferrum.rubycdp.com/",
     "bug_tracker_uri" => "https://github.com/rubycdp/ferrum/issues",
     "documentation_uri" => "https://github.com/rubycdp/ferrum/blob/master/README.md",
     "changelog_uri" => "https://github.com/rubycdp/ferrum/blob/master/CHANGELOG.md",
