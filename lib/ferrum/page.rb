@@ -218,6 +218,14 @@ module Ferrum
           Thread.main.raise JavaScriptError.new(params.dig("exceptionDetails", "exception"))
         end
       end
+
+      on(:dialog) do |dialog, index, total|
+        if total == 1
+          warn "Dialog was shown but you didn't provide `on(:dialog)` callback, accepting it by default. " \
+               "Please take a look at https://github.com/rubycdp/ferrum#dialog"
+          dialog.accept
+        end
+      end
     end
 
     def prepare_page
