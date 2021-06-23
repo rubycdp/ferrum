@@ -40,6 +40,7 @@ Web design by [Evrone](https://evrone.com/), what else
 * [Navigation](https://github.com/rubycdp/ferrum#navigation)
 * [Finders](https://github.com/rubycdp/ferrum#finders)
 * [Screenshots](https://github.com/rubycdp/ferrum#screenshots)
+* [Cleaning Up](https://github.com/rubycdp/ferrum#cleaning-up)
 * [Network](https://github.com/rubycdp/ferrum#network)
 * [Mouse](https://github.com/rubycdp/ferrum#mouse)
 * [Keyboard](https://github.com/rubycdp/ferrum#keyboard)
@@ -404,6 +405,25 @@ Saves MHTML on a disk or returns it as a string.
 ```ruby
 browser.go_to("https://google.com/")
 browser.mhtml(path: "google.mhtml") # => 87742
+```
+
+
+## Cleaning Up
+
+#### reset
+
+Closes browser tabs opened by the `Browser` instance.
+
+```ruby
+# connect to a long-running Chrome process
+browser = Ferrum::Browser.new(url: 'http://localhost:9222')
+
+browser.go_to("https://github.com/")
+
+# clean up, lest the tab stays there hanging forever
+browser.reset
+
+browser.quit
 ```
 
 
