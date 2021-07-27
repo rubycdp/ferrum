@@ -12,6 +12,10 @@ module Ferrum
           "/Applications/Firefox.app/Contents/MacOS/firefox-bin"
         ].freeze
         LINUX_BIN_PATH = %w[firefox].freeze
+        WINDOWS_BIN_PATH = [
+          "C:/Program Files/Firefox Developer Edition/firefox.exe",
+          "C:/Program Files/Mozilla Firefox/firefox.exe"
+        ].freeze
 
         def merge_required(flags, options, user_data_dir)
           port = options.fetch(:port, BROWSER_PORT)

@@ -26,6 +26,8 @@ module Ferrum
         def detect_path
           if Ferrum.mac?
             self.class::MAC_BIN_PATH.find { |n| File.exist?(n) }
+          elsif Ferrum.windows?
+            self.class::WINDOWS_BIN_PATH.find { |path| File.exist?(path) }
           else
             self.class::LINUX_BIN_PATH.find do |name|
               path = Cliver.detect(name) and break(path)
