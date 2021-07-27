@@ -34,7 +34,8 @@ module Ferrum
         proc do
           begin
             if Ferrum.windows?
-              ::Process.kill("KILL", pid)
+              # Process.kill is unreliable on Windows
+              ::Process.kill("KILL", pid) unless system("taskkill /f /t /pid #{pid} >NUL 2>NUL")
             else
               ::Process.kill("USR1", pid)
               start = Ferrum.monotonic_time
@@ -88,7 +89,7 @@ module Ferrum
             @xvfb = Xvfb.start(@command.options)
             ObjectSpace.define_finalizer(self, self.class.process_killer(@xvfb.pid))
           end
-
+          
           @pid = ::Process.spawn(Hash(@xvfb&.to_env), *@command.to_a, process_options)
           ObjectSpace.define_finalizer(self, self.class.process_killer(@pid))
 
