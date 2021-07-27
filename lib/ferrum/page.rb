@@ -113,7 +113,13 @@ module Ferrum
       @browser.command("Browser.getWindowBounds", windowId: window_id).fetch("bounds").values_at("left", "top")
     end
 
-    def position=(left:, top:)
+    def position=(*args)
+      if args.size == 1
+        left = args[0][:left]
+        top = args[0][:top]
+      else
+        raise "Use like: browser.position = { left: 1, right: 2}"
+      end
       @browser.command("Browser.setWindowBounds", windowId: window_id, bounds: { left: left, top: top })
     end
 
