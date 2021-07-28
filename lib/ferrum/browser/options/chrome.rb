@@ -49,6 +49,10 @@ module Ferrum
         LINUX_BIN_PATH = %w[chromium google-chrome-unstable google-chrome-beta
                             google-chrome chrome chromium-browser
                             google-chrome-stable].freeze
+        WINDOWS_BIN_PATH = [
+          "C:/Program Files/Google/Chrome Dev/Application/chrome.exe",
+          "C:/Program Files/Google/Chrome/Application/chrome.exe"
+        ].freeze
 
         def merge_required(flags, options, user_data_dir)
           port = options.fetch(:port, BROWSER_PORT)
