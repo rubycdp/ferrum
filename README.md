@@ -48,6 +48,7 @@ based on Ferrum and Mechanize.
 * [Dialogs](https://github.com/rubycdp/ferrum#dialogs)
 * [Animation](https://github.com/rubycdp/ferrum#animation)
 * [Node](https://github.com/rubycdp/ferrum#node)
+* [Tracing](https://github.com/rubycdp/ferrum#tracing)
 * [Thread safety](https://github.com/rubycdp/ferrum#thread-safety)
 * [Development](https://github.com/rubycdp/ferrum#development)
 * [Contributing](https://github.com/rubycdp/ferrum#contributing)
@@ -1146,6 +1147,50 @@ browser.at_xpath("//*[select]").select("1")
 browser.at_xpath("//*[select]").select("1", "2")
 browser.at_xpath("//*[select]").select(["1", "2"])
 ```
+
+
+## Tracing
+
+You can use `tracing.record` to create a trace file which can be opened in Chrome DevTools or [timeline viewer](https://chromedevtools.github.io/timeline-viewer/).
+
+```ruby
+browser.page.tracing.record(path: "trace.json") do
+  browser.go_to("https://www.google.com")
+end
+```
+
+#### tracing.record(\*\*options) : `Hash`
+
+- By default: returns Trace data from `Tracing.tracingComplete` event.
+- When `path` specified: return `true` and store Trace data from `Tracing.tracingComplete` event to file.
+
+* options `Hash`
+  * `:path` (String) - `String` to save a Trace data output on the disk, not specified by default.
+  * `:encoding` (Symbol) - `:base64` | `:binary` setting only for memory Trace data output, `:binary` by default.
+  * `:timeout` (Integer) - [Timeout of promise](https://github.com/ruby-concurrency/concurrent-ruby/blob/52c08fca13cc3811673ea2f6fdb244a0e42e0ebe/lib/concurrent-ruby/concurrent/promises.rb#L986) to wait til event `Tracing.Complete` triggered that fills buffer/file, `nil` by default, means "wait forever".
+  * `:screenshots` (Boolean) - When true - Captures screenshots in the trace, `false` by default.
+  * `:included_categories` (Array[String]) - An array of categories that be included to tracing data, by default:
+  ```ruby
+    ["devtools.timeline",
+    "v8.execute",
+    "disabled-by-default-devtools.timeline",
+    "disabled-by-default-devtools.timeline.frame",
+    "toplevel",
+    "blink.console",
+    "blink.user_timing",
+    "latencyInfo",
+    "disabled-by-default-devtools.timeline.stack",
+    "disabled-by-default-v8.cpu_profiler",
+    "disabled-by-default-v8.cpu_profiler.hires"]
+  ```
+  * `:excluded_categories` (Array[String]) - An array of categories that be excluded from tracing data, by default:
+  ```ruby
+    ["*"]
+  ```
+
+  See all categories by `browser.client.command("Tracing.getCategories")`
+
+Only one trace can be active at a time per browser.
 
 
 ## Thread safety ##

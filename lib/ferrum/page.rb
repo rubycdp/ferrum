@@ -10,6 +10,7 @@ require "ferrum/network"
 require "ferrum/page/frames"
 require "ferrum/page/screenshot"
 require "ferrum/page/animation"
+require "ferrum/page/tracing"
 require "ferrum/browser/client"
 
 module Ferrum
@@ -213,6 +214,10 @@ module Ferrum
 
     def subscribed?(event)
       @client.subscribed?(event)
+    end
+
+    def tracing
+      @tracing ||= Tracing.new(client: @client)
     end
 
     private

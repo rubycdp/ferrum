@@ -3,6 +3,7 @@
 require "ferrum/utils/platform"
 require "ferrum/utils/elapsed_time"
 require "ferrum/utils/attempt"
+require "ferrum/utils/stream"
 require "ferrum/errors"
 require "ferrum/browser"
 require "ferrum/node"
