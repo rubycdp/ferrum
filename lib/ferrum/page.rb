@@ -221,7 +221,10 @@ module Ferrum
       if @browser.js_errors
         on("Runtime.exceptionThrown") do |params|
           # FIXME https://jvns.ca/blog/2015/11/27/why-rubys-timeout-is-dangerous-and-thread-dot-raise-is-terrifying/
-          Thread.main.raise JavaScriptError.new(params.dig("exceptionDetails", "exception"))
+          Thread.main.raise JavaScriptError.new(
+            params.dig("exceptionDetails", "exception"),
+            params.dig("exceptionDetails", "stackTrace")
+          )
         end
       end
 
