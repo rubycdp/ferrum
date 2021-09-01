@@ -1048,6 +1048,8 @@ browser.playback_rate # => 2000
 #### property
 #### attribute
 #### evaluate
+#### selected : `Array`
+#### select
 
 
 ## Thread safety ##
