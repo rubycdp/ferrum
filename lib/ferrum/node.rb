@@ -139,6 +139,30 @@ module Ferrum
       page.evaluate_func(function, self)
     end
 
+    def select(*values)
+      tap do
+        function = <<~JS
+          function(element, values) {
+            if (element.nodeName.toLowerCase() !== 'select') {
+              throw new Error('Element is not a <select> element.');
+            }
+            const options = Array.from(element.options);
+            element.value = undefined;
+            for (const option of options) {
+              option.selected = values.includes(option.value);
+              if (option.selected && !element.multiple) break;
+            }
+            element.dispatchEvent(new Event('input', { bubbles: true }));
+            element.dispatchEvent(new Event('change', { bubbles: true }));
+            return options
+              .filter((option) => option.selected)
+              .map((option) => option.value);
+          }
+        JS
+        page.evaluate_func(function, self, values.join(','))
+      end
+    end
+
     def evaluate(expression)
       page.evaluate_on(node: self, expression: expression)
     end

@@ -112,6 +112,33 @@ module Ferrum
       end
     end
 
+    describe "#select" do
+      before do
+        browser.goto("/ferrum/form")
+      end
+
+      it "picks option in select by match string argument" do
+        expect(browser.at_xpath("//*[@id='form_title']").select("Miss").value).to eq("Miss")
+      end
+
+      context "when select has multiple property" do
+        it "picks options in select by match arguments as array" do
+          expect(browser.at_xpath("//*[@id='form_languages']").select(%w[SQL Ruby]).selected).to eq(%w[Ruby SQL])
+        end
+
+        it "picks options in select by match arguments as string" do
+          expect(browser.at_xpath("//*[@id='form_languages']").select("SQL, Ruby").selected).to eq(%w[Ruby SQL])
+        end
+      end
+
+      context "when selector is not <select>" do
+        it "raises JavaScriptError with proper message" do
+          expect { browser.at_xpath("//*[@id='customer_name']").select(anything) }.
+            to raise_exception(Ferrum::JavaScriptError, /Element is not a <select> element/)
+        end
+      end
+    end
+
     context "when the element is not in the viewport" do
       before do
         browser.go_to("/ferrum/with_js")
