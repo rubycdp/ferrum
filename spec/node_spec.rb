@@ -118,7 +118,33 @@ module Ferrum
       end
 
       it "picks option in select by match string argument" do
-        expect(browser.at_xpath("//*[@id='form_title']").select("Miss").value).to eq("Miss")
+        expect(browser.at_xpath("//*[@id='form_title']").select("Miss").selected).to eq(["Miss"])
+      end
+
+      shared_examples "clears selected options with no exception" do |options|
+        it "clears selected options with no exception" do
+          expect(browser.at_xpath("//*[@id='form_title']").selected).to eq(["Mrs"])
+          expect(browser.at_xpath("//*[@id='form_title']").select(options).selected).to eq([])
+        end
+      end
+
+      context "when option with provided text does not exist" do
+        include_examples "clears selected options with no exception", "Gotcha"
+      end
+
+      context "when provided empty array" do
+        include_examples "clears selected options with no exception", []
+      end
+
+      context "when provided empty string" do
+        include_examples "clears selected options with no exception", ""
+      end
+
+      context "when one of option with provided texts does not exist" do
+        it "picks only existed options with no exception" do
+          expect(browser.at_xpath("//*[@id='form_title']").selected).to eq(["Mrs"])
+          expect(browser.at_xpath("//*[@id='form_title']").select(%w[Mrs SQL]).selected).to eq(["Mrs"])
+        end
       end
 
       context "when select has multiple property" do
