@@ -127,6 +127,18 @@ module Ferrum
       evaluate("this.getAttribute('#{name}')")
     end
 
+    def selected
+      function = <<~JS
+        function(element) {
+          if (element.nodeName.toLowerCase() !== 'select') {
+            throw new Error('Element is not a <select> element.');
+          }
+          return Array.from(element).filter(option => option.selected).map((option) => option.text);
+        }
+      JS
+      page.evaluate_func(function, self)
+    end
+
     def evaluate(expression)
       page.evaluate_on(node: self, expression: expression)
     end

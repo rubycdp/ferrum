@@ -83,13 +83,33 @@ module Ferrum
       expect(links.first.text).to eq("Open for match")
     end
 
-    it "picks option in select" do
-      browser.goto("/ferrum/form")
-      input = browser.at_xpath("//*[@id='form_title']")
-      expect(input.value).to eq "Mrs"
-      input.click
-      input.type("Miss", :Enter)
-      expect(input.value).to eq "Miss"
+    describe "#selected" do
+      before do
+        browser.goto("/ferrum/form")
+      end
+
+      it "returns texts of selected options" do
+        expect(browser.at_xpath("//*[@id='form_region']").selected).to eq(["Norway"])
+      end
+
+      context "when options exists but no selected option" do
+        it "returns first option text as default value" do
+          expect(browser.at_xpath("//*[@id='form_title']").selected).to eq(["Mrs"])
+        end
+      end
+
+      context "when no selected options" do
+        it "returns empty array" do
+          expect(browser.at_xpath("//*[@id='form_tendency']").selected).to eq([])
+        end
+      end
+
+      context "when selector is not <select>" do
+        it "raises JavaScriptError with proper message" do
+          expect { browser.at_xpath("//*[@id='customer_name']").selected }.
+            to raise_exception(Ferrum::JavaScriptError, /Element is not a <select> element/)
+        end
+      end
     end
 
     context "when the element is not in the viewport" do
