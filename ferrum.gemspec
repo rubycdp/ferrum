@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.platform      = Gem::Platform::RUBY
   s.authors       = ["Dmitry Vorotilin"]
   s.email         = ["d.vorotilin@gmail.com"]
-  s.homepage      = "https://github.com/route/ferrum"
+  s.homepage      = "https://github.com/rubycdp/ferrum"
   s.summary       = "Ruby headless Chrome driver"
   s.description   = "Ferrum allows you to control headless Chrome browser"
   s.license       = "MIT"
