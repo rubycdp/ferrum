@@ -163,6 +163,12 @@ module Ferrum
             to raise_exception(Ferrum::JavaScriptError, /Element is not a <select> element/)
         end
       end
+
+      context "when provided texts of disabled option" do
+        it "picks disabled option with no exception" do
+          expect(browser.at_xpath("//*[@id='form_title']").select(["Other"]).selected).to eq(["Other"])
+        end
+      end
     end
 
     context "when the element is not in the viewport" do
