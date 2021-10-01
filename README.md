@@ -848,6 +848,17 @@ browser.frames # =>
 # ]
 ```
 
+### frame: `Frame | nil`
+
+Return the frame object within parent element use [frame](https://github.com/rubycdp/ferrum#frame-1) method.
+
+```ruby
+frame = p.at_css('iframe').frame # => #<Ferrum::Frame >,
+
+# You can use finder method on frame object as a normal element.
+frame.at_css("body").text
+```
+
 #### main_frame : `Frame`
 
 Returns page's main frame, the top of the tree and the parent of all frames.
