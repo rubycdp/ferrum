@@ -848,17 +848,6 @@ browser.frames # =>
 # ]
 ```
 
-### frame: `Frame | nil`
-
-Return the frame object within parent element use [frame](https://github.com/rubycdp/ferrum#frame-1) method.
-
-```ruby
-frame = p.at_css('iframe').frame # => #<Ferrum::Frame >,
-
-# You can use finder method on frame object as a normal element.
-frame.at_css("body").text
-```
-
 #### main_frame : `Frame`
 
 Returns page's main frame, the top of the tree and the parent of all frames.
@@ -1040,6 +1029,20 @@ browser.playback_rate # => 2000
 #### node? : `Boolean`
 #### frame_id
 #### frame
+
+Returns the [frame](https://github.com/rubycdp/ferrum#frame) object within parent node:
+
+```ruby
+div = browser.at_css("div.has-frame")
+div.at_css("iframe").frame # => Frame
+```
+
+You can keep using [Finders](https://github.com/rubycdp/ferrum#Finders) within that frame object:
+
+```ruby
+browser.at_css("div.has-frame").frame.at_css("body") # => Node
+```
+
 #### focus
 #### focusable?
 #### moving? : `Boolean`
