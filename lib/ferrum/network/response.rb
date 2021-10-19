@@ -3,7 +3,7 @@
 module Ferrum
   class Network
     class Response
-      attr_reader :body_size
+      attr_reader :body_size, :params
 
       def initialize(page, params)
         @page = page
@@ -34,7 +34,7 @@ module Ferrum
       def headers_size
         @response["encodedDataLength"]
       end
-      
+
       def type
         @params["type"]
       end

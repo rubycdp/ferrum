@@ -142,15 +142,18 @@ module Ferrum
       traffic = browser.network.traffic
       expect(traffic.length).to eq(1)
       expect(browser.network.status).to eq(200)
+      expect(traffic.last.response.params.dig("response", "fromDiskCache")).to be_falsey
 
-      browser.refresh
+      browser.at_xpath("//a").click
       expect(traffic.length).to eq(2)
-      expect(browser.network.status).to eq(304)
+      expect(browser.network.status).to eq(200)
+      expect(traffic.last.response.params.dig("response", "fromDiskCache")).to be_truthy
 
       browser.network.clear(:cache)
-      browser.refresh
+      browser.at_xpath("//a").click
       expect(traffic.length).to eq(3)
       expect(browser.network.status).to eq(200)
+      expect(traffic.last.response.params.dig("response", "fromDiskCache")).to be_falsey
     end
 
     it "waits for network idle" do
