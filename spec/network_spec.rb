@@ -359,5 +359,85 @@ module Ferrum
         expect(browser.body).to include("content")
       end
     end
+
+    context "supports proxy" do
+      let(:options) { Hash.new }
+      let(:proxy) { Ferrum::Proxy.start(**options) }
+
+      context "without authorization" do
+        it "works without authorization" do
+          begin
+            browser = Ferrum::Browser.new(
+              proxy: { server: { host: proxy.host, port: proxy.port } }
+            )
+
+            browser.go_to("https://example.com")
+            expect(browser.network.status).to eq(200)
+            expect(browser.body).to include("Example Domain")
+          ensure
+            browser&.quit
+          end
+        end
+      end
+
+      context "with authorization" do
+        let(:options) { Hash(user: "user", password: "pa$$") }
+
+        it "works with right password" do
+          begin
+            browser = Ferrum::Browser.new(
+              proxy: { server: { host: proxy.host, port: proxy.port, **options } }
+            )
+
+            browser.go_to("https://example.com")
+            expect(browser.network.status).to eq(200)
+            expect(browser.body).to include("Example Domain")
+          ensure
+            browser&.quit
+          end
+        end
+
+        it "breaks with wrong password" do
+          begin
+            browser = Ferrum::Browser.new(
+              proxy: { server: { host: proxy.host, port: proxy.port, user: "u1", password: "p1" } }
+            )
+
+            browser.go_to("https://example.com")
+            expect(browser.network.status).to eq(407)
+          ensure
+            browser&.quit
+          end
+        end
+      end
+
+      context "with rotation", skip: "Think how to make it working on CI" do
+        it "works after disposing context" do
+          begin
+            browser = Ferrum::Browser.new(
+              proxy: { server: { run: true } }
+            )
+
+            browser.proxy_server.rotate(host: "host", port: 0, user: "user", password: "password")
+            context = browser.contexts.create
+            page = context.create_page
+            page.go_to("https://api.ipify.org?format=json")
+            expect(page.network.status).to eq(200)
+            expect(page.body).to include("x.x.x.x")
+            context.dispose
+
+            browser.proxy_server.rotate(host: "host", port: 0, user: "user", password: "password")
+            context = browser.contexts.create
+            page = context.create_page
+            page.go_to("https://api.ipify.org?format=json")
+            expect(page.network.status).to eq(200)
+            expect(page.body).to include("x.x.x.x")
+            context.dispose
+          ensure
+            browser&.quit
+          end
+        end
+      end
+    end
   end
 end

@@ -89,7 +89,7 @@ module Ferrum
             @xvfb = Xvfb.start(@command.options)
             ObjectSpace.define_finalizer(self, self.class.process_killer(@xvfb.pid))
           end
-          
+
           @pid = ::Process.spawn(Hash(@xvfb&.to_env), *@command.to_a, process_options)
           ObjectSpace.define_finalizer(self, self.class.process_killer(@pid))
 

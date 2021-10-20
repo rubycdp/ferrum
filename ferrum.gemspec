@@ -23,12 +23,13 @@ Gem::Specification.new do |s|
     "source_code_uri" => "https://github.com/rubycdp/ferrum",
   }
 
-  s.required_ruby_version = ">= 2.3.0"
+  s.required_ruby_version = ">= 2.5.0"
 
   s.add_runtime_dependency "websocket-driver", ">= 0.6", "< 0.8"
   s.add_runtime_dependency "cliver",           "~> 0.3"
   s.add_runtime_dependency "concurrent-ruby",  "~> 1.1"
   s.add_runtime_dependency "addressable",      "~> 2.5"
+  s.add_runtime_dependency "webrick",          "~> 1.7"
 
   s.add_development_dependency "rake",         "~> 13.0"
   s.add_development_dependency "rspec",        "~> 3.8"

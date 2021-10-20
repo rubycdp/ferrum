@@ -42,6 +42,7 @@ Web design by [Evrone](https://evrone.com/), what else
 * [Screenshots](https://github.com/rubycdp/ferrum#screenshots)
 * [Cleaning Up](https://github.com/rubycdp/ferrum#cleaning-up)
 * [Network](https://github.com/rubycdp/ferrum#network)
+* [Proxy](https://github.com/rubycdp/ferrum#proxy)
 * [Mouse](https://github.com/rubycdp/ferrum#mouse)
 * [Keyboard](https://github.com/rubycdp/ferrum#keyboard)
 * [Cookies](https://github.com/rubycdp/ferrum#cookies)
@@ -183,6 +184,7 @@ Ferrum::Browser.new(options)
   * `:ws_max_receive_size` (Integer) - How big messages to accept from Chrome
       over the web socket, in bytes. Defaults to 64MB. Incoming messages larger
       than this will cause a `Ferrum::DeadBrowserError`.
+  * `:proxy` (Hash) - Specify proxy settings, [read more](https://github.com/rubycdp/ferrum#proxy)
 
 
 ## Navigation
@@ -568,6 +570,50 @@ browser.go_to("https://google.com")
 You used to call `authorize` method without block, but since it's implemented using request interception there could be
 a collision with another part of your code that also uses request interception, so that authorize allows the request
 while your code denies but it's too late. The block is mandatory now.
+
+
+## Proxy
+
+There's no currently any API related to proxy in Chrome CDP protocol, the only thing you can do now is to pass flags to
+Chrome when it starts, which means if you want to change proxy you should restart your browser. Killing the browser every
+now and then is not that convenient, but there's workaround. We can run proxy in the same process or on the other server
+and rotate proxies inside this proxy server. If you pick up running proxy server in the same process you can rotate them
+as easy as:
+
+```ruby
+browser = Ferrum::Browser.new(proxy: { server: { run: true } })
+
+context = browser.contexts.create
+page = context.create_page
+browser.proxy_server.rotate(host: "x.x.x.x", port: 31337, user: "user", password: "password")
+page.go_to("https://api.ipify.org?format=json")
+page.body # => "x.x.x.x"
+context.dispose
+
+context = browser.contexts.create
+page = context.create_page
+browser.proxy_server.rotate(host: "y.y.y.y", port: 31337, user: "user", password: "password")
+page.go_to("https://api.ipify.org?format=json")
+page.body # => "y.y.y.y"
+context.dispose
+```
+
+Make sure to create page in the new context, because Chrome doesn't break the connection with the proxy for `CONNECT`
+requests even if you close the page.
+
+If you have your own rotating proxy set on a dedicated server you can specify it with:
+
+```ruby
+browser = Ferrum::Browser.new(proxy: { server: { host: "x.x.x.x", port: 1234, user: "user", password: "pa$$", run: false } })
+browser.go_to("https://api.ipify.org?format=json")
+browser.body # => "a.a.a.a"
+```
+
+You can specify semi-colon-separated list of hosts for which proxy shouldn't be used:
+
+```ruby
+browser = Ferrum::Browser.new(proxy: { server: { run: true }, bypass: "*.google.com;*foo.com" })
+```
 
 
 ### Mouse
@@ -1127,9 +1173,12 @@ browser.quit
 
 After checking out the repo, run `bundle install` to install dependencies.
 
-Then, run `bundle exec rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+Then, run `bundle exec rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will
+allow you to experiment.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the
+version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version,
+push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
 
 
 ## Contributing
