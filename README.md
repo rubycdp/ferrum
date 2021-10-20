@@ -1074,19 +1074,14 @@ browser.playback_rate # => 2000
 
 #### node? : `Boolean`
 #### frame_id
-#### frame
+#### frame  : `Frame`
 
-Returns the [frame](https://github.com/rubycdp/ferrum#frame) object within parent node:
-
-```ruby
-div = browser.at_css("div.has-frame")
-div.at_css("iframe").frame # => Frame
-```
-
-You can keep using [Finders](https://github.com/rubycdp/ferrum#Finders) within that frame object:
+Returns [Frame](https://github.com/rubycdp/ferrum#frame) object for current node, you can keep using
+[Finders](https://github.com/rubycdp/ferrum#Finders) for that object:
 
 ```ruby
-browser.at_css("div.has-frame").frame.at_css("body") # => Node
+frame =  browser.at_xpath("//iframe").frame # => Frame
+frame.at_css("//a[text() = 'Log in']") # => Node
 ```
 
 #### focus
