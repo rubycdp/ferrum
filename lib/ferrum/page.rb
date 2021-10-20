@@ -245,6 +245,12 @@ module Ferrum
       command("Log.enable")
       command("Network.enable")
 
+      if @browser.proxy_options && @browser.proxy_options[:user] && @browser.proxy_options[:password]
+        network.authorize(type: :proxy, **@browser.proxy_options.slice(:user, :password)) do |request|
+          request.continue
+        end
+      end
+
       if @browser.options[:save_path]
         command("Page.setDownloadBehavior", behavior: "allow", downloadPath: @browser.options[:save_path])
       end

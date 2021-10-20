@@ -3,6 +3,7 @@
 require "base64"
 require "forwardable"
 require "ferrum/page"
+require "ferrum/proxy"
 require "ferrum/contexts"
 require "ferrum/browser/xvfb"
 require "ferrum/browser/process"
@@ -31,7 +32,8 @@ module Ferrum
     delegate %i[default_user_agent] => :process
 
     attr_reader :client, :process, :contexts, :logger, :js_errors, :pending_connection_errors,
-                :slowmo, :base_url, :options, :window_size, :ws_max_receive_size
+                :slowmo, :base_url, :options, :window_size, :ws_max_receive_size, :proxy_options,
+                :proxy_server
     attr_writer :timeout
 
     def initialize(options = nil)
@@ -45,6 +47,21 @@ module Ferrum
       @logger, @timeout, @ws_max_receive_size =
         @options.values_at(:logger, :timeout, :ws_max_receive_size)
       @js_errors = @options.fetch(:js_errors, false)
+
+      if @options[:proxy]
+        bypass, @proxy_options = @options[:proxy].values_at(:bypass, :server)
+
+        if @proxy_options[:run]
+          @proxy_server = Proxy.start(**@proxy_options.slice(:host, :port, :user, :password))
+          @proxy_options.merge!(host: @proxy_server.host, port: @proxy_server.port)
+        end
+
+        @options[:browser_options] ||= {}
+        address = "#{@proxy_options[:host]}:#{@proxy_options[:port]}"
+        @options[:browser_options].merge!("proxy-server" => address)
+        @options[:browser_options].merge!("proxy-bypass-list" => bypass) if bypass
+      end
+
       @pending_connection_errors = @options.fetch(:pending_connection_errors, true)
       @slowmo = @options[:slowmo].to_f
 
