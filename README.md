@@ -50,7 +50,7 @@ Web design by [Evrone](https://evrone.com/), what else
 * [JavaScript](https://github.com/rubycdp/ferrum#javascript)
 * [Frames](https://github.com/rubycdp/ferrum#frames)
 * [Frame](https://github.com/rubycdp/ferrum#frame)
-* [Dialog](https://github.com/rubycdp/ferrum#dialog)
+* [Dialogs](https://github.com/rubycdp/ferrum#dialogs)
 * [Animation](https://github.com/rubycdp/ferrum#animation)
 * [Node](https://github.com/rubycdp/ferrum#node)
 * [Thread safety](https://github.com/rubycdp/ferrum#thread-safety)
@@ -431,7 +431,7 @@ browser.quit
 
 ## Network
 
-browser.network
+`browser.network`
 
 #### traffic `Array<Network::Exchange>`
 
@@ -618,7 +618,7 @@ browser = Ferrum::Browser.new(proxy: { server: { run: true }, bypass: "*.google.
 
 ### Mouse
 
-browser.mouse
+`browser.mouse`
 
 #### scroll_to(x, y)
 
@@ -705,7 +705,7 @@ Returns bitfield for a given keys
 
 ## Cookies
 
-browser.cookies
+`browser.cookies`
 
 #### all : `Hash<String, Cookie>`
 
@@ -765,7 +765,7 @@ browser.cookies.clear # => true
 
 ## Headers
 
-browser.headers
+`browser.headers`
 
 #### get : `Hash`
 
@@ -1022,7 +1022,7 @@ frame.body # => <html><head></head><body><p>lol</p></body></html>
 ```
 
 
-## Dialog
+## Dialogs
 
 #### accept(text)
 
