@@ -697,6 +697,56 @@ module Ferrum
       expect(browser.evaluate("window.__injected")).to eq(42)
     end
 
+    context "#create_page" do
+      it "supports without block" do
+        expect(browser.contexts.size).to eq(0)
+        expect(browser.targets.size).to eq(0)
+
+        page = browser.create_page
+        page.go_to("/ferrum/simple")
+
+        expect(browser.contexts.size).to eq(1)
+        expect(browser.targets.size).to eq(1)
+      end
+
+      it "supports with block" do
+        expect(browser.contexts.size).to eq(0)
+        expect(browser.targets.size).to eq(0)
+
+        browser.create_page do |page|
+          page.go_to("/ferrum/simple")
+        end
+
+        expect(browser.contexts.size).to eq(1)
+        expect(browser.targets.size).to eq(0)
+      end
+
+      it "supports with :new_context and without block" do
+        expect(browser.contexts.size).to eq(0)
+
+        page = browser.create_page(new_context: true)
+        page.go_to("/ferrum/simple")
+
+        expect(browser.contexts.size).to eq(1)
+        expect(page.context.targets.size).to eq(1)
+
+        page.context.create_page
+        expect(page.context.targets.size).to eq(2)
+        page.context.dispose
+        expect(browser.contexts.size).to eq(0)
+      end
+
+      it "supports with :new_context and with block" do
+        expect(browser.contexts.size).to eq(0)
+
+        browser.create_page(new_context: true) do |page|
+          page.go_to("/ferrum/simple")
+        end
+
+        expect(browser.contexts.size).to eq(0)
+      end
+    end
+
     if Ferrum.mri? && !Ferrum.windows?
       require "pty"
       require "timeout"

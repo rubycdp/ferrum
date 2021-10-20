@@ -66,6 +66,10 @@ module Ferrum
       @browser.timeout
     end
 
+    def context
+      @browser.contexts.find_by(target_id: target_id)
+    end
+
     def go_to(url = nil)
       options = { url: combine_url!(url) }
       options.merge!(referrer: referrer) if referrer

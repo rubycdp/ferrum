@@ -44,6 +44,10 @@ module Ferrum
       @contexts.keys.each { |id| dispose(id) }
     end
 
+    def size
+      @contexts.size
+    end
+
     private
 
     def subscribe

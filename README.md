@@ -583,19 +583,17 @@ as easy as:
 ```ruby
 browser = Ferrum::Browser.new(proxy: { server: { run: true } })
 
-context = browser.contexts.create
-page = context.create_page
 browser.proxy_server.rotate(host: "x.x.x.x", port: 31337, user: "user", password: "password")
-page.go_to("https://api.ipify.org?format=json")
-page.body # => "x.x.x.x"
-context.dispose
+browser.create_page(new_context: true) do |page|
+  page.go_to("https://api.ipify.org?format=json")
+  page.body # => "x.x.x.x"
+end
 
-context = browser.contexts.create
-page = context.create_page
 browser.proxy_server.rotate(host: "y.y.y.y", port: 31337, user: "user", password: "password")
-page.go_to("https://api.ipify.org?format=json")
-page.body # => "y.y.y.y"
-context.dispose
+browser.create_page(new_context: true) do |page|
+  page.go_to("https://api.ipify.org?format=json")
+  page.body # => "y.y.y.y"
+end
 ```
 
 Make sure to create page in the new context, because Chrome doesn't break the connection with the proxy for `CONNECT`

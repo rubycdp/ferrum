@@ -17,7 +17,7 @@ module Ferrum
 
     extend Forwardable
     delegate %i[default_context] => :contexts
-    delegate %i[targets create_target create_page page pages windows] => :default_context
+    delegate %i[targets create_target page pages windows] => :default_context
     delegate %i[go_to back forward refresh reload stop wait_for_reload
                 at_css at_xpath css xpath current_url current_title url title
                 body doctype set_content
@@ -87,6 +87,22 @@ module Ferrum
       end
 
       @base_url = parsed
+    end
+
+    def create_page(new_context: false)
+      page = if new_context
+               context = contexts.create
+               context.create_page
+             else
+               default_context.create_page
+             end
+
+      block_given? ? yield(page) : page
+    ensure
+      if block_given?
+        page.close
+        context.dispose if new_context
+      end
     end
 
     def extensions

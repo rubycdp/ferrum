@@ -419,20 +419,18 @@ module Ferrum
             )
 
             browser.proxy_server.rotate(host: "host", port: 0, user: "user", password: "password")
-            context = browser.contexts.create
-            page = context.create_page
-            page.go_to("https://api.ipify.org?format=json")
-            expect(page.network.status).to eq(200)
-            expect(page.body).to include("x.x.x.x")
-            context.dispose
+            browser.create_page(new_context: true) do |page|
+              page.go_to("https://api.ipify.org?format=json")
+              expect(page.network.status).to eq(200)
+              expect(page.body).to include("x.x.x.x")
+            end
 
             browser.proxy_server.rotate(host: "host", port: 0, user: "user", password: "password")
-            context = browser.contexts.create
-            page = context.create_page
-            page.go_to("https://api.ipify.org?format=json")
-            expect(page.network.status).to eq(200)
-            expect(page.body).to include("x.x.x.x")
-            context.dispose
+            browser.create_page(new_context: true) do |page|
+              page.go_to("https://api.ipify.org?format=json")
+              expect(page.network.status).to eq(200)
+              expect(page.body).to include("x.x.x.x")
+            end
           ensure
             browser&.quit
           end
