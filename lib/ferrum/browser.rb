@@ -49,15 +49,16 @@ module Ferrum
       @js_errors = @options.fetch(:js_errors, false)
 
       if @options[:proxy]
-        bypass, @proxy_options = @options[:proxy].values_at(:bypass, :server)
+        @proxy_options = @options[:proxy]
 
-        if @proxy_options[:run]
+        if @proxy_options[:server]
           @proxy_server = Proxy.start(**@proxy_options.slice(:host, :port, :user, :password))
           @proxy_options.merge!(host: @proxy_server.host, port: @proxy_server.port)
         end
 
         @options[:browser_options] ||= {}
         address = "#{@proxy_options[:host]}:#{@proxy_options[:port]}"
+        bypass = @proxy_options[:bypass]
         @options[:browser_options].merge!("proxy-server" => address)
         @options[:browser_options].merge!("proxy-bypass-list" => bypass) if bypass
       end
