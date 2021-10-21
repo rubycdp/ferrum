@@ -368,7 +368,7 @@ module Ferrum
         it "works without authorization" do
           begin
             browser = Ferrum::Browser.new(
-              proxy: { server: { host: proxy.host, port: proxy.port } }
+              proxy: { host: proxy.host, port: proxy.port }
             )
 
             browser.go_to("https://example.com")
@@ -386,7 +386,7 @@ module Ferrum
         it "works with right password" do
           begin
             browser = Ferrum::Browser.new(
-              proxy: { server: { host: proxy.host, port: proxy.port, **options } }
+              proxy: { host: proxy.host, port: proxy.port, **options }
             )
 
             browser.go_to("https://example.com")
@@ -400,7 +400,7 @@ module Ferrum
         it "breaks with wrong password" do
           begin
             browser = Ferrum::Browser.new(
-              proxy: { server: { host: proxy.host, port: proxy.port, user: "u1", password: "p1" } }
+              proxy: { host: proxy.host, port: proxy.port, user: "u1", password: "p1" }
             )
 
             browser.go_to("https://example.com")
@@ -415,7 +415,7 @@ module Ferrum
         it "works after disposing context" do
           begin
             browser = Ferrum::Browser.new(
-              proxy: { server: { run: true } }
+              proxy: { server: true }
             )
 
             browser.proxy_server.rotate(host: "host", port: 0, user: "user", password: "password")
