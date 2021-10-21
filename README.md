@@ -574,11 +574,14 @@ while your code denies but it's too late. The block is mandatory now.
 
 ## Proxy
 
-There's no currently any API related to proxy in Chrome CDP protocol, the only thing you can do now is to pass flags to
-Chrome when it starts, which means if you want to change proxy you should restart your browser. Killing the browser every
-now and then is not that convenient, but there's workaround. We can run proxy in the same process or on the other server
-and rotate proxies inside this proxy server. If you pick up running proxy server in the same process you can rotate them
-as easy as:
+You can set a proxy with the `proxy` option.
+
+```ruby
+browser = Ferrum::Browser.new(proxy: {server: {host: "x.x.x.x", port: "8800" }})
+browser = Ferrum::Browser.new(proxy: {server: {host: "x.x.x.x", port: "8800", user: "user", pasword: "pa$$" }})
+```
+
+Chrome Devtools Protocol does not support changing proxies after the browser is launched. If you want to change proxies, you must restart your browser, which may not be convenient. There is a workaround. Ferrum provides a wrapper for a proxy server that can rotate proxies. We can run a proxy in the same process and rotate proxies inside this proxy server:
 
 ```ruby
 browser = Ferrum::Browser.new(proxy: { server: { run: true } })
@@ -598,14 +601,6 @@ end
 
 Make sure to create page in the new context, because Chrome doesn't break the connection with the proxy for `CONNECT`
 requests even if you close the page.
-
-If you have your own rotating proxy set on a dedicated server you can specify it with:
-
-```ruby
-browser = Ferrum::Browser.new(proxy: { server: { host: "x.x.x.x", port: 1234, user: "user", password: "pa$$", run: false } })
-browser.go_to("https://api.ipify.org?format=json")
-browser.body # => "a.a.a.a"
-```
 
 You can specify semi-colon-separated list of hosts for which proxy shouldn't be used:
 
