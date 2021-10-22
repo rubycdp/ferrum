@@ -58,7 +58,7 @@ RSpec.configure do |config|
       save_exception_aftifacts(browser, example.metadata)
     end
 
-    @browser.reset
+    reset
   end
 
   def save_exception_aftifacts(browser, meta)

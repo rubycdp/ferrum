@@ -23,7 +23,7 @@ module Ferrum
       end
 
       def blocked?
-        intercepted_request && intercepted_request.status?(:aborted)
+        intercepted? && intercepted_request.status?(:aborted)
       end
 
       def finished?
@@ -32,6 +32,10 @@ module Ferrum
 
       def pending?
         !finished?
+      end
+
+      def intercepted?
+        intercepted_request
       end
 
       def to_a
