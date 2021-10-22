@@ -577,8 +577,8 @@ while your code denies but it's too late. The block is mandatory now.
 You can set a proxy with the `proxy` option.
 
 ```ruby
-browser = Ferrum::Browser.new(proxy: {host: "x.x.x.x", port: "8800" })
-browser = Ferrum::Browser.new(proxy: {host: "x.x.x.x", port: "8800", user: "user", pasword: "pa$$" })
+browser = Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800" })
+browser = Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800", user: "user", pasword: "pa$$" })
 ```
 
 Chrome Devtools Protocol does not support changing proxies after the browser is launched. If you want to change proxies, you must restart your browser, which may not be convenient. There is a workaround. Ferrum provides a wrapper for a proxy server that can rotate proxies. We can run a proxy in the same process and rotate proxies inside this proxy server:
@@ -605,8 +605,8 @@ requests even if you close the page.
 You can specify semi-colon-separated list of hosts for which proxy shouldn't be used:
 
 ```ruby
-browser = Ferrum::Browser.new(proxy: {host: "x.x.x.x", port: "8800", bypass: "*.google.com;*foo.com" })
-browser = Ferrum::Browser.new(proxy: {server: true, bypass: "*.google.com;*foo.com" })
+browser = Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800", bypass: "*.google.com;*foo.com" })
+browser = Ferrum::Browser.new(proxy: { server: true, bypass: "*.google.com;*foo.com" })
 ```
 
 
