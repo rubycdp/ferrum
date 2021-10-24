@@ -66,6 +66,7 @@ module Ferrum
       expect(network.finished_connections).to eq(0)
 
       page.go_to("/ferrum/with_ajax_connection_refused")
+      network.wait_for_idle
 
       expect(network.finished_connections).to eq(3)
     end
@@ -74,8 +75,8 @@ module Ferrum
       expect(network.pending_connections).to eq(0)
 
       page.go_to("/ferrum/with_slow_ajax_connection")
-
       expect(network.pending_connections).to eq(1)
+
       network.wait_for_idle
       expect(network.pending_connections).to eq(0)
     end
