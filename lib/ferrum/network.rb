@@ -80,8 +80,8 @@ module Ferrum
     end
     alias_method :blocklist=, :blacklist=
 
-    def whitelist=(*patterns)
-      @whitelist = patterns
+    def whitelist=(patterns)
+      @whitelist = Array(patterns)
       graylist_subscribe
     end
     alias_method :allowlist=, :whitelist=

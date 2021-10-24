@@ -2,14 +2,13 @@
 
 module Ferrum
   describe Network do
-    let(:network) { page.network }
-    let(:traffic) { network.traffic }
-
     context "#traffic" do
       it "keeps track of network traffic" do
         page.go_to("/ferrum/with_js")
         urls = traffic.map { |e| e.request.url }
 
+        expect(urls.size).to eq(4)
+        expect(urls.grep(%r{/ferrum/with_js$}).size).to eq(1)
         expect(urls.grep(%r{/ferrum/jquery.min.js$}).size).to eq(1)
         expect(urls.grep(%r{/ferrum/jquery-ui.min.js$}).size).to eq(1)
         expect(urls.grep(%r{/ferrum/test.js$}).size).to eq(1)
@@ -115,18 +114,18 @@ module Ferrum
         page.go_to("/ferrum/cacheable")
         expect(traffic.length).to eq(1)
         expect(network.status).to eq(200)
-        expect(traffic.last.response.params.dig("response", "fromDiskCache")).to be_falsey
+        expect(last_exchange.response.params.dig("response", "fromDiskCache")).to be_falsey
 
         page.at_xpath("//a").click
         expect(traffic.length).to eq(2)
         expect(network.status).to eq(200)
-        expect(traffic.last.response.params.dig("response", "fromDiskCache")).to be_truthy
+        expect(last_exchange.response.params.dig("response", "fromDiskCache")).to be_truthy
 
         page.network.clear(:cache)
         page.at_xpath("//a").click
         expect(traffic.length).to eq(3)
         expect(network.status).to eq(200)
-        expect(traffic.last.response.params.dig("response", "fromDiskCache")).to be_falsey
+        expect(last_exchange.response.params.dig("response", "fromDiskCache")).to be_falsey
       end
     end
 
@@ -153,16 +152,6 @@ module Ferrum
         expect(page.body).to include("Disappearing header")
       end
 
-      it "blocks unwanted iframes" do
-        network.blacklist = /unwanted/
-        page.go_to("/ferrum/url_blacklist")
-
-        expect(network.status).to eq(200)
-        expect(page.body).to include("We are loading some unwanted action here")
-        frame = page.at_xpath("//iframe[@name = 'framename']").frame
-        expect(frame.body).not_to include("We shouldn't see this.")
-      end
-
       it "blocks with array of patterns" do
         network.blacklist = [/unwanted/, /jquery/]
 
@@ -172,6 +161,30 @@ module Ferrum
         expect(blocked_urls).to include(/unwanted/)
         expect(blocked_urls).to include(/jquery/)
         expect(page.body).to include("Disappearing header")
+      end
+
+      it "supports wildcards" do
+        network.blacklist = /.*wanted/
+        page.go_to("/ferrum/url_whitelist")
+
+        expect(network.status).to eq(200)
+        expect(page.body).to include("We are loading some wanted action here")
+
+        frame = page.at_xpath("//iframe[@name = 'framename']").frame
+        expect(frame.body).not_to include("We should see this.")
+
+        frame = page.at_xpath("//iframe[@name = 'unwantedframe']").frame
+        expect(frame.body).not_to include("We shouldn't see this.")
+      end
+
+      it "blocks unwanted iframes" do
+        network.blacklist = /unwanted/
+        page.go_to("/ferrum/url_blacklist")
+
+        expect(network.status).to eq(200)
+        expect(page.body).to include("We are loading some unwanted action here")
+        frame = page.at_xpath("//iframe[@name = 'framename']").frame
+        expect(frame.body).not_to include("We shouldn't see this.")
       end
 
       it "works if set after page is loaded" do
@@ -188,7 +201,7 @@ module Ferrum
         expect(page.body).to include("Disappearing header")
       end
 
-      it "works with one more subscription" do
+      it "works with other subscriptions" do
         @intercepted_request = nil
 
         page.on(:request) do |request, index, total|
@@ -212,158 +225,166 @@ module Ferrum
 
         expect(traffic.select(&:blocked?).length).to eq(0)
       end
+
+      it "supports multiple pages each with their own blacklist" do
+        page_one = browser.create_page
+        page_one.network.blacklist = /unwanted/
+
+        page_two = browser.create_page
+        page_two.network.blacklist = /jquery/
+
+        page_two.go_to("/ferrum/url_blacklist")
+        page_one.go_to("/ferrum/url_blacklist")
+
+        blocked_two = page_two.network.traffic.select(&:blocked?).map { |e| e.request.url }
+        expect(blocked_two.size).to eq(1)
+        expect(blocked_two).not_to include(/unwanted/)
+        expect(blocked_two).to include(/jquery/)
+        expect(page_two.body).to include("Disappearing header")
+
+        blocked_one = page_one.network.traffic.select(&:blocked?).map { |e| e.request.url }
+        expect(blocked_one.size).to eq(3)
+        expect(blocked_one).to include(/unwanted/)
+        expect(blocked_one).not_to include(/jquery/)
+        expect(page_one.body).not_to include("Disappearing header")
+      end
     end
 
     context "#whitelist=" do
-      it "supports wildcards" do
-        browser.network.blacklist = /.*wanted/
-        browser.go_to("/ferrum/url_whitelist")
+      let(:blocked_urls) { traffic.select(&:blocked?).map { |e| e.request.url } }
 
-        expect(browser.network.status).to eq(200)
-        expect(browser.body).to include("We are loading some wanted action here")
+      it "allows all requests when blacklist is not set" do
+        network.whitelist = nil
 
-        frame = browser.at_xpath("//iframe[@name = 'framename']").frame
-        expect(frame.body).not_to include("We should see this.")
+        page.go_to("/ferrum/url_whitelist")
 
-        frame = browser.at_xpath("//iframe[@name = 'unwantedframe']").frame
-        expect(frame.body).not_to include("We shouldn't see this.")
+        expect(blocked_urls).to be_empty
+        expect(page.body).not_to include("Disappearing header")
       end
 
-      it "allows whitelisted urls" do
-        browser.network.whitelist = %r{url_whitelist|/wanted}
-        browser.go_to("/ferrum/url_whitelist")
+      it "blocks with single pattern" do
+        network.whitelist = /url_whitelist|jquery/
 
-        expect(browser.network.status).to eq(200)
-        expect(browser.body).to include("We are loading some wanted action here")
+        page.go_to("/ferrum/url_whitelist")
 
-        frame = browser.at_xpath("//iframe[@name = 'framename']").frame
-        expect(frame.body).to include("We should see this.")
-
-        frame = browser.at_xpath("//iframe[@name = 'unwantedframe']").frame
-        expect(frame.body).not_to include("We shouldn't see this.")
+        expect(blocked_urls.size).to eq(4)
+        expect(blocked_urls).to include(/unwanted/)
+        expect(blocked_urls).to include(/wanted/)
+        expect(page.body).not_to include("Disappearing header")
       end
 
-      it "supports wildcards" do
-        browser.network.whitelist = %r{url_whitelist|/.*wanted}
-        browser.go_to("/ferrum/url_whitelist")
+      it "blocks with array of patterns" do
+        network.whitelist = [/url_whitelist/, /unwanted/, /jquery/]
 
-        expect(browser.network.status).to eq(200)
-        expect(browser.body).to include("We are loading some wanted action here")
+        page.go_to("/ferrum/url_whitelist")
 
-        frame = browser.at_xpath("//iframe[@name = 'framename']").frame
+        expect(blocked_urls.size).to eq(3)
+        expect(blocked_urls).not_to include(/unwanted/)
+        expect(blocked_urls).not_to include(/jquery/)
+        expect(page.body).not_to include("Disappearing header")
+      end
+
+      it "supports wildcards and frames" do
+        network.whitelist = %r{url_whitelist|/.*wanted}
+        page.go_to("/ferrum/url_whitelist")
+
+        expect(network.status).to eq(200)
+        expect(page.body).to include("We are loading some wanted action here")
+
+        frame = page.at_xpath("//iframe[@name = 'framename']").frame
         expect(frame.body).to include("We should see this.")
 
-        frame = browser.at_xpath("//iframe[@name = 'unwantedframe']").frame
+        frame = page.at_xpath("//iframe[@name = 'unwantedframe']").frame
         expect(frame.body).to include("We shouldn't see this.")
       end
     end
 
     context "#intercept" do
       it "supports custom responses" do
-        browser.network.intercept
-        browser.on(:request) do |request|
+        network.intercept
+        page.on(:request) do |request|
           request.respond(body: "<h1>custom content that is more than 45 characters</h1>")
         end
 
-        browser.go_to("/ferrum/non_existing")
+        page.go_to("/ferrum/non_existing")
 
-        expect(browser.network.status).to eq(200)
-        expect(browser.body).to include("content")
+        expect(network.status).to eq(200)
+        expect(page.body).to include("custom content that is more than 45 characters")
       end
     end
 
     context "#authorize" do
       it "raises error when authorize is without block" do
         expect {
-          browser.network.authorize(user: "login", password: "pass")
+          network.authorize(user: "login", password: "pass")
         }.to raise_exception(ArgumentError, "Block is missing, call `authorize(...) { |r| r.continue } or subscribe to `on(:request)` events before calling it")
       end
 
       it "raises no error when authorize is with block" do
         expect {
-          browser.network.authorize(user: "login", password: "pass") { |r| r.continue }
+          network.authorize(user: "login", password: "pass") { |r| r.continue }
         }.not_to raise_error
       end
 
       it "raises no error when authorize is without block but subscribed to events" do
         expect {
-          browser.on(:request) { |r| r.continue }
-          browser.network.authorize(user: "login", password: "pass")
+          page.on(:request) { |r| r.continue }
+          network.authorize(user: "login", password: "pass")
         }.not_to raise_error
       end
 
       it "denies without credentials" do
-        browser.go_to("/ferrum/basic_auth")
+        page.go_to("/ferrum/basic_auth")
 
-        expect(browser.network.status).to eq(401)
-        expect(browser.body).not_to include("Welcome, authenticated client")
+        expect(network.status).to eq(401)
+        expect(page.body).not_to include("Welcome, authenticated client")
       end
 
       it "allows with given credentials" do
-        browser.network.authorize(user: "login", password: "pass") do |request|
+        network.authorize(user: "login", password: "pass") do |request|
           request.continue
         end
 
-        browser.go_to("/ferrum/basic_auth")
+        page.go_to("/ferrum/basic_auth")
 
-        expect(browser.network.status).to eq(200)
-        expect(browser.body).to include("Welcome, authenticated client")
+        expect(network.status).to eq(200)
+        expect(page.body).to include("Welcome, authenticated client")
       end
 
       it "allows even overwriting headers" do
-        browser.network.authorize(user: "login", password: "pass") do |request|
+        network.authorize(user: "login", password: "pass") do |request|
           request.continue
         end
-        browser.headers.set("Cuprite" => "true")
+        page.headers.set("Cuprite" => "true")
 
-        browser.go_to("/ferrum/basic_auth")
+        page.go_to("/ferrum/basic_auth")
 
-        expect(browser.network.status).to eq(200)
-        expect(browser.body).to include("Welcome, authenticated client")
+        expect(network.status).to eq(200)
+        expect(page.body).to include("Welcome, authenticated client")
       end
 
       it "denies with wrong credentials" do
-        browser.network.authorize(user: "user", password: "pass!") do |request|
+        network.authorize(user: "user", password: "pass!") do |request|
           request.continue
         end
 
-        browser.go_to("/ferrum/basic_auth")
+        page.go_to("/ferrum/basic_auth")
 
-        expect(browser.network.status).to eq(401)
-        expect(browser.body).not_to include("Welcome, authenticated client")
+        expect(network.status).to eq(401)
+        expect(page.body).not_to include("Welcome, authenticated client")
       end
 
       it "allows on POST request" do
-        browser.network.authorize(user: "login", password: "pass") do |request|
+        network.authorize(user: "login", password: "pass") do |request|
           request.continue
         end
 
-        browser.go_to("/ferrum/basic_auth")
-        browser.at_css(%([type="submit"])).click
+        page.go_to("/ferrum/basic_auth")
+        page.at_css(%([type="submit"])).click
 
-        expect(browser.network.status).to eq(200)
-        expect(browser.body).to include("Authorized POST request")
+        expect(network.status).to eq(200)
+        expect(page.body).to include("Authorized POST request")
       end
-    end
-
-    it "captures refused connection errors" do
-      page.go_to("/ferrum/with_ajax_connection_refused")
-      expect(page.at_xpath("//h1[text() = 'Error']")).to be
-
-      expect(traffic.last.error).to be
-      expect(traffic.last.response).to be_nil
-      expect(network.idle?).to be true
-    end
-
-    it "captures canceled requests" do
-      browser.go_to("/ferrum/with_ajax_connection_canceled")
-
-      # FIXME: Hack to wait for content in the browser
-      Ferrum.with_attempts(errors: RuntimeError, max: 10, wait: 0.1) do
-        browser.at_xpath("//h1[text() = 'Canceled']") || raise("Node not found")
-      end
-
-      expect(browser.network.idle?).to be true
     end
   end
 end

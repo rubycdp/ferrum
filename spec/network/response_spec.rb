@@ -3,12 +3,10 @@
 module Ferrum
   class Network
     describe Response do
-      let(:traffic) { page.network.traffic }
-
       it "captures responses" do
         page.go_to("/ferrum/with_js")
 
-        expect(traffic.last.response.status).to eq(200)
+        expect(last_exchange.response.status).to eq(200)
       end
 
       it "gets response body" do
@@ -34,7 +32,7 @@ module Ferrum
         page.go_to("/ferrum/with_ajax_fail")
         expect(page.at_xpath("//h1[text() = 'Done']")).to be
 
-        expect(traffic.last.error).to be
+        expect(last_exchange.error).to be
       end
 
       it "counts network traffic for each loaded resource" do

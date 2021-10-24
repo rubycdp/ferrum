@@ -15,6 +15,18 @@ RSpec.shared_context "Global helpers" do
     @page ||= @browser.create_page
   end
 
+  def network
+    page.network
+  end
+
+  def traffic
+    network.traffic
+  end
+
+  def last_exchange
+    traffic.last
+  end
+
   def reset
     @browser.reset
     @page = nil
