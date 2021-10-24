@@ -10,6 +10,9 @@ require "ferrum"
 require "support/server"
 require "support/global_helpers"
 
+# GA servers are slow it's better to increase
+ENV["FERRUM_NEW_WINDOW_WAIT"] ||= "0.5" if ENV["CI"]
+
 RSpec.configure do |config|
   config.include_context "Global helpers"
 
@@ -58,7 +61,7 @@ RSpec.configure do |config|
       save_exception_aftifacts(browser, example.metadata)
     end
 
-    @browser.reset
+    reset
   end
 
   def save_exception_aftifacts(browser, meta)

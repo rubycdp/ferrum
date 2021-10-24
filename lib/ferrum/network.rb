@@ -74,6 +74,18 @@ module Ferrum
       true
     end
 
+    def blacklist=(patterns)
+      @blacklist = Array(patterns)
+      blacklist_subscribe
+    end
+    alias_method :blocklist=, :blacklist=
+
+    def whitelist=(patterns)
+      @whitelist = Array(patterns)
+      whitelist_subscribe
+    end
+    alias_method :allowlist=, :whitelist=
+
     def intercept(pattern: "*", resource_type: nil)
       pattern = { urlPattern: pattern }
       if resource_type && RESOURCE_TYPES.include?(resource_type.to_s)
@@ -203,5 +215,41 @@ module Ferrum
     def build_exchange(id)
       Network::Exchange.new(@page, id).tap { |e| @traffic << e }
     end
+
+    private
+
+    def everylist_subscribe
+      @_everylist_subscribed ||= begin
+        return if Array(@whitelist).none? && Array(@blacklist).none?
+
+        intercept
+
+        @page.on(:request) do |request, index, total|
+          if @blacklist && @blacklist.any?
+            if @blacklist.any? { |pattern| request.match?(pattern) }
+              request.abort and next
+            else
+              request.continue and next
+            end
+          elsif @whitelist && @whitelist.any?
+            if @whitelist.any? { |pattern| request.match?(pattern) }
+              request.continue and next
+            else
+              request.abort and next
+            end
+          elsif index + 1 < total
+            # There are other callbacks that may handle this request
+            next
+          else
+            # If there are no callbacks then just continue
+            request.continue
+          end
+        end
+
+        true
+      end
+    end
+    alias_method :whitelist_subscribe, :everylist_subscribe
+    alias_method :blacklist_subscribe, :everylist_subscribe
   end
 end
