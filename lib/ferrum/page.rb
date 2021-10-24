@@ -88,7 +88,8 @@ module Ferrum
         raise PendingConnectionsError.new(options[:url], pendings) unless pendings.empty?
       end
     end
-    alias goto go_to
+    alias_method :goto, :go_to
+    alias_method :go, :go_to
 
     def close
       @headers.clear
