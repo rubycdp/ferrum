@@ -58,21 +58,18 @@ module Ferrum
 
         @options[:browser_options] ||= {}
         address = "#{@proxy_options[:host]}:#{@proxy_options[:port]}"
-        bypass = @proxy_options[:bypass]
         @options[:browser_options].merge!("proxy-server" => address)
-        @options[:browser_options].merge!("proxy-bypass-list" => bypass) if bypass
+        @options[:browser_options].merge!("proxy-bypass-list" => @proxy_options[:bypass]) if @proxy_options[:bypass]
       end
 
       @pending_connection_errors = @options.fetch(:pending_connection_errors, true)
       @slowmo = @options[:slowmo].to_f
 
-      if @options.key?(:base_url)
-        self.base_url = @options[:base_url]
-      end
+      self.base_url = @options[:base_url] if @options.key?(:base_url)
 
       if ENV["FERRUM_DEBUG"] && !@logger
-        STDOUT.sync = true
-        @logger = STDOUT
+        $stdout.sync = true
+        @logger = $stdout
         @options[:logger] = @logger
       end
 

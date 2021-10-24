@@ -213,9 +213,9 @@ module Ferrum
         it "throws an error on a wrong xpath" do
           browser.go_to("/ferrum/with_js")
 
-          expect {
+          expect do
             browser.xpath("#remove_me")
-          }.to raise_error(Ferrum::JavaScriptError)
+          end.to raise_error(Ferrum::JavaScriptError)
         end
 
         it "supports inside a given frame" do
@@ -251,9 +251,9 @@ module Ferrum
         it "throws an error on a wrong xpath" do
           browser.go_to("/ferrum/with_js")
 
-          expect {
+          expect do
             browser.at_xpath("#remove_me")
-          }.to raise_error(Ferrum::JavaScriptError)
+          end.to raise_error(Ferrum::JavaScriptError)
         end
 
         it "supports inside a given frame" do
@@ -289,9 +289,9 @@ module Ferrum
         it "throws an error on an invalid selector" do
           browser.go_to("/ferrum/table")
 
-          expect {
+          expect do
             browser.css("table tr:last")
-          }.to raise_error(Ferrum::JavaScriptError)
+          end.to raise_error(Ferrum::JavaScriptError)
         end
 
         it "supports inside a given frame" do
@@ -327,9 +327,9 @@ module Ferrum
         it "throws an error on an invalid selector" do
           browser.go_to("/ferrum/table")
 
-          expect {
+          expect do
             browser.at_css("table tr:last")
-          }.to raise_error(Ferrum::JavaScriptError)
+          end.to raise_error(Ferrum::JavaScriptError)
         end
 
         it "supports inside a given frame" do

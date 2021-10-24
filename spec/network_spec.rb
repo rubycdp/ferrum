@@ -80,13 +80,16 @@ module Ferrum
       expect(network.pending_connections).to eq(0)
     end
 
-    it "#request", skip: true do
+    it "#request" do
+      skip
     end
 
-    it "#response", skip: true do
+    it "#response" do
+      skip
     end
 
-    it "#status", skip: true do
+    it "#status" do
+      skip
     end
 
     context "#clear" do
@@ -204,7 +207,7 @@ module Ferrum
       it "works with other subscriptions" do
         @intercepted_request = nil
 
-        page.on(:request) do |request, index, total|
+        page.on(:request) do |request, _index, _total|
           @intercepted_request ||= request
         end
 
@@ -315,22 +318,25 @@ module Ferrum
 
     context "#authorize" do
       it "raises error when authorize is without block" do
-        expect {
+        expect do
           network.authorize(user: "login", password: "pass")
-        }.to raise_exception(ArgumentError, "Block is missing, call `authorize(...) { |r| r.continue } or subscribe to `on(:request)` events before calling it")
+        end.to raise_exception(ArgumentError,
+                               "Block is missing, call `authorize(...) { |r| r.continue } or subscribe to `on(:request)` events before calling it")
       end
 
       it "raises no error when authorize is with block" do
-        expect {
-          network.authorize(user: "login", password: "pass") { |r| r.continue }
-        }.not_to raise_error
+        expect do
+          network.authorize(user: "login", password: "pass") do |request, _index, _total|
+            request.continue
+          end
+        end.not_to raise_error
       end
 
       it "raises no error when authorize is without block but subscribed to events" do
-        expect {
-          page.on(:request) { |r| r.continue }
+        expect do
+          page.on(:request, &:continue)
           network.authorize(user: "login", password: "pass")
-        }.not_to raise_error
+        end.not_to raise_error
       end
 
       it "denies without credentials" do
@@ -341,7 +347,7 @@ module Ferrum
       end
 
       it "allows with given credentials" do
-        network.authorize(user: "login", password: "pass") do |request|
+        network.authorize(user: "login", password: "pass") do |request, _index, _total|
           request.continue
         end
 
@@ -352,7 +358,7 @@ module Ferrum
       end
 
       it "allows even overwriting headers" do
-        network.authorize(user: "login", password: "pass") do |request|
+        network.authorize(user: "login", password: "pass") do |request, _index, _total|
           request.continue
         end
         page.headers.set("Cuprite" => "true")
@@ -364,7 +370,7 @@ module Ferrum
       end
 
       it "denies with wrong credentials" do
-        network.authorize(user: "user", password: "pass!") do |request|
+        network.authorize(user: "user", password: "pass!") do |request, _index, _total|
           request.continue
         end
 
@@ -375,7 +381,7 @@ module Ferrum
       end
 
       it "allows on POST request" do
-        network.authorize(user: "login", password: "pass") do |request|
+        network.authorize(user: "login", password: "pass") do |request, _index, _total|
           request.continue
         end
 

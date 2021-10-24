@@ -41,7 +41,7 @@ module Ferrum
 
     def reset
       @default_context = nil
-      @contexts.keys.each { |id| dispose(id) }
+      @contexts.each_key { |id| dispose(id) }
     end
 
     def size

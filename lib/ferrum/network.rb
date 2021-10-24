@@ -28,6 +28,7 @@ module Ferrum
 
       until idle?(connections)
         raise TimeoutError if Ferrum.timeout?(start, timeout)
+
         sleep(duration)
       end
     end
@@ -61,9 +62,7 @@ module Ferrum
     end
 
     def clear(type)
-      unless CLEAR_TYPE.include?(type)
-        raise ArgumentError, ":type should be in #{CLEAR_TYPE}"
-      end
+      raise ArgumentError, ":type should be in #{CLEAR_TYPE}" unless CLEAR_TYPE.include?(type)
 
       if type == :traffic
         @traffic.clear
@@ -78,30 +77,27 @@ module Ferrum
       @blacklist = Array(patterns)
       blacklist_subscribe
     end
-    alias_method :blocklist=, :blacklist=
+    alias blocklist= blacklist=
 
     def whitelist=(patterns)
       @whitelist = Array(patterns)
       whitelist_subscribe
     end
-    alias_method :allowlist=, :whitelist=
+    alias allowlist= whitelist=
 
     def intercept(pattern: "*", resource_type: nil)
       pattern = { urlPattern: pattern }
-      if resource_type && RESOURCE_TYPES.include?(resource_type.to_s)
-        pattern[:resourceType] = resource_type
-      end
+      pattern[:resourceType] = resource_type if resource_type && RESOURCE_TYPES.include?(resource_type.to_s)
 
       @page.command("Fetch.enable", handleAuthRequests: true, patterns: [pattern])
     end
 
     def authorize(user:, password:, type: :server, &block)
-      unless AUTHORIZE_TYPE.include?(type)
-        raise ArgumentError, ":type should be in #{AUTHORIZE_TYPE}"
-      end
+      raise ArgumentError, ":type should be in #{AUTHORIZE_TYPE}" unless AUTHORIZE_TYPE.include?(type)
 
       if !block_given? && !@page.subscribed?("Fetch.requestPaused")
-        raise ArgumentError, "Block is missing, call `authorize(...) { |r| r.continue } or subscribe to `on(:request)` events before calling it"
+        raise ArgumentError,
+              "Block is missing, call `authorize(...) { |r| r.continue } or subscribe to `on(:request)` events before calling it"
       end
 
       @authorized_ids ||= {}
@@ -152,9 +148,7 @@ module Ferrum
 
         exchange.request = request
 
-        if exchange.navigation_request?(@page.main_frame.id)
-          @exchange = exchange
-        end
+        @exchange = exchange if exchange.navigation_request?(@page.main_frame.id)
       end
 
       @page.on("Network.responseReceived") do |params|
@@ -166,9 +160,7 @@ module Ferrum
 
       @page.on("Network.loadingFinished") do |params|
         exchange = select(params["requestId"]).last
-        if exchange && exchange.response
-          exchange.response.body_size = params["encodedDataLength"]
-        end
+        exchange.response.body_size = params["encodedDataLength"] if exchange&.response
       end
 
       @page.on("Network.loadingFailed") do |params|
@@ -225,13 +217,13 @@ module Ferrum
         intercept
 
         @page.on(:request) do |request, index, total|
-          if @blacklist && @blacklist.any?
+          if @blacklist&.any?
             if @blacklist.any? { |pattern| request.match?(pattern) }
               request.abort and next
             else
               request.continue and next
             end
-          elsif @whitelist && @whitelist.any?
+          elsif @whitelist&.any?
             if @whitelist.any? { |pattern| request.match?(pattern) }
               request.continue and next
             else
@@ -249,7 +241,7 @@ module Ferrum
         true
       end
     end
-    alias_method :whitelist_subscribe, :everylist_subscribe
-    alias_method :blacklist_subscribe, :everylist_subscribe
+    alias whitelist_subscribe everylist_subscribe
+    alias blacklist_subscribe everylist_subscribe
   end
 end

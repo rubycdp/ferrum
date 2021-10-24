@@ -5,21 +5,28 @@ require "ferrum/frame/runtime"
 
 module Ferrum
   class Frame
-    include DOM, Runtime
+    include DOM
+    include Runtime
 
-    attr_reader :page, :parent_id, :state
+    STATE_VALUES = %i[
+      started_loading
+      navigated
+      stopped_loading
+    ].freeze
+
     attr_accessor :id, :name
+    attr_reader :page, :parent_id, :state
 
     def initialize(id, page, parent_id = nil)
+      @id = id
+      @page = page
       @execution_id = nil
-      @id, @page, @parent_id = id, page, parent_id
+      @parent_id = parent_id
     end
 
-    # Can be one of:
-    # * started_loading
-    # * navigated
-    # * stopped_loading
     def state=(value)
+      raise ArgumentError unless STATE_VALUES.include?(value)
+
       @state = value
     end
 
@@ -50,6 +57,7 @@ module Ferrum
 
     def execution_id
       raise NoExecutionContextError unless @execution_id
+
       @execution_id
     rescue NoExecutionContextError
       @page.event.reset

@@ -36,7 +36,9 @@ module Ferrum
                 execution_id evaluate evaluate_on evaluate_async execute evaluate_func
                 add_script_tag add_style_tag] => :main_frame
 
-    include Frames, Screenshot, Animation
+    include Animation
+    include Screenshot
+    include Frames
 
     attr_accessor :referrer
     attr_reader :target_id, :browser,
@@ -46,7 +48,8 @@ module Ferrum
     def initialize(target_id, browser)
       @frames = {}
       @main_frame = Frame.new(nil, self)
-      @target_id, @browser = target_id, browser
+      @browser = browser
+      @target_id = target_id
       @event = Event.new.tap(&:set)
 
       host = @browser.process.host
@@ -54,8 +57,10 @@ module Ferrum
       ws_url = "ws://#{host}:#{port}/devtools/page/#{@target_id}"
       @client = Browser::Client.new(browser, ws_url, id_starts_with: 1000)
 
-      @mouse, @keyboard = Mouse.new(self), Keyboard.new(self)
-      @headers, @cookies = Headers.new(self), Cookies.new(self)
+      @mouse = Mouse.new(self)
+      @keyboard = Keyboard.new(self)
+      @headers = Headers.new(self)
+      @cookies = Cookies.new(self)
       @network = Network.new(self)
 
       subscribe
@@ -81,6 +86,7 @@ module Ferrum
             net::ERR_CONNECTION_TIMED_OUT].include?(response["errorText"])
         raise StatusError, options[:url]
       end
+
       response["frameId"]
     rescue TimeoutError
       if @browser.pending_connection_errors
@@ -88,8 +94,8 @@ module Ferrum
         raise PendingConnectionsError.new(options[:url], pendings) unless pendings.empty?
       end
     end
-    alias_method :goto, :go_to
-    alias_method :go, :go_to
+    alias goto go_to
+    alias go go_to
 
     def close
       @headers.clear
@@ -131,7 +137,7 @@ module Ferrum
     def refresh
       command("Page.reload", wait: timeout, slowmoable: true)
     end
-    alias_method :reload, :refresh
+    alias reload refresh
 
     def stop
       command("Page.stopLoading", slowmoable: true)
@@ -152,7 +158,7 @@ module Ferrum
     end
 
     def bypass_csp(value = true)
-      enabled = !!value
+      enabled = !value.nil?
       command("Page.setBypassCSP", enabled: enabled)
       enabled
     end
@@ -166,14 +172,15 @@ module Ferrum
     end
 
     def command(method, wait: 0, slowmoable: false, **params)
-      iteration = @event.reset if wait > 0
-      sleep(@browser.slowmo) if slowmoable && @browser.slowmo > 0
+      iteration = @event.reset if wait.positive?
+      sleep(@browser.slowmo) if slowmoable && @browser.slowmo.positive?
       result = @client.command(method, params)
 
-      if wait > 0
-        @event.wait(wait) # Wait a bit after command and check if iteration has
-                          # changed which means there was some network event for
-                          # the main frame and it started to load new content.
+      if wait.positive?
+        @event.wait(wait)
+        # Wait a bit after command and check if iteration has
+        # changed which means there was some network event for
+        # the main frame and it started to load new content.
         if iteration != @event.iteration
           set = @event.wait(@browser.timeout)
           raise TimeoutError unless set
@@ -225,7 +232,7 @@ module Ferrum
 
       if @browser.js_errors
         on("Runtime.exceptionThrown") do |params|
-          # FIXME https://jvns.ca/blog/2015/11/27/why-rubys-timeout-is-dangerous-and-thread-dot-raise-is-terrifying/
+          # FIXME: https://jvns.ca/blog/2015/11/27/why-rubys-timeout-is-dangerous-and-thread-dot-raise-is-terrifying/
           Thread.main.raise JavaScriptError.new(
             params.dig("exceptionDetails", "exception"),
             params.dig("exceptionDetails", "stackTrace")
@@ -233,7 +240,7 @@ module Ferrum
         end
       end
 
-      on(:dialog) do |dialog, index, total|
+      on(:dialog) do |dialog, _index, total|
         if total == 1
           warn "Dialog was shown but you didn't provide `on(:dialog)` callback, accepting it by default. " \
                "Please take a look at https://github.com/rubycdp/ferrum#dialog"
@@ -251,7 +258,8 @@ module Ferrum
       command("Network.enable")
 
       if @browser.proxy_options && @browser.proxy_options[:user] && @browser.proxy_options[:password]
-        network.authorize(type: :proxy, **@browser.proxy_options.slice(:user, :password)) do |request|
+        auth_options = @browser.proxy_options.slice(:user, :password)
+        network.authorize(type: :proxy, **auth_options) do |request, _index, _total|
           request.continue
         end
       end

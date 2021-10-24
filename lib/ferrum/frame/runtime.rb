@@ -46,7 +46,7 @@ module Ferrum
       JS
 
       def evaluate(expression, *args)
-        expression = "function() { return %s }" % expression
+        expression = format("function() { return %s }", expression)
         call(expression: expression, arguments: args)
       end
 
@@ -66,12 +66,12 @@ module Ferrum
           }
         JS
 
-        expression = template % [wait * 1000, expression]
+        expression = format(template, wait * 1000, expression)
         call(expression: expression, arguments: args, awaitPromise: true)
       end
 
       def execute(expression, *args)
-        expression = "function() { %s }" % expression
+        expression = format("function() { %s }", expression)
         call(expression: expression, arguments: args, handle: false, returnByValue: true)
         true
       end
@@ -82,7 +82,7 @@ module Ferrum
 
       def evaluate_on(node:, expression:, by_value: true, wait: 0)
         options = { handle: true }
-        expression = "function() { return %s }" % expression
+        expression = format("function() { return %s }", expression)
         options = { handle: false, returnByValue: true } if by_value
         call(expression: expression, on: node, wait: wait, **options)
       end
@@ -119,7 +119,8 @@ module Ferrum
 
       def call(expression:, arguments: [], on: nil, wait: 0, handle: true, **options)
         errors = [NodeNotFoundError, NoExecutionContextError]
-        attempts, sleep = INTERMITTENT_ATTEMPTS, INTERMITTENT_SLEEP
+        sleep = INTERMITTENT_SLEEP
+        attempts = INTERMITTENT_ATTEMPTS
 
         Ferrum.with_attempts(errors: errors, max: attempts, wait: sleep) do
           params = options.dup
@@ -141,7 +142,7 @@ module Ferrum
           handle_error(response)
           response = response["result"]
 
-          handle ? handle_response(response) : response.dig("value")
+          handle ? handle_response(response) : response["value"]
         end
       end
 
@@ -171,16 +172,21 @@ module Ferrum
 
           case response["subtype"]
           when "node"
-              # We cannot store object_id in the node because page can be reloaded
-              # and node destroyed so we need to retrieve it each time for given id.
-              # Though we can try to subscribe to `DOM.childNodeRemoved` and
-              # `DOM.childNodeInserted` in the future.
-              node_id = @page.command("DOM.requestNode", objectId: object_id)["nodeId"]
-              description = @page.command("DOM.describeNode", nodeId: node_id)["node"]
-              Node.new(self, @page.target_id, node_id, description)
+            # We cannot store object_id in the node because page can be reloaded
+            # and node destroyed so we need to retrieve it each time for given id.
+            # Though we can try to subscribe to `DOM.childNodeRemoved` and
+            # `DOM.childNodeInserted` in the future.
+            node_id = @page.command("DOM.requestNode", objectId: object_id)["nodeId"]
+            description = @page.command("DOM.describeNode", nodeId: node_id)["node"]
+            Node.new(self, @page.target_id, node_id, description)
           when "array"
             reduce_props(object_id, []) do |memo, key, value|
-              next(memo) unless (Integer(key) rescue nil)
+              next(memo) unless begin
+                Integer(key)
+              rescue StandardError
+                nil
+              end
+
               value = value["objectId"] ? handle_response(value) : value["value"]
               memo.insert(key.to_i, value)
             end.compact
@@ -212,11 +218,12 @@ module Ferrum
 
       def reduce_props(object_id, to)
         if cyclic?(object_id).dig("result", "value")
-          return to.is_a?(Array) ? [cyclic_object] : cyclic_object
+          to.is_a?(Array) ? [cyclic_object] : cyclic_object
         else
           props = @page.command("Runtime.getProperties", ownProperties: true, objectId: object_id)
           props["result"].reduce(to) do |memo, prop|
             next(memo) unless prop["enumerable"]
+
             yield(memo, prop["name"], prop["value"])
           end
         end

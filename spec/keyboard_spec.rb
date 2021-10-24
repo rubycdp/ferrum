@@ -158,14 +158,14 @@ module Ferrum
 
       it "raises error for unknown keys" do
         input = browser.at_css("#empty_input")
-        expect {
+        expect do
           input.focus.type("abc", :blah)
-        }.to raise_error(KeyError, "key not found: :blah")
+        end.to raise_error(KeyError, "key not found: :blah")
       end
     end
 
     context "type" do
-      let(:delete_all) { [ [(Ferrum.mac? ? :alt : :ctrl), :shift, :right], :backspace ] }
+      let(:delete_all) { [[(Ferrum.mac? ? :alt : :ctrl), :shift, :right], :backspace] }
 
       before { browser.go_to("/ferrum/set") }
 
@@ -222,7 +222,7 @@ module Ferrum
 
         it "calls event handlers for each character input" do
           input.focus.type("abc").blur
-          expect(output.text.strip).to eq((["keydown keypress input keyup"] * 3).join(" ") + " change")
+          expect(output.text.strip).to eq("#{(['keydown keypress input keyup'] * 3).join(' ')} change")
           expect(input.value).to eq("abc")
         end
 
@@ -304,16 +304,14 @@ module Ferrum
       end
 
       it "attaches a file when passed a Pathname", skip: true do
-        begin
-          filename = Pathname.new("spec/tmp/a_test_pathname").expand_path
-          File.open(filename, "w") { |f| f.write("text") }
+        filename = Pathname.new("spec/tmp/a_test_pathname").expand_path
+        File.open(filename, "w") { |f| f.write("text") }
 
-          element = browser.at_css("#change_me_file")
-          element.set(filename)
-          expect(element.value).to eq("C:\\fakepath\\a_test_pathname")
-        ensure
-          FileUtils.rm_f(filename)
-        end
+        element = browser.at_css("#change_me_file")
+        element.set(filename)
+        expect(element.value).to eq("C:\\fakepath\\a_test_pathname")
+      ensure
+        FileUtils.rm_f(filename)
       end
     end
 

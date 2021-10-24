@@ -44,9 +44,7 @@ module Ferrum
       end
 
       def expires
-        if @attributes["expires"] > 0
-          Time.at(@attributes["expires"])
-        end
+        Time.at(@attributes["expires"]) if @attributes["expires"].positive?
       end
     end
 
@@ -73,7 +71,7 @@ module Ferrum
       cookie[:sameSite] = cookie.delete(:samesite) if cookie.key?(:samesite)
 
       expires = cookie.delete(:expires).to_i
-      cookie[:expires] = expires if expires > 0
+      cookie[:expires] = expires if expires.positive?
 
       @page.command("Network.setCookie", **cookie)["success"]
     end

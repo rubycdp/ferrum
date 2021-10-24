@@ -4,14 +4,14 @@ require "json"
 
 module Ferrum
   class Keyboard
-    KEYS = JSON.parse(File.read(File.expand_path("../keyboard.json", __FILE__)))
+    KEYS = JSON.parse(File.read(File.expand_path("keyboard.json", __dir__)))
     MODIFIERS = { "alt" => 1, "ctrl" => 2, "control" => 2,
-                  "meta" => 4, "command" => 4, "shift" => 8 }
+                  "meta" => 4, "command" => 4, "shift" => 8 }.freeze
     KEYS_MAPPING = {
       cancel: "Cancel", help: "Help", backspace: "Backspace", tab: "Tab",
       clear: "Clear", return: "Enter", enter: "Enter", shift: "Shift",
       ctrl: "Control", control: "Control", alt: "Alt", pause: "Pause",
-      escape: "Escape", space: "Space",  pageup: "PageUp", page_up: "PageUp",
+      escape: "Escape", space: "Space", pageup: "PageUp", page_up: "PageUp",
       pagedown: "PageDown", page_down: "PageDown", end: "End", home: "Home",
       left: "ArrowLeft", up: "ArrowUp", right: "ArrowRight",
       down: "ArrowDown", insert: "Insert", delete: "Delete",
@@ -23,8 +23,8 @@ module Ferrum
       separator: "NumpadDecimal", subtract: "NumpadSubtract",
       decimal: "NumpadDecimal", divide: "NumpadDivide", f1: "F1", f2: "F2",
       f3: "F3", f4: "F4", f5: "F5", f6: "F6", f7: "F7", f8: "F8", f9: "F9",
-      f10: "F10", f11: "F11", f12: "F12", meta: "Meta", command: "Meta",
-    }
+      f10: "F10", f11: "F11", f12: "F12", meta: "Meta", command: "Meta"
+    }.freeze
 
     def initialize(page)
       @page = page
@@ -95,7 +95,7 @@ module Ferrum
               text: text,
               unmodifiedText: text,
               isKeypad: key["location"] == 3,
-              modifiers: pressed.map { |k| MODIFIERS[k] }.reduce(0, :|),
+              modifiers: pressed.map { |k| MODIFIERS[k] }.reduce(0, :|)
             )
 
             modifiers = pressed.map { |k| to_options(KEYS.fetch(KEYS_MAPPING[k.to_sym])) }

@@ -22,7 +22,6 @@ module Ferrum
                   :default_user_agent, :browser_version, :protocol_version,
                   :v8_version, :webkit_version, :xvfb
 
-
       extend Forwardable
       delegate path: :command
 
@@ -32,28 +31,33 @@ module Ferrum
 
       def self.process_killer(pid)
         proc do
-          begin
-            if Ferrum.windows?
-              # Process.kill is unreliable on Windows
-              ::Process.kill("KILL", pid) unless system("taskkill /f /t /pid #{pid} >NUL 2>NUL")
-            else
-              ::Process.kill("USR1", pid)
-              start = Ferrum.monotonic_time
-              while ::Process.wait(pid, ::Process::WNOHANG).nil?
-                sleep(WAIT_KILLED)
-                next unless Ferrum.timeout?(start, KILL_TIMEOUT)
-                ::Process.kill("KILL", pid)
-                ::Process.wait(pid)
-                break
-              end
+          if Ferrum.windows?
+            # Process.kill is unreliable on Windows
+            ::Process.kill("KILL", pid) unless system("taskkill /f /t /pid #{pid} >NUL 2>NUL")
+          else
+            ::Process.kill("USR1", pid)
+            start = Ferrum.monotonic_time
+            while ::Process.wait(pid, ::Process::WNOHANG).nil?
+              sleep(WAIT_KILLED)
+              next unless Ferrum.timeout?(start, KILL_TIMEOUT)
+
+              ::Process.kill("KILL", pid)
+              ::Process.wait(pid)
+              break
             end
-          rescue Errno::ESRCH, Errno::ECHILD
           end
+        rescue Errno::ESRCH, Errno::ECHILD
         end
       end
 
       def self.directory_remover(path)
-        proc { FileUtils.remove_entry(path) rescue Errno::ENOENT }
+        proc {
+          begin
+            FileUtils.remove_entry(path)
+          rescue StandardError
+            Errno::ENOENT
+          end
+        }
       end
 
       def initialize(options)
@@ -131,7 +135,7 @@ module Ferrum
         output = ""
         start = Ferrum.monotonic_time
         max_time = start + timeout
-        regexp = /DevTools listening on (ws:\/\/.*)/
+        regexp = %r{DevTools listening on (ws://.*)}
         while (now = Ferrum.monotonic_time) < max_time
           begin
             output += read_io.read_nonblock(512)
@@ -146,7 +150,7 @@ module Ferrum
         end
 
         unless ws_url
-          @logger.puts(output) if @logger
+          @logger&.puts(output)
           raise ProcessTimeoutError.new(timeout, output)
         end
       end
@@ -172,11 +176,9 @@ module Ferrum
 
       def close_io(*ios)
         ios.each do |io|
-          begin
-            io.close unless io.closed?
-          rescue IOError
-            raise unless RUBY_ENGINE == "jruby"
-          end
+          io.close unless io.closed?
+        rescue IOError
+          raise unless RUBY_ENGINE == "jruby"
         end
       end
     end

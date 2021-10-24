@@ -1,7 +1,7 @@
 inherit_from: .rubocop_todo.yml
 
 AllCops:
-  TargetRubyVersion: 2.4
+  TargetRubyVersion: 2.5
   NewCops: enable
 
 Layout/FirstArrayElementIndentation:
@@ -13,6 +13,7 @@ Style/StringLiterals:
 Metrics/BlockLength:
   Exclude:
     - spec/**/*
+    - "*.gemspec"
 
 Naming/MethodParameterName:
   AllowedNames:
@@ -20,6 +21,7 @@ Naming/MethodParameterName:
     - y
     - id
     - to
+    - on
 
 Naming/FileName:
   Exclude:

@@ -5,8 +5,11 @@ require "ferrum/node"
 
 module Ferrum
   class Error               < StandardError; end
+
   class NoSuchPageError     < Error; end
+
   class NoSuchTargetError   < Error; end
+
   class NotImplementedError < Error; end
 
   class StatusError < Error
@@ -59,7 +62,9 @@ module Ferrum
 
   class NodeMovingError < Error
     def initialize(node, prev, current)
-      @node, @prev, @current = node, prev, current
+      @node = node
+      @prev = prev
+      @current = current
       super(message)
     end
 
@@ -146,6 +151,7 @@ module Ferrum
       yield
     rescue *Array(errors)
       raise if attempts >= max
+
       attempts += 1
       sleep(wait)
       retry

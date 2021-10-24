@@ -26,9 +26,9 @@ module Ferrum
 
       sleep 0.2 # Wait for node to disappear
 
-      expect {
+      expect do
         browser.at_xpath("//a[text()='JS redirect']").click
-      }.to raise_error(
+      end.to raise_error(
         Ferrum::CoordinatesNotFoundError,
         "Could not compute content quads"
       )
@@ -106,8 +106,8 @@ module Ferrum
 
       context "when selector is not <select>" do
         it "raises JavaScriptError with proper message" do
-          expect { browser.at_xpath("//*[@id='customer_name']").selected }.
-            to raise_exception(Ferrum::JavaScriptError, /Element is not a <select> element/)
+          expect { browser.at_xpath("//*[@id='customer_name']").selected }
+            .to raise_exception(Ferrum::JavaScriptError, /Element is not a <select> element/)
         end
       end
     end
@@ -159,8 +159,8 @@ module Ferrum
 
       context "when selector is not <select>" do
         it "raises JavaScriptError with proper message" do
-          expect { browser.at_xpath("//*[@id='customer_name']").select(anything) }.
-            to raise_exception(Ferrum::JavaScriptError, /Element is not a <select> element/)
+          expect { browser.at_xpath("//*[@id='customer_name']").select(anything) }
+            .to raise_exception(Ferrum::JavaScriptError, /Element is not a <select> element/)
         end
       end
 
@@ -178,14 +178,14 @@ module Ferrum
 
       # FIXME:
       it "raises a MouseEventFailed error", skip: true do
-        expect {
+        expect do
           browser.at_xpath("//a[text() = 'O hai']").click
-        }.to raise_error(Ferrum::MouseEventFailed)
+        end.to raise_error(Ferrum::MouseEventFailed)
       end
 
       context "and is then brought in" do
         before do
-          browser.execute %Q($("#off-the-left").animate({left: "10"});)
+          browser.execute %($("#off-the-left").animate({left: "10"});)
         end
 
         it "clicks properly" do

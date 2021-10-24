@@ -4,7 +4,7 @@ require "bundler/setup"
 require "rspec"
 
 PROJECT_ROOT = File.expand_path("..", __dir__)
-%w[/lib /spec].each { |p| $:.unshift(p) }
+%w[/lib /spec].each { |p| $LOAD_PATH.unshift(p) }
 
 require "ferrum"
 require "support/server"
@@ -57,9 +57,7 @@ RSpec.configure do |config|
   end
 
   config.after(:each) do |example|
-    if ENV["CI"] && example.exception
-      save_exception_aftifacts(browser, example.metadata)
-    end
+    save_exception_aftifacts(browser, example.metadata) if ENV["CI"] && example.exception
 
     reset
   end
@@ -68,7 +66,7 @@ RSpec.configure do |config|
     time_now = Time.now
     filename = File.basename(meta[:file_path])
     line_number = meta[:line_number]
-    timestamp = "#{time_now.strftime("%Y-%m-%d-%H-%M-%S.")}#{"%03d" % (time_now.usec/1000).to_i}"
+    timestamp = time_now.strftime("%Y-%m-%d-%H-%M-%S.") + format("%03d", (time_now.usec / 1000).to_i)
 
     save_exception_log(browser, filename, line_number, timestamp)
     save_exception_screenshot(browser, filename, line_number, timestamp)
@@ -78,14 +76,14 @@ RSpec.configure do |config|
     screenshot_name = "screenshot-#{filename}-#{line_number}-#{timestamp}.png"
     screenshot_path = "/tmp/ferrum/#{screenshot_name}"
     browser.screenshot(path: screenshot_path, full: true)
-  rescue => e
+  rescue StandardError => e
     puts "#{e.class}: #{e.message}"
   end
 
-  def save_exception_log(browser, filename, line_number, timestamp)
+  def save_exception_log(_browser, filename, line_number, timestamp)
     log_name = "logfile-#{filename}-#{line_number}-#{timestamp}.txt"
     File.open("/tmp/ferrum/#{log_name}", "wb") { |file| file.write(FERRUM_LOGGER.string) }
-  rescue => e
+  rescue StandardError => e
     puts "#{e.class}: #{e.message}"
   end
 end

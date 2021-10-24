@@ -61,13 +61,11 @@ module Ferrum
         end
 
         on("Network.requestWillBeSent") do |params|
-          if params["frameId"] == @main_frame.id
-            # Possible types:
-            # Document, Stylesheet, Image, Media, Font, Script, TextTrack, XHR,
-            # Fetch, EventSource, WebSocket, Manifest, SignedExchange, Ping,
-            # CSPViolationReport, Other
-            @event.reset if params["type"] == "Document"
-          end
+          # Possible types:
+          # Document, Stylesheet, Image, Media, Font, Script, TextTrack, XHR,
+          # Fetch, EventSource, WebSocket, Manifest, SignedExchange, Ping,
+          # CSPViolationReport, Other
+          @event.reset if params["frameId"] == @main_frame.id && params["type"] == "Document"
         end
 
         on("Runtime.executionContextCreated") do |params|

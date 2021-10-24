@@ -37,7 +37,7 @@ module Ferrum
       end
 
       def call(env)
-        if env['PATH_INFO'] == '/__identify__'
+        if env["PATH_INFO"] == "/__identify__"
           [200, {}, [@app.object_id.to_s]]
         else
           @counter.increment
@@ -53,7 +53,7 @@ module Ferrum
     attr_reader :app, :host, :port
 
     def self.boot(**options)
-      new(**options).tap { |s| s.boot! }
+      new(**options).tap(&:boot!)
     end
 
     def self.server
@@ -74,9 +74,7 @@ module Ferrum
     def wait_for_pending_requests
       start = Ferrum.monotonic_time
       while pending_requests?
-        if Ferrum.timeout?(start, KILL_TIMEOUT)
-          raise "Requests did not finish in #{KILL_TIMEOUT} seconds"
-        end
+        raise "Requests did not finish in #{KILL_TIMEOUT} seconds" if Ferrum.timeout?(start, KILL_TIMEOUT)
 
         sleep 0.01
       end
@@ -88,9 +86,7 @@ module Ferrum
         @server_thread = Thread.new { run }
 
         until responsive?
-          if Ferrum.timeout?(start, KILL_TIMEOUT)
-            raise "Rack application timed out during boot"
-          end
+          raise "Rack application timed out during boot" if Ferrum.timeout?(start, KILL_TIMEOUT)
 
           @server_thread.join(0.1)
         end
@@ -106,7 +102,7 @@ module Ferrum
     end
 
     def run
-      options = { Host: host, Port: port, Threads: '0:4', workers: 0, daemon: false }
+      options = { Host: host, Port: port, Threads: "0:4", workers: 0, daemon: false }
       config = Rack::Handler::Puma.config(middleware, options)
       events = config.options[:Silent] ? ::Puma::Events.strings : ::Puma::Events.stdio
 
@@ -116,12 +112,14 @@ module Ferrum
 
       Puma::Server.new(config.app, events, config.options).tap do |s|
         s.binder.parse(config.options[:binds], s.events)
-        s.min_threads, s.max_threads = config.options[:min_threads], config.options[:max_threads]
+        s.min_threads = config.options[:min_threads]
+        s.max_threads = config.options[:max_threads]
       end.run.join
     end
 
     def responsive?
       return false if @server_thread&.join(0)
+
       res = Net::HTTP.start(host, port, read_timeout: 2, max_retries: 0) { |h| h.get("/__identify__") }
       return res.body == app.object_id.to_s if res.is_a?(Net::HTTPSuccess) || res.is_a?(Net::HTTPRedirection)
     rescue SystemCallError, Net::ReadTimeout

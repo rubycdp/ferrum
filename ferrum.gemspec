@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 lib = File.expand_path("lib", __dir__)
-$:.unshift(lib) unless $:.include?(lib)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 require "ferrum/version"
 
@@ -20,22 +22,22 @@ Gem::Specification.new do |s|
     "bug_tracker_uri" => "https://github.com/rubycdp/ferrum/issues",
     "documentation_uri" => "https://github.com/rubycdp/ferrum/blob/master/README.md",
     "changelog_uri" => "https://github.com/rubycdp/ferrum/blob/master/CHANGELOG.md",
-    "source_code_uri" => "https://github.com/rubycdp/ferrum",
+    "source_code_uri" => "https://github.com/rubycdp/ferrum"
   }
 
   s.required_ruby_version = ">= 2.5.0"
 
-  s.add_runtime_dependency "websocket-driver", ">= 0.6", "< 0.8"
+  s.add_runtime_dependency "addressable",      "~> 2.5"
   s.add_runtime_dependency "cliver",           "~> 0.3"
   s.add_runtime_dependency "concurrent-ruby",  "~> 1.1"
-  s.add_runtime_dependency "addressable",      "~> 2.5"
   s.add_runtime_dependency "webrick",          "~> 1.7"
+  s.add_runtime_dependency "websocket-driver", ">= 0.6", "< 0.8"
 
+  s.add_development_dependency "chunky_png",   "~> 1.3"
+  s.add_development_dependency "image_size",   "~> 2.0"
+  s.add_development_dependency "pdf-reader",   "~> 2.2"
+  s.add_development_dependency "puma",         "~> 4.1"
   s.add_development_dependency "rake",         "~> 13.0"
   s.add_development_dependency "rspec",        "~> 3.8"
   s.add_development_dependency "sinatra",      "~> 2.0"
-  s.add_development_dependency "puma",         "~> 4.1"
-  s.add_development_dependency "image_size",   "~> 2.0"
-  s.add_development_dependency "pdf-reader",   "~> 2.2"
-  s.add_development_dependency "chunky_png",   "~> 1.3"
 end

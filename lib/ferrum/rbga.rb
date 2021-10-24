@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Ferrum
   class RGBA
     def initialize(red, green, blue, alpha)
@@ -23,13 +25,13 @@ module Ferrum
     end
 
     def validate_color(value)
-      return if value && value.is_a?(Integer) && Range.new(0, 255).include?(value)
+      return if value.is_a?(Integer) && Range.new(0, 255).include?(value)
 
       raise ArgumentError, "Wrong value of #{value} should be Integer from 0 to 255"
     end
 
     def validate_alpha
-      return if alpha && alpha.is_a?(Float) && Range.new(0.0, 1.0).include?(alpha)
+      return if alpha.is_a?(Float) && Range.new(0.0, 1.0).include?(alpha)
 
       raise ArgumentError,
             "Wrong alpha value #{alpha} should be Float between 0.0 (fully transparent) and 1.0 (fully opaque)"

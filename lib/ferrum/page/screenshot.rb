@@ -13,17 +13,17 @@ module Ferrum
       }.freeze
 
       PAPER_FORMATS = {
-        letter:   { width:  8.50, height: 11.00 },
-        legal:    { width:  8.50, height: 14.00 },
-        tabloid:  { width: 11.00, height: 17.00 },
-        ledger:   { width: 17.00, height: 11.00 },
-        A0:       { width: 33.10, height: 46.80 },
-        A1:       { width: 23.40, height: 33.10 },
-        A2:       { width: 16.54, height: 23.40 },
-        A3:       { width: 11.70, height: 16.54 },
-        A4:       { width:  8.27, height: 11.70 },
-        A5:       { width:  5.83, height:  8.27 },
-        A6:       { width:  4.13, height:  5.83 },
+        letter: { width: 8.50, height: 11.00 },
+        legal: { width: 8.50, height: 14.00 },
+        tabloid: { width: 11.00, height: 17.00 },
+        ledger: { width: 17.00, height: 11.00 },
+        A0: { width: 33.10, height: 46.80 },
+        A1: { width: 23.40, height: 33.10 },
+        A2: { width: 16.54, height: 23.40 },
+        A3: { width: 11.70, height: 16.54 },
+        A4: { width:  8.27, height: 11.70 },
+        A5: { width:  5.83, height:  8.27 },
+        A6: { width:  4.13, height:  5.83 }
       }.freeze
 
       STREAM_CHUNK = 128 * 1024
@@ -53,6 +53,7 @@ module Ferrum
       def mhtml(path: nil)
         data = command("Page.captureSnapshot", format: :mhtml).fetch("data")
         return data if path.nil?
+
         save_file(path, data)
       end
 
@@ -73,6 +74,7 @@ module Ferrum
 
       def save_file(path, data)
         return data unless path
+
         File.open(path.to_s, "wb") { |f| f.write(data) }
       end
 
@@ -119,7 +121,7 @@ module Ferrum
                          paper_height: dimension[:height])
         end
 
-        options.map { |k, v| [to_camel_case(k), v] }.to_h
+        options.transform_keys { |k| to_camel_case(k) }
       end
 
       def screenshot_options(path = nil, format: nil, scale: 1.0, **opts)
@@ -128,23 +130,28 @@ module Ferrum
         format ||= path ? File.extname(path).delete(".") : "png"
         format = "jpeg" if format == "jpg"
         raise "Not supported options `:format` #{format}. jpeg | png" if format !~ /jpeg|png/i
+
         options.merge!(format: format)
+        options.merge!(quality: opts[:quality] || 75) if format == "jpeg"
 
-        options.merge!(quality: opts[:quality] ? opts[:quality] : 75) if format == "jpeg"
-
-        if !!opts[:full] && opts[:selector]
+        if opts[:full] && opts[:selector]
           warn "Ignoring :selector in #screenshot since full: true was given at #{caller(1..1).first}"
         end
 
-        if !!opts[:full]
+        if opts[:full]
           width, height = document_size
-          options.merge!(clip: { x: 0, y: 0, width: width, height: height, scale: scale }) if width > 0 && height > 0
+          if width.positive? && height.positive?
+            options.merge!(clip: { x: 0, y: 0,
+                                   width: width,
+                                   height: height,
+                                   scale: scale })
+          end
         elsif opts[:selector]
           options.merge!(clip: get_bounding_rect(opts[:selector]).merge(scale: scale))
         end
 
         if scale != 1.0
-          if !options[:clip]
+          unless options[:clip]
             width, height = viewport_size
             options[:clip] = { x: 0, y: 0, width: width, height: height }
           end
@@ -156,7 +163,7 @@ module Ferrum
       end
 
       def get_bounding_rect(selector)
-        rect = evaluate_async(%Q(
+        rect = evaluate_async(%(
           const rect = document
                          .querySelector('#{selector}')
                          .getBoundingClientRect();
@@ -169,7 +176,8 @@ module Ferrum
 
       def to_camel_case(option)
         return :preferCSSPageSize if option == :prefer_css_page_size
-        option.to_s.gsub(/(?:_|(\/))([a-z\d]*)/) { "#{$1}#{$2.capitalize}" }.to_sym
+
+        option.to_s.gsub(%r{(?:_|(/))([a-z\d]*)}) { "#{Regexp.last_match(1)}#{Regexp.last_match(2).capitalize}" }.to_sym
       end
 
       def capture_screenshot(options, full, background_color)

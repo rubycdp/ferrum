@@ -55,8 +55,8 @@ module Ferrum
       def body
         @body ||= begin
           body, encoded = @page
-                            .command("Network.getResponseBody", requestId: id)
-                            .values_at("body", "base64Encoded")
+                          .command("Network.getResponseBody", requestId: id)
+                          .values_at("body", "base64Encoded")
           encoded ? Base64.decode64(body) : body
         end
       end

@@ -13,7 +13,10 @@ module Ferrum
     attr_reader :host, :port, :user, :password
 
     def initialize(host: "127.0.0.1", port: 0, user: nil, password: nil)
-      @host, @port, @user, @password = host, port, user, password
+      @host = host
+      @port = port
+      @user = user
+      @password = password
       at_exit { stop }
     end
 
@@ -24,13 +27,12 @@ module Ferrum
         BindAddress: host, Port: port
       }
 
-
       if user && password
         @file = Tempfile.new("htpasswd")
         htpasswd = WEBrick::HTTPAuth::Htpasswd.new(@file.path)
-        htpasswd.set_passwd 'Proxy Realm', user, password
+        htpasswd.set_passwd "Proxy Realm", user, password
         htpasswd.flush
-        authenticator = WEBrick::HTTPAuth::ProxyBasicAuth.new(Realm: 'Proxy Realm',
+        authenticator = WEBrick::HTTPAuth::ProxyBasicAuth.new(Realm: "Proxy Realm",
                                                               UserDB: htpasswd,
                                                               Logger: Logger.new(IO::NULL))
         options.merge!(ProxyAuthProc: authenticator.method(:authenticate).to_proc)
