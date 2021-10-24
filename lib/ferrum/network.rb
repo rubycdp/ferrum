@@ -76,13 +76,13 @@ module Ferrum
 
     def blacklist=(patterns)
       @blacklist = Array(patterns)
-      graylist_subscribe
+      blacklist_subscribe
     end
     alias_method :blocklist=, :blacklist=
 
     def whitelist=(patterns)
       @whitelist = Array(patterns)
-      graylist_subscribe
+      whitelist_subscribe
     end
     alias_method :allowlist=, :whitelist=
 
@@ -218,8 +218,8 @@ module Ferrum
 
     private
 
-    def graylist_subscribe
-      @graylist_subscribed ||= begin
+    def everylist_subscribe
+      @_everylist_subscribed ||= begin
         return if Array(@whitelist).none? && Array(@blacklist).none?
 
         intercept
@@ -249,5 +249,7 @@ module Ferrum
         true
       end
     end
+    alias_method :whitelist_subscribe, :everylist_subscribe
+    alias_method :blacklist_subscribe, :everylist_subscribe
   end
 end
