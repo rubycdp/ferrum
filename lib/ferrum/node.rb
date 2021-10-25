@@ -124,6 +124,7 @@ module Ferrum
     def property(name)
       evaluate("this['#{name}']")
     end
+    alias [] property
 
     def attribute(name)
       evaluate("this.getAttribute('#{name}')")
