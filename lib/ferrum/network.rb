@@ -21,6 +21,8 @@ module Ferrum
       @page = page
       @traffic = []
       @exchange = nil
+      @blacklist = nil
+      @whitelist = nil
     end
 
     def wait_for_idle(connections: 0, duration: 0.05, timeout: @page.browser.timeout)
