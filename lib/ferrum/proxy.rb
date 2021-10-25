@@ -13,6 +13,7 @@ module Ferrum
     attr_reader :host, :port, :user, :password
 
     def initialize(host: "127.0.0.1", port: 0, user: nil, password: nil)
+      @file = nil
       @host = host
       @port = port
       @user = user

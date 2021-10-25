@@ -44,11 +44,11 @@ module Ferrum
 
       def inspect
         "#<#{self.class} "\
-        "@id=#{@id.inspect} "\
-        "@intercepted_request=#{@intercepted_request.inspect} "\
-        "@request=#{@request.inspect} "\
-        "@response=#{@response.inspect} "\
-        "@error=#{@error.inspect}>"
+          "@id=#{@id.inspect} "\
+          "@intercepted_request=#{@intercepted_request.inspect} "\
+          "@request=#{@request.inspect} "\
+          "@response=#{@response.inspect} "\
+          "@error=#{@error.inspect}>"
       end
     end
   end

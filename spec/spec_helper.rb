@@ -11,7 +11,7 @@ require "support/server"
 require "support/global_helpers"
 
 # GA servers are slow it's better to increase
-ENV["FERRUM_NEW_WINDOW_WAIT"] ||= "0.5" if ENV["CI"]
+ENV["FERRUM_NEW_WINDOW_WAIT"] ||= "0.8" if ENV["CI"]
 
 RSpec.configure do |config|
   config.include_context "Global helpers"

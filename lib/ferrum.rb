@@ -33,9 +33,9 @@ module Ferrum
   class TimeoutError < Error
     def message
       "Timed out waiting for response. It's possible that this happened " \
-      "because something took a very long time (for example a page load " \
-      "was slow). If so, setting the :timeout option to a higher value might " \
-      "help."
+        "because something took a very long time (for example a page load " \
+        "was slow). If so, setting the :timeout option to a higher value might " \
+        "help."
     end
   end
 
@@ -70,8 +70,8 @@ module Ferrum
 
     def message
       "#{@node.inspect} that you're trying to click is moving, hence " \
-      "we cannot. Previosuly it was at #{@prev.inspect} but now at " \
-      "#{@current.inspect}."
+        "we cannot. Previosuly it was at #{@prev.inspect} but now at " \
+        "#{@current.inspect}."
     end
   end
 
