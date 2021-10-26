@@ -61,6 +61,8 @@ module Ferrum
       end
 
       def initialize(options)
+        @pid = @xvfb = @user_data_dir = nil
+
         if options[:url]
           url = URI.join(options[:url].to_s, "/json/version")
           response = JSON.parse(::Net::HTTP.get(url))
@@ -69,7 +71,6 @@ module Ferrum
           return
         end
 
-        @pid = @xvfb = @user_data_dir = nil
         @logger = options[:logger]
         @process_timeout = options.fetch(:process_timeout, PROCESS_TIMEOUT)
 
