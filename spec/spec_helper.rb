@@ -18,20 +18,11 @@ puts `#{Ferrum::Browser::Command.build({ window_size: [], ignore_default_browser
 puts ""
 
 RSpec.configure do |config|
+  ferrum_logger = nil
   config.include_context "Global helpers"
 
   config.before(:suite) do
     @server = Ferrum::Server.boot
-
-    begin
-      browser = Ferrum::Browser.new
-      puts "Browser: #{browser.process.browser_version}"
-      puts "Protocol: #{browser.process.protocol_version}"
-      puts "V8: #{browser.process.v8_version}"
-      puts "Webkit: #{browser.process.webkit_version}"
-    ensure
-      browser&.quit
-    end
   end
 
   config.before(:all) do
@@ -40,8 +31,8 @@ RSpec.configure do |config|
     options.merge!(headless: false) if ENV["HEADLESS"] == "false"
 
     if ENV["CI"]
-      FERRUM_LOGGER = StringIO.new
-      options.merge!(logger: FERRUM_LOGGER)
+      ferrum_logger = StringIO.new
+      options.merge!(logger: ferrum_logger)
     end
 
     @browser = Ferrum::Browser.new(**options)
@@ -55,8 +46,8 @@ RSpec.configure do |config|
     server&.wait_for_pending_requests
 
     if ENV["CI"]
-      FERRUM_LOGGER.truncate(0)
-      FERRUM_LOGGER.rewind
+      ferrum_logger.truncate(0)
+      ferrum_logger.rewind
     end
   end
 
@@ -86,7 +77,7 @@ RSpec.configure do |config|
 
   def save_exception_log(_browser, filename, line_number, timestamp)
     log_name = "logfile-#{filename}-#{line_number}-#{timestamp}.txt"
-    File.open("/tmp/ferrum/#{log_name}", "wb") { |file| file.write(FERRUM_LOGGER.string) }
+    File.open("/tmp/ferrum/#{log_name}", "wb") { |file| file.write(ferrum_logger.string) }
   rescue StandardError => e
     puts "#{e.class}: #{e.message}"
   end

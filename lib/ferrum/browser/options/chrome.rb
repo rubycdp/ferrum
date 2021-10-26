@@ -43,15 +43,14 @@ module Ferrum
         }.freeze
 
         MAC_BIN_PATH = [
-          "/Applications/Chromium.app/Contents/MacOS/Chromium",
-          "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+          "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+          "/Applications/Chromium.app/Contents/MacOS/Chromium"
         ].freeze
-        LINUX_BIN_PATH = %w[chromium google-chrome-unstable google-chrome-beta
-                            google-chrome chrome chromium-browser
-                            google-chrome-stable].freeze
+        LINUX_BIN_PATH = %w[chrome google-chrome google-chrome-stable google-chrome-beta
+                            chromium chromium-browser google-chrome-unstable].freeze
         WINDOWS_BIN_PATH = [
-          "C:/Program Files/Google/Chrome Dev/Application/chrome.exe",
-          "C:/Program Files/Google/Chrome/Application/chrome.exe"
+          "C:/Program Files/Google/Chrome/Application/chrome.exe",
+          "C:/Program Files/Google/Chrome Dev/Application/chrome.exe"
         ].freeze
 
         def merge_required(flags, options, user_data_dir)
