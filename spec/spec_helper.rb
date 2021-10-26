@@ -23,16 +23,6 @@ RSpec.configure do |config|
 
   config.before(:suite) do
     @server = Ferrum::Server.boot
-
-    begin
-      browser = Ferrum::Browser.new
-      puts "Browser: #{browser.process.browser_version}"
-      puts "Protocol: #{browser.process.protocol_version}"
-      puts "V8: #{browser.process.v8_version}"
-      puts "Webkit: #{browser.process.webkit_version}"
-    ensure
-      browser&.quit
-    end
   end
 
   config.before(:all) do
