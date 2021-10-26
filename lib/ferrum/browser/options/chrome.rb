@@ -60,7 +60,7 @@ module Ferrum
           flags.merge("remote-debugging-port" => port,
                       "remote-debugging-address" => host,
                       # Doesn't work on MacOS, so we need to set it by CDP
-                      "window-size" => options[:window_size].join(","),
+                      "window-size" => options[:window_size]&.join(","),
                       "user-data-dir" => user_data_dir)
         end
 

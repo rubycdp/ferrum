@@ -13,6 +13,10 @@ require "support/global_helpers"
 # GA servers are slow it's better to increase
 ENV["FERRUM_NEW_WINDOW_WAIT"] ||= "0.8" if ENV["CI"]
 
+puts ""
+puts `#{Ferrum::Browser::Command.build({ window_size: [], ignore_default_browser_options: true }, nil).to_a.first} --version`
+puts ""
+
 RSpec.configure do |config|
   config.include_context "Global helpers"
 
