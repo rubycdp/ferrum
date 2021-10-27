@@ -6,8 +6,8 @@ require "webrick/httpproxy"
 
 module Ferrum
   class Proxy
-    def self.start(*args)
-      new(*args).tap(&:start)
+    def self.start(**args)
+      new(**args).tap(&:start)
     end
 
     attr_reader :host, :port, :user, :password

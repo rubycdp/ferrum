@@ -142,6 +142,9 @@ module Ferrum
             expect { browser.screenshot(path: file, full: true) }
               .to raise_exception(StandardError)
 
+            # Fix Ruby 3 `and_call_original` bug
+            RSpec::Mocks.space.proxy_for(browser.page).reset
+
             expect(File.exist?(file)).not_to be
             expect(browser.viewport_size).to eq([100, 100])
           end
