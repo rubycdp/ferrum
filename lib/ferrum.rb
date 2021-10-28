@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "concurrent-ruby"
 require "ferrum/browser"
 require "ferrum/node"
 
@@ -70,7 +71,7 @@ module Ferrum
 
     def message
       "#{@node.inspect} that you're trying to click is moving, hence " \
-        "we cannot. Previosuly it was at #{@prev.inspect} but now at " \
+        "we cannot. Previously it was at #{@prev.inspect} but now at " \
         "#{@current.inspect}."
     end
   end
