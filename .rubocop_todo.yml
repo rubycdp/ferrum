@@ -36,14 +36,6 @@ Metrics/ModuleLength:
 Metrics/PerceivedComplexity:
   Max: 14
 
-# Offense count: 2
-# Cop supports --auto-correct.
-# Configuration parameters: Keywords.
-# Keywords: TODO, FIXME, OPTIMIZE, HACK, REVIEW
-Style/CommentAnnotation:
-  Exclude:
-    - 'spec/node_spec.rb'
-
 # Offense count: 45
 Style/Documentation:
   Enabled: false

@@ -175,7 +175,7 @@ module Ferrum
       end
 
       it "can set page content" do
-        browser.set_content(%(<html><head></head><body>Voila!</body></html>))
+        browser.content = "<html><head></head><body>Voila!</body></html>"
 
         expect(browser.body).to include("Voila!")
       end
@@ -185,10 +185,10 @@ module Ferrum
         expect(browser.doctype).to eq("<!DOCTYPE html>")
 
         doctype40 = %(<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">)
-        browser.set_content(%(#{doctype40}<html><head></head><body>Voila!</body></html>))
+        browser.content = "#{doctype40}<html><head></head><body>Voila!</body></html>"
         expect(browser.doctype).to eq(doctype40)
 
-        browser.set_content("")
+        browser.content = ""
         expect(browser.doctype).to be_nil
       end
 

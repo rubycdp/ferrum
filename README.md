@@ -858,9 +858,10 @@ browser.add_script_tag(url: "http://example.com/stylesheet.css") # => true
 browser.add_style_tag(content: "h1 { font-size: 40px; }") # => true
 
 ```
-#### bypass_csp(enabled) : `Boolean`
+#### bypass_csp(\*\*options) : `Boolean`
 
-* enabled `Boolean`, `true` by default
+* options `Hash`
+  * :enabled `Boolean`, `true` by default
 
 ```ruby
 browser.bypass_csp # => true
@@ -1001,7 +1002,7 @@ browser.go_to("https://www.w3schools.com/tags/tag_frame.asp")
 browser.main_frame.doctype # => "<!DOCTYPE html>"
 ```
 
-#### set_content(html)
+#### content = html
 
 Sets a content of a given frame.
 
@@ -1011,7 +1012,7 @@ Sets a content of a given frame.
 browser.go_to("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
 frame = browser.frames[1]
 frame.body # <html lang="en"><head><style>body {transition: opacity ease-in 0.2s; }...
-frame.set_content("<html><head></head><body><p>lol</p></body></html>")
+frame.content = "<html><head></head><body><p>lol</p></body></html>"
 frame.body # => <html><head></head><body><p>lol</p></body></html>
 ```
 

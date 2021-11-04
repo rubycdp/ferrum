@@ -32,7 +32,7 @@ module Ferrum
 
     extend Forwardable
     delegate %i[at_css at_xpath css xpath
-                current_url current_title url title body doctype set_content
+                current_url current_title url title body doctype content=
                 execution_id evaluate evaluate_on evaluate_async execute evaluate_func
                 add_script_tag add_style_tag] => :main_frame
 
@@ -153,8 +153,7 @@ module Ferrum
       @event.set
     end
 
-    def bypass_csp(value = true)
-      enabled = !value.nil?
+    def bypass_csp(enabled: true)
       command("Page.setBypassCSP", enabled: enabled)
       enabled
     end
@@ -274,14 +273,14 @@ module Ferrum
       resize(width: width, height: height)
 
       response = command("Page.getNavigationHistory")
-      if response.dig("entries", 0, "transitionType") != "typed"
-        # If we create page by clicking links, submitting forms and so on it
-        # opens a new window for which `frameStoppedLoading` event never
-        # occurs and thus search for nodes cannot be completed. Here we check
-        # the history and if the transitionType for example `link` then
-        # content is already loaded and we can try to get the document.
-        get_document_id
-      end
+      return unless response.dig("entries", 0, "transitionType") != "typed"
+
+      # If we create page by clicking links, submitting forms and so on it
+      # opens a new window for which `frameStoppedLoading` event never
+      # occurs and thus search for nodes cannot be completed. Here we check
+      # the history and if the transitionType for example `link` then
+      # content is already loaded and we can try to get the document.
+      get_document_id
     end
 
     def inject_extensions

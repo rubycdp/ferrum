@@ -67,7 +67,7 @@ module Ferrum
         if options[:url]
           url = URI.join(options[:url].to_s, "/json/version")
           response = JSON.parse(::Net::HTTP.get(url))
-          set_ws_url(response["webSocketDebuggerUrl"])
+          self.ws_url = response["webSocketDebuggerUrl"]
           parse_browser_versions
           return
         end
@@ -142,22 +142,22 @@ module Ferrum
           begin
             output += read_io.read_nonblock(512)
           rescue IO::WaitReadable
-            IO.select([read_io], nil, nil, max_time - now)
+            read_io.wait_readable(max_time - now)
           else
             if output.match(regexp)
-              set_ws_url(output.match(regexp)[1].strip)
+              self.ws_url = output.match(regexp)[1].strip
               break
             end
           end
         end
 
-        unless ws_url
-          @logger&.puts(output)
-          raise ProcessTimeoutError.new(timeout, output)
-        end
+        return if ws_url
+
+        @logger&.puts(output)
+        raise ProcessTimeoutError.new(timeout, output)
       end
 
-      def set_ws_url(url)
+      def ws_url=(url)
         @ws_url = Addressable::URI.parse(url)
         @host = @ws_url.host
         @port = @ws_url.port

@@ -40,7 +40,7 @@ module Ferrum
 
     def wait_for_stop_moving(delay: MOVING_WAIT_DELAY, attempts: MOVING_WAIT_ATTEMPTS)
       Ferrum.with_attempts(errors: NodeMovingError, max: attempts, wait: 0) do
-        previous, current = get_content_quads_with(delay: delay)
+        previous, current = content_quads_with(delay: delay)
         raise NodeMovingError.new(self, previous, current) if previous != current
 
         current
@@ -48,7 +48,7 @@ module Ferrum
     end
 
     def moving?(delay: MOVING_WAIT_DELAY)
-      previous, current = get_content_quads_with(delay: delay)
+      previous, current = content_quads_with(delay: delay)
       previous == current
     end
 
@@ -187,7 +187,7 @@ module Ferrum
       points = wait_for_stop_moving.map { |q| to_points(q) }.first
       get_position(points, x, y, position)
     rescue CoordinatesNotFoundError
-      x, y = get_bounding_rect_coordinates
+      x, y = bounding_rect_coordinates
       raise if x.zero? && y.zero?
 
       [x, y]
@@ -195,24 +195,24 @@ module Ferrum
 
     private
 
-    def get_bounding_rect_coordinates
+    def bounding_rect_coordinates
       evaluate <<~JS
         [this.getBoundingClientRect().left + window.pageXOffset + (this.offsetWidth / 2),
          this.getBoundingClientRect().top + window.pageYOffset + (this.offsetHeight / 2)]
       JS
     end
 
-    def get_content_quads
+    def content_quads
       quads = page.command("DOM.getContentQuads", nodeId: node_id)["quads"]
       raise CoordinatesNotFoundError, "Node is either not visible or not an HTMLElement" if quads.size.zero?
 
       quads
     end
 
-    def get_content_quads_with(delay: MOVING_WAIT_DELAY)
-      previous = get_content_quads
+    def content_quads_with(delay: MOVING_WAIT_DELAY)
+      previous = content_quads
       sleep(delay)
-      current = get_content_quads
+      current = content_quads
       [previous, current]
     end
 
@@ -224,9 +224,9 @@ module Ferrum
         x = point[:x] + offset_x.to_i
         y = point[:y] + offset_y.to_i
       else
-        x, y = points.inject([0, 0]) do |memo, point|
-          [memo[0] + point[:x],
-           memo[1] + point[:y]]
+        x, y = points.inject([0, 0]) do |memo, coordinate|
+          [memo[0] + coordinate[:x],
+           memo[1] + coordinate[:y]]
         end
 
         x /= 4

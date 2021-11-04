@@ -478,7 +478,7 @@ module Ferrum
     it "does not run into content quads error" do
       browser.go_to("/ferrum/index")
 
-      allow_any_instance_of(Node).to receive(:get_content_quads)
+      allow_any_instance_of(Node).to receive(:content_quads)
         .and_raise(Ferrum::CoordinatesNotFoundError,
                    "Could not compute content quads")
 

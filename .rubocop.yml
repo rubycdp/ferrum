@@ -1,7 +1,7 @@
 inherit_from: .rubocop_todo.yml
 
 AllCops:
-  TargetRubyVersion: 2.5
+  TargetRubyVersion: 2.6
   NewCops: enable
 
 Layout/FirstArrayElementIndentation:
@@ -16,13 +16,19 @@ Metrics/BlockLength:
     - "*.gemspec"
 
 Naming/MethodParameterName:
+  MinNameLength: 2
   AllowedNames:
     - x
     - y
-    - id
-    - to
-    - on
 
 Naming/FileName:
   Exclude:
-    - 'gemfiles/websocket-driver-*.gemfile'
+    - 'gemfiles/*.gemfile'
+
+Style/MultilineBlockChain:
+  Exclude:
+    - spec/**/*
+
+Metrics/ModuleLength:
+  Exclude:
+    - spec/**/*

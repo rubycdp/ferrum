@@ -176,8 +176,7 @@ module Ferrum
         browser.go_to("/ferrum/with_js")
       end
 
-      # FIXME:
-      it "raises a MouseEventFailed error", skip: true do
+      it "raises a MouseEventFailed error", skip: "needs fix" do
         expect do
           browser.at_xpath("//a[text() = 'O hai']").click
         end.to raise_error(Ferrum::MouseEventFailed)
@@ -199,8 +198,7 @@ module Ferrum
         browser.go_to("/ferrum/scroll")
       end
 
-      it "scrolls into view" do
-        # FIXME:
+      it "scrolls into view", skip: "needs fix" do
         browser.at_xpath("//a[text() = 'Link outside viewport']").click
         expect(browser.current_url).to eq("/")
       end

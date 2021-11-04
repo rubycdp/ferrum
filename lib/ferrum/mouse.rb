@@ -39,8 +39,8 @@ module Ferrum
       @y = y
 
       steps.times do |i|
-        new_x = from_x + (@x - from_x) * ((i + 1) / steps.to_f)
-        new_y = from_y + (@y - from_y) * ((i + 1) / steps.to_f)
+        new_x = from_x + ((@x - from_x) * ((i + 1) / steps.to_f))
+        new_y = from_y + ((@y - from_y) * ((i + 1) / steps.to_f))
 
         @page.command("Input.dispatchMouseEvent",
                       slowmoable: true,

@@ -25,7 +25,7 @@ Gem::Specification.new do |s|
     "source_code_uri" => "https://github.com/rubycdp/ferrum"
   }
 
-  s.required_ruby_version = ">= 2.5.0"
+  s.required_ruby_version = ">= 2.6.0"
 
   s.add_runtime_dependency "addressable",      "~> 2.5"
   s.add_runtime_dependency "cliver",           "~> 0.3"

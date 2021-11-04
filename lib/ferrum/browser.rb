@@ -20,7 +20,7 @@ module Ferrum
     delegate %i[targets create_target page pages windows] => :default_context
     delegate %i[go_to back forward refresh reload stop wait_for_reload
                 at_css at_xpath css xpath current_url current_title url title
-                body doctype set_content
+                body doctype content=
                 headers cookies network
                 mouse keyboard
                 screenshot pdf mhtml viewport_size

@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         gemfile: [websocket-driver-0.6.x, websocket-driver-0.7.x]
-        ruby: [2.5, 2.6, 2.7, 3.0]
+        ruby: [2.6, 2.7, 3.0]
 
     runs-on: ubuntu-latest
     env:

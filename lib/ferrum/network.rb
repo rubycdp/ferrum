@@ -14,6 +14,9 @@ module Ferrum
     RESOURCE_TYPES = %w[Document Stylesheet Image Media Font Script TextTrack
                         XHR Fetch EventSource WebSocket Manifest
                         SignedExchange Ping CSPViolationReport Other].freeze
+    AUTHORIZE_BLOCK_MISSING = "Block is missing, call `authorize(...) { |r| r.continue } "\
+                              "or subscribe to `on(:request)` events before calling it"
+    AUTHORIZE_TYPE_WRONG = ":type should be in #{AUTHORIZE_TYPE}"
 
     attr_reader :traffic
 
@@ -95,12 +98,8 @@ module Ferrum
     end
 
     def authorize(user:, password:, type: :server, &block)
-      raise ArgumentError, ":type should be in #{AUTHORIZE_TYPE}" unless AUTHORIZE_TYPE.include?(type)
-
-      if !block_given? && !@page.subscribed?("Fetch.requestPaused")
-        raise ArgumentError,
-              "Block is missing, call `authorize(...) { |r| r.continue } or subscribe to `on(:request)` events before calling it"
-      end
+      raise ArgumentError, AUTHORIZE_TYPE_WRONG unless AUTHORIZE_TYPE.include?(type)
+      raise ArgumentError, AUTHORIZE_BLOCK_MISSING if !block_given? && !@page.subscribed?("Fetch.requestPaused")
 
       @authorized_ids ||= {}
       @authorized_ids[type] ||= []
@@ -154,7 +153,9 @@ module Ferrum
       end
 
       @page.on("Network.responseReceived") do |params|
-        if exchange = select(params["requestId"]).last
+        exchange = select(params["requestId"]).last
+
+        if exchange
           response = Network::Response.new(@page, params)
           exchange.response = response
         end

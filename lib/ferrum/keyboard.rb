@@ -77,19 +77,19 @@ module Ferrum
           pressed_keys.last.push(key)
           nil
         else
-          _key = KEYS.fetch(KEYS_MAPPING[key.to_sym] || key.to_sym)
-          _key[:modifiers] = pressed_keys.flatten.map { |k| MODIFIERS[k] }.reduce(0, :|)
-          to_options(_key)
+          key = KEYS.fetch(KEYS_MAPPING[key.to_sym] || key.to_sym)
+          key[:modifiers] = pressed_keys.flatten.map { |k| MODIFIERS[k] }.reduce(0, :|)
+          to_options(key)
         end
       when String
         pressed = pressed_keys.flatten
         keys.each_char.map do |char|
+          key = KEYS[char] || {}
+
           if pressed.empty?
-            key = KEYS[char] || {}
             key = key.merge(text: char, unmodifiedText: char)
             [to_options(key)]
           else
-            key = KEYS[char] || {}
             text = pressed == ["shift"] ? char.upcase : char
             key = key.merge(
               text: text,
