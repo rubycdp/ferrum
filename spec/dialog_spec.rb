@@ -38,8 +38,6 @@ module Ferrum
         browser.on(:dialog) do |dialog, _index, _total|
           if dialog.match?("Are you sure?")
             dialog.accept
-          elsif dialog.match?("Are you really sure?")
-            dialog.dismiss
           else
             dialog.dismiss
           end

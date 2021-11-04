@@ -124,14 +124,10 @@ module Ferrum
       @browser.command("Browser.getWindowBounds", windowId: window_id).fetch("bounds").values_at("left", "top")
     end
 
-    def position=(*args)
-      if args.size == 1
-        left = args[0][:left]
-        top = args[0][:top]
-      else
-        raise "Use like: browser.position = { left: 1, right: 2}"
-      end
-      @browser.command("Browser.setWindowBounds", windowId: window_id, bounds: { left: left, top: top })
+    def position=(options)
+      @browser.command("Browser.setWindowBounds",
+                       windowId: window_id,
+                       bounds: { left: options[:left], top: options[:top] })
     end
 
     def refresh
@@ -279,7 +275,7 @@ module Ferrum
 
       response = command("Page.getNavigationHistory")
       if response.dig("entries", 0, "transitionType") != "typed"
-        # If we create page by clicking links, submiting forms and so on it
+        # If we create page by clicking links, submitting forms and so on it
         # opens a new window for which `frameStoppedLoading` event never
         # occurs and thus search for nodes cannot be completed. Here we check
         # the history and if the transitionType for example `link` then
@@ -304,13 +300,15 @@ module Ferrum
     def history_navigate(delta:)
       history = command("Page.getNavigationHistory")
       index, entries = history.values_at("currentIndex", "entries")
+      entry = entries[index + delta]
 
-      if entry = entries[index + delta]
-        # Potential wait because of network event
-        command("Page.navigateToHistoryEntry", wait: Mouse::CLICK_WAIT,
-                                               slowmoable: true,
-                                               entryId: entry["id"])
-      end
+      return unless entry
+
+      # Potential wait because of network event
+      command("Page.navigateToHistoryEntry",
+              wait: Mouse::CLICK_WAIT,
+              slowmoable: true,
+              entryId: entry["id"])
     end
 
     def combine_url!(url_or_path)

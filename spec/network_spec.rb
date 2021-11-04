@@ -321,7 +321,8 @@ module Ferrum
         expect do
           network.authorize(user: "login", password: "pass")
         end.to raise_exception(ArgumentError,
-                               "Block is missing, call `authorize(...) { |r| r.continue } or subscribe to `on(:request)` events before calling it")
+                               "Block is missing, call `authorize(...) { |r| r.continue }"\
+                               " or subscribe to `on(:request)` events before calling it")
       end
 
       it "raises no error when authorize is with block" do

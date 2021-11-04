@@ -3,6 +3,7 @@
 module Ferrum
   class Network
     describe AuthRequest do
+      skip
     end
   end
 end

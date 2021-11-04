@@ -47,6 +47,7 @@ module Ferrum
             end
           end
         rescue Errno::ESRCH, Errno::ECHILD
+          # nop
         end
       end
 

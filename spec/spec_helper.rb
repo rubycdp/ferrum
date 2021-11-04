@@ -14,7 +14,8 @@ require "support/global_helpers"
 ENV["FERRUM_NEW_WINDOW_WAIT"] ||= "0.8" if ENV["CI"]
 
 puts ""
-puts `#{Ferrum::Browser::Command.build({ window_size: [], ignore_default_browser_options: true }, nil).to_a.first} --version`
+command = Ferrum::Browser::Command.build({ window_size: [], ignore_default_browser_options: true }, nil)
+puts `#{command.to_a.first} --version`
 puts ""
 
 RSpec.configure do |config|

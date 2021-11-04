@@ -233,9 +233,9 @@ module Ferrum
         context "when encoding is base64" do
           let(:file) { "#{PROJECT_ROOT}/spec/tmp/screenshot.#{format}" }
 
-          def create_screenshot(path: file, **options)
+          def create_screenshot(path:, **options)
             image = browser.screenshot(format: format, encoding: :base64, **options)
-            File.open(file, "wb") { |f| f.write Base64.decode64(image) }
+            File.open(path, "wb") { |f| f.write Base64.decode64(image) }
           end
 
           it "defaults to base64 when path isn't set" do

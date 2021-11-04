@@ -50,15 +50,15 @@ module Ferrum
       end
     end
 
+    class << self
+      attr_accessor :server
+
+      def boot(**options)
+        new(**options).tap(&:boot!)
+      end
+    end
+
     attr_reader :app, :host, :port
-
-    def self.boot(**options)
-      new(**options).tap(&:boot!)
-    end
-
-    def self.server
-      @@server
-    end
 
     def initialize(app: nil, host: "127.0.0.1", port: nil)
       @host = host
@@ -81,18 +81,18 @@ module Ferrum
     end
 
     def boot!
-      unless responsive?
-        start = Ferrum.monotonic_time
-        @server_thread = Thread.new { run }
+      return if responsive?
 
-        until responsive?
-          raise "Rack application timed out during boot" if Ferrum.timeout?(start, KILL_TIMEOUT)
+      start = Ferrum.monotonic_time
+      @server_thread = Thread.new { run }
 
-          @server_thread.join(0.1)
-        end
+      until responsive?
+        raise "Rack application timed out during boot" if Ferrum.timeout?(start, KILL_TIMEOUT)
 
-        @@server = self
+        @server_thread.join(0.1)
       end
+
+      self.class.server = self
     end
 
     private
@@ -134,7 +134,7 @@ module Ferrum
       server = TCPServer.new(host, 0)
       server.addr[1]
     ensure
-      server&.close
+      server.close
     end
   end
 end

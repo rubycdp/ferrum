@@ -11,9 +11,10 @@ module Ferrum
     class TestAppError < Exception; end # rubocop:disable Lint/InheritException
 
     class TestAppOtherError < Exception # rubocop:disable Lint/InheritException
-      def initialize(string1, msg)
-        @something = string1
-        @message = msg
+      def initialize(something, message)
+        super(something)
+        @something = something
+        @message = message
       end
     end
 

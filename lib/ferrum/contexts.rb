@@ -19,7 +19,7 @@ module Ferrum
 
     def find_by(target_id:)
       context = nil
-      @contexts.each_value { |c| context = c if c.has_target?(target_id) }
+      @contexts.each_value { |c| context = c if c.target?(target_id) }
       context
     end
 
@@ -68,15 +68,13 @@ module Ferrum
       end
 
       @browser.client.on("Target.targetDestroyed") do |params|
-        if context = find_by(target_id: params["targetId"])
-          context.delete_target(params["targetId"])
-        end
+        context = find_by(target_id: params["targetId"])
+        context&.delete_target(params["targetId"])
       end
 
       @browser.client.on("Target.targetCrashed") do |params|
-        if context = find_by(target_id: params["targetId"])
-          context.delete_target(params["targetId"])
-        end
+        context = find_by(target_id: params["targetId"])
+        context&.delete_target(params["targetId"])
       end
     end
 

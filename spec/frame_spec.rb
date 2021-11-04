@@ -184,9 +184,9 @@ module Ferrum
         browser.go_to("/ferrum/frames")
         expect(browser.doctype).to eq("<!DOCTYPE html>")
 
-        doctype_40 = %(<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">)
-        browser.set_content(%(#{doctype_40}<html><head></head><body>Voila!</body></html>))
-        expect(browser.doctype).to eq(doctype_40)
+        doctype40 = %(<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">)
+        browser.set_content(%(#{doctype40}<html><head></head><body>Voila!</body></html>))
+        expect(browser.doctype).to eq(doctype40)
 
         browser.set_content("")
         expect(browser.doctype).to be_nil

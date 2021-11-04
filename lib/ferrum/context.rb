@@ -76,7 +76,7 @@ module Ferrum
       @contexts.dispose(@id)
     end
 
-    def has_target?(target_id)
+    def target?(target_id)
       !!@targets[target_id]
     end
 

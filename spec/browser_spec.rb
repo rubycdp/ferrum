@@ -63,8 +63,8 @@ module Ferrum
 
       expect do
         Browser.new(browser_path: path)
-      end.to raise_error(Ferrum::ProcessTimeoutError) do |ex|
-        expect(ex.output).to include "Broken Chrome error message"
+      end.to raise_error(Ferrum::ProcessTimeoutError) do |e|
+        expect(e.output).to include "Broken Chrome error message"
       end
     end
 
