@@ -132,11 +132,11 @@ module Ferrum
     end
 
     def started
-      @@started ||= monotonic_time
+      @started ||= monotonic_time
     end
 
     def elapsed_time(start = nil)
-      monotonic_time - (start || @@started)
+      monotonic_time - (start || @started)
     end
 
     def monotonic_time
