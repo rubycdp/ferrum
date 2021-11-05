@@ -150,7 +150,7 @@ module Ferrum
           options.merge!(clip: get_bounding_rect(opts[:selector]).merge(scale: scale))
         end
 
-        if scale != 1.0
+        if scale != 1
           unless options[:clip]
             width, height = viewport_size
             options[:clip] = { x: 0, y: 0, width: width, height: height }
