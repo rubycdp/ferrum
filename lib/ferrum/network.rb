@@ -213,30 +213,17 @@ module Ferrum
 
     private
 
-    def everylist_subscribe
-      @_everylist_subscribed ||= begin
-        return if Array(@whitelist).none? && Array(@blacklist).none?
+    def blacklist_subscribe
+      return unless blacklist?
+      raise ArgumentError, "You can't use blacklist along with whitelist" if whitelist?
 
+      @blacklist_subscribe ||= begin
         intercept
 
-        @page.on(:request) do |request, index, total|
-          if @blacklist&.any?
-            if @blacklist.any? { |pattern| request.match?(pattern) }
-              request.abort and next
-            else
-              request.continue and next
-            end
-          elsif @whitelist&.any?
-            if @whitelist.any? { |pattern| request.match?(pattern) }
-              request.continue and next
-            else
-              request.abort and next
-            end
-          elsif index + 1 < total
-            # There are other callbacks that may handle this request
-            next
+        @page.on(:request) do |request|
+          if @blacklist.any? { |p| request.match?(p) }
+            request.abort
           else
-            # If there are no callbacks then just continue
             request.continue
           end
         end
@@ -244,7 +231,32 @@ module Ferrum
         true
       end
     end
-    alias whitelist_subscribe everylist_subscribe
-    alias blacklist_subscribe everylist_subscribe
+
+    def whitelist_subscribe
+      return unless whitelist?
+      raise ArgumentError, "You can't use whitelist along with blacklist" if blacklist?
+
+      @whitelist_subscribe ||= begin
+        intercept
+
+        @page.on(:request) do |request|
+          if @whitelist.any? { |p| request.match?(p) }
+            request.continue
+          else
+            request.abort
+          end
+        end
+
+        true
+      end
+    end
+
+    def blacklist?
+      Array(@blacklist).any?
+    end
+
+    def whitelist?
+      Array(@whitelist).any?
+    end
   end
 end
