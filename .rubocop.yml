@@ -32,3 +32,6 @@ Style/MultilineBlockChain:
 Metrics/ModuleLength:
   Exclude:
     - spec/**/*
+
+Metrics/ParameterLists:
+  Max: 6

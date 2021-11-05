@@ -125,6 +125,34 @@ module Ferrum
     end
 
     def subscribe
+      subscribe_request_will_be_sent
+      subscribe_response_received
+      subscribe_loading_finished
+      subscribe_loading_failed
+      subscribe_log_entry_added
+    end
+
+    def authorized_response(ids, request_id, username, password)
+      if ids.include?(request_id)
+        { response: "CancelAuth" }
+      elsif username && password
+        { response: "ProvideCredentials",
+          username: username,
+          password: password }
+      end
+    end
+
+    def select(request_id)
+      @traffic.select { |e| e.id == request_id }
+    end
+
+    def build_exchange(id)
+      Network::Exchange.new(@page, id).tap { |e| @traffic << e }
+    end
+
+    private
+
+    def subscribe_request_will_be_sent
       @page.on("Network.requestWillBeSent") do |params|
         request = Network::Request.new(params)
 
@@ -151,7 +179,9 @@ module Ferrum
 
         @exchange = exchange if exchange.navigation_request?(@page.main_frame.id)
       end
+    end
 
+    def subscribe_response_received
       @page.on("Network.responseReceived") do |params|
         exchange = select(params["requestId"]).last
 
@@ -160,12 +190,16 @@ module Ferrum
           exchange.response = response
         end
       end
+    end
 
+    def subscribe_loading_finished
       @page.on("Network.loadingFinished") do |params|
         exchange = select(params["requestId"]).last
         exchange.response.body_size = params["encodedDataLength"] if exchange&.response
       end
+    end
 
+    def subscribe_loading_failed
       @page.on("Network.loadingFailed") do |params|
         exchange = select(params["requestId"]).last
         exchange.error ||= Network::Error.new
@@ -176,7 +210,9 @@ module Ferrum
         exchange.error.monotonic_time = params["timestamp"]
         exchange.error.canceled = params["canceled"]
       end
+    end
 
+    def subscribe_log_entry_added
       @page.on("Log.entryAdded") do |params|
         entry = params["entry"] || {}
         if entry["source"] == "network" && entry["level"] == "error"
@@ -190,28 +226,6 @@ module Ferrum
         end
       end
     end
-
-    def authorized_response(ids, request_id, username, password)
-      if ids.include?(request_id)
-        { response: "CancelAuth" }
-      elsif username && password
-        { response: "ProvideCredentials",
-          username: username,
-          password: password }
-      else
-        { response: "CancelAuth" }
-      end
-    end
-
-    def select(request_id)
-      @traffic.select { |e| e.id == request_id }
-    end
-
-    def build_exchange(id)
-      Network::Exchange.new(@page, id).tap { |e| @traffic << e }
-    end
-
-    private
 
     def blacklist_subscribe
       return unless blacklist?
