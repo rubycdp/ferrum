@@ -85,16 +85,16 @@ module Ferrum
         # Node has disappeared while we were trying to get it
         when "No node with given id found",
              "Could not find node with given id"
-          raise NodeNotFoundError.new(error)
+          raise NodeNotFoundError, error
         # Context is lost, page is reloading
         when "Cannot find context with specified id"
-          raise NoExecutionContextError.new(error)
+          raise NoExecutionContextError, error
         when "No target with given id found"
           raise NoSuchPageError
         when /Could not compute content quads/
           raise CoordinatesNotFoundError
         else
-          raise BrowserError.new(error)
+          raise BrowserError, error
         end
       end
     end

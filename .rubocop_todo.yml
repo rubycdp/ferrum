@@ -39,15 +39,3 @@ Metrics/PerceivedComplexity:
 # Offense count: 45
 Style/Documentation:
   Enabled: false
-
-# Offense count: 7
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: compact, exploded
-Style/RaiseArgs:
-  Exclude:
-    - 'lib/ferrum/browser/client.rb'
-    - 'lib/ferrum/browser/command.rb'
-    - 'lib/ferrum/browser/process.rb'
-    - 'lib/ferrum/browser/xvfb.rb'
-    - 'lib/ferrum/frame/runtime.rb'
