@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "concurrent-ruby"
-
 module Ferrum
   class Browser
     class Subscriber

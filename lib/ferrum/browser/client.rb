@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "concurrent-ruby"
 require "ferrum/browser/subscriber"
 require "ferrum/browser/web_socket"
 
@@ -14,15 +13,18 @@ module Ferrum
         @command_id = id_starts_with
         @pendings = Concurrent::Hash.new
         @ws = WebSocket.new(ws_url, @browser.ws_max_receive_size, @browser.logger)
-        @subscriber, @interruptor = Subscriber.build(2)
+        @subscriber, @interrupter = Subscriber.build(2)
 
         @thread = Thread.new do
           Thread.current.abort_on_exception = true
           Thread.current.report_on_exception = true if Thread.current.respond_to?(:report_on_exception=)
 
-          while message = @ws.messages.pop
+          loop do
+            message = @ws.messages.pop
+            break unless message
+
             if INTERRUPTIONS.include?(message["method"])
-              @interruptor.async.call(message)
+              @interrupter.async.call(message)
             elsif message.key?("method")
               @subscriber.async.call(message)
             else
@@ -51,14 +53,14 @@ module Ferrum
       def on(event, &block)
         case event
         when *INTERRUPTIONS
-          @interruptor.on(event, &block)
+          @interrupter.on(event, &block)
         else
           @subscriber.on(event, &block)
         end
       end
 
       def subscribed?(event)
-        [@interruptor, @subscriber].any? { |s| s.subscribed?(event) }
+        [@interrupter, @subscriber].any? { |s| s.subscribed?(event) }
       end
 
       def close

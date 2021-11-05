@@ -32,7 +32,10 @@ module Ferrum
           Thread.current.report_on_exception = true if Thread.current.respond_to?(:report_on_exception=)
 
           begin
-            while data = @sock.readpartial(512)
+            loop do
+              data = @sock.readpartial(512)
+              break unless data
+
               @driver.parse(data)
             end
           rescue EOFError, Errno::ECONNRESET, Errno::EPIPE
