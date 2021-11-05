@@ -11,11 +11,13 @@ module Ferrum
         @frames.values
       end
 
-      def frame_by(id: nil, name: nil)
+      def frame_by(id: nil, name: nil, execution_id: nil)
         if id
           @frames[id]
         elsif name
           frames.find { |f| f.name == name }
+        elsif execution_id
+          frames.find { |f| f.execution_id == execution_id }
         else
           raise ArgumentError
         end
@@ -69,37 +71,32 @@ module Ferrum
         end
 
         on("Runtime.executionContextCreated") do |params|
-          setting_up_main_frame = false
           context_id = params.dig("context", "id")
           frame_id = params.dig("context", "auxData", "frameId")
 
           unless @main_frame.id
             root_frame = command("Page.getFrameTree").dig("frameTree", "frame", "id")
             if frame_id == root_frame
-              setting_up_main_frame = true
               @main_frame.id = frame_id
               @frames[frame_id] = @main_frame
             end
           end
 
           frame = @frames[frame_id] || Frame.new(frame_id, self)
-          frame.set_execution_id(context_id)
-
-          # Set event because `execution_id` might raise NoExecutionContextError
-          @event.set if setting_up_main_frame
+          frame.execution_id = context_id
 
           @frames[frame_id] ||= frame
         end
 
         on("Runtime.executionContextDestroyed") do |params|
           execution_id = params["executionContextId"]
-          frame = frames.find { |f| f.execution_id?(execution_id) }
-          frame.reset_execution_id
+          frame = frame_by(execution_id: execution_id)
+          frame&.execution_id = nil
         end
 
         on("Runtime.executionContextsCleared") do
           @frames.delete_if { |_, f| !f.main? }
-          @main_frame.reset_execution_id
+          @main_frame.execution_id = nil
         end
       end
 
