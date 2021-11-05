@@ -43,7 +43,7 @@ module Ferrum
     attr_accessor :referrer
     attr_reader :target_id, :browser,
                 :headers, :cookies, :network,
-                :mouse, :keyboard, :event, :document_id
+                :mouse, :keyboard, :event
 
     def initialize(target_id, browser)
       @frames = {}
@@ -280,7 +280,7 @@ module Ferrum
       # occurs and thus search for nodes cannot be completed. Here we check
       # the history and if the transitionType for example `link` then
       # content is already loaded and we can try to get the document.
-      get_document_id
+      document_node_id
     end
 
     def inject_extensions
@@ -321,8 +321,8 @@ module Ferrum
       (nil_or_relative ? @browser.base_url.join(url.to_s) : url).to_s
     end
 
-    def get_document_id
-      @document_id = command("DOM.getDocument", depth: 0).dig("root", "nodeId")
+    def document_node_id
+      command("DOM.getDocument", depth: 0).dig("root", "nodeId")
     end
   end
 end
