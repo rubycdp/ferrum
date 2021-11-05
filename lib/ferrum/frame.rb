@@ -20,8 +20,8 @@ module Ferrum
     def initialize(id, page, parent_id = nil)
       @id = id
       @page = page
-      @execution_id = nil
       @parent_id = parent_id
+      @execution_id = Concurrent::MVar.new
     end
 
     def state=(value)
@@ -52,25 +52,19 @@ module Ferrum
     end
     alias set_content content=
 
-    def execution_id?(execution_id)
-      @execution_id == execution_id
-    end
-
     def execution_id
-      raise NoExecutionContextError unless @execution_id
+      value = @execution_id.borrow(@page.timeout, &:itself)
+      raise NoExecutionContextError if value.instance_of?(Object)
 
-      @execution_id
-    rescue NoExecutionContextError
-      @page.event.reset
-      @page.event.wait(@page.timeout) ? retry : raise
+      value
     end
 
-    def set_execution_id(value)
-      @execution_id ||= value
-    end
-
-    def reset_execution_id
-      @execution_id = nil
+    def execution_id=(value)
+      if value.nil?
+        @execution_id.try_take!
+      else
+        @execution_id.try_put!(value)
+      end
     end
 
     def inspect
