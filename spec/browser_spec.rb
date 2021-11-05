@@ -441,11 +441,11 @@ module Ferrum
       JS
 
       popup1, popup2 = browser.windows(:last, 2)
-      popup1.resize(width: 100, height: 200)
-      popup2.resize(width: 200, height: 100)
+      popup1&.resize(width: 100, height: 200)
+      popup2&.resize(width: 200, height: 100)
 
-      expect(popup1.viewport_size).to eq([100, 200])
-      expect(popup2.viewport_size).to eq([200, 100])
+      expect(popup1&.viewport_size).to eq([100, 200])
+      expect(popup2&.viewport_size).to eq([200, 100])
     end
 
     it "clears local storage after reset" do
