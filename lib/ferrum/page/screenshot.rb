@@ -124,45 +124,53 @@ module Ferrum
         options.transform_keys { |k| to_camel_case(k) }
       end
 
-      def screenshot_options(path = nil, format: nil, scale: 1.0, **opts)
-        options = {}
+      def screenshot_options(path = nil, format: nil, scale: 1.0, **options)
+        screenshot_options = {}
 
+        format, quality = format_options(format, path, options[:quality])
+        screenshot_options.merge!(quality: quality) if quality
+        screenshot_options.merge!(format: format)
+
+        clip = area_options(options[:full], options[:selector], scale)
+        screenshot_options.merge!(clip: clip) if clip
+
+        screenshot_options
+      end
+
+      def format_options(format, path, quality)
         format ||= path ? File.extname(path).delete(".") : "png"
         format = "jpeg" if format == "jpg"
         raise "Not supported options `:format` #{format}. jpeg | png" if format !~ /jpeg|png/i
 
-        options.merge!(format: format)
-        options.merge!(quality: opts[:quality] || 75) if format == "jpeg"
+        quality ||= 75 if format == "jpeg"
 
-        if opts[:full] && opts[:selector]
-          warn "Ignoring :selector in #screenshot since full: true was given at #{caller(1..1).first}"
-        end
-
-        if opts[:full]
-          width, height = document_size
-          if width.positive? && height.positive?
-            options.merge!(clip: { x: 0, y: 0,
-                                   width: width,
-                                   height: height,
-                                   scale: scale })
-          end
-        elsif opts[:selector]
-          options.merge!(clip: get_bounding_rect(opts[:selector]).merge(scale: scale))
-        end
-
-        if scale != 1
-          unless options[:clip]
-            width, height = viewport_size
-            options[:clip] = { x: 0, y: 0, width: width, height: height }
-          end
-
-          options[:clip].merge!(scale: scale)
-        end
-
-        options
+        [format, quality]
       end
 
-      def get_bounding_rect(selector)
+      def area_options(full, selector, scale)
+        message = "Ignoring :selector in #screenshot since full: true was given at #{caller(1..1).first}"
+        warn(message) if full && selector
+
+        clip = if full
+                 width, height = document_size
+                 { x: 0, y: 0, width: width, height: height, scale: scale } if width.positive? && height.positive?
+               elsif selector
+                 bounding_rect(selector).merge(scale: scale)
+               end
+
+        if scale != 1
+          unless clip
+            width, height = viewport_size
+            clip = { x: 0, y: 0, width: width, height: height }
+          end
+
+          clip.merge!(scale: scale)
+        end
+
+        clip
+      end
+
+      def bounding_rect(selector)
         rect = evaluate_async(%(
           const rect = document
                          .querySelector('#{selector}')
