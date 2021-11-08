@@ -53,12 +53,12 @@ RSpec.configure do |config|
   end
 
   config.after(:each) do |example|
-    save_exception_aftifacts(browser, example.metadata) if ENV["CI"] && example.exception
+    save_exception_artifacts(browser, example.metadata) if ENV["CI"] && example.exception
 
     reset
   end
 
-  def save_exception_aftifacts(browser, meta)
+  def save_exception_artifacts(browser, meta)
     time_now = Time.now
     filename = File.basename(meta[:file_path])
     line_number = meta[:line_number]
