@@ -53,18 +53,18 @@ RSpec.configure do |config|
   end
 
   config.after(:each) do |example|
-    save_exception_artifacts(browser, example.metadata) if ENV["CI"] && example.exception
+    save_exception_artifacts(browser, example.metadata, ferrum_logger) if ENV["CI"] && example.exception
 
     reset
   end
 
-  def save_exception_artifacts(browser, meta)
+  def save_exception_artifacts(browser, meta, ferrum_logger)
     time_now = Time.now
     filename = File.basename(meta[:file_path])
     line_number = meta[:line_number]
     timestamp = time_now.strftime("%Y-%m-%d-%H-%M-%S.") + format("%03d", (time_now.usec / 1000).to_i)
 
-    save_exception_log(browser, filename, line_number, timestamp)
+    save_exception_log(browser, filename, line_number, timestamp, ferrum_logger)
     save_exception_screenshot(browser, filename, line_number, timestamp)
   end
 
@@ -76,7 +76,7 @@ RSpec.configure do |config|
     puts "#{e.class}: #{e.message}"
   end
 
-  def save_exception_log(_browser, filename, line_number, timestamp)
+  def save_exception_log(_browser, filename, line_number, timestamp, ferrum_logger)
     log_name = "logfile-#{filename}-#{line_number}-#{timestamp}.txt"
     File.open("/tmp/ferrum/#{log_name}", "wb") { |file| file.write(ferrum_logger.string) }
   rescue StandardError => e
