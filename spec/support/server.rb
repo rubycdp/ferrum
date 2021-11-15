@@ -72,9 +72,9 @@ module Ferrum
     end
 
     def wait_for_pending_requests
-      start = Ferrum.monotonic_time
+      start = Utils::ElapsedTime.monotonic_time
       while pending_requests?
-        raise "Requests did not finish in #{KILL_TIMEOUT} seconds" if Ferrum.timeout?(start, KILL_TIMEOUT)
+        raise "Requests did not finish in #{KILL_TIMEOUT} seconds" if Utils::ElapsedTime.timeout?(start, KILL_TIMEOUT)
 
         sleep 0.01
       end
@@ -83,11 +83,11 @@ module Ferrum
     def boot!
       return if responsive?
 
-      start = Ferrum.monotonic_time
+      start = Utils::ElapsedTime.monotonic_time
       @server_thread = Thread.new { run }
 
       until responsive?
-        raise "Rack application timed out during boot" if Ferrum.timeout?(start, KILL_TIMEOUT)
+        raise "Rack application timed out during boot" if Utils::ElapsedTime.timeout?(start, KILL_TIMEOUT)
 
         @server_thread.join(0.1)
       end

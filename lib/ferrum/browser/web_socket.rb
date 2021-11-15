@@ -61,7 +61,7 @@ module Ferrum
           output.sub!(/{"data":"(.*)"}/, %("Set FERRUM_LOGGING_SCREENSHOTS=true to see screenshots in Base64"))
         end
 
-        @logger&.puts("    ◀ #{Ferrum.elapsed_time} #{output}\n")
+        @logger&.puts("    ◀ #{Utils::ElapsedTime.elapsed_time} #{output}\n")
       end
 
       def on_close(_event)
@@ -74,7 +74,7 @@ module Ferrum
 
         json = data.to_json
         @driver.text(json)
-        @logger&.puts("\n\n▶ #{Ferrum.elapsed_time} #{json}")
+        @logger&.puts("\n\n▶ #{Utils::ElapsedTime.elapsed_time} #{json}")
       end
 
       def write(data)

@@ -150,7 +150,7 @@ module Ferrum
       expect(browser.body).to include("x: 100, y: 150")
     end
 
-    it "supports stopping the session", skip: Ferrum.windows? do
+    it "supports stopping the session", skip: Utils::Platform.windows? do
       browser = Browser.new
       pid = browser.process.pid
 
@@ -787,7 +787,7 @@ module Ferrum
       end
     end
 
-    if Ferrum.mri? && !Ferrum.windows?
+    if Utils::Platform.mri? && !Utils::Platform.windows?
       require "pty"
       require "timeout"
 

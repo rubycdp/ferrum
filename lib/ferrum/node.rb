@@ -39,7 +39,7 @@ module Ferrum
     end
 
     def wait_for_stop_moving(delay: MOVING_WAIT_DELAY, attempts: MOVING_WAIT_ATTEMPTS)
-      Ferrum.with_attempts(errors: NodeMovingError, max: attempts, wait: 0) do
+      Utils::Attempt.with_retry(errors: NodeMovingError, max: attempts, wait: 0) do
         previous, current = content_quads_with(delay: delay)
         raise NodeMovingError.new(self, previous, current) if previous != current
 

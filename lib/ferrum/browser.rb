@@ -152,7 +152,7 @@ module Ferrum
     private
 
     def start
-      Ferrum.started
+      Utils::ElapsedTime.start
       @process = Process.start(@options)
       @client = Client.new(self, @process.ws_url)
       @contexts = Contexts.new(self)

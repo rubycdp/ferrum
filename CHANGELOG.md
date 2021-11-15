@@ -26,6 +26,15 @@ a block with this page, after which the page is closed.
 - `Ferrum::Page#bypass_csp` accepts hash as argument `enabled: true` by default
 - `Ferrum::Context#has_target?` -> `Ferrum::Context#target?`
 - We now start looking for Chrome first instead of Chromium, the order for checking binaries has changed
+- Multiple methods are moved into `Utils`:
+  - Ferrum.with_attempts -> Ferrum::Utils::Attempt.with_retry
+  - Ferrum.started -> Ferrum::Utils::ElapsedTime.start
+  - Ferrum.elapsed_time -> Ferrum::Utils::ElapsedTime.elapsed_time
+  - Ferrum.monotonic_time -> Ferrum::Utils::ElapsedTime.monotonic_time
+  - Ferrum.timeout? -> Ferrum::Utils::ElapsedTime.timeout?
+  - Ferrum.windows? -> Ferrum::Utils::Platform.windows?
+  - Ferrum.mac? -> Ferrum::Utils::Platform.mac?
+  - Ferrum.mri? -> Ferrum::Utils::Platform.mri?
 
 ## [0.11](https://github.com/rubycdp/ferrum/compare/v0.10.2...v0.11) - (Mar 11, 2021) ##
 

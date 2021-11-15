@@ -122,7 +122,7 @@ module Ferrum
         sleep = INTERMITTENT_SLEEP
         attempts = INTERMITTENT_ATTEMPTS
 
-        Ferrum.with_attempts(errors: errors, max: attempts, wait: sleep) do
+        Utils::Attempt.with_retry(errors: errors, max: attempts, wait: sleep) do
           params = options.dup
 
           if on
