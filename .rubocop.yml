@@ -53,3 +53,6 @@ Metrics/ModuleLength:
 Metrics/PerceivedComplexity:
   Max: 14
 
+#require:
+#  - rubocop-rake
+#  - rubocop-rspec
