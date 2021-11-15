@@ -91,7 +91,7 @@ module Ferrum
       it "sends sequences with modifiers and symbols" do
         input = browser.at_css("#empty_input")
 
-        keys = Ferrum.mac? ? %i[Alt Left] : %i[Ctrl Left]
+        keys = Utils::Platform.mac? ? %i[Alt Left] : %i[Ctrl Left]
 
         input.focus.type("t", "r", "i", "n", "g", keys, "s")
 
@@ -101,7 +101,7 @@ module Ferrum
       it "sends sequences with multiple modifiers and symbols" do
         input = browser.at_css("#empty_input")
 
-        keys = Ferrum.mac? ? %i[Alt Shift Left] : %i[Ctrl Shift Left]
+        keys = Utils::Platform.mac? ? %i[Alt Shift Left] : %i[Ctrl Shift Left]
 
         input.focus.type("t", "r", "i", "n", "g", keys, "s")
 
@@ -165,7 +165,7 @@ module Ferrum
     end
 
     context "type" do
-      let(:delete_all) { [[(Ferrum.mac? ? :alt : :ctrl), :shift, :right], :backspace] }
+      let(:delete_all) { [[(Utils::Platform.mac? ? :alt : :ctrl), :shift, :right], :backspace] }
 
       before { browser.go_to("/ferrum/set") }
 
@@ -293,7 +293,7 @@ module Ferrum
       end
 
       it "clears the input" do
-        keys = Ferrum.mac? ? %i[Alt Shift Left] : %i[Ctrl Shift Left]
+        keys = Utils::Platform.mac? ? %i[Alt Shift Left] : %i[Ctrl Shift Left]
         change_me.type(2.times.map { keys }, :backspace)
         expect(change_me.value).to eq("")
       end

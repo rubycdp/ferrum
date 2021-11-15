@@ -31,15 +31,15 @@ module Ferrum
 
       def self.process_killer(pid)
         proc do
-          if Ferrum.windows?
+          if Utils::Platform.windows?
             # Process.kill is unreliable on Windows
             ::Process.kill("KILL", pid) unless system("taskkill /f /t /pid #{pid} >NUL 2>NUL")
           else
             ::Process.kill("USR1", pid)
-            start = Ferrum.monotonic_time
+            start = Utils::ElapsedTime.monotonic_time
             while ::Process.wait(pid, ::Process::WNOHANG).nil?
               sleep(WAIT_KILLED)
-              next unless Ferrum.timeout?(start, KILL_TIMEOUT)
+              next unless Utils::ElapsedTime.timeout?(start, KILL_TIMEOUT)
 
               ::Process.kill("KILL", pid)
               ::Process.wait(pid)
@@ -88,7 +88,7 @@ module Ferrum
         begin
           read_io, write_io = IO.pipe
           process_options = { in: File::NULL }
-          process_options[:pgroup] = true unless Ferrum.windows?
+          process_options[:pgroup] = true unless Utils::Platform.windows?
           process_options[:out] = process_options[:err] = write_io
 
           if @command.xvfb?
@@ -135,10 +135,10 @@ module Ferrum
 
       def parse_ws_url(read_io, timeout)
         output = ""
-        start = Ferrum.monotonic_time
+        start = Utils::ElapsedTime.monotonic_time
         max_time = start + timeout
         regexp = %r{DevTools listening on (ws://.*)}
-        while (now = Ferrum.monotonic_time) < max_time
+        while (now = Utils::ElapsedTime.monotonic_time) < max_time
           begin
             output += read_io.read_nonblock(512)
           rescue IO::WaitReadable

@@ -29,10 +29,10 @@ module Ferrum
     end
 
     def wait_for_idle(connections: 0, duration: 0.05, timeout: @page.browser.timeout)
-      start = Ferrum.monotonic_time
+      start = Utils::ElapsedTime.monotonic_time
 
       until idle?(connections)
-        raise TimeoutError if Ferrum.timeout?(start, timeout)
+        raise TimeoutError if Utils::ElapsedTime.timeout?(start, timeout)
 
         sleep(duration)
       end

@@ -24,9 +24,9 @@ module Ferrum
         end
 
         def detect_path
-          if Ferrum.mac?
+          if Utils::Platform.mac?
             self.class::MAC_BIN_PATH.find { |n| File.exist?(n) }
-          elsif Ferrum.windows?
+          elsif Utils::Platform.windows?
             self.class::WINDOWS_BIN_PATH.find { |path| File.exist?(path) }
           else
             self.class::LINUX_BIN_PATH.find do |name|

@@ -22,7 +22,8 @@ Gem::Specification.new do |s|
     "bug_tracker_uri" => "https://github.com/rubycdp/ferrum/issues",
     "documentation_uri" => "https://github.com/rubycdp/ferrum/blob/master/README.md",
     "changelog_uri" => "https://github.com/rubycdp/ferrum/blob/master/CHANGELOG.md",
-    "source_code_uri" => "https://github.com/rubycdp/ferrum"
+    "source_code_uri" => "https://github.com/rubycdp/ferrum",
+    "rubygems_mfa_required" => "true"
   }
 
   s.required_ruby_version = ">= 2.6.0"
