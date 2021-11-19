@@ -259,5 +259,18 @@ module Ferrum
         it { expect(browser.at_css("#form_name").focusable?).to eq(true) }
       end
     end
+
+    describe "#computed_style" do
+      before do
+        browser.go_to("/ferrum/computed_style")
+      end
+
+      it "returns the computed styles for the node" do
+        styles = browser.at_css("#test_node").computed_style
+
+        expect(styles["color"]).to eq("rgb(255, 0, 0)")
+        expect(styles["font-weight"]).to eq("700")
+      end
+    end
   end
 end

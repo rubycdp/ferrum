@@ -193,6 +193,13 @@ module Ferrum
       [x, y]
     end
 
+    # Returns a hash of the computed styles for the node
+    def computed_style
+      page
+        .command("CSS.getComputedStyleForNode", nodeId: node_id)["computedStyle"]
+        .inject({}) { |memo, style| memo[style["name"]] = style["value"]; memo }
+    end
+
     private
 
     def bounding_rect_coordinates
