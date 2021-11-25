@@ -15,6 +15,7 @@ a block with this page, after which the page is closed.
 - `Ferrum::Node`
   - `#selected` check selected option
   - `#select` select option
+  - `#computed_style` returns hash of computed styles
 - `Ferrum::JavaScriptError#stack_trace` attr_reader
 - Windows support
 - Show warning and accept dialog if no handler given
