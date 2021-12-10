@@ -157,9 +157,6 @@ module Ferrum
             }
             element.dispatchEvent(new Event('input', { bubbles: true }));
             element.dispatchEvent(new Event('change', { bubbles: true }));
-            return options
-              .filter((option) => option.selected)
-              .map((option) => option.value);
           }
         JS
         page.evaluate_func(function, self, values.join(","), by)
