@@ -153,8 +153,8 @@ module Ferrum
             .to eq(%w[Ruby SQL])
         end
 
-        it "picks options in select by match arguments as string" do
-          expect(browser.at_xpath("//*[@id='form_languages']").select("SQL, Ruby").selected.map(&:text))
+        it "picks options in select by match arguments as strings" do
+          expect(browser.at_xpath("//*[@id='form_languages']").select("SQL", "Ruby").selected.map(&:text))
             .to eq(%w[Ruby SQL])
         end
       end
@@ -174,8 +174,23 @@ module Ferrum
 
       context "when option with text and value" do
         it "picks option in select by matched text" do
-          expect(browser.at_xpath("//select[@id='form_locale']").select("Swedish", by: :text).selected.map(&:value)).
-            to eq(["sv"])
+          expect(browser.at_xpath("//select[@id='form_locale']").select("Swedish", by: :text).selected.map(&:value))
+            .to eq(["sv"])
+        end
+      end
+
+      context "when option with empty text/value" do
+        it "picks option in select by match string argument" do
+          expect(browser.at_xpath("//select[@id='empty_option']").select("AU").selected.map(&:value)).to eq(["AU"])
+        end
+
+        it "picks empty option by match empty value argument" do
+          expect(browser.at_xpath("//select[@id='empty_option']").select("").selected.map(&:value)).to eq([""])
+        end
+
+        it "picks empty option by match empty text argument" do
+          expect(browser.at_xpath("//select[@id='empty_option']").select("", by: :text).selected.map(&:text))
+            .to eq([""])
         end
       end
     end

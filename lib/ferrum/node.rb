@@ -152,14 +152,14 @@ module Ferrum
             const options = Array.from(element.options);
             element.value = undefined;
             for (const option of options) {
-              option.selected = values.includes(option[by]);
+              option.selected = values.some((value) => option[by] === value);
               if (option.selected && !element.multiple) break;
             }
             element.dispatchEvent(new Event('input', { bubbles: true }));
             element.dispatchEvent(new Event('change', { bubbles: true }));
           }
         JS
-        page.evaluate_func(function, self, values.join(","), by)
+        page.evaluate_func(function, self, values.flatten, by)
       end
     end
 
