@@ -171,6 +171,13 @@ module Ferrum
           expect(browser.at_xpath("//*[@id='form_title']").select(["Other"]).selected.map(&:text)).to eq(["Other"])
         end
       end
+
+      context "when option with text and value" do
+        it "picks option in select by matched text" do
+          expect(browser.at_xpath("//select[@id='form_locale']").select("Swedish", by: :text).selected.map(&:value)).
+            to eq(["sv"])
+        end
+      end
     end
 
     context "when the element is not in the viewport" do

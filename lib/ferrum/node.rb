@@ -142,17 +142,17 @@ module Ferrum
       page.evaluate_func(function, self)
     end
 
-    def select(*values)
+    def select(*values, by: :value)
       tap do
         function = <<~JS
-          function(element, values) {
+          function(element, values, by) {
             if (element.nodeName.toLowerCase() !== 'select') {
               throw new Error('Element is not a <select> element.');
             }
             const options = Array.from(element.options);
             element.value = undefined;
             for (const option of options) {
-              option.selected = values.includes(option.value);
+              option.selected = values.includes(option[by]);
               if (option.selected && !element.multiple) break;
             }
             element.dispatchEvent(new Event('input', { bubbles: true }));
@@ -162,7 +162,7 @@ module Ferrum
               .map((option) => option.value);
           }
         JS
-        page.evaluate_func(function, self, values.join(","))
+        page.evaluate_func(function, self, values.join(","), by)
       end
     end
 
