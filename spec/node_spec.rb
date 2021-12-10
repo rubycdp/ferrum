@@ -89,24 +89,24 @@ module Ferrum
       end
 
       it "returns texts of selected options" do
-        expect(browser.at_xpath("//*[@id='form_region']").selected).to eq(["Norway"])
+        expect(browser.at_xpath("//*[@id='form_region']").selected.map(&:text)).to eq(["Norway"])
       end
 
       context "when options exists but no selected option" do
         it "returns first option text as default value" do
-          expect(browser.at_xpath("//*[@id='form_title']").selected).to eq(["Mrs"])
+          expect(browser.at_xpath("//*[@id='form_title']").selected.map(&:text)).to eq(["Mrs"])
         end
       end
 
       context "when no selected options" do
         it "returns empty array" do
-          expect(browser.at_xpath("//*[@id='form_tendency']").selected).to eq([])
+          expect(browser.at_xpath("//*[@id='form_tendency']").selected.map(&:text)).to eq([])
         end
       end
 
       context "when selector is not <select>" do
         it "raises JavaScriptError with proper message" do
-          expect { browser.at_xpath("//*[@id='customer_name']").selected }
+          expect { browser.at_xpath("//*[@id='customer_name']").selected.map(&:text) }
             .to raise_exception(Ferrum::JavaScriptError, /Element is not a <select> element/)
         end
       end
@@ -118,13 +118,13 @@ module Ferrum
       end
 
       it "picks option in select by match string argument" do
-        expect(browser.at_xpath("//*[@id='form_title']").select("Miss").selected).to eq(["Miss"])
+        expect(browser.at_xpath("//*[@id='form_title']").select("Miss").selected.map(&:text)).to eq(["Miss"])
       end
 
       shared_examples "clears selected options with no exception" do |options|
         it "clears selected options with no exception" do
-          expect(browser.at_xpath("//*[@id='form_title']").selected).to eq(["Mrs"])
-          expect(browser.at_xpath("//*[@id='form_title']").select(options).selected).to eq([])
+          expect(browser.at_xpath("//*[@id='form_title']").selected.map(&:text)).to eq(["Mrs"])
+          expect(browser.at_xpath("//*[@id='form_title']").select(options).selected.map(&:text)).to eq([])
         end
       end
 
@@ -142,18 +142,20 @@ module Ferrum
 
       context "when one of option with provided texts does not exist" do
         it "picks only existed options with no exception" do
-          expect(browser.at_xpath("//*[@id='form_title']").selected).to eq(["Mrs"])
-          expect(browser.at_xpath("//*[@id='form_title']").select(%w[Mrs SQL]).selected).to eq(["Mrs"])
+          expect(browser.at_xpath("//*[@id='form_title']").selected.map(&:text)).to eq(["Mrs"])
+          expect(browser.at_xpath("//*[@id='form_title']").select(%w[Mrs SQL]).selected.map(&:text)).to eq(["Mrs"])
         end
       end
 
       context "when select has multiple property" do
         it "picks options in select by match arguments as array" do
-          expect(browser.at_xpath("//*[@id='form_languages']").select(%w[SQL Ruby]).selected).to eq(%w[Ruby SQL])
+          expect(browser.at_xpath("//*[@id='form_languages']").select(%w[SQL Ruby]).selected.map(&:text))
+            .to eq(%w[Ruby SQL])
         end
 
-        it "picks options in select by match arguments as string" do
-          expect(browser.at_xpath("//*[@id='form_languages']").select("SQL, Ruby").selected).to eq(%w[Ruby SQL])
+        it "picks options in select by match arguments as strings" do
+          expect(browser.at_xpath("//*[@id='form_languages']").select("SQL", "Ruby").selected.map(&:text))
+            .to eq(%w[Ruby SQL])
         end
       end
 
@@ -166,7 +168,29 @@ module Ferrum
 
       context "when provided texts of disabled option" do
         it "picks disabled option with no exception" do
-          expect(browser.at_xpath("//*[@id='form_title']").select(["Other"]).selected).to eq(["Other"])
+          expect(browser.at_xpath("//*[@id='form_title']").select(["Other"]).selected.map(&:text)).to eq(["Other"])
+        end
+      end
+
+      context "when option with text and value" do
+        it "picks option in select by matched text" do
+          expect(browser.at_xpath("//select[@id='form_locale']").select("Swedish", by: :text).selected.map(&:value))
+            .to eq(["sv"])
+        end
+      end
+
+      context "when option with empty text/value" do
+        it "picks option in select by match string argument" do
+          expect(browser.at_xpath("//select[@id='empty_option']").select("AU").selected.map(&:value)).to eq(["AU"])
+        end
+
+        it "picks empty option by match empty value argument" do
+          expect(browser.at_xpath("//select[@id='empty_option']").select("").selected.map(&:value)).to eq([""])
+        end
+
+        it "picks empty option by match empty text argument" do
+          expect(browser.at_xpath("//select[@id='empty_option']").select("", by: :text).selected.map(&:text))
+            .to eq([""])
         end
       end
     end

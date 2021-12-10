@@ -136,33 +136,30 @@ module Ferrum
           if (element.nodeName.toLowerCase() !== 'select') {
             throw new Error('Element is not a <select> element.');
           }
-          return Array.from(element).filter(option => option.selected).map((option) => option.text);
+          return Array.from(element).filter(option => option.selected);
         }
       JS
       page.evaluate_func(function, self)
     end
 
-    def select(*values)
+    def select(*values, by: :value)
       tap do
         function = <<~JS
-          function(element, values) {
+          function(element, values, by) {
             if (element.nodeName.toLowerCase() !== 'select') {
               throw new Error('Element is not a <select> element.');
             }
             const options = Array.from(element.options);
             element.value = undefined;
             for (const option of options) {
-              option.selected = values.includes(option.value);
+              option.selected = values.some((value) => option[by] === value);
               if (option.selected && !element.multiple) break;
             }
             element.dispatchEvent(new Event('input', { bubbles: true }));
             element.dispatchEvent(new Event('change', { bubbles: true }));
-            return options
-              .filter((option) => option.selected)
-              .map((option) => option.value);
           }
         JS
-        page.evaluate_func(function, self, values.join(","))
+        page.evaluate_func(function, self, values.flatten, by)
       end
     end
 

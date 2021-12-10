@@ -13,8 +13,8 @@ a block with this page, after which the page is closed.
 - `Ferrum::Browser` supports new option `:proxy` https://github.com/rubycdp/ferrum#proxy
 - `Ferrum::Network::Response#params` attr_reader added
 - `Ferrum::Node`
-  - `#selected` check selected option
-  - `#select` select option
+  - `#selected` checks selected options. Returns an array of `Ferrum::Node` that's selected.
+  - `#select` selects options by passed attribute, default: `:value`.
   - `#computed_style` returns hash of computed styles
 - `Ferrum::JavaScriptError#stack_trace` attr_reader
 - Windows support
