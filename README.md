@@ -1098,7 +1098,7 @@ frame.at_css("//a[text() = 'Log in']") # => Node
 #### property
 #### attribute
 #### evaluate
-#### selected : `Array`
+#### selected : `Array<Node>`
 #### select
 
 

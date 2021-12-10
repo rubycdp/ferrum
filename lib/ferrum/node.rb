@@ -136,7 +136,7 @@ module Ferrum
           if (element.nodeName.toLowerCase() !== 'select') {
             throw new Error('Element is not a <select> element.');
           }
-          return Array.from(element).filter(option => option.selected).map((option) => option.text);
+          return Array.from(element).filter(option => option.selected);
         }
       JS
       page.evaluate_func(function, self)
