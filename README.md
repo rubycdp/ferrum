@@ -1101,6 +1101,20 @@ frame.at_css("//a[text() = 'Log in']") # => Node
 #### selected : `Array<Node>`
 #### select
 
+(chainable) Selects options by passed attribute.
+
+```ruby
+browser.at_xpath("//*[select]").select(["1"]) # => Node (select)
+browser.at_xpath("//*[select]").select(["text"], by: :text) # => Node (select)
+```
+
+Accept string, array or strings:
+```ruby
+browser.at_xpath("//*[select]").select("1")
+browser.at_xpath("//*[select]").select("1", "2")
+browser.at_xpath("//*[select]").select(["1", "2"])
+```
+
 
 ## Thread safety ##
 
