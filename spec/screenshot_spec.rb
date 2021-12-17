@@ -137,10 +137,13 @@ module Ferrum
             allow(browser.page).to receive(:command).and_call_original
             expect(browser.page).to receive(:command)
               .with("Page.captureScreenshot", format: "png", clip: {
-                x: 0, y: 0, width: 1280, height: 1024, scale: 1.0
-              }).and_raise(StandardError)
+                      x: 0, y: 0, width: 1280, height: 1024, scale: 1.0
+                    }).and_raise(StandardError)
             expect { browser.screenshot(path: file, full: true) }
               .to raise_exception(StandardError)
+
+            # Fix Ruby 3 `and_call_original` bug
+            RSpec::Mocks.space.proxy_for(browser.page).reset
 
             expect(File.exist?(file)).not_to be
             expect(browser.viewport_size).to eq([100, 100])
@@ -148,21 +151,19 @@ module Ferrum
         end
 
         it "supports screenshotting the page to file without extension when format is specified" do
-          begin
-            file = PROJECT_ROOT + "/spec/tmp/screenshot"
-            browser.go_to
+          file = "#{PROJECT_ROOT}/spec/tmp/screenshot"
+          browser.go_to
 
-            browser.screenshot(path: file, format: "jpg")
+          browser.screenshot(path: file, format: "jpg")
 
-            expect(File.exist?(file)).to be true
-          ensure
-            FileUtils.rm_f(file)
-          end
+          expect(File.exist?(file)).to be true
+        ensure
+          FileUtils.rm_f(file)
         end
 
         it "supports screenshotting the page with different quality settings" do
-          file2 = PROJECT_ROOT + "/spec/tmp/screenshot2.jpeg"
-          file3 = PROJECT_ROOT + "/spec/tmp/screenshot3.jpeg"
+          file2 = "#{PROJECT_ROOT}/spec/tmp/screenshot2.jpeg"
+          file3 = "#{PROJECT_ROOT}/spec/tmp/screenshot3.jpeg"
           FileUtils.rm_f([file2, file3])
 
           begin
@@ -177,26 +178,24 @@ module Ferrum
           end
         end
 
-        describe 'background_color option' do
-          it 'supports screenshotting page with the specific background color' do
-            begin
-              file = PROJECT_ROOT + "/spec/tmp/screenshot.jpeg"
-              browser.go_to
-              browser.screenshot(path: file)
-              content = File.read(file)
-              browser.screenshot(path: file, background_color: RGBA.new(0, 0, 0, 0.0))
-              content_with_specific_bc = File.read(file)
-              expect(content).not_to eq(content_with_specific_bc)
-            ensure
-              FileUtils.rm_f([file])
-            end
+        describe "background_color option" do
+          it "supports screenshotting page with the specific background color" do
+            file = "#{PROJECT_ROOT}/spec/tmp/screenshot.jpeg"
+            browser.go_to
+            browser.screenshot(path: file)
+            content = File.read(file)
+            browser.screenshot(path: file, background_color: RGBA.new(0, 0, 0, 0.0))
+            content_with_specific_bc = File.read(file)
+            expect(content).not_to eq(content_with_specific_bc)
+          ensure
+            FileUtils.rm_f([file])
           end
 
-          it 'raises ArgumentError with proper message' do
+          it "raises ArgumentError with proper message" do
             browser.go_to
-            expect {
-              browser.screenshot(path: file, background_color: '#FFF')
-            }.to raise_exception(ArgumentError, 'Accept Ferrum::RGBA class only')
+            expect do
+              browser.screenshot(path: file, background_color: "#FFF")
+            end.to raise_exception(ArgumentError, "Accept Ferrum::RGBA class only")
           end
         end
 
@@ -215,7 +214,7 @@ module Ferrum
             browser.screenshot(path: file, scale: scale)
             after = black_pixels_count[file]
 
-            expect(after.to_f / before.to_f).to eq(scale**2)
+            expect(after.to_f / before).to eq(scale**2)
           end
         end
 
@@ -234,9 +233,9 @@ module Ferrum
         context "when encoding is base64" do
           let(:file) { "#{PROJECT_ROOT}/spec/tmp/screenshot.#{format}" }
 
-          def create_screenshot(path: file, **options)
+          def create_screenshot(path:, **options)
             image = browser.screenshot(format: format, encoding: :base64, **options)
-            File.open(file, "wb") { |f| f.write Base64.decode64(image) }
+            File.open(path, "wb") { |f| f.write Base64.decode64(image) }
           end
 
           it "defaults to base64 when path isn't set" do
@@ -311,30 +310,30 @@ module Ferrum
           it "specifying format and paperWidth will cause exception" do
             browser.go_to("/ferrum/long_page")
 
-            expect {
+            expect do
               browser.pdf(path: file, format: :A0, paper_width: 1.0)
-            }.to raise_error(ArgumentError)
+            end.to raise_error(ArgumentError)
           end
 
           it "convert case correct" do
             browser.go_to("/ferrum/long_page")
 
             allow(browser.page).to receive(:command).with("Page.printToPDF", hash_including(
-               displayHeaderFooter: false,
-               ignoreInvalidPageRanges: false,
-               landscape: false,
-               marginBottom: 0.4,
-               marginLeft: 0.4,
-               marginRight: 0.4,
-               marginTop: 0.4,
-               pageRanges: "",
-               paperHeight: 11,
-               paperWidth: 8.5,
-               path: file,
-               preferCSSPageSize: false,
-               printBackground: false,
-               scale: 1,
-            )) { { "stream" => "1" } }
+                                                                               displayHeaderFooter: false,
+                                                                               ignoreInvalidPageRanges: false,
+                                                                               landscape: false,
+                                                                               marginBottom: 0.4,
+                                                                               marginLeft: 0.4,
+                                                                               marginRight: 0.4,
+                                                                               marginTop: 0.4,
+                                                                               pageRanges: "",
+                                                                               paperHeight: 11,
+                                                                               paperWidth: 8.5,
+                                                                               path: file,
+                                                                               preferCSSPageSize: false,
+                                                                               printBackground: false,
+                                                                               scale: 1
+                                                                             )) { { "stream" => "1" } }
 
             allow(browser.page).to receive(:command).with("IO.read", hash_including(handle: "1")) {
               { "data" => "", "base64Encoded" => false, "eof" => true }
@@ -371,10 +370,10 @@ module Ferrum
 
           data = browser.mhtml
 
-          expect(data).to match(/\/ferrum\/simple/)
+          expect(data).to match(%r{/ferrum/simple})
           expect(data).to match(/mhtml.blink/)
-          expect(data).to match(/\<\!DOCTYPE html\>/)
-          expect(data).to match(/Foo\<br\>Bar/)
+          expect(data).to match(/<!DOCTYPE html>/)
+          expect(data).to match(/Foo<br>Bar/)
         end
 
         it "saves a file" do
@@ -383,10 +382,10 @@ module Ferrum
           browser.mhtml(path: file)
 
           content = File.read(file)
-          expect(content).to match(/\/ferrum\/simple/)
+          expect(content).to match(%r{/ferrum/simple})
           expect(content).to match(/mhtml.blink/)
-          expect(content).to match(/\<\!DOCTYPE html\>/)
-          expect(content).to match(/Foo\<br\>Bar/)
+          expect(content).to match(/<!DOCTYPE html>/)
+          expect(content).to match(/Foo<br>Bar/)
         end
       end
     end

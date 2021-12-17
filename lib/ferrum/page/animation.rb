@@ -7,7 +7,6 @@ module Ferrum
         command("Animation.getPlaybackRate")["playbackRate"]
       end
 
-
       def playback_rate=(value)
         command("Animation.setPlaybackRate", playbackRate: value)
       end

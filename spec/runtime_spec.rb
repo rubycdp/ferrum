@@ -39,7 +39,7 @@ module Ferrum
     end
 
     context "evaluate_func" do
-      let(:function) {
+      let(:function) do
         <<~JS
           function(c) {
             let a = 1;
@@ -47,7 +47,7 @@ module Ferrum
             return a + b + c;
           }
         JS
-      }
+      end
 
       it "supports executing multiple lines of javascript function" do
         expect(browser.evaluate_func(function, 3)).to eq(6)
@@ -76,9 +76,9 @@ module Ferrum
       end
 
       it "will timeout" do
-        expect {
+        expect do
           browser.evaluate_async("var callback=arguments[0]; setTimeout(function(){callback(true)}, 4000)", 1)
-        }.to raise_error(Ferrum::ScriptTimeoutError)
+        end.to raise_error(Ferrum::ScriptTimeoutError)
       end
     end
 
@@ -89,24 +89,24 @@ module Ferrum
       expect(browser.evaluate("undefined")).to eq(nil)
 
       expect(browser.evaluate("3;")).to eq(3)
-      expect(browser.evaluate("31337")).to eq(31337)
+      expect(browser.evaluate("31337")).to eq(31_337)
       expect(browser.evaluate(%("string"))).to eq("string")
       expect(browser.evaluate(%({foo: "bar"}))).to eq("foo" => "bar")
 
       expect(browser.evaluate("new Object")).to eq({})
       expect(browser.evaluate("new Date(2012, 0).toDateString()")).to eq("Sun Jan 01 2012")
-      expect(browser.evaluate("new Object({a: 1})")).to eq({"a" => 1})
+      expect(browser.evaluate("new Object({a: 1})")).to eq({ "a" => 1 })
       expect(browser.evaluate("new Array")).to eq([])
       expect(browser.evaluate("new Function")).to eq({})
 
-      expect {
+      expect do
         browser.evaluate(%(throw "smth"))
-      }.to raise_error(Ferrum::JavaScriptError)
+      end.to raise_error(Ferrum::JavaScriptError)
     end
 
     context "cyclic structure" do
       context "ignores seen" do
-        let(:code) {
+        let(:code) do
           <<~JS
             (function() {
               var a = {};
@@ -119,7 +119,7 @@ module Ferrum
               return %s;
             })()
           JS
-        }
+        end
 
         it "objects" do
           expect(browser.evaluate(code % "a")).to eq(CyclicObject.instance)
@@ -138,9 +138,9 @@ module Ferrum
     context "#add_script_tag" do
       it "adds by url" do
         browser.go_to
-        expect {
+        expect do
           browser.evaluate("$('a').first().text()")
-        }.to raise_error(Ferrum::JavaScriptError)
+        end.to raise_error(Ferrum::JavaScriptError)
 
         browser.add_script_tag(url: "/ferrum/jquery.min.js")
 
@@ -150,9 +150,9 @@ module Ferrum
       it "adds by path" do
         browser.go_to
         path = "#{Ferrum::Application::FERRUM_PUBLIC}/jquery-1.11.3.min.js"
-        expect {
+        expect do
           browser.evaluate("$('a').first().text()")
-        }.to raise_error(Ferrum::JavaScriptError)
+        end.to raise_error(Ferrum::JavaScriptError)
 
         browser.add_script_tag(path: path)
 
@@ -169,13 +169,13 @@ module Ferrum
     end
 
     context "#add_style_tag" do
-      let(:font_size) {
+      let(:font_size) do
         <<~JS
           window
             .getComputedStyle(document.querySelector('a'))
             .getPropertyValue('font-size')
         JS
-      }
+      end
 
       it "adds by url" do
         browser.go_to

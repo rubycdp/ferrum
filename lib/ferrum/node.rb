@@ -10,7 +10,8 @@ module Ferrum
     def initialize(frame, target_id, node_id, description)
       @page = frame.page
       @target_id = target_id
-      @node_id, @description = node_id, description
+      @node_id = node_id
+      @description = description
       @tag_name = description["nodeName"].downcase
     end
 
@@ -38,15 +39,16 @@ module Ferrum
     end
 
     def wait_for_stop_moving(delay: MOVING_WAIT_DELAY, attempts: MOVING_WAIT_ATTEMPTS)
-      Ferrum.with_attempts(errors: NodeMovingError, max: attempts, wait: 0) do
-        previous, current = get_content_quads_with(delay: delay)
+      Utils::Attempt.with_retry(errors: NodeMovingError, max: attempts, wait: 0) do
+        previous, current = content_quads_with(delay: delay)
         raise NodeMovingError.new(self, previous, current) if previous != current
+
         current
       end
     end
 
     def moving?(delay: MOVING_WAIT_DELAY)
-      previous, current = get_content_quads_with(delay: delay)
+      previous, current = content_quads_with(delay: delay)
       previous == current
     end
 
@@ -122,6 +124,7 @@ module Ferrum
     def property(name)
       evaluate("this['#{name}']")
     end
+    alias [] property
 
     def attribute(name)
       evaluate("this.getAttribute('#{name}')")
@@ -133,33 +136,30 @@ module Ferrum
           if (element.nodeName.toLowerCase() !== 'select') {
             throw new Error('Element is not a <select> element.');
           }
-          return Array.from(element).filter(option => option.selected).map((option) => option.text);
+          return Array.from(element).filter(option => option.selected);
         }
       JS
       page.evaluate_func(function, self)
     end
 
-    def select(*values)
+    def select(*values, by: :value)
       tap do
         function = <<~JS
-          function(element, values) {
+          function(element, values, by) {
             if (element.nodeName.toLowerCase() !== 'select') {
               throw new Error('Element is not a <select> element.');
             }
             const options = Array.from(element.options);
             element.value = undefined;
             for (const option of options) {
-              option.selected = values.includes(option.value);
+              option.selected = values.some((value) => option[by] === value);
               if (option.selected && !element.multiple) break;
             }
             element.dispatchEvent(new Event('input', { bubbles: true }));
             element.dispatchEvent(new Event('change', { bubbles: true }));
-            return options
-              .filter((option) => option.selected)
-              .map((option) => option.value);
           }
         JS
-        page.evaluate_func(function, self, values.join(','))
+        page.evaluate_func(function, self, values.flatten, by)
       end
     end
 
@@ -169,6 +169,7 @@ module Ferrum
 
     def ==(other)
       return false unless other.is_a?(Node)
+
       # We compare backendNodeId because once nodeId is sent to frontend backend
       # never returns same nodeId sending 0. In other words frontend is
       # responsible for keeping track of node ids.
@@ -183,30 +184,39 @@ module Ferrum
       points = wait_for_stop_moving.map { |q| to_points(q) }.first
       get_position(points, x, y, position)
     rescue CoordinatesNotFoundError
-      x, y = get_bounding_rect_coordinates
-      raise if x == 0 && y == 0
+      x, y = bounding_rect_coordinates
+      raise if x.zero? && y.zero?
+
       [x, y]
+    end
+
+    # Returns a hash of the computed styles for the node
+    def computed_style
+      page
+        .command("CSS.getComputedStyleForNode", nodeId: node_id)["computedStyle"]
+        .each_with_object({}) { |style, memo| memo.merge!(style["name"] => style["value"]) }
     end
 
     private
 
-    def get_bounding_rect_coordinates
+    def bounding_rect_coordinates
       evaluate <<~JS
         [this.getBoundingClientRect().left + window.pageXOffset + (this.offsetWidth / 2),
          this.getBoundingClientRect().top + window.pageYOffset + (this.offsetHeight / 2)]
       JS
     end
 
-    def get_content_quads
+    def content_quads
       quads = page.command("DOM.getContentQuads", nodeId: node_id)["quads"]
-      raise CoordinatesNotFoundError, "Node is either not visible or not an HTMLElement" if quads.size == 0
+      raise CoordinatesNotFoundError, "Node is either not visible or not an HTMLElement" if quads.size.zero?
+
       quads
     end
 
-    def get_content_quads_with(delay: MOVING_WAIT_DELAY)
-      previous = get_content_quads
+    def content_quads_with(delay: MOVING_WAIT_DELAY)
+      previous = content_quads
       sleep(delay)
-      current = get_content_quads
+      current = content_quads
       [previous, current]
     end
 
@@ -218,28 +228,28 @@ module Ferrum
         x = point[:x] + offset_x.to_i
         y = point[:y] + offset_y.to_i
       else
-        x, y = points.inject([0, 0]) do |memo, point|
-          [memo[0] + point[:x],
-           memo[1] + point[:y]]
+        x, y = points.inject([0, 0]) do |memo, coordinate|
+          [memo[0] + coordinate[:x],
+           memo[1] + coordinate[:y]]
         end
 
-        x = x / 4
-        y = y / 4
+        x /= 4
+        y /= 4
       end
 
       if offset_x && offset_y && position == :center
-        x = x + offset_x.to_i
-        y = y + offset_y.to_i
+        x += offset_x.to_i
+        y += offset_y.to_i
       end
 
       [x, y]
     end
 
     def to_points(quad)
-      [{x: quad[0], y: quad[1]},
-       {x: quad[2], y: quad[3]},
-       {x: quad[4], y: quad[5]},
-       {x: quad[6], y: quad[7]}]
+      [{ x: quad[0], y: quad[1] },
+       { x: quad[2], y: quad[3] },
+       { x: quad[4], y: quad[5] },
+       { x: quad[6], y: quad[7] }]
     end
   end
 end

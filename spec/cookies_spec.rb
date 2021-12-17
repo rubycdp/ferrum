@@ -69,7 +69,7 @@ module Ferrum
       end
 
       it "can set cookies with an expires time" do
-        time = Time.at(Time.now.to_i + 10000)
+        time = Time.at(Time.now.to_i + 10_000)
         browser.go_to
         browser.cookies.set(name: "foo", value: "bar", expires: time)
         expect(browser.cookies["foo"].expires).to eq(time)
@@ -88,19 +88,17 @@ module Ferrum
       end
 
       it "sets cookies correctly with :domain option when base_url isn't set" do
-        begin
-          browser = Browser.new
-          browser.cookies.set(name: "stealth", value: "123456", domain: "localhost")
+        browser = Browser.new
+        browser.cookies.set(name: "stealth", value: "123456", domain: "localhost")
 
-          port = server.port
-          browser.go_to("http://localhost:#{port}/ferrum/get_cookie")
-          expect(browser.body).to include("123456")
+        port = server.port
+        browser.go_to("http://localhost:#{port}/ferrum/get_cookie")
+        expect(browser.body).to include("123456")
 
-          browser.go_to("http://127.0.0.1:#{port}/ferrum/get_cookie")
-          expect(browser.body).not_to include("123456")
-        ensure
-          browser&.quit
-        end
+        browser.go_to("http://127.0.0.1:#{port}/ferrum/get_cookie")
+        expect(browser.body).not_to include("123456")
+      ensure
+        browser&.quit
       end
     end
   end

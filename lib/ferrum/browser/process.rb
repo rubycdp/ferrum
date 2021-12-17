@@ -22,7 +22,6 @@ module Ferrum
                   :default_user_agent, :browser_version, :protocol_version,
                   :v8_version, :webkit_version, :xvfb
 
-
       extend Forwardable
       delegate path: :command
 
@@ -32,40 +31,47 @@ module Ferrum
 
       def self.process_killer(pid)
         proc do
-          begin
-            if Ferrum.windows?
-              # Process.kill is unreliable on Windows
-              ::Process.kill("KILL", pid) unless system("taskkill /f /t /pid #{pid} >NUL 2>NUL")
-            else
-              ::Process.kill("USR1", pid)
-              start = Ferrum.monotonic_time
-              while ::Process.wait(pid, ::Process::WNOHANG).nil?
-                sleep(WAIT_KILLED)
-                next unless Ferrum.timeout?(start, KILL_TIMEOUT)
-                ::Process.kill("KILL", pid)
-                ::Process.wait(pid)
-                break
-              end
+          if Utils::Platform.windows?
+            # Process.kill is unreliable on Windows
+            ::Process.kill("KILL", pid) unless system("taskkill /f /t /pid #{pid} >NUL 2>NUL")
+          else
+            ::Process.kill("USR1", pid)
+            start = Utils::ElapsedTime.monotonic_time
+            while ::Process.wait(pid, ::Process::WNOHANG).nil?
+              sleep(WAIT_KILLED)
+              next unless Utils::ElapsedTime.timeout?(start, KILL_TIMEOUT)
+
+              ::Process.kill("KILL", pid)
+              ::Process.wait(pid)
+              break
             end
-          rescue Errno::ESRCH, Errno::ECHILD
           end
+        rescue Errno::ESRCH, Errno::ECHILD
+          # nop
         end
       end
 
       def self.directory_remover(path)
-        proc { FileUtils.remove_entry(path) rescue Errno::ENOENT }
+        proc {
+          begin
+            FileUtils.remove_entry(path)
+          rescue StandardError
+            Errno::ENOENT
+          end
+        }
       end
 
       def initialize(options)
+        @pid = @xvfb = @user_data_dir = nil
+
         if options[:url]
           url = URI.join(options[:url].to_s, "/json/version")
           response = JSON.parse(::Net::HTTP.get(url))
-          set_ws_url(response["webSocketDebuggerUrl"])
+          self.ws_url = response["webSocketDebuggerUrl"]
           parse_browser_versions
           return
         end
 
-        @pid = @xvfb = @user_data_dir = nil
         @logger = options[:logger]
         @process_timeout = options.fetch(:process_timeout, PROCESS_TIMEOUT)
 
@@ -82,14 +88,14 @@ module Ferrum
         begin
           read_io, write_io = IO.pipe
           process_options = { in: File::NULL }
-          process_options[:pgroup] = true unless Ferrum.windows?
+          process_options[:pgroup] = true unless Utils::Platform.windows?
           process_options[:out] = process_options[:err] = write_io
 
           if @command.xvfb?
             @xvfb = Xvfb.start(@command.options)
             ObjectSpace.define_finalizer(self, self.class.process_killer(@xvfb.pid))
           end
-          
+
           @pid = ::Process.spawn(Hash(@xvfb&.to_env), *@command.to_a, process_options)
           ObjectSpace.define_finalizer(self, self.class.process_killer(@pid))
 
@@ -129,29 +135,29 @@ module Ferrum
 
       def parse_ws_url(read_io, timeout)
         output = ""
-        start = Ferrum.monotonic_time
+        start = Utils::ElapsedTime.monotonic_time
         max_time = start + timeout
-        regexp = /DevTools listening on (ws:\/\/.*)/
-        while (now = Ferrum.monotonic_time) < max_time
+        regexp = %r{DevTools listening on (ws://.*)}
+        while (now = Utils::ElapsedTime.monotonic_time) < max_time
           begin
             output += read_io.read_nonblock(512)
           rescue IO::WaitReadable
-            IO.select([read_io], nil, nil, max_time - now)
+            read_io.wait_readable(max_time - now)
           else
             if output.match(regexp)
-              set_ws_url(output.match(regexp)[1].strip)
+              self.ws_url = output.match(regexp)[1].strip
               break
             end
           end
         end
 
-        unless ws_url
-          @logger.puts(output) if @logger
-          raise ProcessTimeoutError.new(timeout, output)
-        end
+        return if ws_url
+
+        @logger&.puts(output)
+        raise ProcessTimeoutError.new(timeout, output)
       end
 
-      def set_ws_url(url)
+      def ws_url=(url)
         @ws_url = Addressable::URI.parse(url)
         @host = @ws_url.host
         @port = @ws_url.port
@@ -172,11 +178,9 @@ module Ferrum
 
       def close_io(*ios)
         ios.each do |io|
-          begin
-            io.close unless io.closed?
-          rescue IOError
-            raise unless RUBY_ENGINE == "jruby"
-          end
+          io.close unless io.closed?
+        rescue IOError
+          raise unless RUBY_ENGINE == "jruby"
         end
       end
     end

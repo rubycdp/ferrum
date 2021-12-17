@@ -10,6 +10,7 @@ module Ferrum
         def initialize(logger)
           @logger = logger
         end
+
         def puts(*args)
           @logger << args
         end

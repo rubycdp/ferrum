@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "concurrent-ruby"
-
 module Ferrum
   class Browser
     class Subscriber
@@ -29,7 +27,7 @@ module Ferrum
         method, params = message.values_at("method", "params")
         total = @on[method].size
         @on[method].each_with_index do |block, index|
-          # If there are a few callback we provide current index and total
+          # In case of multiple callbacks we provide current index and total
           block.call(params, index, total)
         end
       end

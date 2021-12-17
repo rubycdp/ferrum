@@ -4,7 +4,7 @@ module Ferrum
   class Browser
     class Xvfb
       NOT_FOUND = "Could not find an executable for the Xvfb. Try to install " \
-                  "it with your package manager".freeze
+                  "it with your package manager"
 
       def self.start(*args)
         new(*args).tap(&:start)
@@ -18,9 +18,9 @@ module Ferrum
 
       def initialize(options)
         @path = self.class.xvfb_path
-        raise Cliver::Dependency::NotFound.new(NOT_FOUND) unless @path
+        raise Cliver::Dependency::NotFound, NOT_FOUND unless @path
 
-        @screen_size = options.fetch(:window_size, [1024, 768]).join("x") + "x24"
+        @screen_size = "#{options.fetch(:window_size, [1024, 768]).join('x')}x24"
         @display_id = (Time.now.to_f * 1000).to_i % 100_000_000
       end
 

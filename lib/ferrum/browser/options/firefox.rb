@@ -5,7 +5,7 @@ module Ferrum
     module Options
       class Firefox < Base
         DEFAULT_OPTIONS = {
-          "headless" => nil,
+          "headless" => nil
         }.freeze
 
         MAC_BIN_PATH = [
@@ -25,9 +25,7 @@ module Ferrum
         end
 
         def merge_default(flags, options)
-          unless options.fetch(:headless, true)
-            defaults = except("headless")
-          end
+          defaults = except("headless") unless options.fetch(:headless, true)
 
           defaults ||= DEFAULT_OPTIONS
           defaults.merge(flags)

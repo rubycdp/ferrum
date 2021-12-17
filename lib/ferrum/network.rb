@@ -14,6 +14,9 @@ module Ferrum
     RESOURCE_TYPES = %w[Document Stylesheet Image Media Font Script TextTrack
                         XHR Fetch EventSource WebSocket Manifest
                         SignedExchange Ping CSPViolationReport Other].freeze
+    AUTHORIZE_BLOCK_MISSING = "Block is missing, call `authorize(...) { |r| r.continue } "\
+                              "or subscribe to `on(:request)` events before calling it"
+    AUTHORIZE_TYPE_WRONG = ":type should be in #{AUTHORIZE_TYPE}"
 
     attr_reader :traffic
 
@@ -21,13 +24,16 @@ module Ferrum
       @page = page
       @traffic = []
       @exchange = nil
+      @blacklist = nil
+      @whitelist = nil
     end
 
     def wait_for_idle(connections: 0, duration: 0.05, timeout: @page.browser.timeout)
-      start = Ferrum.monotonic_time
+      start = Utils::ElapsedTime.monotonic_time
 
       until idle?(connections)
-        raise TimeoutError if Ferrum.timeout?(start, timeout)
+        raise TimeoutError if Utils::ElapsedTime.timeout?(start, timeout)
+
         sleep(duration)
       end
     end
@@ -61,9 +67,7 @@ module Ferrum
     end
 
     def clear(type)
-      unless CLEAR_TYPE.include?(type)
-        raise ArgumentError, ":type should be in #{CLEAR_TYPE}"
-      end
+      raise ArgumentError, ":type should be in #{CLEAR_TYPE}" unless CLEAR_TYPE.include?(type)
 
       if type == :traffic
         @traffic.clear
@@ -74,23 +78,28 @@ module Ferrum
       true
     end
 
+    def blacklist=(patterns)
+      @blacklist = Array(patterns)
+      blacklist_subscribe
+    end
+    alias blocklist= blacklist=
+
+    def whitelist=(patterns)
+      @whitelist = Array(patterns)
+      whitelist_subscribe
+    end
+    alias allowlist= whitelist=
+
     def intercept(pattern: "*", resource_type: nil)
       pattern = { urlPattern: pattern }
-      if resource_type && RESOURCE_TYPES.include?(resource_type.to_s)
-        pattern[:resourceType] = resource_type
-      end
+      pattern[:resourceType] = resource_type if resource_type && RESOURCE_TYPES.include?(resource_type.to_s)
 
       @page.command("Fetch.enable", handleAuthRequests: true, patterns: [pattern])
     end
 
     def authorize(user:, password:, type: :server, &block)
-      unless AUTHORIZE_TYPE.include?(type)
-        raise ArgumentError, ":type should be in #{AUTHORIZE_TYPE}"
-      end
-
-      if !block_given? && !@page.subscribed?("Fetch.requestPaused")
-        raise ArgumentError, "Block is missing, call `authorize(...) { |r| r.continue } or subscribe to `on(:request)` events before calling it"
-      end
+      raise ArgumentError, AUTHORIZE_TYPE_WRONG unless AUTHORIZE_TYPE.include?(type)
+      raise ArgumentError, AUTHORIZE_BLOCK_MISSING if !block_given? && !@page.subscribed?("Fetch.requestPaused")
 
       @authorized_ids ||= {}
       @authorized_ids[type] ||= []
@@ -116,6 +125,34 @@ module Ferrum
     end
 
     def subscribe
+      subscribe_request_will_be_sent
+      subscribe_response_received
+      subscribe_loading_finished
+      subscribe_loading_failed
+      subscribe_log_entry_added
+    end
+
+    def authorized_response(ids, request_id, username, password)
+      if ids.include?(request_id)
+        { response: "CancelAuth" }
+      elsif username && password
+        { response: "ProvideCredentials",
+          username: username,
+          password: password }
+      end
+    end
+
+    def select(request_id)
+      @traffic.select { |e| e.id == request_id }
+    end
+
+    def build_exchange(id)
+      Network::Exchange.new(@page, id).tap { |e| @traffic << e }
+    end
+
+    private
+
+    def subscribe_request_will_be_sent
       @page.on("Network.requestWillBeSent") do |params|
         request = Network::Request.new(params)
 
@@ -140,25 +177,29 @@ module Ferrum
 
         exchange.request = request
 
-        if exchange.navigation_request?(@page.main_frame.id)
-          @exchange = exchange
-        end
+        @exchange = exchange if exchange.navigation_request?(@page.main_frame.id)
       end
+    end
 
+    def subscribe_response_received
       @page.on("Network.responseReceived") do |params|
-        if exchange = select(params["requestId"]).last
+        exchange = select(params["requestId"]).last
+
+        if exchange
           response = Network::Response.new(@page, params)
           exchange.response = response
         end
       end
+    end
 
+    def subscribe_loading_finished
       @page.on("Network.loadingFinished") do |params|
         exchange = select(params["requestId"]).last
-        if exchange && exchange.response
-          exchange.response.body_size = params["encodedDataLength"]
-        end
+        exchange.response.body_size = params["encodedDataLength"] if exchange&.response
       end
+    end
 
+    def subscribe_loading_failed
       @page.on("Network.loadingFailed") do |params|
         exchange = select(params["requestId"]).last
         exchange.error ||= Network::Error.new
@@ -169,7 +210,9 @@ module Ferrum
         exchange.error.monotonic_time = params["timestamp"]
         exchange.error.canceled = params["canceled"]
       end
+    end
 
+    def subscribe_log_entry_added
       @page.on("Log.entryAdded") do |params|
         entry = params["entry"] || {}
         if entry["source"] == "network" && entry["level"] == "error"
@@ -184,24 +227,50 @@ module Ferrum
       end
     end
 
-    def authorized_response(ids, request_id, username, password)
-      if ids.include?(request_id)
-        { response: "CancelAuth" }
-      elsif username && password
-        { response: "ProvideCredentials",
-          username: username,
-          password: password }
-      else
-        { response: "CancelAuth" }
+    def blacklist_subscribe
+      return unless blacklist?
+      raise ArgumentError, "You can't use blacklist along with whitelist" if whitelist?
+
+      @blacklist_subscribe ||= begin
+        intercept
+
+        @page.on(:request) do |request|
+          if @blacklist.any? { |p| request.match?(p) }
+            request.abort
+          else
+            request.continue
+          end
+        end
+
+        true
       end
     end
 
-    def select(request_id)
-      @traffic.select { |e| e.id == request_id }
+    def whitelist_subscribe
+      return unless whitelist?
+      raise ArgumentError, "You can't use whitelist along with blacklist" if blacklist?
+
+      @whitelist_subscribe ||= begin
+        intercept
+
+        @page.on(:request) do |request|
+          if @whitelist.any? { |p| request.match?(p) }
+            request.continue
+          else
+            request.abort
+          end
+        end
+
+        true
+      end
     end
 
-    def build_exchange(id)
-      Network::Exchange.new(@page, id).tap { |e| @traffic << e }
+    def blacklist?
+      Array(@blacklist).any?
+    end
+
+    def whitelist?
+      Array(@whitelist).any?
     end
   end
 end

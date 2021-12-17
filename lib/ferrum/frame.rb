@@ -5,21 +5,28 @@ require "ferrum/frame/runtime"
 
 module Ferrum
   class Frame
-    include DOM, Runtime
+    include DOM
+    include Runtime
 
-    attr_reader :page, :parent_id, :state
+    STATE_VALUES = %i[
+      started_loading
+      navigated
+      stopped_loading
+    ].freeze
+
     attr_accessor :id, :name
+    attr_reader :page, :parent_id, :state
 
     def initialize(id, page, parent_id = nil)
-      @execution_id = nil
-      @id, @page, @parent_id = id, page, parent_id
+      @id = id
+      @page = page
+      @parent_id = parent_id
+      @execution_id = Concurrent::MVar.new
     end
 
-    # Can be one of:
-    # * started_loading
-    # * navigated
-    # * stopped_loading
     def state=(value)
+      raise ArgumentError unless STATE_VALUES.include?(value)
+
       @state = value
     end
 
@@ -35,7 +42,7 @@ module Ferrum
       @parent_id.nil?
     end
 
-    def set_content(html)
+    def content=(html)
       evaluate_async(%(
         document.open();
         document.write(arguments[0]);
@@ -43,29 +50,30 @@ module Ferrum
         arguments[1](true);
       ), @page.timeout, html)
     end
-
-    def execution_id?(execution_id)
-      @execution_id == execution_id
-    end
+    alias set_content content=
 
     def execution_id
-      raise NoExecutionContextError unless @execution_id
-      @execution_id
-    rescue NoExecutionContextError
-      @page.event.reset
-      @page.event.wait(@page.timeout) ? retry : raise
+      value = @execution_id.borrow(@page.timeout, &:itself)
+      raise NoExecutionContextError if value.instance_of?(Object)
+
+      value
     end
 
-    def set_execution_id(value)
-      @execution_id ||= value
-    end
-
-    def reset_execution_id
-      @execution_id = nil
+    def execution_id=(value)
+      if value.nil?
+        @execution_id.try_take!
+      else
+        @execution_id.try_put!(value)
+      end
     end
 
     def inspect
-      %(#<#{self.class} @id=#{@id.inspect} @parent_id=#{@parent_id.inspect} @name=#{@name.inspect} @state=#{@state.inspect} @execution_id=#{@execution_id.inspect}>)
+      "#<#{self.class} "\
+        "@id=#{@id.inspect} "\
+        "@parent_id=#{@parent_id.inspect} "\
+        "@name=#{@name.inspect} "\
+        "@state=#{@state.inspect} "\
+        "@execution_id=#{@execution_id.inspect}>"
     end
   end
 end

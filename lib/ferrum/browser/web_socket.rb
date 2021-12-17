@@ -21,9 +21,7 @@ module Ferrum
         @driver   = ::WebSocket::Driver.client(self, max_length: max_receive_size)
         @messages = Queue.new
 
-        if SKIP_LOGGING_SCREENSHOTS
-          @screenshot_commands = Concurrent::Hash.new
-        end
+        @screenshot_commands = Concurrent::Hash.new if SKIP_LOGGING_SCREENSHOTS
 
         @driver.on(:open,    &method(:on_open))
         @driver.on(:message, &method(:on_message))
@@ -31,12 +29,13 @@ module Ferrum
 
         @thread = Thread.new do
           Thread.current.abort_on_exception = true
-          if Thread.current.respond_to?(:report_on_exception=)
-            Thread.current.report_on_exception = true
-          end
+          Thread.current.report_on_exception = true if Thread.current.respond_to?(:report_on_exception=)
 
           begin
-            while data = @sock.readpartial(512)
+            loop do
+              data = @sock.readpartial(512)
+              break unless data
+
               @driver.parse(data)
             end
           rescue EOFError, Errno::ECONNRESET, Errno::EPIPE
@@ -62,7 +61,7 @@ module Ferrum
           output.sub!(/{"data":"(.*)"}/, %("Set FERRUM_LOGGING_SCREENSHOTS=true to see screenshots in Base64"))
         end
 
-        @logger&.puts("    ◀ #{Ferrum.elapsed_time} #{output}\n")
+        @logger&.puts("    ◀ #{Utils::ElapsedTime.elapsed_time} #{output}\n")
       end
 
       def on_close(_event)
@@ -71,13 +70,11 @@ module Ferrum
       end
 
       def send_message(data)
-        if SKIP_LOGGING_SCREENSHOTS
-          @screenshot_commands[data[:id]] = true
-        end
+        @screenshot_commands[data[:id]] = true if SKIP_LOGGING_SCREENSHOTS
 
         json = data.to_json
         @driver.text(json)
-        @logger&.puts("\n\n▶ #{Ferrum.elapsed_time} #{json}")
+        @logger&.puts("\n\n▶ #{Utils::ElapsedTime.elapsed_time} #{json}")
       end
 
       def write(data)

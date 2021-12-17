@@ -36,22 +36,21 @@ module Ferrum
           "metrics-recording-only" => nil,
           "safebrowsing-disable-auto-update" => nil,
           "password-store" => "basic",
-          "no-startup-window" => nil,
-          # Note: --no-sandbox is not needed if you properly setup a user in the container.
+          "no-startup-window" => nil
+          # NOTE: --no-sandbox is not needed if you properly setup a user in the container.
           # https://github.com/ebidel/lighthouse-ci/blob/master/builder/Dockerfile#L35-L40
           # "no-sandbox" => nil,
         }.freeze
 
         MAC_BIN_PATH = [
-          "/Applications/Chromium.app/Contents/MacOS/Chromium",
-          "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+          "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+          "/Applications/Chromium.app/Contents/MacOS/Chromium"
         ].freeze
-        LINUX_BIN_PATH = %w[chromium google-chrome-unstable google-chrome-beta
-                            google-chrome chrome chromium-browser
-                            google-chrome-stable].freeze
+        LINUX_BIN_PATH = %w[chrome google-chrome google-chrome-stable google-chrome-beta
+                            chromium chromium-browser google-chrome-unstable].freeze
         WINDOWS_BIN_PATH = [
-          "C:/Program Files/Google/Chrome Dev/Application/chrome.exe",
-          "C:/Program Files/Google/Chrome/Application/chrome.exe"
+          "C:/Program Files/Google/Chrome/Application/chrome.exe",
+          "C:/Program Files/Google/Chrome Dev/Application/chrome.exe"
         ].freeze
 
         def merge_required(flags, options, user_data_dir)
@@ -60,14 +59,12 @@ module Ferrum
           flags.merge("remote-debugging-port" => port,
                       "remote-debugging-address" => host,
                       # Doesn't work on MacOS, so we need to set it by CDP
-                      "window-size" => options[:window_size].join(","),
+                      "window-size" => options[:window_size]&.join(","),
                       "user-data-dir" => user_data_dir)
         end
 
         def merge_default(flags, options)
-          unless options.fetch(:headless, true)
-            defaults = except("headless", "disable-gpu")
-          end
+          defaults = except("headless", "disable-gpu") unless options.fetch(:headless, true)
 
           defaults ||= DEFAULT_OPTIONS
           defaults.merge(flags)

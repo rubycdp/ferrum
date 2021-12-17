@@ -5,14 +5,16 @@ require "sinatra/base"
 module Ferrum
   class Application < Sinatra::Base
     configure { set :protection, except: :frame_options }
-    FERRUM_VIEWS  = File.dirname(__FILE__) + "/views"
-    FERRUM_PUBLIC = File.dirname(__FILE__) + "/public"
+    FERRUM_VIEWS  = "#{File.dirname(__FILE__)}/views"
+    FERRUM_PUBLIC = "#{File.dirname(__FILE__)}/public"
 
     class TestAppError < Exception; end # rubocop:disable Lint/InheritException
+
     class TestAppOtherError < Exception # rubocop:disable Lint/InheritException
-      def initialize(string1, msg)
-        @something = string1
-        @message = msg
+      def initialize(something, message)
+        super(something)
+        @something = something
+        @message = message
       end
     end
 
@@ -186,7 +188,7 @@ module Ferrum
 
     post "/form" do
       self.class.form_post_count += 1
-      %(<pre id="results">#{params[:form].merge("post_count" => self.class.form_post_count).to_yaml}</pre>)
+      %(<pre id="results">#{params[:form].merge('post_count' => self.class.form_post_count).to_yaml}</pre>)
     end
 
     post "/upload_empty" do
@@ -198,28 +200,24 @@ module Ferrum
     end
 
     post "/upload" do
-      begin
-        buffer = []
-        buffer << "Content-type: #{params.dig(:form, :document, :type)}"
-        buffer << "File content: #{params.dig(:form, :document, :tempfile).read}"
-        buffer.join(" | ")
-      rescue StandardError
-        "No file uploaded"
-      end
+      buffer = []
+      buffer << "Content-type: #{params.dig(:form, :document, :type)}"
+      buffer << "File content: #{params.dig(:form, :document, :tempfile).read}"
+      buffer.join(" | ")
+    rescue StandardError
+      "No file uploaded"
     end
 
     post "/upload_multiple" do
-      begin
-        docs = params.dig(:form, :multiple_documents)
-        buffer = [docs.size.to_s]
-        docs.each do |doc|
-          buffer << "Content-type: #{doc[:type]}"
-          buffer << "File content: #{doc[:tempfile].read}"
-        end
-        buffer.join(" | ")
-      rescue StandardError
-        "No files uploaded"
+      docs = params.dig(:form, :multiple_documents)
+      buffer = [docs.size.to_s]
+      docs.each do |doc|
+        buffer << "Content-type: #{doc[:type]}"
+        buffer << "File content: #{doc[:tempfile].read}"
       end
+      buffer.join(" | ")
+    rescue StandardError
+      "No files uploaded"
     end
 
     get "/apple-touch-icon-precomposed.png" do
@@ -232,10 +230,10 @@ module Ferrum
 
     @form_post_count = 0
 
-
     helpers do
       def requires_credentials(login, password)
         return if authorized?(login, password)
+
         headers["WWW-Authenticate"] = %(Basic realm="Restricted Area")
         halt 401, "Not authorized\n"
       end
@@ -310,7 +308,7 @@ module Ferrum
     get "/ferrum/cacheable" do
       cache_control :public, max_age: 60
       etag "deadbeef"
-      "Cacheable request"
+      "Cacheable request <a href='/ferrum/cacheable'>click me</a>"
     end
 
     get "/ferrum/:view" do |view|

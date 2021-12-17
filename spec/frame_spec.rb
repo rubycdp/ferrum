@@ -175,7 +175,7 @@ module Ferrum
       end
 
       it "can set page content" do
-        browser.set_content(%(<html><head></head><body>Voila!</body></html>))
+        browser.content = "<html><head></head><body>Voila!</body></html>"
 
         expect(browser.body).to include("Voila!")
       end
@@ -184,11 +184,11 @@ module Ferrum
         browser.go_to("/ferrum/frames")
         expect(browser.doctype).to eq("<!DOCTYPE html>")
 
-        doctype_40 = %(<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">)
-        browser.set_content(%(#{doctype_40}<html><head></head><body>Voila!</body></html>))
-        expect(browser.doctype).to eq(doctype_40)
+        doctype40 = %(<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">)
+        browser.content = "#{doctype40}<html><head></head><body>Voila!</body></html>"
+        expect(browser.doctype).to eq(doctype40)
 
-        browser.set_content("")
+        browser.content = ""
         expect(browser.doctype).to be_nil
       end
 
@@ -213,9 +213,9 @@ module Ferrum
         it "throws an error on a wrong xpath" do
           browser.go_to("/ferrum/with_js")
 
-          expect {
+          expect do
             browser.xpath("#remove_me")
-          }.to raise_error(Ferrum::JavaScriptError)
+          end.to raise_error(Ferrum::JavaScriptError)
         end
 
         it "supports inside a given frame" do
@@ -251,9 +251,9 @@ module Ferrum
         it "throws an error on a wrong xpath" do
           browser.go_to("/ferrum/with_js")
 
-          expect {
+          expect do
             browser.at_xpath("#remove_me")
-          }.to raise_error(Ferrum::JavaScriptError)
+          end.to raise_error(Ferrum::JavaScriptError)
         end
 
         it "supports inside a given frame" do
@@ -289,9 +289,9 @@ module Ferrum
         it "throws an error on an invalid selector" do
           browser.go_to("/ferrum/table")
 
-          expect {
+          expect do
             browser.css("table tr:last")
-          }.to raise_error(Ferrum::JavaScriptError)
+          end.to raise_error(Ferrum::JavaScriptError)
         end
 
         it "supports inside a given frame" do
@@ -327,9 +327,9 @@ module Ferrum
         it "throws an error on an invalid selector" do
           browser.go_to("/ferrum/table")
 
-          expect {
+          expect do
             browser.at_css("table tr:last")
-          }.to raise_error(Ferrum::JavaScriptError)
+          end.to raise_error(Ferrum::JavaScriptError)
         end
 
         it "supports inside a given frame" do

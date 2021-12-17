@@ -42,6 +42,7 @@ Web design by [Evrone](https://evrone.com/), what else
 * [Screenshots](https://github.com/rubycdp/ferrum#screenshots)
 * [Cleaning Up](https://github.com/rubycdp/ferrum#cleaning-up)
 * [Network](https://github.com/rubycdp/ferrum#network)
+* [Proxy](https://github.com/rubycdp/ferrum#proxy)
 * [Mouse](https://github.com/rubycdp/ferrum#mouse)
 * [Keyboard](https://github.com/rubycdp/ferrum#keyboard)
 * [Cookies](https://github.com/rubycdp/ferrum#cookies)
@@ -49,7 +50,7 @@ Web design by [Evrone](https://evrone.com/), what else
 * [JavaScript](https://github.com/rubycdp/ferrum#javascript)
 * [Frames](https://github.com/rubycdp/ferrum#frames)
 * [Frame](https://github.com/rubycdp/ferrum#frame)
-* [Dialog](https://github.com/rubycdp/ferrum#dialog)
+* [Dialogs](https://github.com/rubycdp/ferrum#dialogs)
 * [Animation](https://github.com/rubycdp/ferrum#animation)
 * [Node](https://github.com/rubycdp/ferrum#node)
 * [Thread safety](https://github.com/rubycdp/ferrum#thread-safety)
@@ -183,6 +184,7 @@ Ferrum::Browser.new(options)
   * `:ws_max_receive_size` (Integer) - How big messages to accept from Chrome
       over the web socket, in bytes. Defaults to 64MB. Incoming messages larger
       than this will cause a `Ferrum::DeadBrowserError`.
+  * `:proxy` (Hash) - Specify proxy settings, [read more](https://github.com/rubycdp/ferrum#proxy)
 
 
 ## Navigation
@@ -429,7 +431,7 @@ browser.quit
 
 ## Network
 
-browser.network
+`browser.network`
 
 #### traffic `Array<Network::Exchange>`
 
@@ -570,9 +572,47 @@ a collision with another part of your code that also uses request interception, 
 while your code denies but it's too late. The block is mandatory now.
 
 
+## Proxy
+
+You can set a proxy with the `proxy` option.
+
+```ruby
+browser = Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800" })
+browser = Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800", user: "user", pasword: "pa$$" })
+```
+
+Chrome Devtools Protocol does not support changing proxies after the browser is launched. If you want to change proxies, you must restart your browser, which may not be convenient. There is a workaround. Ferrum provides a wrapper for a proxy server that can rotate proxies. We can run a proxy in the same process and rotate proxies inside this proxy server:
+
+```ruby
+browser = Ferrum::Browser.new(proxy: { server: true })
+
+browser.proxy_server.rotate(host: "x.x.x.x", port: 31337, user: "user", password: "password")
+browser.create_page(new_context: true) do |page|
+  page.go_to("https://api.ipify.org?format=json")
+  page.body # => "x.x.x.x"
+end
+
+browser.proxy_server.rotate(host: "y.y.y.y", port: 31337, user: "user", password: "password")
+browser.create_page(new_context: true) do |page|
+  page.go_to("https://api.ipify.org?format=json")
+  page.body # => "y.y.y.y"
+end
+```
+
+Make sure to create page in the new context, because Chrome doesn't break the connection with the proxy for `CONNECT`
+requests even if you close the page.
+
+You can specify semi-colon-separated list of hosts for which proxy shouldn't be used:
+
+```ruby
+browser = Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800", bypass: "*.google.com;*foo.com" })
+browser = Ferrum::Browser.new(proxy: { server: true, bypass: "*.google.com;*foo.com" })
+```
+
+
 ### Mouse
 
-browser.mouse
+`browser.mouse`
 
 #### scroll_to(x, y)
 
@@ -659,7 +699,7 @@ Returns bitfield for a given keys
 
 ## Cookies
 
-browser.cookies
+`browser.cookies`
 
 #### all : `Hash<String, Cookie>`
 
@@ -719,7 +759,7 @@ browser.cookies.clear # => true
 
 ## Headers
 
-browser.headers
+`browser.headers`
 
 #### get : `Hash`
 
@@ -818,9 +858,10 @@ browser.add_script_tag(url: "http://example.com/stylesheet.css") # => true
 browser.add_style_tag(content: "h1 { font-size: 40px; }") # => true
 
 ```
-#### bypass_csp(enabled) : `Boolean`
+#### bypass_csp(\*\*options) : `Boolean`
 
-* enabled `Boolean`, `true` by default
+* options `Hash`
+  * :enabled `Boolean`, `true` by default
 
 ```ruby
 browser.bypass_csp # => true
@@ -961,7 +1002,7 @@ browser.go_to("https://www.w3schools.com/tags/tag_frame.asp")
 browser.main_frame.doctype # => "<!DOCTYPE html>"
 ```
 
-#### set_content(html)
+#### content = html
 
 Sets a content of a given frame.
 
@@ -971,12 +1012,12 @@ Sets a content of a given frame.
 browser.go_to("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
 frame = browser.frames[1]
 frame.body # <html lang="en"><head><style>body {transition: opacity ease-in 0.2s; }...
-frame.set_content("<html><head></head><body><p>lol</p></body></html>")
+frame.content = "<html><head></head><body><p>lol</p></body></html>"
 frame.body # => <html><head></head><body><p>lol</p></body></html>
 ```
 
 
-## Dialog
+## Dialogs
 
 #### accept(text)
 
@@ -1028,19 +1069,14 @@ browser.playback_rate # => 2000
 
 #### node? : `Boolean`
 #### frame_id
-#### frame
+#### frame  : `Frame`
 
-Returns the [frame](https://github.com/rubycdp/ferrum#frame) object within parent node:
-
-```ruby
-div = browser.at_css("div.has-frame")
-div.at_css("iframe").frame # => Frame
-```
-
-You can keep using [Finders](https://github.com/rubycdp/ferrum#Finders) within that frame object:
+Returns [Frame](https://github.com/rubycdp/ferrum#frame) object for current node, you can keep using
+[Finders](https://github.com/rubycdp/ferrum#Finders) for that object:
 
 ```ruby
-browser.at_css("div.has-frame").frame.at_css("body") # => Node
+frame =  browser.at_xpath("//iframe").frame # => Frame
+frame.at_css("//a[text() = 'Log in']") # => Node
 ```
 
 #### focus
@@ -1062,8 +1098,22 @@ browser.at_css("div.has-frame").frame.at_css("body") # => Node
 #### property
 #### attribute
 #### evaluate
-#### selected : `Array`
+#### selected : `Array<Node>`
 #### select
+
+(chainable) Selects options by passed attribute.
+
+```ruby
+browser.at_xpath("//*[select]").select(["1"]) # => Node (select)
+browser.at_xpath("//*[select]").select(["text"], by: :text) # => Node (select)
+```
+
+Accept string, array or strings:
+```ruby
+browser.at_xpath("//*[select]").select("1")
+browser.at_xpath("//*[select]").select("1", "2")
+browser.at_xpath("//*[select]").select(["1", "2"])
+```
 
 
 ## Thread safety ##
@@ -1127,9 +1177,12 @@ browser.quit
 
 After checking out the repo, run `bundle install` to install dependencies.
 
-Then, run `bundle exec rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+Then, run `bundle exec rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will
+allow you to experiment.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the
+version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version,
+push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
 
 
 ## Contributing

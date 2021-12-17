@@ -9,7 +9,9 @@ module Ferrum
     attr_reader :id, :targets
 
     def initialize(browser, contexts, id)
-      @browser, @contexts, @id = browser, contexts, id
+      @id = id
+      @browser = browser
+      @contexts = contexts
       @targets = Concurrent::Map.new
       @pendings = Concurrent::MVar.new
     end
@@ -32,6 +34,7 @@ module Ferrum
     # usually is the last one.
     def windows(pos = nil, size = 1)
       raise ArgumentError if pos && !POSITION.include?(pos)
+
       windows = @targets.values.select(&:window?)
       windows = windows.send(pos, size) if pos
       windows.map(&:page)
@@ -47,6 +50,7 @@ module Ferrum
                        url: "about:blank")
       target = @pendings.take(@browser.timeout)
       raise NoSuchTargetError unless target.is_a?(Target)
+
       @targets.put_if_absent(target.id, target)
       target
     end
@@ -72,7 +76,7 @@ module Ferrum
       @contexts.dispose(@id)
     end
 
-    def has_target?(target_id)
+    def target?(target_id)
       !!@targets[target_id]
     end
 

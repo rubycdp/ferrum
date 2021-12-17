@@ -5,7 +5,7 @@ module Ferrum
     class Command
       NOT_FOUND = "Could not find an executable for the browser. Try to make " \
                   "it available on the PATH or set environment variable for " \
-                  "example BROWSER_PATH=\"/usr/bin/chrome\"".freeze
+                  "example BROWSER_PATH=\"/usr/bin/chrome\""
 
       # Currently only these browsers support CDP:
       # https://github.com/cyrus-and/chrome-remote-interface#implementations
@@ -27,9 +27,11 @@ module Ferrum
       def initialize(defaults, options, user_data_dir)
         @flags = {}
         @defaults = defaults
-        @options, @user_data_dir = options, user_data_dir
+        @options = options
+        @user_data_dir = user_data_dir
         @path = options[:browser_path] || ENV["BROWSER_PATH"] || defaults.detect_path
-        raise Cliver::Dependency::NotFound.new(NOT_FOUND) unless @path
+        raise Cliver::Dependency::NotFound, NOT_FOUND unless @path
+
         merge_options
       end
 
@@ -45,10 +47,7 @@ module Ferrum
 
       def merge_options
         @flags = defaults.merge_required(@flags, options, @user_data_dir)
-
-        unless options[:ignore_default_browser_options]
-          @flags = defaults.merge_default(@flags, options)
-        end
+        @flags = defaults.merge_default(@flags, options) unless options[:ignore_default_browser_options]
 
         @flags.merge!(options.fetch(:browser_options, {}))
       end

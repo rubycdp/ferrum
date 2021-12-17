@@ -5,7 +5,7 @@ module Ferrum
     context "dialog support" do
       it "matches on partial strings" do
         browser.go_to("/ferrum/with_js")
-        browser.on(:dialog) do |dialog|
+        browser.on(:dialog) do |dialog, _index, _total|
           if dialog.match?(Regexp.escape("[reg.exp] (chara©+er$)"))
             dialog.accept
           else
@@ -20,7 +20,7 @@ module Ferrum
 
       it "matches on regular expressions" do
         browser.go_to("/ferrum/with_js")
-        browser.on(:dialog) do |dialog|
+        browser.on(:dialog) do |dialog, _index, _total|
           if dialog.match?(/^.t.ext.*\[\w{3}\.\w{3}\]/i)
             dialog.accept
           else
@@ -35,11 +35,9 @@ module Ferrum
 
       it "works with nested modals" do
         browser.go_to("/ferrum/with_js")
-        browser.on(:dialog) do |dialog|
+        browser.on(:dialog) do |dialog, _index, _total|
           if dialog.match?("Are you sure?")
             dialog.accept
-          elsif dialog.match?("Are you really sure?")
-            dialog.dismiss
           else
             dialog.dismiss
           end
@@ -57,9 +55,11 @@ module Ferrum
           window.open("/ferrum/with_js", "popup")
         JS
 
-        popup, _ = browser.windows(:last)
+        popup, = browser.windows(:last)
 
-        popup.on(:dialog) { |d| d.accept }
+        popup.on(:dialog) do |dialog, _index, _total|
+          dialog.accept
+        end
         popup.at_css("a#open-match").click
         expect(popup.at_xpath("//a[@id='open-match' and @confirmed='true']")).to be
 

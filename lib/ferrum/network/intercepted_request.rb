@@ -9,7 +9,8 @@ module Ferrum
 
       def initialize(page, params)
         @status = nil
-        @page, @params = page, params
+        @page = page
+        @params = params
         @request_id = params["requestId"]
         @frame_id = params["frameId"]
         @resource_type = params["resourceType"]
@@ -30,15 +31,12 @@ module Ferrum
       end
 
       def respond(**options)
-        has_body = options.has_key?(:body)
+        has_body = options.key?(:body)
         headers = has_body ? { "content-length" => options.fetch(:body, "").length } : {}
         headers = headers.merge(options.fetch(:responseHeaders, {}))
 
-        options = {responseCode: 200}.merge(options)
-        options = options.merge({
-          requestId: request_id,
-          responseHeaders: header_array(headers),
-        })
+        options = { responseCode: 200 }.merge(options)
+        options = options.merge(requestId: request_id, responseHeaders: header_array(headers))
         options = options.merge(body: Base64.strict_encode64(options.fetch(:body, ""))) if has_body
 
         @status = :responded
@@ -77,7 +75,11 @@ module Ferrum
       end
 
       def inspect
-        %(#<#{self.class} @request_id=#{@request_id.inspect} @frame_id=#{@frame_id.inspect} @resource_type=#{@resource_type.inspect} @request=#{@request.inspect}>)
+        "#<#{self.class} "\
+          "@request_id=#{@request_id.inspect} "\
+          "@frame_id=#{@frame_id.inspect} "\
+          "@resource_type=#{@resource_type.inspect} "\
+          "@request=#{@request.inspect}>"
       end
 
       private
