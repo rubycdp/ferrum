@@ -6,7 +6,8 @@ module Ferrum
       attr_accessor :request_id, :frame_id, :resource_type
 
       def initialize(page, params)
-        @page, @params = page, params
+        @page = page
+        @params = params
         @request_id = params["requestId"]
         @frame_id = params["frameId"]
         @resource_type = params["resourceType"]
@@ -55,7 +56,11 @@ module Ferrum
       end
 
       def inspect
-        %(#<#{self.class} @request_id=#{@request_id.inspect} @frame_id=#{@frame_id.inspect} @resource_type=#{@resource_type.inspect} @request=#{@request.inspect}>)
+        "#<#{self.class} "\
+          "@request_id=#{@request_id.inspect} "\
+          "@frame_id=#{@frame_id.inspect} "\
+          "@resource_type=#{@resource_type.inspect} "\
+          "@request=#{@request.inspect}>"
       end
     end
   end

@@ -7,7 +7,7 @@ module Ferrum
     attr_reader :contexts
 
     def initialize(browser)
-      @contexts = Concurrent::Hash.new
+      @contexts = Concurrent::Map.new
       @browser = browser
       subscribe
       discover
@@ -18,7 +18,9 @@ module Ferrum
     end
 
     def find_by(target_id:)
-      @contexts.find { |_, c| c.targets.keys.include?(target_id) }&.last
+      context = nil
+      @contexts.each_value { |c| context = c if c.target?(target_id) }
+      context
     end
 
     def create
@@ -39,7 +41,11 @@ module Ferrum
 
     def reset
       @default_context = nil
-      @contexts.keys.each { |id| dispose(id) }
+      @contexts.each_key { |id| dispose(id) }
+    end
+
+    def size
+      @contexts.size
     end
 
     private
@@ -62,15 +68,13 @@ module Ferrum
       end
 
       @browser.client.on("Target.targetDestroyed") do |params|
-        if context = find_by(target_id: params["targetId"])
-          context.delete_target(params["targetId"])
-        end
+        context = find_by(target_id: params["targetId"])
+        context&.delete_target(params["targetId"])
       end
 
       @browser.client.on("Target.targetCrashed") do |params|
-        if context = find_by(target_id: params["targetId"])
-          context.delete_target(params["targetId"])
-        end
+        context = find_by(target_id: params["targetId"])
+        context&.delete_target(params["targetId"])
       end
     end
 

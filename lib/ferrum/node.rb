@@ -2,15 +2,16 @@
 
 module Ferrum
   class Node
-    MOVING_WAIT = ENV.fetch("FERRUM_NODE_MOVING_WAIT", 0.01).to_f
-    MOVING_ATTEMPTS = ENV.fetch("FERRUM_NODE_MOVING_ATTEMPTS", 50).to_i
+    MOVING_WAIT_DELAY = ENV.fetch("FERRUM_NODE_MOVING_WAIT", 0.01).to_f
+    MOVING_WAIT_ATTEMPTS = ENV.fetch("FERRUM_NODE_MOVING_ATTEMPTS", 50).to_i
 
     attr_reader :page, :target_id, :node_id, :description, :tag_name
 
     def initialize(frame, target_id, node_id, description)
       @page = frame.page
       @target_id = target_id
-      @node_id, @description = node_id, description
+      @node_id = node_id
+      @description = description
       @tag_name = description["nodeName"].downcase
     end
 
@@ -28,6 +29,27 @@ module Ferrum
 
     def focus
       tap { page.command("DOM.focus", slowmoable: true, nodeId: node_id) }
+    end
+
+    def focusable?
+      focus
+      true
+    rescue BrowserError => e
+      e.message == "Element is not focusable" ? false : raise
+    end
+
+    def wait_for_stop_moving(delay: MOVING_WAIT_DELAY, attempts: MOVING_WAIT_ATTEMPTS)
+      Utils::Attempt.with_retry(errors: NodeMovingError, max: attempts, wait: 0) do
+        previous, current = content_quads_with(delay: delay)
+        raise NodeMovingError.new(self, previous, current) if previous != current
+
+        current
+      end
+    end
+
+    def moving?(delay: MOVING_WAIT_DELAY)
+      previous, current = content_quads_with(delay: delay)
+      previous == current
     end
 
     def blur
@@ -106,9 +128,43 @@ module Ferrum
     def property(name)
       evaluate("this['#{name}']")
     end
+    alias [] property
 
     def attribute(name)
       evaluate("this.getAttribute('#{name}')")
+    end
+
+    def selected
+      function = <<~JS
+        function(element) {
+          if (element.nodeName.toLowerCase() !== 'select') {
+            throw new Error('Element is not a <select> element.');
+          }
+          return Array.from(element).filter(option => option.selected);
+        }
+      JS
+      page.evaluate_func(function, self)
+    end
+
+    def select(*values, by: :value)
+      tap do
+        function = <<~JS
+          function(element, values, by) {
+            if (element.nodeName.toLowerCase() !== 'select') {
+              throw new Error('Element is not a <select> element.');
+            }
+            const options = Array.from(element.options);
+            element.value = undefined;
+            for (const option of options) {
+              option.selected = values.some((value) => option[by] === value);
+              if (option.selected && !element.multiple) break;
+            }
+            element.dispatchEvent(new Event('input', { bubbles: true }));
+            element.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        JS
+        page.evaluate_func(function, self, values.flatten, by)
+      end
     end
 
     def evaluate(expression)
@@ -117,6 +173,7 @@ module Ferrum
 
     def ==(other)
       return false unless other.is_a?(Node)
+
       # We compare backendNodeId because once nodeId is sent to frontend backend
       # never returns same nodeId sending 0. In other words frontend is
       # responsible for keeping track of node ids.
@@ -128,42 +185,43 @@ module Ferrum
     end
 
     def find_position(x: nil, y: nil, position: :top)
-      prev = get_content_quads
-
-      # FIXME: Case when a few quads returned
-      points = Ferrum.with_attempts(errors: NodeIsMovingError, max: MOVING_ATTEMPTS, wait: 0) do
-        sleep(MOVING_WAIT)
-        current = get_content_quads
-
-        if current != prev
-          error = NodeIsMovingError.new(self, prev, current)
-          prev = current
-          raise(error)
-        end
-
-        current
-      end.map { |q| to_points(q) }.first
-
+      points = wait_for_stop_moving.map { |q| to_points(q) }.first
       get_position(points, x, y, position)
-    rescue Ferrum::BrowserError => e
-      return raise unless e.message&.include?('Could not compute content quads')
+    rescue CoordinatesNotFoundError
+      x, y = bounding_rect_coordinates
+      raise if x.zero? && y.zero?
 
-      find_position_via_js
+      [x, y]
+    end
+
+    # Returns a hash of the computed styles for the node
+    def computed_style
+      page
+        .command("CSS.getComputedStyleForNode", nodeId: node_id)["computedStyle"]
+        .each_with_object({}) { |style, memo| memo.merge!(style["name"] => style["value"]) }
     end
 
     private
 
-    def find_position_via_js
-      [
-        evaluate('this.getBoundingClientRect().left + window.pageXOffset + (this.offsetWidth / 2)'), # x
-        evaluate('this.getBoundingClientRect().top + window.pageYOffset + (this.offsetHeight / 2)') # y
-      ]
+    def bounding_rect_coordinates
+      evaluate <<~JS
+        [this.getBoundingClientRect().left + window.pageXOffset + (this.offsetWidth / 2),
+         this.getBoundingClientRect().top + window.pageYOffset + (this.offsetHeight / 2)]
+      JS
     end
 
-    def get_content_quads
+    def content_quads
       quads = page.command("DOM.getContentQuads", nodeId: node_id)["quads"]
-      raise "Node is either not visible or not an HTMLElement" if quads.size == 0
+      raise CoordinatesNotFoundError, "Node is either not visible or not an HTMLElement" if quads.size.zero?
+
       quads
+    end
+
+    def content_quads_with(delay: MOVING_WAIT_DELAY)
+      previous = content_quads
+      sleep(delay)
+      current = content_quads
+      [previous, current]
     end
 
     def get_position(points, offset_x, offset_y, position)
@@ -174,28 +232,28 @@ module Ferrum
         x = point[:x] + offset_x.to_i
         y = point[:y] + offset_y.to_i
       else
-        x, y = points.inject([0, 0]) do |memo, point|
-          [memo[0] + point[:x],
-           memo[1] + point[:y]]
+        x, y = points.inject([0, 0]) do |memo, coordinate|
+          [memo[0] + coordinate[:x],
+           memo[1] + coordinate[:y]]
         end
 
-        x = x / 4
-        y = y / 4
+        x /= 4
+        y /= 4
       end
 
       if offset_x && offset_y && position == :center
-        x = x + offset_x.to_i
-        y = y + offset_y.to_i
+        x += offset_x.to_i
+        y += offset_y.to_i
       end
 
       [x, y]
     end
 
     def to_points(quad)
-      [{x: quad[0], y: quad[1]},
-       {x: quad[2], y: quad[3]},
-       {x: quad[4], y: quad[5]},
-       {x: quad[6], y: quad[7]}]
+      [{ x: quad[0], y: quad[1] },
+       { x: quad[2], y: quad[3] },
+       { x: quad[4], y: quad[5] },
+       { x: quad[6], y: quad[7] }]
     end
   end
 end

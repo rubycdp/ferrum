@@ -3,35 +3,18 @@
 require "singleton"
 
 module Ferrum
+  class CyclicObject
+    include Singleton
+
+    def inspect
+      %(#<#{self.class} JavaScript object that cannot be represented in Ruby>)
+    end
+  end
+
   class Frame
     module Runtime
       INTERMITTENT_ATTEMPTS = ENV.fetch("FERRUM_INTERMITTENT_ATTEMPTS", 6).to_i
       INTERMITTENT_SLEEP = ENV.fetch("FERRUM_INTERMITTENT_SLEEP", 0.1).to_f
-
-      EXECUTE_OPTIONS = {
-        returnByValue: true,
-        functionDeclaration: %(function() { %s })
-      }.freeze
-      DEFAULT_OPTIONS = {
-        functionDeclaration: %(function() { return %s })
-      }.freeze
-      EVALUATE_ASYNC_OPTIONS = {
-        awaitPromise: true,
-        functionDeclaration: %(
-          function() {
-           return new Promise((__resolve, __reject) => {
-             try {
-               arguments[arguments.length] = r => __resolve(r);
-               arguments.length = arguments.length + 1;
-               setTimeout(() => __reject(new Error("timed out promise")), %s);
-               %s
-             } catch(error) {
-               __reject(error);
-             }
-           });
-          }
-        )
-      }.freeze
 
       SCRIPT_SRC_TAG = <<~JS
         const script = document.createElement("script");
@@ -63,37 +46,45 @@ module Ferrum
       JS
 
       def evaluate(expression, *args)
-        call(*args, expression: expression)
+        expression = format("function() { return %s }", expression)
+        call(expression: expression, arguments: args)
       end
 
-      def evaluate_async(expression, wait_time, *args)
-        call(*args, expression: expression, wait_time: wait_time * 1000, **EVALUATE_ASYNC_OPTIONS)
+      def evaluate_async(expression, wait, *args)
+        template = <<~JS
+          function() {
+            return new Promise((__f, __r) => {
+              try {
+                arguments[arguments.length] = r => __f(r);
+                arguments.length = arguments.length + 1;
+                setTimeout(() => __r(new Error("timed out promise")), %s);
+                %s
+              } catch(error) {
+                __r(error);
+              }
+            });
+          }
+        JS
+
+        expression = format(template, wait * 1000, expression)
+        call(expression: expression, arguments: args, awaitPromise: true)
       end
 
       def execute(expression, *args)
-        call(*args, expression: expression, handle: false, **EXECUTE_OPTIONS)
+        expression = format("function() { %s }", expression)
+        call(expression: expression, arguments: args, handle: false, returnByValue: true)
         true
       end
 
+      def evaluate_func(expression, *args, on: nil)
+        call(expression: expression, arguments: args, on: on)
+      end
+
       def evaluate_on(node:, expression:, by_value: true, wait: 0)
-        errors = [NodeNotFoundError, NoExecutionContextError]
-        attempts, sleep = INTERMITTENT_ATTEMPTS, INTERMITTENT_SLEEP
-
-        Ferrum.with_attempts(errors: errors, max: attempts, wait: sleep) do
-          response = @page.command("DOM.resolveNode", nodeId: node.node_id)
-          object_id = response.dig("object", "objectId")
-          options = DEFAULT_OPTIONS.merge(objectId: object_id)
-          options[:functionDeclaration] = options[:functionDeclaration] % expression
-          options.merge!(returnByValue: by_value)
-
-          response = @page.command("Runtime.callFunctionOn",
-                                   wait: wait, slowmoable: true,
-                                   **options)
-          handle_error(response)
-          response = response["result"]
-
-          by_value ? response.dig("value") : handle_response(response)
-        end
+        options = { handle: true }
+        expression = format("function() { return %s }", expression)
+        options = { handle: false, returnByValue: true } if by_value
+        call(expression: expression, on: node, wait: wait, **options)
       end
 
       def add_script_tag(url: nil, path: nil, content: nil, type: "text/javascript")
@@ -126,27 +117,32 @@ module Ferrum
 
       private
 
-      def call(*args, expression:, wait_time: nil, handle: true, **options)
+      def call(expression:, arguments: [], on: nil, wait: 0, handle: true, **options)
         errors = [NodeNotFoundError, NoExecutionContextError]
-        attempts, sleep = INTERMITTENT_ATTEMPTS, INTERMITTENT_SLEEP
+        sleep = INTERMITTENT_SLEEP
+        attempts = INTERMITTENT_ATTEMPTS
 
-        Ferrum.with_attempts(errors: errors, max: attempts, wait: sleep) do
-          arguments = prepare_args(args)
-          params = DEFAULT_OPTIONS.merge(options)
-          expression = [wait_time, expression] if wait_time
-          params[:functionDeclaration] = params[:functionDeclaration] % expression
-          params = params.merge(arguments: arguments)
-          unless params[:executionContextId]
+        Utils::Attempt.with_retry(errors: errors, max: attempts, wait: sleep) do
+          params = options.dup
+
+          if on
+            response = @page.command("DOM.resolveNode", nodeId: on.node_id)
+            object_id = response.dig("object", "objectId")
+            params = params.merge(objectId: object_id)
+          end
+
+          if params[:executionContextId].nil? && params[:objectId].nil?
             params = params.merge(executionContextId: execution_id)
           end
 
           response = @page.command("Runtime.callFunctionOn",
-                                   slowmoable: true,
-                                   **params)
+                                   wait: wait, slowmoable: true,
+                                   **params.merge(functionDeclaration: expression,
+                                                  arguments: prepare_args(arguments)))
           handle_error(response)
           response = response["result"]
 
-          handle ? handle_response(response) : response
+          handle ? handle_response(response) : response["value"]
         end
       end
 
@@ -159,7 +155,7 @@ module Ferrum
         when /\AError: timed out promise/
           raise ScriptTimeoutError
         else
-          raise JavaScriptError.new(result)
+          raise JavaScriptError.new(result, response.dig("exceptionDetails", "stackTrace"))
         end
       end
 
@@ -176,16 +172,17 @@ module Ferrum
 
           case response["subtype"]
           when "node"
-              # We cannot store object_id in the node because page can be reloaded
-              # and node destroyed so we need to retrieve it each time for given id.
-              # Though we can try to subscribe to `DOM.childNodeRemoved` and
-              # `DOM.childNodeInserted` in the future.
-              node_id = @page.command("DOM.requestNode", objectId: object_id)["nodeId"]
-              description = @page.command("DOM.describeNode", nodeId: node_id)["node"]
-              Node.new(self, @page.target_id, node_id, description)
+            # We cannot store object_id in the node because page can be reloaded
+            # and node destroyed so we need to retrieve it each time for given id.
+            # Though we can try to subscribe to `DOM.childNodeRemoved` and
+            # `DOM.childNodeInserted` in the future.
+            node_id = @page.command("DOM.requestNode", objectId: object_id)["nodeId"]
+            description = @page.command("DOM.describeNode", nodeId: node_id)["node"]
+            Node.new(self, @page.target_id, node_id, description)
           when "array"
             reduce_props(object_id, []) do |memo, key, value|
-              next(memo) unless (Integer(key) rescue nil)
+              next(memo) unless Integer(key, exception: false)
+
               value = value["objectId"] ? handle_response(value) : value["value"]
               memo.insert(key.to_i, value)
             end.compact
@@ -217,11 +214,12 @@ module Ferrum
 
       def reduce_props(object_id, to)
         if cyclic?(object_id).dig("result", "value")
-          return to.is_a?(Array) ? [cyclic_object] : cyclic_object
+          to.is_a?(Array) ? [cyclic_object] : cyclic_object
         else
           props = @page.command("Runtime.getProperties", ownProperties: true, objectId: object_id)
           props["result"].reduce(to) do |memo, prop|
             next(memo) unless prop["enumerable"]
+
             yield(memo, prop["name"], prop["value"])
           end
         end
@@ -263,14 +261,6 @@ module Ferrum
       def cyclic_object
         CyclicObject.instance
       end
-    end
-  end
-
-  class CyclicObject
-    include Singleton
-
-    def inspect
-      %(#<#{self.class} JavaScript object that cannot be represented in Ruby>)
     end
   end
 end

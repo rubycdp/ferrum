@@ -4,11 +4,11 @@ module Ferrum
   class Network
     class Exchange
       attr_reader :id
-      attr_accessor :intercepted_request
-      attr_accessor :request, :response, :error
+      attr_accessor :intercepted_request, :request, :response, :error
 
       def initialize(page, id)
-        @page, @id = page, id
+        @id = id
+        @page = page
         @intercepted_request = nil
         @request = @response = @error = nil
       end
@@ -23,7 +23,7 @@ module Ferrum
       end
 
       def blocked?
-        intercepted_request && intercepted_request.status?(:aborted)
+        intercepted? && intercepted_request.status?(:aborted)
       end
 
       def finished?
@@ -34,17 +34,21 @@ module Ferrum
         !finished?
       end
 
+      def intercepted?
+        intercepted_request
+      end
+
       def to_a
         [request, response, error]
       end
 
       def inspect
         "#<#{self.class} "\
-        "@id=#{@id.inspect} "\
-        "@intercepted_request=#{@intercepted_request.inspect} "\
-        "@request=#{@request.inspect} "\
-        "@response=#{@response.inspect} "\
-        "@error=#{@error.inspect}>"
+          "@id=#{@id.inspect} "\
+          "@intercepted_request=#{@intercepted_request.inspect} "\
+          "@request=#{@request.inspect} "\
+          "@response=#{@response.inspect} "\
+          "@error=#{@error.inspect}>"
       end
     end
   end

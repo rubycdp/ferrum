@@ -3,7 +3,7 @@
 module Ferrum
   class Network
     class Response
-      attr_reader :body_size
+      attr_reader :body_size, :params
 
       def initialize(page, params)
         @page = page
@@ -34,7 +34,7 @@ module Ferrum
       def headers_size
         @response["encodedDataLength"]
       end
-      
+
       def type
         @params["type"]
       end
@@ -55,8 +55,8 @@ module Ferrum
       def body
         @body ||= begin
           body, encoded = @page
-                            .command("Network.getResponseBody", requestId: id)
-                            .values_at("body", "base64Encoded")
+                          .command("Network.getResponseBody", requestId: id)
+                          .values_at("body", "base64Encoded")
           encoded ? Base64.decode64(body) : body
         end
       end

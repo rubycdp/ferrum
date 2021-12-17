@@ -37,7 +37,7 @@ module Ferrum
       end
 
       def call(env)
-        if env['PATH_INFO'] == '/__identify__'
+        if env["PATH_INFO"] == "/__identify__"
           [200, {}, [@app.object_id.to_s]]
         else
           @counter.increment
@@ -50,20 +50,21 @@ module Ferrum
       end
     end
 
+    class << self
+      attr_accessor :server
+
+      def boot(**options)
+        new(**options).tap(&:boot!)
+      end
+    end
+
     attr_reader :app, :host, :port
-
-    def self.boot(**options)
-      new(**options).tap { |s| s.boot! }
-    end
-
-    def self.server
-      @@server
-    end
 
     def initialize(app: nil, host: "127.0.0.1", port: nil)
       @host = host
       @port = port || find_available_port(host)
       @app = app || Application.new
+      @server_thread = nil
     end
 
     def base_url(path = nil)
@@ -71,31 +72,27 @@ module Ferrum
     end
 
     def wait_for_pending_requests
-      start = Ferrum.monotonic_time
+      start = Utils::ElapsedTime.monotonic_time
       while pending_requests?
-        if Ferrum.timeout?(start, KILL_TIMEOUT)
-          raise "Requests did not finish in #{KILL_TIMEOUT} seconds"
-        end
+        raise "Requests did not finish in #{KILL_TIMEOUT} seconds" if Utils::ElapsedTime.timeout?(start, KILL_TIMEOUT)
 
         sleep 0.01
       end
     end
 
     def boot!
-      unless responsive?
-        start = Ferrum.monotonic_time
-        @server_thread = Thread.new { run }
+      return if responsive?
 
-        until responsive?
-          if Ferrum.timeout?(start, KILL_TIMEOUT)
-            raise "Rack application timed out during boot"
-          end
+      start = Utils::ElapsedTime.monotonic_time
+      @server_thread = Thread.new { run }
 
-          @server_thread.join(0.1)
-        end
+      until responsive?
+        raise "Rack application timed out during boot" if Utils::ElapsedTime.timeout?(start, KILL_TIMEOUT)
 
-        @@server = self
+        @server_thread.join(0.1)
       end
+
+      self.class.server = self
     end
 
     private
@@ -105,7 +102,7 @@ module Ferrum
     end
 
     def run
-      options = { Host: host, Port: port, Threads: '0:4', workers: 0, daemon: false }
+      options = { Host: host, Port: port, Threads: "0:4", workers: 0, daemon: false }
       config = Rack::Handler::Puma.config(middleware, options)
       events = config.options[:Silent] ? ::Puma::Events.strings : ::Puma::Events.stdio
 
@@ -115,12 +112,14 @@ module Ferrum
 
       Puma::Server.new(config.app, events, config.options).tap do |s|
         s.binder.parse(config.options[:binds], s.events)
-        s.min_threads, s.max_threads = config.options[:min_threads], config.options[:max_threads]
+        s.min_threads = config.options[:min_threads]
+        s.max_threads = config.options[:max_threads]
       end.run.join
     end
 
     def responsive?
       return false if @server_thread&.join(0)
+
       res = Net::HTTP.start(host, port, read_timeout: 2, max_retries: 0) { |h| h.get("/__identify__") }
       return res.body == app.object_id.to_s if res.is_a?(Net::HTTPSuccess) || res.is_a?(Net::HTTPRedirection)
     rescue SystemCallError, Net::ReadTimeout
@@ -135,7 +134,7 @@ module Ferrum
       server = TCPServer.new(host, 0)
       server.addr[1]
     ensure
-      server&.close
+      server.close
     end
   end
 end

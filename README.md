@@ -1,7 +1,5 @@
 # Ferrum - high-level API to control Chrome in Ruby
 
-[![CircleCI](https://circleci.com/gh/rubycdp/ferrum.svg?style=shield)](https://circleci.com/gh/rubycdp/ferrum)
-
 <img align="right"
      width="320" height="241"
      alt="Ferrum logo"
@@ -32,9 +30,6 @@ Web design by [Evrone](https://evrone.com/), what else
 [we build with Ruby on Rails](https://evrone.com/ruby), what else
 [we do at Evrone](https://evrone.com/cases#case-studies).
 
-If you like this project, please consider to
-_[become a backer](https://www.patreon.com/rubycdp_ferrum)_ on Patreon.
-
 
 ## Index
 
@@ -45,7 +40,9 @@ _[become a backer](https://www.patreon.com/rubycdp_ferrum)_ on Patreon.
 * [Navigation](https://github.com/rubycdp/ferrum#navigation)
 * [Finders](https://github.com/rubycdp/ferrum#finders)
 * [Screenshots](https://github.com/rubycdp/ferrum#screenshots)
+* [Cleaning Up](https://github.com/rubycdp/ferrum#cleaning-up)
 * [Network](https://github.com/rubycdp/ferrum#network)
+* [Proxy](https://github.com/rubycdp/ferrum#proxy)
 * [Mouse](https://github.com/rubycdp/ferrum#mouse)
 * [Keyboard](https://github.com/rubycdp/ferrum#keyboard)
 * [Cookies](https://github.com/rubycdp/ferrum#cookies)
@@ -53,7 +50,9 @@ _[become a backer](https://www.patreon.com/rubycdp_ferrum)_ on Patreon.
 * [JavaScript](https://github.com/rubycdp/ferrum#javascript)
 * [Frames](https://github.com/rubycdp/ferrum#frames)
 * [Frame](https://github.com/rubycdp/ferrum#frame)
-* [Dialog](https://github.com/rubycdp/ferrum#dialog)
+* [Dialogs](https://github.com/rubycdp/ferrum#dialogs)
+* [Animation](https://github.com/rubycdp/ferrum#animation)
+* [Node](https://github.com/rubycdp/ferrum#node)
 * [Thread safety](https://github.com/rubycdp/ferrum#thread-safety)
 * [Development](https://github.com/rubycdp/ferrum#development)
 * [Contributing](https://github.com/rubycdp/ferrum#contributing)
@@ -157,11 +156,14 @@ Ferrum::Browser.new(options)
       `["/path/to/script.js", { source: "window.secret = 'top'" }]`
   * `:logger` (Object responding to `puts`) - When present, debug output is
       written to this object.
-  * `:slowmo` (Integer | Float) - Set a delay to wait before sending command.
+  * `:slowmo` (Integer | Float) - Set a delay in seconds to wait before sending command.
       Usefull companion of headless option, so that you have time to see changes.
   * `:timeout` (Numeric) - The number of seconds we'll wait for a response when
       communicating with browser. Default is 5.
   * `:js_errors` (Boolean) - When true, JavaScript errors get re-raised in Ruby.
+  * `:pending_connection_errors` (Boolean) - When main frame is still waiting for slow responses while timeout is
+      reached `PendingConnectionsError` is raised. It's better to figure out why you have slow responses and fix or
+      block them rather than turn this setting off. Default is true.
   * `:browser_name` (Symbol) - `:chrome` by default, only experimental support
       for `:firefox` for now.
   * `:browser_path` (String) - Path to Chrome binary, you can also set ENV
@@ -182,11 +184,12 @@ Ferrum::Browser.new(options)
   * `:ws_max_receive_size` (Integer) - How big messages to accept from Chrome
       over the web socket, in bytes. Defaults to 64MB. Incoming messages larger
       than this will cause a `Ferrum::DeadBrowserError`.
+  * `:proxy` (Hash) - Specify proxy settings, [read more](https://github.com/rubycdp/ferrum#proxy)
 
 
 ## Navigation
 
-#### goto(url) : `String`
+#### go_to(url) : `String`
 
 Navigate page to.
 
@@ -236,6 +239,25 @@ browser.go_to("https://github.com/")
 browser.stop
 ```
 
+#### position = \*\*options
+
+Set the position for the browser window
+
+* options `Hash`
+  * :left `Integer`
+  * :top `Integer`
+
+```ruby
+browser.position = { left: 10, top: 20 }
+```
+
+#### position : `Array<Integer>`
+
+Get the position for the browser window
+
+```ruby
+browser.position # => [10, 20]
+```
 
 ## Finders
 
@@ -338,6 +360,7 @@ Saves screenshot on a disk or returns it as base64.
   * :full `Boolean` whether you need full page screenshot or a viewport
   * :selector `String` css selector for given element
   * :scale `Float` zoom in/out
+  * :background_color `Ferrum::RGBA.new(0, 0, 0, 0.0)` to have specific background color
 
 ```ruby
 browser.go_to("https://google.com/")
@@ -347,9 +370,11 @@ browser.screenshot(path: "google.png") # => 134660
 browser.screenshot(path: "google.jpg") # => 30902
 # Save to Base64 the whole page not only viewport and reduce quality
 browser.screenshot(full: true, quality: 60) # "iVBORw0KGgoAAAANSUhEUgAABAAAAAMACAYAAAC6uhUNAAAAAXNSR0IArs4c6Q...
+# Save with specific background color
+browser.screenshot(background_color: Ferrum::RGBA.new(0, 0, 0, 0.0))
 ```
 
-#### pdf(\*\*options) : `String` | `Integer`
+#### pdf(\*\*options) : `String` | `Boolean`
 
 Saves PDF on a disk or returns it as base64.
 
@@ -369,7 +394,7 @@ Saves PDF on a disk or returns it as base64.
 ```ruby
 browser.go_to("https://google.com/")
 # Save to disk as a PDF
-browser.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => 14983
+browser.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => true
 ```
 
 #### mhtml(\*\*options) : `String` | `Integer`
@@ -385,9 +410,28 @@ browser.mhtml(path: "google.mhtml") # => 87742
 ```
 
 
+## Cleaning Up
+
+#### reset
+
+Closes browser tabs opened by the `Browser` instance.
+
+```ruby
+# connect to a long-running Chrome process
+browser = Ferrum::Browser.new(url: 'http://localhost:9222')
+
+browser.go_to("https://github.com/")
+
+# clean up, lest the tab stays there hanging forever
+browser.reset
+
+browser.quit
+```
+
+
 ## Network
 
-browser.network
+`browser.network`
 
 #### traffic `Array<Network::Exchange>`
 
@@ -484,26 +528,91 @@ end
 browser.go_to("https://google.com")
 ```
 
-#### authorize(\*\*options)
+#### authorize(\*\*options, &block)
 
-If site uses authorization you can provide credentials using this method.
+If site or proxy uses authorization you can provide credentials using this method.
 
 * options `Hash`
   * :type `Symbol` `:server` | `:proxy` site or proxy authorization
   * :user `String`
   * :password `String`
+* &block accepts authenticated request, which you must subsequently allow or deny, if you don't
+care about unwanted requests just call `request.continue`.
 
 ```ruby
-browser.network.authorize(user: "login", password: "pass")
+browser.network.authorize(user: "login", password: "pass") { |req| req.continue }
 browser.go_to("http://example.com/authenticated")
 puts browser.network.status # => 200
 puts browser.body # => Welcome, authenticated client
 ```
 
+Since Chrome implements authorize using request interception you must continue or abort authorized requests. If you
+already have code that uses interception you can use `authorize` without block, but if not you are obliged to pass
+block, so this is version doesn't pass block and can work just fine:
+
+```ruby
+browser = Ferrum::Browser.new
+browser.network.intercept
+browser.on(:request) do |request|
+  if request.resource_type == "Image"
+    request.abort
+  else
+    request.continue
+  end
+end
+
+browser.network.authorize(user: "login", password: "pass", type: :proxy)
+
+browser.go_to("https://google.com")
+
+```
+
+You used to call `authorize` method without block, but since it's implemented using request interception there could be
+a collision with another part of your code that also uses request interception, so that authorize allows the request
+while your code denies but it's too late. The block is mandatory now.
+
+
+## Proxy
+
+You can set a proxy with the `proxy` option.
+
+```ruby
+browser = Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800" })
+browser = Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800", user: "user", pasword: "pa$$" })
+```
+
+Chrome Devtools Protocol does not support changing proxies after the browser is launched. If you want to change proxies, you must restart your browser, which may not be convenient. There is a workaround. Ferrum provides a wrapper for a proxy server that can rotate proxies. We can run a proxy in the same process and rotate proxies inside this proxy server:
+
+```ruby
+browser = Ferrum::Browser.new(proxy: { server: true })
+
+browser.proxy_server.rotate(host: "x.x.x.x", port: 31337, user: "user", password: "password")
+browser.create_page(new_context: true) do |page|
+  page.go_to("https://api.ipify.org?format=json")
+  page.body # => "x.x.x.x"
+end
+
+browser.proxy_server.rotate(host: "y.y.y.y", port: 31337, user: "user", password: "password")
+browser.create_page(new_context: true) do |page|
+  page.go_to("https://api.ipify.org?format=json")
+  page.body # => "y.y.y.y"
+end
+```
+
+Make sure to create page in the new context, because Chrome doesn't break the connection with the proxy for `CONNECT`
+requests even if you close the page.
+
+You can specify semi-colon-separated list of hosts for which proxy shouldn't be used:
+
+```ruby
+browser = Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800", bypass: "*.google.com;*foo.com" })
+browser = Ferrum::Browser.new(proxy: { server: true, bypass: "*.google.com;*foo.com" })
+```
+
 
 ### Mouse
 
-browser.mouse
+`browser.mouse`
 
 #### scroll_to(x, y)
 
@@ -590,7 +699,7 @@ Returns bitfield for a given keys
 
 ## Cookies
 
-browser.cookies
+`browser.cookies`
 
 #### all : `Hash<String, Cookie>`
 
@@ -650,7 +759,7 @@ browser.cookies.clear # => true
 
 ## Headers
 
-browser.headers
+`browser.headers`
 
 #### get : `Hash`
 
@@ -712,6 +821,20 @@ simple value.
 browser.execute(%(1 + 1)) # => true
 ```
 
+#### evaluate_on_new_document(expression)
+
+Evaluate JavaScript to modify things before a page load
+
+* expression `String` should be valid JavaScript
+
+```ruby
+browser.evaluate_on_new_document <<~JS
+  Object.defineProperty(navigator, "languages", {
+    get: function() { return ["tlh"]; }
+  });
+JS
+```
+
 #### add_script_tag(\*\*options) : `Boolean`
 
 * options `Hash`
@@ -735,9 +858,10 @@ browser.add_script_tag(url: "http://example.com/stylesheet.css") # => true
 browser.add_style_tag(content: "h1 { font-size: 40px; }") # => true
 
 ```
-#### bypass_csp(enabled) : `Boolean`
+#### bypass_csp(\*\*options) : `Boolean`
 
-* enabled `Boolean`, `true` by default
+* options `Hash`
+  * :enabled `Boolean`, `true` by default
 
 ```ruby
 browser.bypass_csp # => true
@@ -878,7 +1002,7 @@ browser.go_to("https://www.w3schools.com/tags/tag_frame.asp")
 browser.main_frame.doctype # => "<!DOCTYPE html>"
 ```
 
-#### set_content(html)
+#### content = html
 
 Sets a content of a given frame.
 
@@ -888,12 +1012,12 @@ Sets a content of a given frame.
 browser.go_to("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
 frame = browser.frames[1]
 frame.body # <html lang="en"><head><style>body {transition: opacity ease-in 0.2s; }...
-frame.set_content("<html><head></head><body><p>lol</p></body></html>")
+frame.content = "<html><head></head><body><p>lol</p></body></html>"
 frame.body # => <html><head></head><body><p>lol</p></body></html>
 ```
 
 
-## Dialog
+## Dialogs
 
 #### accept(text)
 
@@ -918,6 +1042,80 @@ browser.go_to("https://google.com")
 ```
 
 
+## Animation
+
+You can slow down or speed up CSS animations.
+
+#### playback_rate : `Integer`
+
+Returns playback rate for CSS animations, defaults to `1`.
+
+
+#### playback_rate = value
+
+Sets playback rate of CSS animations
+
+  * value `Integer`
+
+```ruby
+browser = Ferrum::Browser.new
+browser.playback_rate = 2000
+browser.go_to("https://google.com")
+browser.playback_rate # => 2000
+```
+
+
+## Node
+
+#### node? : `Boolean`
+#### frame_id
+#### frame  : `Frame`
+
+Returns [Frame](https://github.com/rubycdp/ferrum#frame) object for current node, you can keep using
+[Finders](https://github.com/rubycdp/ferrum#Finders) for that object:
+
+```ruby
+frame =  browser.at_xpath("//iframe").frame # => Frame
+frame.at_css("//a[text() = 'Log in']") # => Node
+```
+
+#### focus
+#### focusable?
+#### moving? : `Boolean`
+#### wait_for_stop_moving
+#### blur
+#### type
+#### click
+#### hover
+#### select_file
+#### at_xpath
+#### at_css
+#### xpath
+#### css
+#### text
+#### inner_text
+#### value
+#### property
+#### attribute
+#### evaluate
+#### selected : `Array<Node>`
+#### select
+
+(chainable) Selects options by passed attribute.
+
+```ruby
+browser.at_xpath("//*[select]").select(["1"]) # => Node (select)
+browser.at_xpath("//*[select]").select(["text"], by: :text) # => Node (select)
+```
+
+Accept string, array or strings:
+```ruby
+browser.at_xpath("//*[select]").select("1")
+browser.at_xpath("//*[select]").select("1", "2")
+browser.at_xpath("//*[select]").select(["1", "2"])
+```
+
+
 ## Thread safety ##
 
 Ferrum is fully thread-safe. You can create one browser or a few as you wish and
@@ -931,13 +1129,13 @@ context = browser.contexts.create
 
 t1 = Thread.new(context) do |c|
   page = c.create_page
-  page.goto("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
+  page.go_to("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
   page.screenshot(path: "t1.png")
 end
 
 t2 = Thread.new(context) do |c|
   page = c.create_page
-  page.goto("https://www.google.com/search?q=Ruby+static+typing")
+  page.go_to("https://www.google.com/search?q=Ruby+static+typing")
   page.screenshot(path: "t2.png")
 end
 
@@ -956,7 +1154,7 @@ browser = Ferrum::Browser.new
 t1 = Thread.new(browser) do |b|
   context = b.contexts.create
   page = context.create_page
-  page.goto("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
+  page.go_to("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
   page.screenshot(path: "t1.png")
   context.dispose
 end
@@ -964,7 +1162,7 @@ end
 t2 = Thread.new(browser) do |b|
   context = b.contexts.create
   page = context.create_page
-  page.goto("https://www.google.com/search?q=Ruby+static+typing")
+  page.go_to("https://www.google.com/search?q=Ruby+static+typing")
   page.screenshot(path: "t2.png")
   context.dispose
 end
@@ -979,9 +1177,12 @@ browser.quit
 
 After checking out the repo, run `bundle install` to install dependencies.
 
-Then, run `bundle exec rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+Then, run `bundle exec rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will
+allow you to experiment.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the
+version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version,
+push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
 
 
 ## Contributing

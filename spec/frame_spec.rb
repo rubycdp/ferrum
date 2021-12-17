@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Ferrum
-  describe Browser do
+  describe Frame do
     context "frame support" do
       it "supports selection by index" do
         browser.go_to("/ferrum/frames")
@@ -25,6 +25,16 @@ module Ferrum
         browser.go_to("/ferrum/frames")
         frame = browser.at_css("iframe[id]:not([name])").frame
         expect(frame.url).to end_with("/ferrum/get_cookie")
+      end
+
+      it "finds main frame properly" do
+        browser.go_to("/ferrum/popup_frames")
+
+        browser.at_xpath("//a[text()='pop up']").click
+
+        expect(browser.pages.size).to eq(2)
+        opened_page = browser.pages.last
+        expect(opened_page.main_frame.url).to end_with("/frames")
       end
 
       it "waits for the frame to load" do
@@ -103,76 +113,6 @@ module Ferrum
         end
       end
 
-      context "#add_script_tag" do
-        it "adds by url" do
-          browser.go_to
-          expect {
-            browser.evaluate("$('a').first().text()")
-          }.to raise_error(Ferrum::JavaScriptError)
-
-          browser.add_script_tag(url: "/ferrum/jquery.min.js")
-
-          expect(browser.evaluate("$('a').first().text()")).to eq("Relative")
-        end
-
-        it "adds by path" do
-          browser.go_to
-          path = "#{Ferrum::Application::FERRUM_PUBLIC}/jquery-1.11.3.min.js"
-          expect {
-            browser.evaluate("$('a').first().text()")
-          }.to raise_error(Ferrum::JavaScriptError)
-
-          browser.add_script_tag(path: path)
-
-          expect(browser.evaluate("$('a').first().text()")).to eq("Relative")
-        end
-
-        it "adds by content" do
-          browser.go_to
-
-          browser.add_script_tag(content: "function yay() { return 'yay!'; }")
-
-          expect(browser.evaluate("yay()")).to eq("yay!")
-        end
-      end
-
-      context "#add_style_tag" do
-        let(:font_size) {
-          <<~JS
-            window
-              .getComputedStyle(document.querySelector('a'))
-              .getPropertyValue('font-size')
-          JS
-        }
-
-        it "adds by url" do
-          browser.go_to
-          expect(browser.evaluate(font_size)).to eq("16px")
-
-          browser.add_style_tag(url: "/ferrum/add_style_tag.css")
-
-          expect(browser.evaluate(font_size)).to eq("50px")
-        end
-
-        it "adds by path" do
-          browser.go_to
-          path = "#{Ferrum::Application::FERRUM_PUBLIC}/add_style_tag.css"
-          expect(browser.evaluate(font_size)).to eq("16px")
-
-          browser.add_style_tag(path: path)
-
-          expect(browser.evaluate(font_size)).to eq("50px")
-        end
-
-        it "adds by content" do
-          browser.go_to
-
-          browser.add_style_tag(content: "a { font-size: 20px; }")
-
-          expect(browser.evaluate(font_size)).to eq("20px")
-        end
-      end
-
       it "supports clicking in a frame", skip: true do
         browser.go_to
         browser.execute <<-JS
@@ -235,7 +175,7 @@ module Ferrum
       end
 
       it "can set page content" do
-        browser.set_content(%(<html><head></head><body>Voila!</body></html>))
+        browser.content = "<html><head></head><body>Voila!</body></html>"
 
         expect(browser.body).to include("Voila!")
       end
@@ -244,11 +184,11 @@ module Ferrum
         browser.go_to("/ferrum/frames")
         expect(browser.doctype).to eq("<!DOCTYPE html>")
 
-        doctype_40 = %(<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">)
-        browser.set_content(%(#{doctype_40}<html><head></head><body>Voila!</body></html>))
-        expect(browser.doctype).to eq(doctype_40)
+        doctype40 = %(<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">)
+        browser.content = "#{doctype40}<html><head></head><body>Voila!</body></html>"
+        expect(browser.doctype).to eq(doctype40)
 
-        browser.set_content("")
+        browser.content = ""
         expect(browser.doctype).to be_nil
       end
 
@@ -273,9 +213,9 @@ module Ferrum
         it "throws an error on a wrong xpath" do
           browser.go_to("/ferrum/with_js")
 
-          expect {
+          expect do
             browser.xpath("#remove_me")
-          }.to raise_error(Ferrum::JavaScriptError)
+          end.to raise_error(Ferrum::JavaScriptError)
         end
 
         it "supports inside a given frame" do
@@ -311,9 +251,9 @@ module Ferrum
         it "throws an error on a wrong xpath" do
           browser.go_to("/ferrum/with_js")
 
-          expect {
+          expect do
             browser.at_xpath("#remove_me")
-          }.to raise_error(Ferrum::JavaScriptError)
+          end.to raise_error(Ferrum::JavaScriptError)
         end
 
         it "supports inside a given frame" do
@@ -349,9 +289,9 @@ module Ferrum
         it "throws an error on an invalid selector" do
           browser.go_to("/ferrum/table")
 
-          expect {
+          expect do
             browser.css("table tr:last")
-          }.to raise_error(Ferrum::JavaScriptError)
+          end.to raise_error(Ferrum::JavaScriptError)
         end
 
         it "supports inside a given frame" do
@@ -387,9 +327,9 @@ module Ferrum
         it "throws an error on an invalid selector" do
           browser.go_to("/ferrum/table")
 
-          expect {
+          expect do
             browser.at_css("table tr:last")
-          }.to raise_error(Ferrum::JavaScriptError)
+          end.to raise_error(Ferrum::JavaScriptError)
         end
 
         it "supports inside a given frame" do

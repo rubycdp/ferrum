@@ -9,6 +9,7 @@ module Ferrum
     attr_writer :page
 
     def initialize(browser, params = nil)
+      @page = nil
       @browser = browser
       @params = params
     end

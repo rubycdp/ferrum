@@ -90,7 +90,7 @@ module Ferrum
           browser.go_to("/ferrum/popup_headers")
           browser.at_xpath("//a[text()='pop up']").click
 
-          page, _ = browser.windows(:last)
+          page, = browser.windows(:last)
 
           expect(page.body).to include("USER_AGENT: foo")
           expect(page.body).to include("COOKIE: foo=bar")
