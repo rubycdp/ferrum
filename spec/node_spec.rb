@@ -222,12 +222,12 @@ module Ferrum
         browser.go_to("/ferrum/scroll")
       end
 
-      it "scrolls into view" do
+      it "scrolls into view if element outside viewport" do
         browser.at_xpath("//a[text() = 'Link outside viewport']").school_into_view.click
         expect(browser.current_url).to eq(base_url("/"))
       end
 
-      it "scrolls into view if scrollIntoViewIfNeeded fails" do
+      it "scrolls into view if element below the fold" do
         browser.at_xpath("//a[*//text() = 'Below the fold']").school_into_view.click
         expect(browser.current_url).to eq(base_url("/"))
       end
