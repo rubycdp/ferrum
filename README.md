@@ -26,9 +26,9 @@ going to crawl sites you better use Ferrum or
 based on Ferrum. It looks like [Scrapy](https://scrapy.org/) except that it uses
 a real browser in order to grab data.
 
-Web design by [Evrone](https://evrone.com/), what else
-[we build with Ruby on Rails](https://evrone.com/ruby), what else
-[we do at Evrone](https://evrone.com/cases#case-studies).
+Web design by [Evrone](https://evrone.com/).
+
+[RubyMine](https://jb.gg/ruby) is provided by [JetBrains](https://jb.gg/OpenSourceSupport).
 
 
 ## Index
@@ -63,7 +63,8 @@ Web design by [Evrone](https://evrone.com/), what else
 
 There's no official Chrome or Chromium package for Linux don't install it this
 way because it's either outdated or unofficial, both are bad. Download it from
-official [source](https://www.chromium.org/getting-involved/download-chromium).
+official source for [Chrome](https://www.google.com/chrome/) or
+[Chromium](https://www.chromium.org/getting-involved/download-chromium).
 Chrome binary should be in the `PATH` or `BROWSER_PATH` or you can pass it as an
 option to browser instance see `:browser_path` in
 [Customization](https://github.com/rubycdp/ferrum#customization).
