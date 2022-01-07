@@ -96,8 +96,8 @@ module Ferrum
       function = <<~JS
         function(element, scope) {
           const rect = element.getBoundingClientRect();
-          const [height, width] = scope 
-            ? [scope.offsetHeight, scope.offsetWidth] 
+          const [height, width] = scope
+            ? [scope.offsetHeight, scope.offsetWidth]
             : [window.innerHeight, window.innerWidth];
           return rect.top >= 0 &&
            rect.left >= 0 &&
