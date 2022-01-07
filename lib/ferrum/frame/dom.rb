@@ -36,6 +36,36 @@ module Ferrum
         evaluate("document.documentElement.outerHTML")
       end
 
+      def wait_for_selector(css: nil, xpath: nil, timeout: 1000, interval: 100)
+        tap do
+          evaluate_func(%(
+            function(selector, isXpath, timeout, interval) {
+              var attempts = 0;
+              var max = timeout / interval;
+              function waitForSelector(resolve, reject) {
+                if (attempts > ((max < 1) ? 1 : max)) {
+                  return reject(new Error("Not found element match the selector:" + selector));
+                }
+                var element = isXpath
+                  ? document.
+                      evaluate(selector, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
+                  : document.querySelector(selector);
+                if (element !== null) {
+                  return resolve(element);
+                }
+                setTimeout(function () {
+                  waitForSelector(resolve, reject);
+                }, interval);
+                attempts++;
+              }
+              return new Promise(function (resolve, reject) {
+                waitForSelector(resolve, reject);
+              });
+            }
+          ), css || xpath, css.nil? && !xpath.nil?, timeout, interval, awaitPromise: true)
+        end
+      end
+
       def xpath(selector, within: nil)
         expr = <<~JS
           function(selector, within) {

@@ -34,7 +34,7 @@ module Ferrum
     delegate %i[at_css at_xpath css xpath
                 current_url current_title url title body doctype content=
                 execution_id evaluate evaluate_on evaluate_async execute evaluate_func
-                add_script_tag add_style_tag] => :main_frame
+                add_script_tag add_style_tag wait_for_selector] => :main_frame
 
     include Animation
     include Screenshot

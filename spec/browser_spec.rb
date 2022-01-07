@@ -504,6 +504,64 @@ module Ferrum
       expect(browser.evaluate("window.last_hashchange")).to eq("#foo")
     end
 
+    context "wait_for_selector" do
+      before do
+        browser.go_to("/ferrum/with_js")
+      end
+
+      it "waits for provided css selector" do
+        expect(
+          browser.wait_for_selector(css: "div#wait_for_selector").at_css("div#wait_for_selector")
+        ).not_to be_nil
+      end
+
+      it "waits for provided css hidden selector" do
+        expect(
+          browser.wait_for_selector(css: "div#wait_for_hidden_selector").at_css("div#wait_for_hidden_selector")
+        ).not_to be_nil
+      end
+
+      it "waits for provided xpath selector" do
+        expect(
+          browser.wait_for_selector(xpath: "//div[@id='wait_for_selector']").at_css("div#wait_for_selector")
+        ).not_to be_nil
+      end
+
+      it "waits for provided xpath hidden selector" do
+        expect(
+          browser
+            .wait_for_selector(xpath: "//div[@id='wait_for_hidden_selector']")
+            .at_css("div#wait_for_hidden_selector")
+        ).not_to be_nil
+      end
+
+      it "raises error when timeout exceed" do
+        expect do
+          browser.wait_for_selector(css: "div#wait_for_selector", timeout: 800)
+        end.to raise_error(Ferrum::JavaScriptError, /Not found element match the selector/)
+      end
+
+      it "raises error when provided invalid css" do
+        expect do
+          browser.wait_for_selector(css: "//div[@id='wait_for_selector']")
+        end.to raise_error(Ferrum::JavaScriptError, /Failed to execute 'querySelector' on 'Document'/)
+      end
+
+      it "raises error when provided invalid xpath" do
+        expect do
+          browser.wait_for_selector(xpath: "div#wait_for_selector")
+        end.to raise_error(Ferrum::JavaScriptError, /Failed to execute 'evaluate' on 'Document'/)
+      end
+
+      it "waits less than provided timeout when node found" do
+        Timeout.timeout(1) do
+          expect(
+            browser.wait_for_selector(css: "div#wait_for_selector", timeout: 2000).at_css("div#wait_for_selector")
+          ).not_to be_nil
+        end
+      end
+    end
+
     context "current_url" do
       it "supports whitespace characters" do
         browser.go_to("/ferrum/arbitrary_path/200/foo%20bar%20baz")
