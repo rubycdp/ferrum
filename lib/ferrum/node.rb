@@ -88,7 +88,7 @@ module Ferrum
       raise NotImplementedError
     end
 
-    def school_into_view
+    def scroll_into_view
       tap { page.command("DOM.scrollIntoViewIfNeeded", nodeId: node_id) }
     end
 

@@ -1100,7 +1100,7 @@ frame.at_css("//a[text() = 'Log in']") # => Node
 #### evaluate
 #### selected : `Array<Node>`
 #### select
-#### school_into_view
+#### scroll_into_view
 
 (chainable) Selects options by passed attribute.
 
