@@ -2,6 +2,7 @@
 
 ### Added
 
+- Implement `Ferrum::Node#in_viewport?` - boolean of the check the element in viewport (optional argument `scope` as `Ferrum::Node`).
 - Implement `Ferrum::Node#scroll_into_view` - scrolls to element if needed (when it's not in the viewport).
 - Alias `Ferrum::Frame#content=` to `Ferrum::Frame#set_content`
 - Alias `Ferrum::Node#propery` to `Ferrum::Node#[]`

@@ -223,12 +223,20 @@ module Ferrum
       end
 
       it "scrolls into view if element outside viewport" do
-        browser.at_xpath("//a[text() = 'Link outside viewport']").scroll_into_view.click
+        scope = browser.at_xpath("//div[contains(., 'Link outside viewport')]")
+        expect(browser.at_xpath("//a[text() = 'Link outside viewport']").in_viewport?).to eq(true)
+        expect(browser.at_xpath("//a[text() = 'Link outside viewport']").in_viewport?(scope: scope)).to eq(false)
+        browser.at_xpath("//a[text() = 'Link outside viewport']").scroll_into_view
+        expect(browser.at_xpath("//a[text() = 'Link outside viewport']").in_viewport?(scope: scope)).to eq(true)
+        browser.at_xpath("//a[text() = 'Link outside viewport']").click
         expect(browser.current_url).to eq(base_url("/"))
       end
 
       it "scrolls into view if element below the fold" do
-        browser.at_xpath("//a[*//text() = 'Below the fold']").scroll_into_view.click
+        expect(browser.at_xpath("//a[*//text() = 'Below the fold']").in_viewport?).to eq(false)
+        browser.at_xpath("//a[*//text() = 'Below the fold']").scroll_into_view
+        expect(browser.at_xpath("//a[*//text() = 'Below the fold']").in_viewport?).to eq(true)
+        browser.at_xpath("//a[*//text() = 'Below the fold']").click
         expect(browser.current_url).to eq(base_url("/"))
       end
     end

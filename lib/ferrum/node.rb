@@ -92,6 +92,22 @@ module Ferrum
       tap { page.command("DOM.scrollIntoViewIfNeeded", nodeId: node_id) }
     end
 
+    def in_viewport?(scope: nil)
+      function = <<~JS
+        function(element, scope) {
+          const rect = element.getBoundingClientRect();
+          const [height, width] = scope 
+            ? [scope.offsetHeight, scope.offsetWidth] 
+            : [window.innerHeight, window.innerWidth];
+          return rect.top >= 0 &&
+           rect.left >= 0 &&
+           rect.bottom <= height &&
+           rect.right <= width;
+        }
+      JS
+      page.evaluate_func(function, self, scope)
+    end
+
     def select_file(value)
       page.command("DOM.setFileInputFiles", slowmoable: true, nodeId: node_id, files: Array(value))
     end
