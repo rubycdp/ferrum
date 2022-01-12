@@ -36,7 +36,7 @@ module Ferrum
         evaluate("document.documentElement.outerHTML")
       end
 
-      def wait_for_selector(css: nil, xpath: nil, timeout: 1000, interval: 100)
+      def wait_for_selector(css: nil, xpath: nil, timeout: 5000, interval: 100)
         tap do
           evaluate_func(%(
             function(selector, isXpath, timeout, interval) {
@@ -44,7 +44,7 @@ module Ferrum
               var max = timeout / interval;
               function waitForSelector(resolve, reject) {
                 if (attempts > ((max < 1) ? 1 : max)) {
-                  return reject(new Error("Not found element match the selector:" + selector));
+                  return reject(new Error("Not found element match the selector: " + selector));
                 }
                 var element = isXpath
                   ? document.
