@@ -110,6 +110,19 @@ module Ferrum
             .to raise_exception(Ferrum::JavaScriptError, /Element is not a <select> element/)
         end
       end
+
+      it "returns selected options within frame" do
+        browser.execute <<-JS
+          document.body.innerHTML += "<iframe src='about:blank' name='frame'>";
+          var iframeDocument = document.querySelector("iframe[name='frame']").contentWindow.document;
+          var content = "<html><body><select id='select'><option>One</option></select></body></html>";
+          iframeDocument.open("text/html", "replace");
+          iframeDocument.write(content);
+          iframeDocument.close();
+        JS
+        frame = browser.at_xpath("//iframe[@name='frame']").frame
+        expect(frame.at_xpath("//*[@id='select']").selected.map(&:text)).to eq(["One"])
+      end
     end
 
     describe "#select" do
@@ -192,6 +205,19 @@ module Ferrum
           expect(browser.at_xpath("//select[@id='empty_option']").select("", by: :text).selected.map(&:text))
             .to eq([""])
         end
+      end
+
+      it "picks option within frame" do
+        browser.execute <<-JS
+          document.body.innerHTML += "<iframe src='about:blank' name='frame'>";
+          var iframeDocument = document.querySelector("iframe[name='frame']").contentWindow.document;
+          var content = "<html><body><select id='select'><option>One</option><option>Two</option></select></body></html>";
+          iframeDocument.open("text/html", "replace");
+          iframeDocument.write(content);
+          iframeDocument.close();
+        JS
+        frame = browser.at_xpath("//iframe[@name='frame']").frame
+        expect(frame.at_xpath("//*[@id='select']").select("Two", by: :text).selected.map(&:text)).to eq(["Two"])
       end
     end
 
