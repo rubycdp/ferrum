@@ -37,33 +37,31 @@ module Ferrum
       end
 
       def wait_for_selector(css: nil, xpath: nil, timeout: 5000, interval: 100)
-        tap do
-          evaluate_func(%(
-            function(selector, isXpath, timeout, interval) {
-              var attempts = 0;
-              var max = timeout / interval;
-              function waitForSelector(resolve, reject) {
-                if (attempts > ((max < 1) ? 1 : max)) {
-                  return reject(new Error("Not found element match the selector: " + selector));
-                }
-                var element = isXpath
-                  ? document.
-                      evaluate(selector, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
-                  : document.querySelector(selector);
-                if (element !== null) {
-                  return resolve(element);
-                }
-                setTimeout(function () {
-                  waitForSelector(resolve, reject);
-                }, interval);
-                attempts++;
+        evaluate_func(%(
+          function(selector, isXpath, timeout, interval) {
+            var attempts = 0;
+            var max = timeout / interval;
+            function waitForSelector(resolve, reject) {
+              if (attempts > ((max < 1) ? 1 : max)) {
+                return reject(new Error("Not found element match the selector: " + selector));
               }
-              return new Promise(function (resolve, reject) {
+              var element = isXpath
+                ? document.
+                  evaluate(selector, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
+                : document.querySelector(selector);
+              if (element !== null) {
+                return resolve(element);
+              }
+              setTimeout(function () {
                 waitForSelector(resolve, reject);
-              });
+              }, interval);
+              attempts++;
             }
-          ), css || xpath, css.nil? && !xpath.nil?, timeout, interval, awaitPromise: true)
-        end
+            return new Promise(function (resolve, reject) {
+              waitForSelector(resolve, reject);
+            });
+          }
+        ), css || xpath, css.nil? && !xpath.nil?, timeout, interval, awaitPromise: true)
       end
 
       def xpath(selector, within: nil)

@@ -509,30 +509,25 @@ module Ferrum
         browser.go_to("/ferrum/with_js")
       end
 
+      it "returns Node by provided selector" do
+        expect(browser.wait_for_selector(css: "div#wait_for_selector")).to be_kind_of(Ferrum::Node)
+        expect(browser.wait_for_selector(xpath: "//div[@id='wait_for_selector']")).to be_kind_of(Ferrum::Node)
+      end
+
       it "waits for provided css selector" do
-        expect(
-          browser.wait_for_selector(css: "div#wait_for_selector").at_css("div#wait_for_selector")
-        ).not_to be_nil
+        expect(browser.wait_for_selector(css: "div#wait_for_selector")).not_to be_nil
       end
 
       it "waits for provided css hidden selector" do
-        expect(
-          browser.wait_for_selector(css: "div#wait_for_hidden_selector").at_css("div#wait_for_hidden_selector")
-        ).not_to be_nil
+        expect(browser.wait_for_selector(css: "div#wait_for_hidden_selector")).not_to be_nil
       end
 
       it "waits for provided xpath selector" do
-        expect(
-          browser.wait_for_selector(xpath: "//div[@id='wait_for_selector']").at_css("div#wait_for_selector")
-        ).not_to be_nil
+        expect(browser.wait_for_selector(xpath: "//div[@id='wait_for_selector']")).not_to be_nil
       end
 
       it "waits for provided xpath hidden selector" do
-        expect(
-          browser
-            .wait_for_selector(xpath: "//div[@id='wait_for_hidden_selector']")
-            .at_css("div#wait_for_hidden_selector")
-        ).not_to be_nil
+        expect(browser.wait_for_selector(xpath: "//div[@id='wait_for_hidden_selector']")).not_to be_nil
       end
 
       it "raises error when timeout exceed" do
@@ -555,9 +550,7 @@ module Ferrum
 
       it "waits less than provided timeout when node found" do
         Timeout.timeout(1) do
-          expect(
-            browser.wait_for_selector(css: "div#wait_for_selector", timeout: 2000).at_css("div#wait_for_selector")
-          ).not_to be_nil
+          expect(browser.wait_for_selector(css: "div#wait_for_selector", timeout: 2000)).not_to be_nil
         end
       end
 
@@ -572,12 +565,8 @@ module Ferrum
             iframeDocument.close();
           }, 900);
         JS
-        frame = browser.wait_for_selector(xpath: "//iframe[@name='frame']").at_xpath("//iframe[@name='frame']").frame
-        expect(
-          frame
-            .wait_for_selector(xpath: "//div[@id='wait_for_selector_within_frame']")
-            .at_css("div#wait_for_selector_within_frame")
-        ).not_to be_nil
+        frame = browser.wait_for_selector(xpath: "//iframe[@name='frame']").frame
+        expect(frame.wait_for_selector(xpath: "//div[@id='wait_for_selector_within_frame']")).not_to be_nil
       end
     end
 
