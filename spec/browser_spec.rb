@@ -530,6 +530,12 @@ module Ferrum
         expect(browser.wait_for_selector(xpath: "//div[@id='wait_for_hidden_selector']")).not_to be_nil
       end
 
+      it "raises error when default timeout exceed" do
+        expect do
+          browser.wait_for_selector(css: "div#not_existed_element")
+        end.to raise_error(Ferrum::JavaScriptError, /Not found element match the selector/)
+      end
+
       it "raises error when timeout exceed" do
         expect do
           browser.wait_for_selector(css: "div#wait_for_selector", timeout: 800)

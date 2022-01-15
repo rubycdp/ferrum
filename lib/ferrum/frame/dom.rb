@@ -36,7 +36,7 @@ module Ferrum
         evaluate("document.documentElement.outerHTML")
       end
 
-      def wait_for_selector(css: nil, xpath: nil, timeout: 5000, interval: 100)
+      def wait_for_selector(css: nil, xpath: nil, timeout: 3000, interval: 100)
         evaluate_func(%(
           function(selector, isXpath, timeout, interval) {
             var attempts = 0;
