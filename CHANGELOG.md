@@ -2,6 +2,7 @@
 
 ### Added
 
+- `Ferrum::Browser#wait_for_selector`: returns instance of `Ferrum::Node` that's matched by provided selector.
 - Alias `Ferrum::Frame#content=` to `Ferrum::Frame#set_content`
 - Alias `Ferrum::Node#propery` to `Ferrum::Node#[]`
 - Implement `Ferrum::Network#blacklist=` and `Ferrum::Network#whitelist=`

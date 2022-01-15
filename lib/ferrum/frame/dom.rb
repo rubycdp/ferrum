@@ -46,8 +46,7 @@ module Ferrum
                 return reject(new Error("Not found element match the selector: " + selector));
               }
               var element = isXpath
-                ? document.
-                  evaluate(selector, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
+                ? document.evaluate(selector, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
                 : document.querySelector(selector);
               if (element !== null) {
                 return resolve(element);
