@@ -560,6 +560,25 @@ module Ferrum
           ).not_to be_nil
         end
       end
+
+      it "waits for selector within frame" do
+        browser.execute <<-JS
+          setTimeout(function(){
+            document.body.innerHTML += "<iframe src='about:blank' name='frame'>";
+            var iframeDocument = document.querySelector("iframe[name='frame']").contentWindow.document;
+            var content = "<html><body><div id='wait_for_selector_within_frame'></div></body></html>";
+            iframeDocument.open("text/html", "replace");
+            iframeDocument.write(content);
+            iframeDocument.close();
+          }, 900);
+        JS
+        frame = browser.wait_for_selector(xpath: "//iframe[@name='frame']").at_xpath("//iframe[@name='frame']").frame
+        expect(
+          frame
+            .wait_for_selector(xpath: "//div[@id='wait_for_selector_within_frame']")
+            .at_css("div#wait_for_selector_within_frame")
+        ).not_to be_nil
+      end
     end
 
     context "current_url" do
