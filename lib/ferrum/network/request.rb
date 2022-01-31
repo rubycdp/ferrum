@@ -49,6 +49,7 @@ module Ferrum
       def post_data
         @request["postData"]
       end
+      alias body post_data
     end
   end
 end
