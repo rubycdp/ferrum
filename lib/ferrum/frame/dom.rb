@@ -72,7 +72,7 @@ module Ferrum
           }
         JS
 
-        wait_for_selector(expr, xpath: xpath, **options)
+        wait_for_selector(xpath, expr, **options)
       end
 
       def css(selector, within: nil)
@@ -104,14 +104,14 @@ module Ferrum
           }
         JS
 
-        wait_for_selector(expr, css: css, **options)
+        wait_for_selector(css, expr, **options)
       end
 
       private
 
-      def wait_for_selector(find_by_selector_function, css: nil, xpath: nil, timeout: 3000, interval: 100)
+      def wait_for_selector(selector, find_element_expression, timeout: 3000, interval: 100)
         expr = <<~JS
-          function(selector, findBySelectorFunction, timeout, interval) {
+          function(selector, findElementExpression, timeout, interval) {
             var attempts = 0;
             var max = timeout / interval;
             var wrapperFunction = function(expression) {
@@ -121,7 +121,7 @@ module Ferrum
               if (attempts > ((max < 1) ? 1 : max)) {
                 return reject(new Error("Not found element match the selector: " + selector));
               }
-              var element = new Function(wrapperFunction(findBySelectorFunction))()(selector);
+              var element = new Function(wrapperFunction(findElementExpression))()(selector);
               if (element !== null) {
                 return resolve(element);
               }
@@ -136,7 +136,7 @@ module Ferrum
           }
         JS
 
-        evaluate_func(expr, css || xpath, find_by_selector_function, timeout, interval, awaitPromise: true)
+        evaluate_func(expr, selector, find_element_expression, timeout, interval, awaitPromise: true)
       end
     end
   end
