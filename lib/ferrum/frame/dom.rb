@@ -36,34 +36,6 @@ module Ferrum
         evaluate("document.documentElement.outerHTML")
       end
 
-      def wait_for_selector(css: nil, xpath: nil, timeout: 3000, interval: 100)
-        expr = <<~JS
-          function(selector, isXpath, timeout, interval) {
-            var attempts = 0;
-            var max = timeout / interval;
-            function waitForSelector(resolve, reject) {
-              if (attempts > ((max < 1) ? 1 : max)) {
-                return reject(new Error("Not found element match the selector: " + selector));
-              }
-              var element = isXpath
-                ? document.evaluate(selector, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
-                : document.querySelector(selector);
-              if (element !== null) {
-                return resolve(element);
-              }
-              setTimeout(function () {
-                waitForSelector(resolve, reject);
-              }, interval);
-              attempts++;
-            }
-            return new Promise(function (resolve, reject) {
-              waitForSelector(resolve, reject);
-            });
-          }
-        JS
-        evaluate_func(expr, css || xpath, css.nil? && !xpath.nil?, timeout, interval, awaitPromise: true)
-      end
-
       def xpath(selector, within: nil)
         expr = <<~JS
           function(selector, within) {
@@ -93,6 +65,16 @@ module Ferrum
         evaluate_func(expr, selector, within)
       end
 
+      def wait_for_xpath(xpath, **options)
+        expr = <<~JS
+          function(selector) {
+            return document.evaluate(selector, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+          }
+        JS
+
+        wait_for_selector(expr, xpath: xpath, **options)
+      end
+
       def css(selector, within: nil)
         expr = <<~JS
           function(selector, within) {
@@ -113,6 +95,48 @@ module Ferrum
         JS
 
         evaluate_func(expr, selector, within)
+      end
+
+      def wait_for_css(css, **options)
+        expr = <<~JS
+          function(selector) {
+            return document.querySelector(selector);
+          }
+        JS
+
+        wait_for_selector(expr, css: css, **options)
+      end
+
+      private
+
+      def wait_for_selector(find_by_selector_function, css: nil, xpath: nil, timeout: 3000, interval: 100)
+        expr = <<~JS
+          function(selector, findBySelectorFunction, timeout, interval) {
+            var attempts = 0;
+            var max = timeout / interval;
+            var wrapperFunction = function(expression) {
+              return "{ return " + expression + " };";
+            }
+            function waitForElement(resolve, reject) {
+              if (attempts > ((max < 1) ? 1 : max)) {
+                return reject(new Error("Not found element match the selector: " + selector));
+              }
+              var element = new Function(wrapperFunction(findBySelectorFunction))()(selector);
+              if (element !== null) {
+                return resolve(element);
+              }
+              setTimeout(function () {
+                waitForElement(resolve, reject);
+              }, interval);
+              attempts++;
+            }
+            return new Promise(function (resolve, reject) {
+              waitForElement(resolve, reject);
+            });
+          }
+        JS
+
+        evaluate_func(expr, css || xpath, find_by_selector_function, timeout, interval, awaitPromise: true)
       end
     end
   end

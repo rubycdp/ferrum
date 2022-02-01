@@ -2,7 +2,8 @@
 
 ### Added
 
-- `Ferrum::Browser#wait_for_selector`: returns instance of `Ferrum::Node` that's matched by provided selector.
+- `Ferrum::Browser#wait_for_css`: returns instance of `Ferrum::Node` that's matched by provided css selector.
+- `Ferrum::Browser#wait_for_xpath`: returns instance of `Ferrum::Node` that's matched by provided XPath selector.
 - Alias `Ferrum::Frame#content=` to `Ferrum::Frame#set_content`
 - Alias `Ferrum::Node#propery` to `Ferrum::Node#[]`
 - Implement `Ferrum::Network#blacklist=` and `Ferrum::Network#whitelist=`

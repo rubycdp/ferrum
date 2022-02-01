@@ -504,59 +504,40 @@ module Ferrum
       expect(browser.evaluate("window.last_hashchange")).to eq("#foo")
     end
 
-    context "wait_for_selector" do
+    context "wait_for_css" do
       before do
         browser.go_to("/ferrum/with_js")
       end
 
-      it "returns Node by provided selector" do
-        expect(browser.wait_for_selector(css: "div#wait_for_selector")).to be_kind_of(Ferrum::Node)
-        expect(browser.wait_for_selector(xpath: "//div[@id='wait_for_selector']")).to be_kind_of(Ferrum::Node)
-      end
-
       it "waits for provided css selector" do
-        expect(browser.wait_for_selector(css: "div#wait_for_selector")).not_to be_nil
+        expect(browser.wait_for_css("div#wait_for_selector")).to be_kind_of(Ferrum::Node)
       end
 
-      it "waits for provided css hidden selector" do
-        expect(browser.wait_for_selector(css: "div#wait_for_hidden_selector")).not_to be_nil
-      end
-
-      it "waits for provided xpath selector" do
-        expect(browser.wait_for_selector(xpath: "//div[@id='wait_for_selector']")).not_to be_nil
-      end
-
-      it "waits for provided xpath hidden selector" do
-        expect(browser.wait_for_selector(xpath: "//div[@id='wait_for_hidden_selector']")).not_to be_nil
+      it "waits for provided css of hidden element" do
+        expect(browser.wait_for_css("div#wait_for_hidden_selector")).to be_kind_of(Ferrum::Node)
       end
 
       it "raises error when default timeout exceed" do
         expect do
-          browser.wait_for_selector(css: "div#not_existed_element")
+          browser.wait_for_css("div#not_existed_element")
         end.to raise_error(Ferrum::JavaScriptError, /Not found element match the selector/)
       end
 
       it "raises error when timeout exceed" do
         expect do
-          browser.wait_for_selector(css: "div#wait_for_selector", timeout: 800)
+          browser.wait_for_css("div#wait_for_selector", timeout: 800)
         end.to raise_error(Ferrum::JavaScriptError, /Not found element match the selector/)
       end
 
-      it "raises error when provided invalid css" do
+      it "raises error when provided invalid css selector" do
         expect do
-          browser.wait_for_selector(css: "//div[@id='wait_for_selector']")
+          browser.wait_for_css("//div[@id='wait_for_selector']")
         end.to raise_error(Ferrum::JavaScriptError, /Failed to execute 'querySelector' on 'Document'/)
-      end
-
-      it "raises error when provided invalid xpath" do
-        expect do
-          browser.wait_for_selector(xpath: "div#wait_for_selector")
-        end.to raise_error(Ferrum::JavaScriptError, /Failed to execute 'evaluate' on 'Document'/)
       end
 
       it "waits less than provided timeout when node found" do
         Timeout.timeout(1) do
-          expect(browser.wait_for_selector(css: "div#wait_for_selector", timeout: 2000)).not_to be_nil
+          expect(browser.wait_for_css("div#wait_for_selector", timeout: 2000)).to be_kind_of(Ferrum::Node)
         end
       end
 
@@ -571,8 +552,61 @@ module Ferrum
             iframeDocument.close();
           }, 900);
         JS
-        frame = browser.wait_for_selector(xpath: "//iframe[@name='frame']").frame
-        expect(frame.wait_for_selector(xpath: "//div[@id='wait_for_selector_within_frame']")).not_to be_nil
+        frame = browser.wait_for_css("iframe[name='frame']").frame
+        expect(frame.wait_for_css("div#wait_for_selector_within_frame")).to be_kind_of(Ferrum::Node)
+      end
+    end
+
+    context "wait_for_xpath" do
+      before do
+        browser.go_to("/ferrum/with_js")
+      end
+
+      it "waits for provided xpath selector" do
+        expect(browser.wait_for_xpath("//div[@id='wait_for_selector']")).to be_kind_of(Ferrum::Node)
+      end
+
+      it "waits for provided xpath of hidden element" do
+        expect(browser.wait_for_xpath("//div[@id='wait_for_hidden_selector']")).to be_kind_of(Ferrum::Node)
+      end
+
+      it "raises error when default timeout exceed" do
+        expect do
+          browser.wait_for_xpath("//div[@id='not_existed_element']")
+        end.to raise_error(Ferrum::JavaScriptError, /Not found element match the selector/)
+      end
+
+      it "raises error when timeout exceed" do
+        expect do
+          browser.wait_for_xpath("//div[@id='wait_for_selector']", timeout: 800)
+        end.to raise_error(Ferrum::JavaScriptError, /Not found element match the selector/)
+      end
+
+      it "raises error when provided invalid xpath selector" do
+        expect do
+          browser.wait_for_xpath("div#wait_for_selector")
+        end.to raise_error(Ferrum::JavaScriptError, /Failed to execute 'evaluate' on 'Document'/)
+      end
+
+      it "waits less than provided timeout when node found" do
+        Timeout.timeout(1) do
+          expect(browser.wait_for_xpath("//div[@id='wait_for_selector']", timeout: 2000)).to be_kind_of(Ferrum::Node)
+        end
+      end
+
+      it "waits for xpath within frame" do
+        browser.execute <<-JS
+          setTimeout(function(){
+            document.body.innerHTML += "<iframe src='about:blank' name='frame'>";
+            var iframeDocument = document.querySelector("iframe[name='frame']").contentWindow.document;
+            var content = "<html><body><div id='wait_for_selector_within_frame'></div></body></html>";
+            iframeDocument.open("text/html", "replace");
+            iframeDocument.write(content);
+            iframeDocument.close();
+          }, 900);
+        JS
+        frame = browser.wait_for_xpath("//iframe[@name='frame']").frame
+        expect(frame.wait_for_xpath("//div[@id='wait_for_selector_within_frame']")).to be_kind_of(Ferrum::Node)
       end
     end
 
