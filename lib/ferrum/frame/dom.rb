@@ -114,14 +114,14 @@ module Ferrum
           function(selector, findElementExpression, timeout, interval) {
             var attempts = 0;
             var max = timeout / interval;
-            var wrapperFunction = function(expression) {
+            var findElement = new Function(function(expression) {
               return "{ return " + expression + " };";
-            }
+            }(findElementExpression))();
             function waitForElement(resolve, reject) {
               if (attempts > ((max < 1) ? 1 : max)) {
                 return reject(new Error("Not found element match the selector: " + selector));
               }
-              var element = new Function(wrapperFunction(findElementExpression))()(selector);
+              var element = findElement(selector);
               if (element !== null) {
                 return resolve(element);
               }
