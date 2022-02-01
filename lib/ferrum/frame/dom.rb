@@ -37,7 +37,7 @@ module Ferrum
       end
 
       def wait_for_selector(css: nil, xpath: nil, timeout: 3000, interval: 100)
-        evaluate_func(%(
+        expr = <<~JS
           function(selector, isXpath, timeout, interval) {
             var attempts = 0;
             var max = timeout / interval;
@@ -60,7 +60,8 @@ module Ferrum
               waitForSelector(resolve, reject);
             });
           }
-        ), css || xpath, css.nil? && !xpath.nil?, timeout, interval, awaitPromise: true)
+        JS
+        evaluate_func(expr, css || xpath, css.nil? && !xpath.nil?, timeout, interval, awaitPromise: true)
       end
 
       def xpath(selector, within: nil)
