@@ -26,10 +26,6 @@ going to crawl sites you better use Ferrum or
 based on Ferrum. It looks like [Scrapy](https://scrapy.org/) except that it uses
 a real browser in order to grab data.
 
-Web design by [Evrone](https://evrone.com/).
-
-[RubyMine](https://jb.gg/ruby) is provided by [JetBrains](https://jb.gg/OpenSourceSupport).
-
 
 ## Index
 
