@@ -23,8 +23,7 @@ going to crawl sites you better use Ferrum or
 [Vessel](https://github.com/rubycdp/vessel) because you crawl, not test.
 
 * [Vessel](https://github.com/rubycdp/vessel) high-level web crawling framework
-based on Ferrum. It looks like [Scrapy](https://scrapy.org/) except that it uses
-a real browser in order to grab data.
+based on Ferrum and Mechanize.
 
 
 ## Index
