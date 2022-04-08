@@ -235,7 +235,7 @@ module Ferrum
 
           def create_screenshot(path:, **options)
             image = browser.screenshot(format: format, encoding: :base64, **options)
-            File.open(path, "wb") { |f| f.write Base64.decode64(image) }
+            File.binwrite(path, Base64.decode64(image))
           end
 
           it "defaults to base64 when path isn't set" do

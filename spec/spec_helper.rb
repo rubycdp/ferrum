@@ -78,7 +78,7 @@ RSpec.configure do |config|
 
   def save_exception_log(_browser, filename, line_number, timestamp, ferrum_logger)
     log_name = "logfile-#{filename}-#{line_number}-#{timestamp}.txt"
-    File.open("/tmp/ferrum/#{log_name}", "wb") { |file| file.write(ferrum_logger.string) }
+    File.binwrite("/tmp/ferrum/#{log_name}", ferrum_logger.string)
   rescue StandardError => e
     puts "#{e.class}: #{e.message}"
   end

@@ -54,7 +54,7 @@ module Ferrum
 
     def all
       cookies = @page.command("Network.getAllCookies")["cookies"]
-      cookies.map { |c| [c["name"], Cookie.new(c)] }.to_h
+      cookies.to_h { |c| [c["name"], Cookie.new(c)] }
     end
 
     def [](name)
