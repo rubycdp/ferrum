@@ -1,4 +1,4 @@
-## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.11...master) ##
+## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.11...main) ##
 
 ### Added
 
