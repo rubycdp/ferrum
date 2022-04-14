@@ -262,7 +262,7 @@ module Ferrum
       end
 
       if @browser.options[:save_path]
-        command("Page.setDownloadBehavior", behavior: "allow", downloadPath: @browser.options[:save_path])
+        command("Browser.setDownloadBehavior", behavior: "allow", downloadPath: @browser.options[:save_path], eventsEnabled: true)
       end
 
       @browser.extensions.each do |extension|
