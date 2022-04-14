@@ -3,6 +3,8 @@
 module Ferrum
   class Cookies
     class Cookie
+      attr_reader :attributes
+
       def initialize(attributes)
         @attributes = attributes
       end
@@ -61,10 +63,11 @@ module Ferrum
       all[name]
     end
 
-    def set(name: nil, value: nil, **options)
-      cookie = options.dup
-      cookie[:name]   ||= name
-      cookie[:value]  ||= value
+    def set(options)
+      cookie = (
+        options.is_a?(Cookie) ? options.attributes : options
+      ).dup.transform_keys(&:to_sym)
+
       cookie[:domain] ||= default_domain
 
       cookie[:httpOnly] = cookie.delete(:httponly) if cookie.key?(:httponly)

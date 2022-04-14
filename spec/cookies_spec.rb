@@ -56,6 +56,110 @@ module Ferrum
         expect(browser.body).to_not include("test_cookie")
       end
 
+      it "can set a retrieved cookie" do
+        browser.cookies.set(name: "stealth", value: "omg")
+
+        browser.go_to("/get_cookie")
+
+        expect(browser.body).to include("omg")
+
+        cookie = browser.cookies.all.values.first
+
+        browser.cookies.clear
+
+        browser.go_to("/get_cookie")
+
+        expect(browser.body).to_not include("omg")
+
+        browser.cookies.set(cookie)
+
+        browser.go_to("/get_cookie")
+
+        expect(browser.body).to include("omg")
+      end
+
+      it "can set a retrieved browser cookie" do
+        browser.go_to("/set_cookie")
+
+        cookie = browser.cookies["stealth"]
+
+        expect(cookie.name).to eq("stealth")
+        expect(cookie.value).to eq("test_cookie")
+
+        browser.go_to("/get_cookie")
+
+        expect(browser.body).to include("test_cookie")
+
+        browser.cookies.clear
+
+        browser.go_to("/get_cookie")
+
+        expect(browser.body).not_to include("test_cookie")
+
+        browser.cookies.set(cookie)
+
+        browser.go_to("/get_cookie")
+
+        expect(browser.body).to include("test_cookie")
+      end
+
+      it "it retains the characteristics of the reference cookie" do
+        browser.cookies.set(name: "stealth", value: "omg", domain: "site.com")
+
+        expect(browser.cookies["stealth"].name).to eq("stealth")
+        expect(browser.cookies["stealth"].value).to eq("omg")
+        expect(browser.cookies["stealth"].domain).to eq("site.com")
+
+        cookie = browser.cookies["stealth"]
+
+        browser.cookies.clear
+
+        expect(browser.cookies["stealth"]).to eq(nil)
+
+        browser.cookies.set(cookie)
+
+        expect(browser.cookies["stealth"].name).to eq("stealth")
+        expect(browser.cookies["stealth"].value).to eq("omg")
+        expect(browser.cookies["stealth"].domain).to eq("site.com")
+
+        browser.cookies.clear
+
+        expect(browser.cookies["stealth"]).to eq(nil)
+
+        browser.cookies.set(cookie.attributes)
+
+        expect(browser.cookies["stealth"].name).to eq("stealth")
+        expect(browser.cookies["stealth"].value).to eq("omg")
+        expect(browser.cookies["stealth"].domain).to eq("site.com")
+      end
+
+      it "it prevents side effects for params" do
+        cookie_params = { name: "stealth", value: "test_cookie" }
+
+        original_cookie_params = cookie_params.dup
+
+        browser.cookies.set(cookie_params)
+
+        expect(cookie_params).to eq(original_cookie_params)
+      end
+
+      it "it prevents side effects for cookie object" do
+        browser.cookies.set(name: "stealth", value: "omg")
+
+        cookie = browser.cookies["stealth"]
+
+        cookie.instance_variable_set(
+          :@attributes,
+          { "name" => "stealth", "value" => "test_cookie", "domain" => "site.com" }
+        )
+
+        original_attributes = cookie.attributes.dup
+
+        browser.cookies.set(cookie)
+
+        expect(cookie.attributes).to eq(original_attributes)
+      end
+
       it "can clear cookies" do
         browser.go_to("/set_cookie")
 
