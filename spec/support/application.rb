@@ -182,6 +182,12 @@ module Ferrum
       "This, is, comma, separated"
     end
 
+    get "/attachment.pdf" do
+      path = "/tmp/ferrum/attachment.pdf"
+      FileUtils.touch(path)
+      attachment(path, :attachment)
+    end
+
     get "/:view" do |view|
       erb view.to_sym, locals: { referrer: request.referrer }
     end
