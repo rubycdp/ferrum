@@ -181,6 +181,7 @@ Ferrum::Browser.new(options)
       over the web socket, in bytes. Defaults to 64MB. Incoming messages larger
       than this will cause a `Ferrum::DeadBrowserError`.
   * `:proxy` (Hash) - Specify proxy settings, [read more](https://github.com/rubycdp/ferrum#proxy)
+  * `:save_path` (String) - Path to save screenshots, PDF, mhtml, and attachment requests
 
 
 ## Navigation
