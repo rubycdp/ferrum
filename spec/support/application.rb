@@ -183,9 +183,8 @@ module Ferrum
     end
 
     get "/attachment.pdf" do
-      path = "/tmp/ferrum/attachment.pdf"
-      FileUtils.touch(path)
-      attachment(path, :attachment)
+      attachment("attachment.pdf")
+      send_file("attachment.pdf")
     end
 
     get "/:view" do |view|
