@@ -733,6 +733,18 @@ Sets given values as cookie
 browser.cookies.set(name: "stealth", value: "omg", domain: "google.com") # => true
 ```
 
+#### set(cookie) : `Boolean`
+
+Sets given cookie
+
+* cookie `Cookie`
+
+```ruby
+nid_cookie = browser.cookies["NID"] # => <Ferrum::Cookies::Cookie:0x0000558624b67a88>
+
+browser.cookies.set(nid_cookie) # => true
+```
+
 #### remove(\*\*options) : `Boolean`
 
 Removes given cookie
