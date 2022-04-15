@@ -717,11 +717,11 @@ Returns cookie
 browser.cookies["NID"] # => <Ferrum::Cookies::Cookie:0x0000558624b67a88 @attributes={"name"=>"NID", "value"=>"...", "domain"=>".google.com", "path"=>"/", "expires"=>1583211046.575681, "size"=>178, "httpOnly"=>true, "secure"=>false, "session"=>false}>
 ```
 
-#### set(\*\*options) : `Boolean`
+#### set(value) : `Boolean`
 
-Sets given values as cookie
+Sets a cookie
 
-* options `Hash`
+* value `Hash`
   * :name `String`
   * :value `String`
   * :domain `String`
@@ -733,15 +733,10 @@ Sets given values as cookie
 browser.cookies.set(name: "stealth", value: "omg", domain: "google.com") # => true
 ```
 
-#### set(cookie) : `Boolean`
-
-Sets given cookie
-
-* cookie `Cookie`
+* value `Cookie`
 
 ```ruby
 nid_cookie = browser.cookies["NID"] # => <Ferrum::Cookies::Cookie:0x0000558624b67a88>
-
 browser.cookies.set(nid_cookie) # => true
 ```
 
