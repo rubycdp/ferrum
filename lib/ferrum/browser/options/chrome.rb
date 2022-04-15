@@ -5,41 +5,41 @@ module Ferrum
     module Options
       class Chrome < Base
         DEFAULT_OPTIONS = {
-          "headless" => nil,
-          "disable-gpu" => nil,
-          "hide-scrollbars" => nil,
-          "mute-audio" => nil,
-          "enable-automation" => nil,
-          "disable-web-security" => nil,
-          "disable-session-crashed-bubble" => nil,
-          "disable-breakpad" => nil,
-          "disable-sync" => nil,
-          "no-first-run" => nil,
-          "use-mock-keychain" => nil,
-          "keep-alive-for-test" => nil,
-          "disable-popup-blocking" => nil,
-          "disable-extensions" => nil,
-          "disable-hang-monitor" => nil,
+          "headless" => true,
+          "disable-gpu" => true,
+          "hide-scrollbars" => true,
+          "mute-audio" => true,
+          "enable-automation" => true,
+          "disable-web-security" => true,
+          "disable-session-crashed-bubble" => true,
+          "disable-breakpad" => true,
+          "disable-sync" => true,
+          "no-first-run" => true,
+          "use-mock-keychain" => true,
+          "keep-alive-for-test" => true,
+          "disable-popup-blocking" => true,
+          "disable-extensions" => true,
+          "disable-hang-monitor" => true,
           "disable-features" => "site-per-process,TranslateUI",
-          "disable-translate" => nil,
-          "disable-background-networking" => nil,
+          "disable-translate" => true,
+          "disable-background-networking" => true,
           "enable-features" => "NetworkService,NetworkServiceInProcess",
-          "disable-background-timer-throttling" => nil,
-          "disable-backgrounding-occluded-windows" => nil,
-          "disable-client-side-phishing-detection" => nil,
-          "disable-default-apps" => nil,
-          "disable-dev-shm-usage" => nil,
-          "disable-ipc-flooding-protection" => nil,
-          "disable-prompt-on-repost" => nil,
-          "disable-renderer-backgrounding" => nil,
+          "disable-background-timer-throttling" => true,
+          "disable-backgrounding-occluded-windows" => true,
+          "disable-client-side-phishing-detection" => true,
+          "disable-default-apps" => true,
+          "disable-dev-shm-usage" => true,
+          "disable-ipc-flooding-protection" => true,
+          "disable-prompt-on-repost" => true,
+          "disable-renderer-backgrounding" => true,
           "force-color-profile" => "srgb",
-          "metrics-recording-only" => nil,
-          "safebrowsing-disable-auto-update" => nil,
+          "metrics-recording-only" => true,
+          "safebrowsing-disable-auto-update" => true,
           "password-store" => "basic",
-          "no-startup-window" => nil
+          "no-startup-window" => true
           # NOTE: --no-sandbox is not needed if you properly setup a user in the container.
           # https://github.com/ebidel/lighthouse-ci/blob/master/builder/Dockerfile#L35-L40
-          # "no-sandbox" => nil,
+          # "no-sandbox" => true,
         }.freeze
 
         MAC_BIN_PATH = [
@@ -64,6 +64,12 @@ module Ferrum
         end
 
         def merge_default(flags, options)
+          ensure_required!(
+            options,
+            %w[remote-debugging-port remote-debugging-address
+               window-size user-data-dir]
+          )
+
           defaults = except("headless", "disable-gpu") unless options.fetch(:headless, true)
 
           defaults ||= DEFAULT_OPTIONS

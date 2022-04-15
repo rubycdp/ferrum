@@ -130,7 +130,7 @@ browser.quit
 In docker as root you must pass the no-sandbox browser option:
 
 ```ruby
-Ferrum::Browser.new(browser_options: { 'no-sandbox': nil })
+Ferrum::Browser.new(browser_options: { 'no-sandbox': true })
 ```
 
 
@@ -166,7 +166,7 @@ Ferrum::Browser.new(options)
       variable as `BROWSER_PATH=some/path/chrome bundle exec rspec`.
   * `:browser_options` (Hash) - Additional command line options,
       [see them all](https://peter.sh/experiments/chromium-command-line-switches/)
-      e.g. `{ "ignore-certificate-errors" => nil }`
+      e.g. `{ "ignore-certificate-errors" => true }`
   * `:ignore_default_browser_options` (Boolean) - Ferrum has a number of default
       options it passes to the browser, if you set this to `true` then only
       options you put in `:browser_options` will be passed to the browser,

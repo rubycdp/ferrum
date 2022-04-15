@@ -40,7 +40,9 @@ module Ferrum
       end
 
       def to_a
-        [path] + @flags.map { |k, v| v.nil? ? "--#{k}" : "--#{k}=#{v}" }
+        [path] + @flags.reject { |_, v| v.nil? || v == false }.map do |key, value|
+          value == true ? "--#{key}" : "--#{key}=#{value}"
+        end
       end
 
       private

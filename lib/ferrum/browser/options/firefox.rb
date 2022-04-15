@@ -5,7 +5,7 @@ module Ferrum
     module Options
       class Firefox < Base
         DEFAULT_OPTIONS = {
-          "headless" => nil
+          "headless" => true
         }.freeze
 
         MAC_BIN_PATH = [
@@ -25,6 +25,8 @@ module Ferrum
         end
 
         def merge_default(flags, options)
+          ensure_required!(options, %w[remote-debugger profile])
+
           defaults = except("headless") unless options.fetch(:headless, true)
 
           defaults ||= DEFAULT_OPTIONS

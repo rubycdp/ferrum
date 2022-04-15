@@ -35,6 +35,19 @@ module Ferrum
           end
         end
 
+        def ensure_required!(options, required_options)
+          return if options[:browser_options].nil?
+
+          required_options.each do |required|
+            next unless options[:browser_options].key?(required)
+
+            if options[:browser_options][required] == false ||
+               options[:browser_options][required].nil?
+              raise ArgumentError, "#{required} is required"
+            end
+          end
+        end
+
         def merge_required(flags, options, user_data_dir)
           raise NotImplementedError
         end

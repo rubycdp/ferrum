@@ -42,9 +42,37 @@ module Ferrum
     it "ignores default options" do
       defaults = Browser::Options::Chrome.options.except("disable-web-security")
       browser = Browser.new(ignore_default_browser_options: true, browser_options: defaults)
+
+      expect(browser.options[:browser_options]["disable-web-security"]).to eq(nil)
       browser.go_to(base_url("/ferrum/console_log"))
     ensure
       browser&.quit
+    end
+
+    it "allows options removal" do
+      browser = Browser.new(browser_options: { "disable-web-security" => false })
+
+      expect(browser.options[:browser_options]["disable-web-security"]).to eq(false)
+
+      browser.go_to(base_url("/ferrum/console_log"))
+    ensure
+      browser&.quit
+    end
+
+    it "prevents required flags from being removed" do
+      expect do
+        Browser.new(browser_options: { "remote-debugging-port" => false }).options
+      end.to raise_error(
+        an_instance_of(ArgumentError),
+        "remote-debugging-port is required"
+      )
+
+      expect do
+        Browser.new(browser_options: { "remote-debugging-port" => nil }).options
+      end.to raise_error(
+        an_instance_of(ArgumentError),
+        "remote-debugging-port is required"
+      )
     end
 
     it "raises an error when browser is too slow" do
