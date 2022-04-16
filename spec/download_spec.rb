@@ -29,7 +29,7 @@ module Ferrum
         it "raises an error" do
           expect do
             browser.go_to("/#{filename}")
-          end.to raise_error(Ferrum::Error, "supply absolute path as `:save_path` option")
+          end.to raise_error(Ferrum::Error, "supply absolute path for `:save_path` option")
         end
       end
     end
