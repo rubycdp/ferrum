@@ -3,7 +3,7 @@
 <img align="right"
      width="320" height="241"
      alt="Ferrum logo"
-     src="https://raw.githubusercontent.com/rubycdp/ferrum/master/logo.svg?sanitize=true">
+     src="https://raw.githubusercontent.com/rubycdp/ferrum/main/logo.svg?sanitize=true">
 
 #### As simple as Puppeteer, though even simpler.
 
