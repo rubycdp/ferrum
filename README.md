@@ -171,17 +171,17 @@ Ferrum::Browser.new(options)
       options it passes to the browser, if you set this to `true` then only
       options you put in `:browser_options` will be passed to the browser,
       except required ones of course.
-  * `:port` (Integer) - Remote debugging port for headless Chrome
-  * `:host` (String) - Remote debugging address for headless Chrome
+  * `:port` (Integer) - Remote debugging port for headless Chrome.
+  * `:host` (String) - Remote debugging address for headless Chrome.
   * `:url` (String) - URL for a running instance of Chrome. If this is set, a
       browser process will not be spawned.
   * `:process_timeout` (Integer) - How long to wait for the Chrome process to
-      respond on startup
+      respond on startup.
   * `:ws_max_receive_size` (Integer) - How big messages to accept from Chrome
       over the web socket, in bytes. Defaults to 64MB. Incoming messages larger
       than this will cause a `Ferrum::DeadBrowserError`.
   * `:proxy` (Hash) - Specify proxy settings, [read more](https://github.com/rubycdp/ferrum#proxy)
-  * `:save_path` (String) - Path to save screenshots, PDF, mhtml, and attachment requests
+  * `:save_path` (String) - Path to save attachments with [Content-Disposition](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition) header.
 
 
 ## Navigation
