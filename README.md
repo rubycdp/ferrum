@@ -3,7 +3,7 @@
 <img align="right"
      width="320" height="241"
      alt="Ferrum logo"
-     src="https://raw.githubusercontent.com/rubycdp/ferrum/master/logo.svg?sanitize=true">
+     src="https://raw.githubusercontent.com/rubycdp/ferrum/main/logo.svg?sanitize=true">
 
 #### As simple as Puppeteer, though even simpler.
 
@@ -23,12 +23,7 @@ going to crawl sites you better use Ferrum or
 [Vessel](https://github.com/rubycdp/vessel) because you crawl, not test.
 
 * [Vessel](https://github.com/rubycdp/vessel) high-level web crawling framework
-based on Ferrum. It looks like [Scrapy](https://scrapy.org/) except that it uses
-a real browser in order to grab data.
-
-Web design by [Evrone](https://evrone.com/), what else
-[we build with Ruby on Rails](https://evrone.com/ruby), what else
-[we do at Evrone](https://evrone.com/cases#case-studies).
+based on Ferrum and Mechanize.
 
 
 ## Index
@@ -63,7 +58,8 @@ Web design by [Evrone](https://evrone.com/), what else
 
 There's no official Chrome or Chromium package for Linux don't install it this
 way because it's either outdated or unofficial, both are bad. Download it from
-official [source](https://www.chromium.org/getting-involved/download-chromium).
+official source for [Chrome](https://www.google.com/chrome/) or
+[Chromium](https://www.chromium.org/getting-involved/download-chromium).
 Chrome binary should be in the `PATH` or `BROWSER_PATH` or you can pass it as an
 option to browser instance see `:browser_path` in
 [Customization](https://github.com/rubycdp/ferrum#customization).
@@ -175,16 +171,17 @@ Ferrum::Browser.new(options)
       options it passes to the browser, if you set this to `true` then only
       options you put in `:browser_options` will be passed to the browser,
       except required ones of course.
-  * `:port` (Integer) - Remote debugging port for headless Chrome
-  * `:host` (String) - Remote debugging address for headless Chrome
+  * `:port` (Integer) - Remote debugging port for headless Chrome.
+  * `:host` (String) - Remote debugging address for headless Chrome.
   * `:url` (String) - URL for a running instance of Chrome. If this is set, a
       browser process will not be spawned.
   * `:process_timeout` (Integer) - How long to wait for the Chrome process to
-      respond on startup
+      respond on startup.
   * `:ws_max_receive_size` (Integer) - How big messages to accept from Chrome
       over the web socket, in bytes. Defaults to 64MB. Incoming messages larger
       than this will cause a `Ferrum::DeadBrowserError`.
   * `:proxy` (Hash) - Specify proxy settings, [read more](https://github.com/rubycdp/ferrum#proxy)
+  * `:save_path` (String) - Path to save attachments with [Content-Disposition](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition) header.
 
 
 ## Navigation
@@ -740,11 +737,11 @@ Returns cookie
 browser.cookies["NID"] # => <Ferrum::Cookies::Cookie:0x0000558624b67a88 @attributes={"name"=>"NID", "value"=>"...", "domain"=>".google.com", "path"=>"/", "expires"=>1583211046.575681, "size"=>178, "httpOnly"=>true, "secure"=>false, "session"=>false}>
 ```
 
-#### set(\*\*options) : `Boolean`
+#### set(value) : `Boolean`
 
-Sets given values as cookie
+Sets a cookie
 
-* options `Hash`
+* value `Hash`
   * :name `String`
   * :value `String`
   * :domain `String`
@@ -754,6 +751,13 @@ Sets given values as cookie
 
 ```ruby
 browser.cookies.set(name: "stealth", value: "omg", domain: "google.com") # => true
+```
+
+* value `Cookie`
+
+```ruby
+nid_cookie = browser.cookies["NID"] # => <Ferrum::Cookies::Cookie:0x0000558624b67a88>
+browser.cookies.set(nid_cookie) # => true
 ```
 
 #### remove(\*\*options) : `Boolean`

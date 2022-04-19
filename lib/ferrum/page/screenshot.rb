@@ -75,7 +75,7 @@ module Ferrum
       def save_file(path, data)
         return data unless path
 
-        File.open(path.to_s, "wb") { |f| f.write(data) }
+        File.binwrite(path.to_s, data)
       end
 
       def stream_to_file(handle, path:)

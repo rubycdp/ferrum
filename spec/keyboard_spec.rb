@@ -305,7 +305,7 @@ module Ferrum
 
       it "attaches a file when passed a Pathname", skip: true do
         filename = Pathname.new("spec/tmp/a_test_pathname").expand_path
-        File.open(filename, "w") { |f| f.write("text") }
+        File.write(filename, "text")
 
         element = browser.at_css("#change_me_file")
         element.set(filename)

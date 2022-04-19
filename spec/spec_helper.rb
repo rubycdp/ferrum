@@ -14,8 +14,8 @@ require "support/global_helpers"
 ENV["FERRUM_NEW_WINDOW_WAIT"] ||= "0.8" if ENV["CI"]
 
 puts ""
-command = Ferrum::Browser::Command.build({ window_size: [], ignore_default_browser_options: true }, nil)
-puts `#{command.to_a.first} --version`
+command = Ferrum::Browser::Command.build({}, nil)
+puts `'#{command.path}' --version`
 puts ""
 
 RSpec.configure do |config|
@@ -78,7 +78,7 @@ RSpec.configure do |config|
 
   def save_exception_log(_browser, filename, line_number, timestamp, ferrum_logger)
     log_name = "logfile-#{filename}-#{line_number}-#{timestamp}.txt"
-    File.open("/tmp/ferrum/#{log_name}", "wb") { |file| file.write(ferrum_logger.string) }
+    File.binwrite("/tmp/ferrum/#{log_name}", ferrum_logger.string)
   rescue StandardError => e
     puts "#{e.class}: #{e.message}"
   end

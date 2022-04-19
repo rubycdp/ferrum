@@ -1,4 +1,4 @@
-## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.11...master) ##
+## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.11...main) ##
 
 ### Added
 
@@ -21,6 +21,7 @@ a block with this page, after which the page is closed.
 - `Ferrum::JavaScriptError#stack_trace` attr_reader
 - Windows support
 - Show warning and accept dialog if no handler given
+- `Ferrum::Cookies#set` ability to set cookie using `Ferrum::Cookies::Cookie` object
 
 ### Changed
 

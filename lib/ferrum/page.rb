@@ -262,7 +262,14 @@ module Ferrum
       end
 
       if @browser.options[:save_path]
-        command("Page.setDownloadBehavior", behavior: "allow", downloadPath: @browser.options[:save_path])
+        unless Pathname.new(@browser.options[:save_path]).absolute?
+          raise Error, "supply absolute path for `:save_path` option"
+        end
+
+        @browser.command("Browser.setDownloadBehavior",
+                         browserContextId: context.id,
+                         downloadPath: browser.options[:save_path],
+                         behavior: "allow", eventsEnabled: true)
       end
 
       @browser.extensions.each do |extension|

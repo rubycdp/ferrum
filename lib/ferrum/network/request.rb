@@ -45,6 +45,11 @@ module Ferrum
       def time
         @time ||= Time.strptime(@params["wallTime"].to_s, "%s")
       end
+
+      def post_data
+        @request["postData"]
+      end
+      alias body post_data
     end
   end
 end
