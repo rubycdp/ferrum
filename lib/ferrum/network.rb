@@ -17,6 +17,7 @@ module Ferrum
     AUTHORIZE_BLOCK_MISSING = "Block is missing, call `authorize(...) { |r| r.continue } "\
                               "or subscribe to `on(:request)` events before calling it"
     AUTHORIZE_TYPE_WRONG = ":type should be in #{AUTHORIZE_TYPE}"
+    ALLOWED_CONNECTION_TYPE = %w[none cellular2g cellular3g cellular4g bluetooth ethernet wifi wimax other].freeze
 
     attr_reader :traffic
 
@@ -148,6 +149,25 @@ module Ferrum
 
     def build_exchange(id)
       Network::Exchange.new(@page, id).tap { |e| @traffic << e }
+    end
+
+    def emulate_network_conditions(offline: false, latency: 0,
+                                   download_throughput: -1, upload_throughput: -1,
+                                   connection_type: nil)
+      params = {
+        offline: offline, latency: latency,
+        downloadThroughput: download_throughput,
+        uploadThroughput: upload_throughput
+      }
+
+      params[:connectionType] = connection_type if connection_type && ALLOWED_CONNECTION_TYPE.include?(connection_type)
+
+      @page.command("Network.emulateNetworkConditions", **params)
+      true
+    end
+
+    def offline_mode
+      emulate_network_conditions(offline: true, latency: 0, download_throughput: 0, upload_throughput: 0)
     end
 
     private

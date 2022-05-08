@@ -561,12 +561,40 @@ end
 browser.network.authorize(user: "login", password: "pass", type: :proxy)
 
 browser.go_to("https://google.com")
-
 ```
 
 You used to call `authorize` method without block, but since it's implemented using request interception there could be
 a collision with another part of your code that also uses request interception, so that authorize allows the request
 while your code denies but it's too late. The block is mandatory now.
+
+#### emulate_network_conditions(\*\*options)
+
+Activates emulation of network conditions.
+
+* options `Hash`
+  * :offline `Boolean` emulate internet disconnection, `false` by default
+  * :latency `Integer` minimum latency from request sent to response headers received (ms), `0` by
+    default
+  * :download_throughput `Integer` maximal aggregated download throughput (bytes/sec), `-1`
+    by default, disables download throttling
+  * :upload_throughput `Integer` maximal aggregated upload throughput (bytes/sec), `-1`
+    by default, disables download throttling
+  * :connection_type `String` connection type if known, one of: none, cellular2g, cellular3g, cellular4g,
+    bluetooth, ethernet, wifi, wimax, other. `nil` by default
+
+```ruby
+browser.network.emulate_network_conditions(connection_type: "cellular2g")
+browser.go_to("https://github.com/")
+```
+
+#### offline_mode
+
+Activates offline mode for a page.
+
+```ruby
+browser.network.offline_mode
+browser.go_to("https://github.com/") # => Ferrum::StatusError (Request to https://github.com/ failed to reach server, check DNS and server status)
+```
 
 
 ## Proxy

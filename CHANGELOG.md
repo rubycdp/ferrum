@@ -20,6 +20,8 @@ a block with this page, after which the page is closed.
 - Windows support
 - Show warning and accept dialog if no handler given
 - `Ferrum::Cookies#set` ability to set cookie using `Ferrum::Cookies::Cookie` object
+- `Ferrum::Network#emulate_network_conditions` activates emulation of network conditions
+- `Ferrum::Network#offline_mode` puts browser into offline mode
 
 ### Changed
 
