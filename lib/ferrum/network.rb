@@ -162,7 +162,7 @@ module Ferrum
 
       params[:connectionType] = connection_type if connection_type && ALLOWED_CONNECTION_TYPE.include?(connection_type)
 
-      @page.command("Network.emulateNetworkConditions", params)
+      @page.command("Network.emulateNetworkConditions", **params)
       true
     end
 
