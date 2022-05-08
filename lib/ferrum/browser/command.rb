@@ -29,7 +29,7 @@ module Ferrum
         @defaults = defaults
         @options = options
         @user_data_dir = user_data_dir
-        @path = options[:browser_path] || ENV["BROWSER_PATH"] || defaults.detect_path
+        @path = options[:browser_path] || ENV.fetch("BROWSER_PATH", nil) || defaults.detect_path
         raise Cliver::Dependency::NotFound, NOT_FOUND unless @path
 
         merge_options

@@ -407,9 +407,9 @@ module Ferrum
       page.network.offline_mode
 
       expect { page.go_to("/ferrum/with_js") }.to raise_error(
-                                                    Ferrum::StatusError,
-                                                    %r{Request to http://.*/ferrum/with_js failed to reach server, check DNS and server status}
-                                                  )
+        Ferrum::StatusError,
+        %r{Request to http://.*/ferrum/with_js failed to reach server, check DNS and server status}
+      )
 
       expect(page.body).to eq("<html><head></head><body></body></html>")
     end

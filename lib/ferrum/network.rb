@@ -151,16 +151,16 @@ module Ferrum
       Network::Exchange.new(@page, id).tap { |e| @traffic << e }
     end
 
-    def emulate_network_conditions(offline: false, latency: 0, download_throughput: -1, upload_throughput: -1, connection_type: nil)
+    def emulate_network_conditions(offline: false, latency: 0,
+                                   download_throughput: -1, upload_throughput: -1,
+                                   connection_type: nil)
       params = {
         offline: offline, latency: latency,
         downloadThroughput: download_throughput,
         uploadThroughput: upload_throughput
       }
 
-      if connection_type && ALLOWED_CONNECTION_TYPE.include?(connection_type)
-        params[:connectionType] = connection_type
-      end
+      params[:connectionType] = connection_type if connection_type && ALLOWED_CONNECTION_TYPE.include?(connection_type)
 
       @page.command("Network.emulateNetworkConditions", params)
       true

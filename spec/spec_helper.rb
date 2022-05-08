@@ -54,7 +54,7 @@ RSpec.configure do |config|
   end
 
   config.after(:each) do |example|
-    save_exception_artifacts(browser, example.metadata, ferrum_logger) if ENV["CI"] && example.exception
+    save_exception_artifacts(browser, example.metadata, ferrum_logger) if ENV.fetch("CI", nil) && example.exception
 
     reset
   end

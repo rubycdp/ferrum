@@ -67,7 +67,7 @@ module Ferrum
 
       self.base_url = @options[:base_url] if @options.key?(:base_url)
 
-      if ENV["FERRUM_DEBUG"] && !@logger
+      if ENV.fetch("FERRUM_DEBUG", nil) && !@logger
         $stdout.sync = true
         @logger = $stdout
         @options[:logger] = @logger

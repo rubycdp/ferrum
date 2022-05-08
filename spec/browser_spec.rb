@@ -369,11 +369,11 @@ module Ferrum
     it "allows the driver to have a custom host", skip: ENV["BROWSER_TEST_HOST"].nil? do
       # Use custom host "pointing" to localhost in /etc/hosts or iptables for this.
       # https://superuser.com/questions/516208/how-to-change-ip-address-to-point-to-localhost
-      browser = Browser.new(host: ENV["BROWSER_TEST_HOST"], port: 12_345)
+      browser = Browser.new(host: ENV.fetch("BROWSER_TEST_HOST"), port: 12_345)
       browser.go_to(base_url)
 
       expect do
-        TCPServer.new(ENV["BROWSER_TEST_HOST"], 12_345)
+        TCPServer.new(ENV.fetch("BROWSER_TEST_HOST"), 12_345)
       end.to raise_error(Errno::EADDRINUSE)
     ensure
       browser&.quit
