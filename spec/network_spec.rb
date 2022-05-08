@@ -393,5 +393,25 @@ module Ferrum
         expect(page.body).to include("Authorized POST request")
       end
     end
+
+    it "#emulate_network_conditions", skip: "doesn't work for now" do
+      page.network.emulate_network_conditions(latency: 500)
+
+      start = Utils::ElapsedTime.monotonic_time
+      page.go_to("/ferrum/with_js")
+
+      expect(Utils::ElapsedTime.elapsed_time(start)).to eq(2000)
+    end
+
+    it "#offline_mode" do
+      page.network.offline_mode
+
+      expect { page.go_to("/ferrum/with_js") }.to raise_error(
+                                                    Ferrum::StatusError,
+                                                    %r{Request to http://.*/ferrum/with_js failed to reach server, check DNS and server status}
+                                                  )
+
+      expect(page.body).to eq("<html><head></head><body></body></html>")
+    end
   end
 end
