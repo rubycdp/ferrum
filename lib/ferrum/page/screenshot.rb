@@ -26,8 +26,6 @@ module Ferrum
         A6: { width:  4.13, height:  5.83 }
       }.freeze
 
-      STREAM_CHUNK = 128 * 1024
-
       def screenshot(**opts)
         path, encoding = common_options(**opts)
         options = screenshot_options(path, **opts)
@@ -42,9 +40,7 @@ module Ferrum
         path, encoding = common_options(**opts)
         options = pdf_options(**opts).merge(transferMode: "ReturnAsStream")
         handle = command("Page.printToPDF", **options).fetch("stream")
-        Utils::Stream.fetch(encoding: encoding, path: path) do |read_stream|
-          read_stream.call(client: self, handle: handle)
-        end
+        stream_to(path: path, encoding: encoding, handle: handle)
       end
 
       def mhtml(path: nil)

@@ -3,79 +3,66 @@
 module Ferrum
   class Page
     class Tracing
-      INCLUDED_CATEGORIES = %w[
-        devtools.timeline
-        v8.execute
-        disabled-by-default-devtools.timeline
-        disabled-by-default-devtools.timeline.frame
-        toplevel
-        blink.console
-        blink.user_timing
-        latencyInfo
-        disabled-by-default-devtools.timeline.stack
-        disabled-by-default-v8.cpu_profiler
-        disabled-by-default-v8.cpu_profiler.hires
-      ].freeze
-      EXCLUDED_CATEGORIES = %w[
-        *
-      ].freeze
+      EXCLUDED_CATEGORIES = %w[*].freeze
+      SCREENSHOT_CATEGORIES = %w[disabled-by-default-devtools.screenshot].freeze
+      INCLUDED_CATEGORIES = %w[devtools.timeline v8.execute disabled-by-default-devtools.timeline
+                               disabled-by-default-devtools.timeline.frame toplevel blink.console
+                               blink.user_timing latencyInfo disabled-by-default-devtools.timeline.stack
+                               disabled-by-default-v8.cpu_profiler disabled-by-default-v8.cpu_profiler.hires].freeze
+      DEFAULT_TRACE_CONFIG = {
+        includedCategories: INCLUDED_CATEGORIES,
+        excludedCategories: EXCLUDED_CATEGORIES
+      }.freeze
 
-      def initialize(client:)
-        @client = client
+      def initialize(page)
+        @page = page
+        @subscribed_tracing_complete = false
       end
 
-      def record(options = {}, &block)
-        @options = {
-          timeout: nil,
-          screenshots: false,
-          encoding: :binary,
-          included_categories: INCLUDED_CATEGORIES,
-          excluded_categories: EXCLUDED_CATEGORIES,
-          **options
-        }
-        @promise = Concurrent::Promises.resolvable_future
-        subscribe_on_tracing_event
-        start
-        block.call
-        @client.command("Tracing.end")
-        @promise.value!(@options[:timeout])
+      def record(path: nil, encoding: :binary, timeout: nil, trace_config: nil, screenshots: false)
+        @path, @encoding = path, encoding
+        @result = Concurrent::Promises.resolvable_future
+        trace_config ||= DEFAULT_TRACE_CONFIG.dup
+
+        if screenshots
+          included = trace_config.fetch(:includedCategories, [])
+          trace_config.merge!(includedCategories: included | SCREENSHOT_CATEGORIES)
+        end
+
+        subscribe_tracing_complete
+
+        start(trace_config)
+        yield
+        stop
+
+        @result.value!(timeout)
       end
 
       private
 
-      def start
-        @client.command(
-          "Tracing.start",
-          transferMode: "ReturnAsStream",
-          traceConfig: {
-            includedCategories: included_categories,
-            excludedCategories: @options[:excluded_categories]
-          }
-        )
+      def start(config)
+        @page.command("Tracing.start", transferMode: "ReturnAsStream", traceConfig: config)
       end
 
-      def included_categories
-        included_categories = @options[:included_categories]
-        if @options[:screenshots] == true
-          included_categories = @options[:included_categories] | ["disabled-by-default-devtools.screenshot"]
-        end
-        included_categories
+      def stop
+        @page.command("Tracing.end")
       end
 
-      def subscribe_on_tracing_event
-        @client.on("Tracing.tracingComplete") do |event, index|
+      def subscribe_tracing_complete
+        return if @subscribed_tracing_complete
+
+        @page.on("Tracing.tracingComplete") do |event, index|
           next if index.to_i != 0
-
-          @promise.fulfill(stream(event.fetch("stream")))
-        rescue StandardError => e
-          @promise.reject(e)
+          @result.fulfill(stream_handle(event["stream"]))
+        rescue => e
+          @result.reject(e)
         end
+
+        @subscribed_tracing_complete = true
       end
 
-      def stream(handle)
-        Utils::Stream.fetch(encoding: @options[:encoding], path: @options[:path]) do |read_stream|
-          read_stream.call(client: @client, handle: handle)
-        end
+      def stream_handle(handle)
+        @page.stream_to(path: @path, encoding: @encoding, handle: handle)
       end
     end
   end

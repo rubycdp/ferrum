@@ -1151,46 +1151,29 @@ browser.at_xpath("//*[select]").select(["1", "2"])
 
 ## Tracing
 
-You can use `tracing.record` to create a trace file which can be opened in Chrome DevTools or [timeline viewer](https://chromedevtools.github.io/timeline-viewer/).
+You can use `tracing.record` to create a trace file which can be opened in Chrome DevTools or
+[timeline viewer](https://chromedevtools.github.io/timeline-viewer/).
 
 ```ruby
-browser.page.tracing.record(path: "trace.json") do
-  browser.go_to("https://www.google.com")
+page.tracing.record(path: "trace.json") do
+  page.go_to("https://www.google.com")
 end
 ```
 
-#### tracing.record(\*\*options) : `Hash`
+#### tracing.record(\*\*options) : `String`
 
-- By default: returns Trace data from `Tracing.tracingComplete` event.
-- When `path` specified: return `true` and store Trace data from `Tracing.tracingComplete` event to file.
+Accepts block, records trace and by default returns trace data from `Tracing.tracingComplete` event as output. When
+`path` is specified returns `true` and stores trace data into file.
 
 * options `Hash`
-  * `:path` (String) - `String` to save a Trace data output on the disk, not specified by default.
-  * `:encoding` (Symbol) - `:base64` | `:binary` setting only for memory Trace data output, `:binary` by default.
-  * `:timeout` (Integer) - [Timeout of promise](https://github.com/ruby-concurrency/concurrent-ruby/blob/52c08fca13cc3811673ea2f6fdb244a0e42e0ebe/lib/concurrent-ruby/concurrent/promises.rb#L986) to wait til event `Tracing.Complete` triggered that fills buffer/file, `nil` by default, means "wait forever".
-  * `:screenshots` (Boolean) - When true - Captures screenshots in the trace, `false` by default.
-  * `:included_categories` (Array[String]) - An array of categories that be included to tracing data, by default:
-  ```ruby
-    ["devtools.timeline",
-    "v8.execute",
-    "disabled-by-default-devtools.timeline",
-    "disabled-by-default-devtools.timeline.frame",
-    "toplevel",
-    "blink.console",
-    "blink.user_timing",
-    "latencyInfo",
-    "disabled-by-default-devtools.timeline.stack",
-    "disabled-by-default-v8.cpu_profiler",
-    "disabled-by-default-v8.cpu_profiler.hires"]
-  ```
-  * `:excluded_categories` (Array[String]) - An array of categories that be excluded from tracing data, by default:
-  ```ruby
-    ["*"]
-  ```
-
-  See all categories by `browser.client.command("Tracing.getCategories")`
-
-Only one trace can be active at a time per browser.
+  * :path `String` save data on the disk, `nil` by default
+  * :encoding `Symbol` `:base64` | `:binary` encode output as Base64 or plain text. `:binary` by default
+  * :timeout `Float` wait until file streaming finishes in the specified time or raise error, defaults to `nil`
+  * :screenshots `Boolean` capture screenshots in the trace, `false` by default
+  * :trace_config `Hash<String, Object>` config for
+    [trace](https://chromedevtools.github.io/devtools-protocol/tot/Tracing/#type-TraceConfig), for categories
+    see [getCategories](https://chromedevtools.github.io/devtools-protocol/tot/Tracing/#method-getCategories),
+    only one trace config can be active at a time per browser.
 
 
 ## Thread safety ##
