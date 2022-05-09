@@ -22,6 +22,8 @@ a block with this page, after which the page is closed.
 - `Ferrum::Cookies#set` ability to set cookie using `Ferrum::Cookies::Cookie` object
 - `Ferrum::Network#emulate_network_conditions` activates emulation of network conditions
 - `Ferrum::Network#offline_mode` puts browser into offline mode
+- `Ferrum::Page#tracing` - instance of `Ferrum::Page::Tracing` for trace capabilities.
+- `Ferrum::Page::Tracing#record(&block)` start/stop tracing for steps provided in passed block
 
 ### Changed
 

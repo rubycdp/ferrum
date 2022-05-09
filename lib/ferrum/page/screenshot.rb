@@ -26,8 +26,6 @@ module Ferrum
         A6: { width:  4.13, height:  5.83 }
       }.freeze
 
-      STREAM_CHUNK = 128 * 1024
-
       def screenshot(**opts)
         path, encoding = common_options(**opts)
         options = screenshot_options(path, **opts)
@@ -42,12 +40,7 @@ module Ferrum
         path, encoding = common_options(**opts)
         options = pdf_options(**opts).merge(transferMode: "ReturnAsStream")
         handle = command("Page.printToPDF", **options).fetch("stream")
-
-        if path
-          stream_to_file(handle, path: path)
-        else
-          stream_to_memory(handle, encoding: encoding)
-        end
+        stream_to(path: path, encoding: encoding, handle: handle)
       end
 
       def mhtml(path: nil)
@@ -76,29 +69,6 @@ module Ferrum
         return data unless path
 
         File.binwrite(path.to_s, data)
-      end
-
-      def stream_to_file(handle, path:)
-        File.open(path, "wb") { |f| stream_to(handle, f) }
-        true
-      end
-
-      def stream_to_memory(handle, encoding:)
-        data = String.new("") # Mutable string has << and compatible to File
-        stream_to(handle, data)
-        encoding == :base64 ? Base64.encode64(data) : data
-      end
-
-      def stream_to(handle, output)
-        loop do
-          result = command("IO.read", handle: handle, size: STREAM_CHUNK)
-
-          data_chunk = result["data"]
-          data_chunk = Base64.decode64(data_chunk) if result["base64Encoded"]
-          output << data_chunk
-
-          break if result["eof"]
-        end
       end
 
       def common_options(encoding: :base64, path: nil, **_)

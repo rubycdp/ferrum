@@ -10,6 +10,8 @@ require "ferrum/network"
 require "ferrum/page/frames"
 require "ferrum/page/screenshot"
 require "ferrum/page/animation"
+require "ferrum/page/tracing"
+require "ferrum/page/stream"
 require "ferrum/browser/client"
 
 module Ferrum
@@ -39,11 +41,13 @@ module Ferrum
     include Animation
     include Screenshot
     include Frames
+    include Stream
 
     attr_accessor :referrer
     attr_reader :target_id, :browser,
                 :headers, :cookies, :network,
-                :mouse, :keyboard, :event
+                :mouse, :keyboard, :event,
+                :tracing
 
     def initialize(target_id, browser)
       @frames = {}
@@ -62,6 +66,7 @@ module Ferrum
       @headers = Headers.new(self)
       @cookies = Cookies.new(self)
       @network = Network.new(self)
+      @tracing = Tracing.new(self)
 
       subscribe
       prepare_page
