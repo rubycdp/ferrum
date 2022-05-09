@@ -20,7 +20,8 @@ module Ferrum
       end
 
       def record(path: nil, encoding: :binary, timeout: nil, trace_config: nil, screenshots: false)
-        @path, @encoding = path, encoding
+        @path = path
+        @encoding = encoding
         @result = Concurrent::Promises.resolvable_future
         trace_config ||= DEFAULT_TRACE_CONFIG.dup
 
@@ -53,8 +54,9 @@ module Ferrum
 
         @page.on("Tracing.tracingComplete") do |event, index|
           next if index.to_i != 0
+
           @result.fulfill(stream_handle(event["stream"]))
-        rescue => e
+        rescue StandardError => e
           @result.reject(e)
         end
 
