@@ -110,6 +110,11 @@ module Ferrum
             .to raise_exception(Ferrum::JavaScriptError, /Element is not a <select> element/)
         end
       end
+
+      it "returns selected options within frame" do
+        frame = browser.at_xpath("//iframe[@name='frame']").frame
+        expect(frame.at_xpath("//*[@id='select']").selected.map(&:text)).to eq(["One"])
+      end
     end
 
     describe "#select" do
@@ -192,6 +197,11 @@ module Ferrum
           expect(browser.at_xpath("//select[@id='empty_option']").select("", by: :text).selected.map(&:text))
             .to eq([""])
         end
+      end
+
+      it "picks option within frame" do
+        frame = browser.at_xpath("//iframe[@name='frame']").frame
+        expect(frame.at_xpath("//*[@id='select']").select("Two", by: :text).selected.map(&:text)).to eq(["Two"])
       end
     end
 

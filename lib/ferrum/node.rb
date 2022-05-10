@@ -139,7 +139,7 @@ module Ferrum
           return Array.from(element).filter(option => option.selected);
         }
       JS
-      page.evaluate_func(function, self)
+      page.evaluate_func(function, self, on: self)
     end
 
     def select(*values, by: :value)
@@ -159,7 +159,7 @@ module Ferrum
             element.dispatchEvent(new Event('change', { bubbles: true }));
           }
         JS
-        page.evaluate_func(function, self, values.flatten, by)
+        page.evaluate_func(function, self, values.flatten, by, on: self)
       end
     end
 
