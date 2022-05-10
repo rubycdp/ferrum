@@ -24,6 +24,23 @@
         display: inline;
       }
     </style>
+    <script>
+      $(document).ready(function(){
+        setTimeout(function(){
+          const div = document.createElement('div');
+          div.setAttribute('id', 'wait_for_selector');
+          document.body.appendChild(div);
+        }, 900);
+      });
+      $(document).ready(function(){
+        setTimeout(function(){
+          const div = document.createElement('div');
+          div.setAttribute('id', 'wait_for_hidden_selector');
+          div.setAttribute('style', 'display:none;');
+          document.body.appendChild(div);
+        }, 900);
+      });
+    </script>
   </head>
 
   <body>

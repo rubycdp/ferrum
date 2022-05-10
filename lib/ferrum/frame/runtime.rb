@@ -76,8 +76,8 @@ module Ferrum
         true
       end
 
-      def evaluate_func(expression, *args, on: nil)
-        call(expression: expression, arguments: args, on: on)
+      def evaluate_func(expression, *args, on: nil, **options)
+        call(expression: expression, arguments: args, on: on, **options)
       end
 
       def evaluate_on(node:, expression:, by_value: true, wait: 0)

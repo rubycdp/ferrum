@@ -341,6 +341,26 @@ browser.go_to("https://google.com/")
 browser.body # => '<html itemscope="" itemtype="http://schema.org/WebPage" lang="ru"><head>...
 ```
 
+#### wait_for_css : `Node`
+
+```ruby
+browser.wait_for_css("body", timeout: 3000, interval: 100) # => [Node]
+```
+* css `String` - CSS selector for a target element.
+* options `Hash`
+  * `:timeout` (Integer) - timeout for the selector-waiting in milliseconds, 3000 ms by default.
+  * `:interval` (Integer) - interval that used to compute attempts for the selector-waiting (max attempts = timeout / interval), 100 by default.
+
+#### wait_for_xpath : `Node`
+
+```ruby
+browser.wait_for_xpath("//body", timeout: 3000, interval: 100) # => [Node]
+```
+
+* xpath `String` - XPath selector for a target element.
+* options `Hash`
+  * `:timeout` (Integer) - timeout for the selector-waiting in milliseconds, 3000 ms by default.
+  * `:interval` (Integer) - interval that used to compute attempts for the selector-waiting (max attempts = timeout / interval), 100 by default.
 
 ## Screenshots
 

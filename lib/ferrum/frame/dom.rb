@@ -65,6 +65,16 @@ module Ferrum
         evaluate_func(expr, selector, within)
       end
 
+      def wait_for_xpath(xpath, **options)
+        expr = <<~JS
+          function(selector) {
+            return document.evaluate(selector, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+          }
+        JS
+
+        wait_for_selector(xpath, expr, **options)
+      end
+
       def css(selector, within: nil)
         expr = <<~JS
           function(selector, within) {
@@ -85,6 +95,48 @@ module Ferrum
         JS
 
         evaluate_func(expr, selector, within)
+      end
+
+      def wait_for_css(css, **options)
+        expr = <<~JS
+          function(selector) {
+            return document.querySelector(selector);
+          }
+        JS
+
+        wait_for_selector(css, expr, **options)
+      end
+
+      private
+
+      def wait_for_selector(selector, find_element_expression, timeout: 3000, interval: 100)
+        expr = <<~JS
+          function(selector, findElementExpression, timeout, interval) {
+            var attempts = 0;
+            var max = timeout / interval;
+            var findElement = new Function(function(expression) {
+              return "{ return " + expression + " };";
+            }(findElementExpression))();
+            function waitForElement(resolve, reject) {
+              if (attempts > ((max < 1) ? 1 : max)) {
+                return reject(new Error("Not found element match the selector: " + selector));
+              }
+              var element = findElement(selector);
+              if (element !== null) {
+                return resolve(element);
+              }
+              setTimeout(function () {
+                waitForElement(resolve, reject);
+              }, interval);
+              attempts++;
+            }
+            return new Promise(function (resolve, reject) {
+              waitForElement(resolve, reject);
+            });
+          }
+        JS
+
+        evaluate_func(expr, selector, find_element_expression, timeout, interval, awaitPromise: true)
       end
     end
   end
