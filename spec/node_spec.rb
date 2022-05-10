@@ -112,14 +112,6 @@ module Ferrum
       end
 
       it "returns selected options within frame" do
-        browser.execute <<-JS
-          document.body.innerHTML += "<iframe src='about:blank' name='frame'>";
-          var iframeDocument = document.querySelector("iframe[name='frame']").contentWindow.document;
-          var content = "<html><body><select id='select'><option>One</option></select></body></html>";
-          iframeDocument.open("text/html", "replace");
-          iframeDocument.write(content);
-          iframeDocument.close();
-        JS
         frame = browser.at_xpath("//iframe[@name='frame']").frame
         expect(frame.at_xpath("//*[@id='select']").selected.map(&:text)).to eq(["One"])
       end
@@ -208,14 +200,6 @@ module Ferrum
       end
 
       it "picks option within frame" do
-        browser.execute <<-JS
-          document.body.innerHTML += "<iframe src='about:blank' name='frame'>";
-          var iframeDocument = document.querySelector("iframe[name='frame']").contentWindow.document;
-          var content = "<html><body><select id='select'><option>One</option><option>Two</option></select></body></html>";
-          iframeDocument.open("text/html", "replace");
-          iframeDocument.write(content);
-          iframeDocument.close();
-        JS
         frame = browser.at_xpath("//iframe[@name='frame']").frame
         expect(frame.at_xpath("//*[@id='select']").select("Two", by: :text).selected.map(&:text)).to eq(["Two"])
       end

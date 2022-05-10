@@ -1,8 +1,6 @@
-
 <h1>Form</h1>
 
 <form action="/form" method="post" novalidate>
-
   <p>
     <label for="form_title">Title</label>
     <select name="form[title]" id="form_title" class="title">
@@ -144,12 +142,12 @@
   </p>
 
   <p>
-    <label for="form_description">Description</label></br>
+    <label for="form_description">Description</label><br/>
     <textarea name="form[description]" id="form_description">Descriptive text goes here</textarea>
-  <p>
+  </p>
 
   <p>
-    <label for="form_newline">NewLine</label></br>
+    <label for="form_newline">NewLine</label><br/>
     <textarea name="form[newline]" id="form_newline">
 
 New line after and before textarea tag
@@ -298,13 +296,13 @@ New line after and before textarea tag
 
   <p>
     <span>First address<span>
-    <label for='address1_street'>Street</label>
+    <label for="address1_street">Street</label>
     <input type="text" name="form[addresses][][street]" value="" id="address1_street">
 
-    <label for='address1_city'>City</label>
+    <label for="address1_city">City</label>
     <input type="text" name="form[addresses][][city]" value="" id="address1_city">
 
-    <label for='address1_country'>Country</label>
+    <label for="address1_country">Country</label>
     <select name="form[addresses][][country]" id="address1_country">
       <option selected>France</option>
       <option>Ukraine</option>
@@ -313,13 +311,13 @@ New line after and before textarea tag
 
   <p>
     <span>Second address<span>
-    <label for='address2_street'>Street</label>
+    <label for="address2_street">Street</label>
     <input type="text" name="form[addresses][][street]" value="" id="address2_street">
 
-    <label for='address2_city'>City</label>
+    <label for="address2_city">City</label>
     <input type="text" name="form[addresses][][city]" value="" id="address2_city">
 
-    <label for='address2_country'>Country</label>
+    <label for="address2_country">Country</label>
     <select name="form[addresses][][country]" id="address2_country">
       <option>France</option>
       <option selected>Ukraine</option>
@@ -580,10 +578,10 @@ New line after and before textarea tag
 
   <input type="hidden" name="form[data]" value="TWTW"/>
   <p>
-    <button formaction='/redirect_307'>Go 307</button>
+    <button formaction="/redirect_307">Go 307</button>
   </p>
   <p>
-    <button formaction='/redirect_308'>Go 308</button>
+    <button formaction="/redirect_308">Go 308</button>
   </p>
 </form>
 
@@ -677,3 +675,5 @@ New line after and before textarea tag
   <option value=""></option>
   <option value="AU">Australia</option>
 </select>
+
+<iframe src="/ferrum/form_iframe" name="frame"></iframe>
