@@ -8,12 +8,16 @@ module Ferrum
     let(:content) { JSON.parse(File.read(file_path)) }
     let(:trace_config) { JSON.parse(content["metadata"]["trace-config"]) }
 
+    after do
+      FileUtils.rm_f(file_path)
+      FileUtils.rm_f(file_path2)
+      FileUtils.rm_f(file_path3)
+    end
+
     it "outputs a trace" do
       page.tracing.record(path: file_path) { page.go_to }
 
       expect(File.exist?(file_path)).to be(true)
-    ensure
-      FileUtils.rm_f(file_path)
     end
 
     it "runs with custom options" do
@@ -29,8 +33,6 @@ module Ferrum
       expect(trace_config["excluded_categories"]).to eq(["*"])
       expect(trace_config["included_categories"]).to eq(["disabled-by-default-devtools.timeline"])
       expect(content["traceEvents"].any? { |o| o["cat"] == "toplevel" }).to eq(false)
-    ensure
-      FileUtils.rm_f(file_path)
     end
 
     it "runs with default categories" do
@@ -44,11 +46,9 @@ module Ferrum
                            blink.user_timing latencyInfo disabled-by-default-devtools.timeline.stack
                            disabled-by-default-v8.cpu_profiler disabled-by-default-v8.cpu_profiler.hires])
       expect(content["traceEvents"].any? { |o| o["cat"] == "toplevel" }).to eq(true)
-    ensure
-      FileUtils.rm_f(file_path)
     end
 
-    it "throws an exception if tracing is on two pages" do
+    it "raises an error when tracing is on two pages" do
       page.tracing.record(path: file_path) do
         page.go_to
 
@@ -62,6 +62,15 @@ module Ferrum
       expect(File.exist?(file_path)).to be(true)
     end
 
+    it "raises an error when cannot handle stream" do
+      allow(page.tracing).to receive(:stream_handle).and_raise("boom")
+      expect do
+        page.tracing.record(path: file_path) { page.go_to }
+      end.to raise_error(RuntimeError, "boom")
+
+      expect(File.exist?(file_path)).to be(false)
+    end
+
     it "handles tracing complete event once" do
       expect(page.tracing).to receive(:stream_handle).exactly(3).times.and_call_original
 
@@ -73,10 +82,6 @@ module Ferrum
 
       page.tracing.record(path: file_path3) { page.go_to }
       expect(File.exist?(file_path3)).to be(true)
-    ensure
-      FileUtils.rm_f(file_path)
-      FileUtils.rm_f(file_path2)
-      FileUtils.rm_f(file_path3)
     end
 
     it "returns base64 encoded string" do
@@ -101,8 +106,6 @@ module Ferrum
         expect(File.exist?(file_path)).to be(true)
         expect(trace_config["included_categories"]).to include("disabled-by-default-devtools.screenshot")
         expect(content["traceEvents"].any? { |o| o["name"] == "Screenshot" }).to eq(true)
-      ensure
-        FileUtils.rm_f(file_path)
       end
 
       it "returns a buffer with screenshot data" do

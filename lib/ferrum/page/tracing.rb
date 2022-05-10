@@ -22,7 +22,7 @@ module Ferrum
       def record(path: nil, encoding: :binary, timeout: nil, trace_config: nil, screenshots: false)
         @path = path
         @encoding = encoding
-        @result = Concurrent::Promises.resolvable_future
+        @pending = Concurrent::IVar.new
         trace_config ||= DEFAULT_TRACE_CONFIG.dup
 
         if screenshots
@@ -36,7 +36,7 @@ module Ferrum
         yield
         stop
 
-        @result.value!(timeout)
+        @pending.value!(timeout || @page.timeout)
       end
 
       private
@@ -55,9 +55,9 @@ module Ferrum
         @page.on("Tracing.tracingComplete") do |event, index|
           next if index.to_i != 0
 
-          @result.fulfill(stream_handle(event["stream"]))
+          @pending.set(stream_handle(event["stream"]))
         rescue StandardError => e
-          @result.reject(e)
+          @pending.fail(e)
         end
 
         @subscribed_tracing_complete = true
