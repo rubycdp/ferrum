@@ -2,12 +2,11 @@
 
 module Ferrum
   class Error               < StandardError; end
-
   class NoSuchPageError     < Error; end
-
   class NoSuchTargetError   < Error; end
-
   class NotImplementedError < Error; end
+  class BinaryNotFoundError < Error; end
+  class EmptyPathError < Error; end
 
   class StatusError < Error
     def initialize(url, message = nil)

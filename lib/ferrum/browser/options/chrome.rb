@@ -52,6 +52,11 @@ module Ferrum
           "C:/Program Files/Google/Chrome/Application/chrome.exe",
           "C:/Program Files/Google/Chrome Dev/Application/chrome.exe"
         ].freeze
+        PLATFORM_PATH = {
+          mac: MAC_BIN_PATH,
+          windows: WINDOWS_BIN_PATH,
+          linux: LINUX_BIN_PATH
+        }.freeze
 
         def merge_required(flags, options, user_data_dir)
           port = options.fetch(:port, BROWSER_PORT)

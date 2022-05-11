@@ -5,6 +5,13 @@ module Ferrum
     module Platform
       module_function
 
+      def name
+        return :mac if mac?
+        return :windows if windows?
+
+        :linux
+      end
+
       def windows?
         RbConfig::CONFIG["host_os"] =~ /mingw|mswin|cygwin/
       end

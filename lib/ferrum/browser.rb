@@ -8,6 +8,7 @@ require "ferrum/contexts"
 require "ferrum/browser/xvfb"
 require "ferrum/browser/process"
 require "ferrum/browser/client"
+require "ferrum/browser/binary"
 
 module Ferrum
   class Browser
@@ -18,7 +19,7 @@ module Ferrum
     extend Forwardable
     delegate %i[default_context] => :contexts
     delegate %i[targets create_target page pages windows] => :default_context
-    delegate %i[go_to back forward refresh reload stop wait_for_reload
+    delegate %i[go_to goto go back forward refresh reload stop wait_for_reload
                 at_css at_xpath css xpath current_url current_title url title
                 body doctype content=
                 headers cookies network
@@ -27,7 +28,7 @@ module Ferrum
                 frames frame_by main_frame
                 evaluate evaluate_on evaluate_async execute evaluate_func
                 add_script_tag add_style_tag bypass_csp
-                on goto position position=
+                on position position=
                 playback_rate playback_rate=] => :page
     delegate %i[default_user_agent] => :process
 

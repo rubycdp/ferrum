@@ -10,15 +10,11 @@ module Ferrum
         new(*args).tap(&:start)
       end
 
-      def self.xvfb_path
-        Cliver.detect("Xvfb")
-      end
-
       attr_reader :screen_size, :display_id, :pid
 
       def initialize(options)
-        @path = self.class.xvfb_path
-        raise Cliver::Dependency::NotFound, NOT_FOUND unless @path
+        @path = Binary.find("Xvfb")
+        raise BinaryNotFoundError, NOT_FOUND unless @path
 
         @screen_size = "#{options.fetch(:window_size, [1024, 768]).join('x')}x24"
         @display_id = (Time.now.to_f * 1000).to_i % 100_000_000

@@ -24,15 +24,7 @@ module Ferrum
         end
 
         def detect_path
-          if Utils::Platform.mac?
-            self.class::MAC_BIN_PATH.find { |n| File.exist?(n) }
-          elsif Utils::Platform.windows?
-            self.class::WINDOWS_BIN_PATH.find { |path| File.exist?(path) }
-          else
-            self.class::LINUX_BIN_PATH.find do |name|
-              path = Cliver.detect(name) and break(path)
-            end
-          end
+          Binary.find(self.class::PLATFORM_PATH[Utils::Platform.name])
         end
 
         def merge_required(flags, options, user_data_dir)

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Ferrum
-  describe Browser::Xvfb, skip: !Browser::Xvfb.xvfb_path do
+  describe Browser::Xvfb, skip: !Browser::Binary.find("Xvfb") do
     let(:process) { xvfb_browser.process }
     let(:xvfb_browser) { Browser.new(default_options.merge(options)) }
     let(:default_options) { Hash(headless: true, xvfb: true) }

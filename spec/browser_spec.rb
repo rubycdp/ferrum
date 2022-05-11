@@ -120,6 +120,8 @@ module Ferrum
     end
 
     it "allows the window to be positioned" do
+      skip if Utils::Platform.mac?
+
       expect do
         browser.position = { left: 10, top: 20 }
       end.to change {

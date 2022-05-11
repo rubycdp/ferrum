@@ -26,7 +26,6 @@ Gem::Specification.new do |s|
   s.required_ruby_version = ">= 2.6.0"
 
   s.add_runtime_dependency "addressable",      "~> 2.5"
-  s.add_runtime_dependency "cliver",           "~> 0.3"
   s.add_runtime_dependency "concurrent-ruby",  "~> 1.1"
   s.add_runtime_dependency "webrick",          "~> 1.7"
   s.add_runtime_dependency "websocket-driver", ">= 0.6", "< 0.8"
