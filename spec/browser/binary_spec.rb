@@ -45,6 +45,10 @@ module Ferrum
           expect(Binary.find(%w[bin4])).to eq(bin4_exe)
         end
 
+        it "finds binary with absolute path" do
+          expect(Binary.find(bin4_exe)).to eq(bin4_exe)
+        end
+
         it "finds binary without ext" do
           ENV["PATHEXT"] = ".com;.exe"
 
