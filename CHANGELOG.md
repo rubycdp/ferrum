@@ -28,7 +28,7 @@ a block with this page, after which the page is closed.
 ### Changed
 
 - Use `Concurrent::MVar` as `execution_id` in `Ferrum::Frame`
-- Min Ruby version >= 2.7
+- Min Ruby version is 2.6 and 3.0 is supported
 - `Ferrum::Page#bypass_csp` accepts hash as argument `enabled: true` by default
 - `Ferrum::Context#has_target?` -> `Ferrum::Context#target?`
 - We now start looking for Chrome first instead of Chromium, the order for checking binaries has changed
