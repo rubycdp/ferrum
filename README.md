@@ -183,6 +183,7 @@ Ferrum::Browser.new(options)
       than this will cause a `Ferrum::DeadBrowserError`.
   * `:proxy` (Hash) - Specify proxy settings, [read more](https://github.com/rubycdp/ferrum#proxy)
   * `:save_path` (String) - Path to save attachments with [Content-Disposition](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition) header.
+  * `:env` (Hash) - Environment variables you'd like to pass through to the process
 
 
 ## Navigation

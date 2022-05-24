@@ -73,6 +73,7 @@ module Ferrum
 
         @logger = options[:logger]
         @process_timeout = options.fetch(:process_timeout, PROCESS_TIMEOUT)
+        @env = Hash(options[:env])
 
         tmpdir = Dir.mktmpdir("ferrum_user_data_dir_")
         ObjectSpace.define_finalizer(self, self.class.directory_remover(tmpdir))
@@ -95,7 +96,8 @@ module Ferrum
             ObjectSpace.define_finalizer(self, self.class.process_killer(@xvfb.pid))
           end
 
-          @pid = ::Process.spawn(Hash(@xvfb&.to_env), *@command.to_a, process_options)
+          env = Hash(@xvfb&.to_env).merge(@env)
+          @pid = ::Process.spawn(env, *@command.to_a, process_options)
           ObjectSpace.define_finalizer(self, self.class.process_killer(@pid))
 
           parse_ws_url(read_io, @process_timeout)
