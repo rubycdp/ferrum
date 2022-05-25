@@ -21,6 +21,22 @@ module Ferrum
           subject.quit
         end
       end
+
+      context "env variables" do
+        subject { Browser.new(env: { "LD_PRELOAD" => "some.so" }) }
+
+        it "passes through env" do
+          allow(::Process).to receive(:wait).and_return(nil)
+          allow(Client).to receive(:new).and_return(double.as_null_object)
+
+          allow(::Process).to receive(:spawn).with({ "LD_PRELOAD" => "some.so" }, any_args)
+
+          allow_any_instance_of(Process).to receive(:parse_ws_url)
+
+          subject.send(:start)
+          subject.quit
+        end
+      end
     end
   end
 end
