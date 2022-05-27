@@ -22,6 +22,25 @@ module Ferrum
         end
       end
 
+      it "hooks existing Chrome instance by websocket" do
+        version_url_response = {
+          "Browser" => "HeadlessChrome/101.0.4951.64",
+          "Protocol-Version" => "1.3",
+          "User-Agent" => "Mozilla/5.0",
+          "V8-Version" => "10.1.124.12",
+          "WebKit-Version" => "537.36 (@d1daa9897e1bc1d507d6be8f2346e377e5505905)",
+          "webSocketDebuggerUrl" => "ws://127.0.0.1:45537/devtools/browser/4b78acad-9168-4e68-99aa-0030a467071e"
+        }
+        with_external_browser do |url|
+          ws_url = "ws://#{url.host}:#{url.port}"
+          expect(::Net::HTTP).to receive(:get).and_return(version_url_response.to_json)
+          browser = Browser.new(ws_url: ws_url)
+          expect(browser.default_user_agent).to be_nil
+        ensure
+          browser&.quit
+        end
+      end
+
       context "env variables" do
         subject { Browser.new(env: { "LD_PRELOAD" => "some.so" }) }
 

@@ -38,7 +38,7 @@ RSpec.shared_context "Global helpers" do
 
     begin
       process.start
-      yield "http://#{host}:#{port}"
+      yield Addressable::URI.parse("http://#{host}:#{port}")
     ensure
       process.stop
     end

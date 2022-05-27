@@ -63,6 +63,12 @@ module Ferrum
       def initialize(options)
         @pid = @xvfb = @user_data_dir = nil
 
+        if options[:ws_url]
+          self.ws_url = options[:ws_url]
+          parse_browser_versions
+          return
+        end
+
         if options[:url]
           url = URI.join(options[:url].to_s, "/json/version")
           response = JSON.parse(::Net::HTTP.get(url))
