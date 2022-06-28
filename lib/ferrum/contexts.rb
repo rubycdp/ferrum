@@ -24,7 +24,17 @@ module Ferrum
     end
 
     def create
-      response = @browser.command("Target.createBrowserContext")
+      browser_options = @browser.options[:browser_options]
+
+      params = {}
+
+      # Passes the proxy-server params to the remote browser when using a
+      # remote browser.
+      @browser.options[:url] &&
+        browser_options&.key?("proxy-server") &&
+        params[:proxyServer] = browser_options["proxy-server"]
+
+      response = @browser.command("Target.createBrowserContext", params)
       context_id = response["browserContextId"]
       context = Context.new(@browser, self, context_id)
       @contexts[context_id] = context
