@@ -88,7 +88,8 @@ module Ferrum
       if %w[net::ERR_NAME_NOT_RESOLVED
             net::ERR_NAME_RESOLUTION_FAILED
             net::ERR_INTERNET_DISCONNECTED
-            net::ERR_CONNECTION_TIMED_OUT].include?(response["errorText"])
+            net::ERR_CONNECTION_TIMED_OUT
+            net::ERR_FILE_NOT_FOUND].include?(response["errorText"])
         raise StatusError, options[:url]
       end
 
