@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "ferrum/rbga"
+require "ferrum/rgba"
 
 module Ferrum
   describe RGBA do

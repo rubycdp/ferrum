@@ -3,7 +3,7 @@
 require "image_size"
 require "pdf/reader"
 require "chunky_png"
-require "ferrum/rbga"
+require "ferrum/rgba"
 
 module Ferrum
   describe Browser do
