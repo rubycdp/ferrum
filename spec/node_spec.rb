@@ -30,7 +30,7 @@ module Ferrum
         browser.at_xpath("//a[text()='JS redirect']").click
       end.to raise_error(
         Ferrum::CoordinatesNotFoundError,
-        "Could not compute content quads"
+        "Node is either not visible or not an HTMLElement"
       )
     end
 

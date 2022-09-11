@@ -75,10 +75,10 @@ module Ferrum
       end
 
       def inspect
-        "#<#{self.class} "\
-          "@request_id=#{@request_id.inspect} "\
-          "@frame_id=#{@frame_id.inspect} "\
-          "@resource_type=#{@resource_type.inspect} "\
+        "#<#{self.class} " \
+          "@request_id=#{@request_id.inspect} " \
+          "@frame_id=#{@frame_id.inspect} " \
+          "@resource_type=#{@resource_type.inspect} " \
           "@request=#{@request.inspect}>"
       end
 
