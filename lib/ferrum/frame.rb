@@ -68,11 +68,11 @@ module Ferrum
     end
 
     def inspect
-      "#<#{self.class} "\
-        "@id=#{@id.inspect} "\
-        "@parent_id=#{@parent_id.inspect} "\
-        "@name=#{@name.inspect} "\
-        "@state=#{@state.inspect} "\
+      "#<#{self.class} " \
+        "@id=#{@id.inspect} " \
+        "@parent_id=#{@parent_id.inspect} " \
+        "@name=#{@name.inspect} " \
+        "@state=#{@state.inspect} " \
         "@execution_id=#{@execution_id.inspect}>"
     end
   end
