@@ -61,6 +61,9 @@ module Ferrum
 
     private
 
+    # TODO: Refactor it, and try to simplify complexity
+    # rubocop:disable Metrics/PerceivedComplexity
+    # rubocop:disable Metrics/CyclomaticComplexity
     def normalize_keys(keys, pressed_keys = [], memo = [])
       case keys
       when Array
@@ -110,6 +113,8 @@ module Ferrum
         raise ArgumentError, "unexpected argument"
       end
     end
+    # rubocop:enable Metrics/PerceivedComplexity
+    # rubocop:enable Metrics/CyclomaticComplexity
 
     def combine_strings(keys)
       keys
