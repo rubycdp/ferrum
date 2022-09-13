@@ -164,7 +164,7 @@ module Ferrum
       end
     end
 
-    context "type" do
+    context "#type" do
       let(:delete_all) { [[(Utils::Platform.mac? ? :alt : :ctrl), :shift, :right], :backspace] }
 
       before { browser.go_to("/ferrum/set") }
@@ -232,6 +232,30 @@ module Ferrum
 
           expect(output.text.strip).to eq("keydown keypress input keyup change keydown keypress input keyup")
         end
+      end
+    end
+
+    context "#down" do
+      before { browser.go_to("/ferrum/set") }
+
+      it "sends down events from keyboard" do
+        expect { browser.keyboard.down("") }.to raise_error(ArgumentError, "empty keys passed")
+        expect { browser.keyboard.down([]) }.to raise_error(ArgumentError, "empty keys passed")
+        expect { browser.keyboard.down("arghhh") }.not_to raise_error
+        expect { browser.keyboard.down(:page_down) }.not_to raise_error
+        expect { browser.keyboard.down(1) }.to raise_error(ArgumentError, "unexpected argument")
+      end
+    end
+
+    context "#up" do
+      before { browser.go_to("/ferrum/set") }
+
+      it "sends up events from keyboard" do
+        expect { browser.keyboard.up("") }.to raise_error(ArgumentError, "empty keys passed")
+        expect { browser.keyboard.up([]) }.to raise_error(ArgumentError, "empty keys passed")
+        expect { browser.keyboard.up("arghhh") }.not_to raise_error
+        expect { browser.keyboard.up(:page_down) }.not_to raise_error
+        expect { browser.keyboard.up(1) }.to raise_error(ArgumentError, "unexpected argument")
       end
     end
 
