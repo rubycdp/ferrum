@@ -31,14 +31,14 @@ module Ferrum
     end
 
     def down(key)
-      key = normalize_keys(Array(key))
+      key = normalize_keys(Array(key)).first
       type = key[:text] ? "keyDown" : "rawKeyDown"
       @page.command("Input.dispatchKeyEvent", slowmoable: true, type: type, **key)
       self
     end
 
     def up(key)
-      key = normalize_keys(Array(key))
+      key = normalize_keys(Array(key)).first
       @page.command("Input.dispatchKeyEvent", slowmoable: true, type: "keyUp", **key)
       self
     end
@@ -64,6 +64,8 @@ module Ferrum
     def normalize_keys(keys, pressed_keys = [], memo = [])
       case keys
       when Array
+        raise ArgumentError, "empty keys passed" if keys.empty?
+
         pressed_keys.push([])
         memo += combine_strings(keys).map do |key|
           normalize_keys(key, pressed_keys, memo)
@@ -82,6 +84,8 @@ module Ferrum
           to_options(key)
         end
       when String
+        raise ArgumentError, "empty keys passed" if keys.empty?
+
         pressed = pressed_keys.flatten
         keys.each_char.map do |char|
           key = KEYS[char] || {}
@@ -102,6 +106,8 @@ module Ferrum
             modifiers + [to_options(key)]
           end.flatten
         end
+      else
+        raise ArgumentError, "unexpected argument"
       end
     end
 
