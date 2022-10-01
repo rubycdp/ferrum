@@ -82,7 +82,11 @@ module Ferrum
 
     def command: (String method, ?wait: ::Numeric?, ?slowmoable: bool, ?timeout: ::Numeric?, **untyped) -> Hash[String, untyped]
 
-    def on: ((Symbol | String) event) ?{ (Hash[String, untyped]) -> void } -> Integer
+    def on: (:dialog) { (Dialog, Integer, Integer) -> void } -> Integer
+          | (:request) { (Network::InterceptedRequest, Integer, Integer) -> void } -> Integer
+          | (:response) { (Network::Exchange, Integer, Integer) -> void } -> Integer
+          | (:auth) { (Network::AuthRequest, Integer, Integer) -> void } -> Integer
+          | ((Symbol | String) event) { (*untyped) -> void } -> Integer
 
     def off: ((Symbol | String) event, Integer id) -> void
 

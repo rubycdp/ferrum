@@ -1,6 +1,9 @@
 module Ferrum
   module Interceptable
-    def on: (Symbol | String name) { (*untyped) -> void } -> Integer
+    def on: (:request) { (Network::InterceptedRequest, Integer, Integer) -> void } -> Integer
+          | (:response) { (Network::Exchange, Integer, Integer) -> void } -> Integer
+          | (:auth) { (Network::AuthRequest, Integer, Integer) -> void } -> Integer
+          | (Symbol | String name) { (*untyped) -> void } -> Integer
 
     def off: (Symbol | String name, Integer id) -> void
 

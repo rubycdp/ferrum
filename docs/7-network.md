@@ -86,6 +86,47 @@ page.network.clear(:traffic)
 traffic.size # => 0
 ```
 
+#### on(name, &block) : `Integer`
+
+Subscribes to a CDP event, or to one of the following pseudo-events. Returns a
+subscription id you can pass to `off` to unsubscribe.
+
+* `:request` an intercepted request, see `intercept` below. Requires `network.intercept` to be set up first.
+* `:response` a request's response once it's fully loaded, see below. Works without `intercept`.
+* `:auth` a proxy/basic auth challenge, see `authorize` below. Requires `network.intercept` to be set up first.
+* `:dialog` a JS dialog (`alert`/`confirm`/`prompt`), see [Dialogs](./16-dialogs.md).
+* anything else is passed straight through as a raw CDP event name, e.g. `page.on("Page.frameNavigated") { |params| ... }`.
+
+##### on(:response, &block)
+
+Subscribes to a callback fired once a request's response has fully loaded, i.e. after
+Chrome's `Network.loadingFinished` event, so `exchange.response.body` is always
+available. Doesn't require `intercept` to be set up. The block receives the
+`Network::Exchange` for that request; it's never yielded for requests that fail to
+load (use `traffic` to inspect those instead).
+
+```ruby
+page.on(:response) do |exchange|
+  puts "#{exchange.response.status} #{exchange.url}"
+end
+page.go_to("https://github.com/")
+```
+
+#### off(name, id) : `void`
+
+Unsubscribes a listener previously registered via `on`, given the subscription id `on` returned.
+
+* name `Symbol | String` the same event name that was passed to `on`, e.g. `:request`, `:response`, `:auth`
+* id `Integer` the subscription id returned by `on`
+
+```ruby
+id = page.on(:response) do |exchange|
+  puts "#{exchange.response.status} #{exchange.url}"
+end
+page.go_to("https://github.com/")
+page.off(:response, id)
+```
+
 #### intercept(\*\*options)
 
 Set request interception for given options. This method is only sets request

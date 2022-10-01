@@ -448,6 +448,50 @@ describe Ferrum::Network do
     end
   end
 
+  describe "#on(:response)" do
+    it "yields the exchange once its response is fully loaded" do
+      exchanges = []
+      page.on(:response) { |exchange, _index, _total| exchanges << exchange }
+
+      page.go_to("/foo")
+
+      expect(exchanges.size).to eq(1)
+      expect(exchanges.first.response.loaded?).to eq(true)
+      expect(exchanges.first.response.body).to eq("Another World")
+    end
+
+    it "fires once per exchange that finishes loading" do
+      exchanges = []
+      page.on(:response) { |exchange, _index, _total| exchanges << exchange }
+
+      page.go_to("/with_js")
+
+      expect(exchanges.map(&:url)).to match_array(traffic.map(&:url))
+    end
+
+    it "does not fire for requests that fail to load" do
+      exchanges = []
+      page.on(:response) { |exchange, _index, _total| exchanges << exchange }
+
+      page.go_to("/with_ajax_connection_refused")
+      network.wait_for_idle
+
+      expect(traffic.size).to eq(3)
+      expect(exchanges.size).to eq(2)
+      expect(exchanges).not_to include(traffic.find(&:error))
+    end
+
+    it "does not require request interception to be set up" do
+      expect(page.subscribed?("Fetch.requestPaused")).to eq(false)
+
+      exchange = nil
+      page.on(:response) { |e, _index, _total| exchange = e }
+      page.go_to("/foo")
+
+      expect(exchange).to be
+    end
+  end
+
   describe "#authorize" do
     it "raises error when authorize is without block" do
       expect do

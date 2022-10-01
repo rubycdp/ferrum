@@ -454,8 +454,8 @@ module Ferrum
       result
     end
 
-    # Subscribes to a CDP event, or to `:dialog`, `:request`, `:auth` (the
-    # latter two handled by {Interceptable}).
+    # Subscribes to a CDP event, or to `:dialog`, `:request`, `:response`,
+    # `:auth` (the latter three handled by {Interceptable}).
     #
     # @param [Symbol, String] name
     #

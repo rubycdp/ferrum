@@ -1,6 +1,10 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.18.0...main) ##
 
 ### Added
+- `Ferrum::Page#on(:response)`/`Ferrum::Worker#on(:response)`, a callback fired once a request's response has fully
+  loaded (on CDP's `Network.loadingFinished`, not `Network.responseReceived`, so `exchange.response.body` is always
+  available), yielding the request's `Network::Exchange`. Doesn't require `network.intercept` to be set up, and is
+  never fired for requests that fail to load [#294]
 - `Ferrum::Browser#quit`/`Ferrum::Browser::Process#stop` accept `wait: false` to return immediately and run process
   killing and user-data-directory cleanup on a background thread instead of blocking; the call returns the `Thread`
   so callers can `#join` it if they need cleanup to have finished, e.g. before process exit or before reusing a
