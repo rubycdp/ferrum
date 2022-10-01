@@ -9,6 +9,7 @@ require "ferrum/browser/xvfb"
 require "ferrum/browser/process"
 require "ferrum/browser/client"
 require "ferrum/browser/binary"
+require "ferrum/browser/version_info"
 
 module Ferrum
   class Browser
@@ -148,6 +149,10 @@ module Ferrum
 
     def crash
       command("Browser.crash")
+    end
+
+    def version
+      VersionInfo.new(command("Browser.getVersion"))
     end
 
     private
