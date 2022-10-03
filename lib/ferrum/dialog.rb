@@ -15,6 +15,17 @@ module Ferrum
     #
     # @param [String, nil] prompt_text
     #
+    # @example
+    #   browser = Ferrum::Browser.new
+    #   browser.on(:dialog) do |dialog|
+    #     if dialog.match?(/bla-bla/)
+    #       dialog.accept
+    #     else
+    #       dialog.dismiss
+    #     end
+    #   end
+    #   browser.go_to("https://google.com")
+    #
     def accept(prompt_text = nil)
       options = { accept: true }
       response = prompt_text || default_prompt
