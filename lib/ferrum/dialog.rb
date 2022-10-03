@@ -10,6 +10,11 @@ module Ferrum
       @default_prompt = params["defaultPrompt"]
     end
 
+    #
+    # Accept dialog with given text or default prompt if applicable
+    #
+    # @param [String, nil] prompt_text
+    #
     def accept(prompt_text = nil)
       options = { accept: true }
       response = prompt_text || default_prompt
