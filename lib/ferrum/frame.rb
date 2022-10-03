@@ -52,6 +52,16 @@ module Ferrum
       @state = value
     end
 
+    #
+    # Returns current frame's `location.href`.
+    #
+    # @return [String]
+    #
+    # @example
+    #   browser.go_to("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
+    #   frame = browser.frames[1]
+    #   frame.url # => https://interactive-examples.mdn.mozilla.net/pages/tabbed/iframe.html
+    #
     def url
       evaluate("document.location.href")
     end
