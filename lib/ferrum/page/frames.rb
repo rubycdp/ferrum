@@ -5,6 +5,9 @@ require "ferrum/frame"
 module Ferrum
   class Page
     module Frames
+      # The page's main frame, the top of the tree and the parent of all frames.
+      #
+      # @return [Frame]
       attr_reader :main_frame
 
       #
