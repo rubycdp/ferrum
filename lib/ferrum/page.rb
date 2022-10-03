@@ -45,7 +45,6 @@ module Ferrum
 
     attr_accessor :referrer
     attr_reader :target_id, :browser,
-                :headers,
                 :event,
                 :tracing
 
@@ -63,6 +62,11 @@ module Ferrum
     #
     # @return [Network]
     attr_reader :network
+
+    # Headers object.
+    #
+    # @return [Headers]
+    attr_reader :headers
 
     # Cookie store.
     #
