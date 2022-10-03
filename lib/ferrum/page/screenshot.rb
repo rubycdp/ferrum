@@ -81,6 +81,41 @@ module Ferrum
         save_file(path, bin)
       end
 
+      #
+      # Saves PDF on a disk or returns it as Base64.
+      #
+      # @param [Hash{Symbol => Object}] opts
+      # 
+      # @option opts [String] :path
+      #  The path to save a screenshot on the disk. `:encoding` will be set to
+      #  `:binary` automatically.
+      #
+      # @option opts [:base64, :binary] :encoding
+      #   The encoding the image should be returned in.
+      #
+      # @option opts [Boolean] :landscape (false)
+      #   Page orientation.
+      #
+      # @option opts [Float] :scale
+      #   Zoom in/out.
+      #
+      # @option opts [:letter, :legal, :tabloid, :ledger, :A0, :A1, :A2, :A3, :A4, :A5, :A6] :format
+      #   The standard paper size.
+      #
+      # @option opts [Float] :paper_width
+      #   Sets the paper's width.
+      #
+      # @option opts [Float] :paper_height
+      #   Sets the paper's height.
+      #
+      # @note
+      #   See other [native options](https://chromedevtools.github.io/devtools-protocol/tot/Page#method-printToPDF) you can pass.
+      #
+      # @example
+      #   browser.go_to("https://google.com/")
+      #   # Save to disk as a PDF
+      #   browser.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => true
+      #
       def pdf(**opts)
         path, encoding = common_options(**opts)
         options = pdf_options(**opts).merge(transferMode: "ReturnAsStream")
