@@ -97,6 +97,18 @@ module Ferrum
         call(expression: expression, arguments: args, awaitPromise: true)
       end
 
+      #
+      # Execute expression. Doesn't return the result.
+      #
+      # @param [String] expression
+      #   The JavaScript to evaluate.
+      #
+      # @param [Array] args
+      #   Additional arguments to pass to the JavaScript code.
+      #
+      # @example
+      #   browser.execute(%(1 + 1)) # => true
+      #
       def execute(expression, *args)
         expression = format("function() { %s }", expression)
         call(expression: expression, arguments: args, handle: false, returnByValue: true)
