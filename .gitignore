@@ -1,5 +1,7 @@
 .byebug_history
 Gemfile.*
+doc
 pkg
 .idea
 .ruby-version
+.yardoc

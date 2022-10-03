@@ -1,0 +1,4 @@
+lib/**/*.rb
+- 
+CHANGELOG.md
+LICENSE
