@@ -46,13 +46,18 @@ module Ferrum
     attr_accessor :referrer
     attr_reader :target_id, :browser,
                 :headers, :cookies,
-                :keyboard, :event,
+                :event,
                 :tracing
 
     # Mouse object.
     #
     # @return [Mouse]
     attr_reader :mouse
+
+    # Keyboard object.
+    #
+    # @return [Keyboard]
+    attr_reader :keyboard
 
     # Network object.
     #
