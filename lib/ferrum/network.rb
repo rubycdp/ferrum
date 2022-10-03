@@ -163,6 +163,30 @@ module Ferrum
     end
     alias allowlist= whitelist=
 
+    #
+    # Set request interception for given options. This method is only sets
+    # request interception, you should use `on` callback to catch requests and
+    # abort or continue them.
+    #
+    # @param [String] pattern
+    #
+    # @param [Symbol, nil] resource_type
+    #   One of the [resource types](https://chromedevtools.github.io/devtools-protocol/tot/Network#type-ResourceType)
+    #
+    # @example
+    #   browser = Ferrum::Browser.new
+    #   browser.network.intercept
+    #   browser.on(:request) do |request|
+    #     if request.match?(/bla-bla/)
+    #       request.abort
+    #     elsif request.match?(/lorem/)
+    #       request.respond(body: "Lorem ipsum")
+    #     else
+    #       request.continue
+    #     end
+    #   end
+    #   browser.go_to("https://google.com")
+    #
     def intercept(pattern: "*", resource_type: nil)
       pattern = { urlPattern: pattern }
       pattern[:resourceType] = resource_type if resource_type && RESOURCE_TYPES.include?(resource_type.to_s)
