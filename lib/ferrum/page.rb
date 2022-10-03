@@ -135,6 +135,15 @@ module Ferrum
                                                     fitWindow: false)
     end
 
+    #
+    # The current position of the browser window.
+    #
+    # @return [(Integer, Integer)]
+    #   The left,top coordinates of the browser window.
+    #
+    # @example
+    #   browser.position # => [10, 20]
+    #
     def position
       @browser.command("Browser.getWindowBounds", windowId: window_id).fetch("bounds").values_at("left", "top")
     end
