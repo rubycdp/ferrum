@@ -80,6 +80,16 @@ module Ferrum
       @browser.contexts.find_by(target_id: target_id)
     end
 
+    #
+    # Navigates the page to a URL.
+    #
+    # @param [String, nil] url
+    #   The URL to navigate to. The url should include scheme unless you set
+    #   {Browser#base_url= base_url}` when configuring driver.
+    #
+    # @example
+    #   browser.go_to("https://github.com/")
+    #
     def go_to(url = nil)
       options = { url: combine_url!(url) }
       options.merge!(referrer: referrer) if referrer
