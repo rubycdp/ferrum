@@ -30,6 +30,14 @@ module Ferrum
       @page = page
     end
 
+    #
+    # Dispatches a `keydown` event.
+    #
+    # @param [String, Symbol] key
+    #   Name of the key, such as `"a"`, `:enter`, or `:backspace`.
+    #
+    # @return [self]
+    #
     def down(key)
       key = normalize_keys(Array(key)).first
       type = key[:text] ? "keyDown" : "rawKeyDown"
