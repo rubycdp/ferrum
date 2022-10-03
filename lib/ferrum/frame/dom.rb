@@ -52,6 +52,16 @@ module Ferrum
         evaluate("document.doctype && new XMLSerializer().serializeToString(document.doctype)")
       end
 
+      #
+      # Returns current page's html.
+      #
+      # @return [String]
+      #   The HTML source of the current page.
+      #
+      # @example
+      #   browser.go_to("https://google.com/")
+      #   browser.body # => '<html itemscope="" itemtype="http://schema.org/WebPage" lang="ru"><head>...
+      #
       def body
         evaluate("document.documentElement.outerHTML")
       end
