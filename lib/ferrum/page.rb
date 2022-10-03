@@ -246,6 +246,20 @@ module Ferrum
       @event.set
     end
 
+    #
+    # Enables/disables CSP bypass.
+    #
+    # @param [Boolean] enabled
+    #
+    # @return [Boolean]
+    #
+    # @example
+    #   browser.bypass_csp # => true
+    #   browser.go_to("https://github.com/ruby-concurrency/concurrent-ruby/blob/master/docs-source/promises.in.md")
+    #   browser.refresh
+    #   browser.add_script_tag(content: "window.__injected = 42")
+    #   browser.evaluate("window.__injected") # => 42
+    #
     def bypass_csp(enabled: true)
       command("Page.setBypassCSP", enabled: enabled)
       enabled
