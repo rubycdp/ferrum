@@ -157,6 +157,13 @@ module Ferrum
     end
     alias reload refresh
 
+    #
+    # Stop all navigations and loading pending resources on the page.
+    #
+    # @example
+    #   browser.go_to("https://github.com/")
+    #   browser.stop
+    #
     def stop
       command("Page.stopLoading", slowmoable: true)
     end
