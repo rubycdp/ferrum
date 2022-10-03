@@ -116,6 +116,14 @@ module Ferrum
       @page = page
     end
 
+    #
+    # Returns cookies hash.
+    #
+    # @return [Hash{String => Cookie}]
+    #
+    # @example
+    #   browser.cookies.all # => {"NID"=>#<Ferrum::Cookies::Cookie:0x0000558624b37a40 @attributes={"name"=>"NID", "value"=>"...", "domain"=>".google.com", "path"=>"/", "expires"=>1583211046.575681, "size"=>178, "httpOnly"=>true, "secure"=>false, "session"=>false}>}
+    #
     def all
       cookies = @page.command("Network.getAllCookies")["cookies"]
       cookies.to_h { |c| [c["name"], Cookie.new(c)] }
