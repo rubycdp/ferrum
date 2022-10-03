@@ -84,6 +84,22 @@ module Ferrum
       tap { mouse_event(type: "mousePressed", **options) }
     end
 
+    #
+    # Mouse up for given coordinates.
+    #
+    # @param [Hash{Symbol => Object}] options
+    #   Additional keyword arguments.
+    #
+    # @option options [:left, :right] :button (:left)
+    #   The mouse button to click.
+    #
+    # @option options [Integer] :count (1)
+    #
+    # @option options [Integer] :modifiers
+    #   Bitfield for key modifiers. See`keyboard.modifiers`.
+    #
+    # @return [self]
+    #
     def up(**options)
       tap { mouse_event(type: "mouseReleased", **options) }
     end
