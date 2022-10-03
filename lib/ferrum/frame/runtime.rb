@@ -45,6 +45,18 @@ module Ferrum
         document.head.appendChild(link);
       JS
 
+      #
+      # Evaluate and return result for given JS expression.
+      #
+      # @param [String] expression
+      #   The JavaScript to evaluate.
+      #
+      # @param [Array] args
+      #   Additional arguments to pass to the JavaScript code.
+      #
+      # @example
+      #   browser.evaluate("[window.scrollX, window.scrollY]")
+      #
       def evaluate(expression, *args)
         expression = format("function() { return %s }", expression)
         call(expression: expression, arguments: args)
