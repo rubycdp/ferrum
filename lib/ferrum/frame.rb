@@ -80,6 +80,16 @@ module Ferrum
       evaluate("document.title")
     end
 
+    #
+    # If current frame is the main frame of the page (top of the tree).
+    #
+    # @return [Boolean]
+    #
+    # @example
+    #   browser.go_to("https://www.w3schools.com/tags/tag_frame.asp")
+    #   frame = browser.frame_by(id: "C09C4E4404314AAEAE85928EAC109A93")
+    #   frame.main? # => false
+    #
     def main?
       @parent_id.nil?
     end
