@@ -155,6 +155,18 @@ module Ferrum
         evaluate_async(expr, @page.timeout, *args)
       end
 
+      #
+      # Adds a `<style>` tag to the document.
+      #
+      # @param [String, nil] url
+      #
+      # @param [String, nil] path
+      #
+      # @param [String, nil] content
+      #
+      # @example
+      #   browser.add_style_tag(content: "h1 { font-size: 40px; }") # => true
+      #
       def add_style_tag(url: nil, path: nil, content: nil)
         expr, *args = if url
                         [LINK_TAG, url]
