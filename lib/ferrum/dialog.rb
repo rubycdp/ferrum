@@ -22,6 +22,20 @@ module Ferrum
       @page.command("Page.handleJavaScriptDialog", slowmoable: true, **options)
     end
 
+    #
+    # Dismiss dialog.
+    #
+    # @example
+    #   browser = Ferrum::Browser.new
+    #   browser.on(:dialog) do |dialog|
+    #     if dialog.match?(/bla-bla/)
+    #       dialog.accept
+    #     else
+    #       dialog.dismiss
+    #     end
+    #   end
+    #   browser.go_to("https://google.com")
+    #
     def dismiss
       @page.command("Page.handleJavaScriptDialog", slowmoable: true, accept: false)
     end
