@@ -45,6 +45,14 @@ module Ferrum
       self
     end
 
+    #
+    # Dispatches a `keyup` event.
+    #
+    # @param [String, Symbol] key
+    #   Name of the key, such as `"a"`, `:enter`, or `:backspace`.
+    #
+    # @return [self]
+    #
     def up(key)
       key = normalize_keys(Array(key)).first
       @page.command("Input.dispatchKeyEvent", slowmoable: true, type: "keyUp", **key)
