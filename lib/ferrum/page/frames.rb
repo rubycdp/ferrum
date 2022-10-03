@@ -26,6 +26,21 @@ module Ferrum
         @frames.values
       end
 
+      #
+      # Find frame by given options.
+      #
+      # @param [String] id
+      #   Unique frame's id that browser provides.
+      #
+      # @param [String] name
+      #   Frame's name if there's one.
+      #
+      # @return [Frame, nil]
+      #   The matching frame.
+      #
+      # @example
+      #   browser.frame_by(id: "C6D104CE454A025FBCF22B98DE612B12")
+      #
       def frame_by(id: nil, name: nil, execution_id: nil)
         if id
           @frames[id]
