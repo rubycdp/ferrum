@@ -318,6 +318,13 @@ module Ferrum
       true
     end
 
+    #
+    # Activates offline mode for a page.
+    #
+    # @example
+    #   browser.network.offline_mode
+    #   browser.go_to("https://github.com/") # => Ferrum::StatusError (Request to https://github.com/ failed to reach server, check DNS and server status)
+    #
     def offline_mode
       emulate_network_conditions(offline: true, latency: 0, download_throughput: 0, upload_throughput: 0)
     end
