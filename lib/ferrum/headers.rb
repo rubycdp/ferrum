@@ -29,6 +29,11 @@ module Ferrum
       add(headers)
     end
 
+    #
+    # Clear all headers.
+    #
+    # @return [true]
+    #
     def clear
       @headers = {}
       true
