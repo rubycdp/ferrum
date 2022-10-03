@@ -151,6 +151,13 @@ module Ferrum
       command("Browser.crash")
     end
 
+    #
+    # Gets the version information from the browser.
+    #
+    # @return [VersionInfo]
+    #
+    # @since 0.13
+    #
     def version
       VersionInfo.new(command("Browser.getVersion"))
     end
