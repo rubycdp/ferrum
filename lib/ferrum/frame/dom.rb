@@ -20,6 +20,16 @@
 module Ferrum
   class Frame
     module DOM
+      #
+      # Returns current top window `location href`.
+      #
+      # @return [String]
+      #   The window's current URL.
+      #
+      # @example
+      #   browser.go_to("https://google.com/")
+      #   browser.current_url # => "https://www.google.com/"
+      #
       def current_url
         evaluate("window.top.location.href")
       end
