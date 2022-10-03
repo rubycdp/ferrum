@@ -80,6 +80,13 @@ module Ferrum
       self
     end
 
+    #
+    # Returns bitfield for a given keys.
+    #
+    # @param [Array<:alt, :ctrl, :command, :shift>] keys
+    #
+    # @return [Integer]
+    #
     def modifiers(keys)
       keys.map { |k| MODIFIERS[k.to_s] }.compact.reduce(0, :|)
     end
