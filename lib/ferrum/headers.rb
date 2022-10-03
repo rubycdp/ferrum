@@ -16,6 +16,14 @@ module Ferrum
       @headers
     end
 
+    #
+    # Set given headers. Eventually clear all headers and set given ones.
+    #
+    # @param [Hash{String => String}] headers
+    #   key-value pairs for example `"User-Agent" => "Browser"`.
+    #
+    # @return [true]
+    #
     def set(headers)
       clear
       add(headers)
