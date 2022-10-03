@@ -19,6 +19,16 @@ module Ferrum
     AUTHORIZE_TYPE_WRONG = ":type should be in #{AUTHORIZE_TYPE}"
     ALLOWED_CONNECTION_TYPE = %w[none cellular2g cellular3g cellular4g bluetooth ethernet wifi wimax other].freeze
 
+    # Network traffic.
+    #
+    # @return [Array<Exchange>]
+    #   Returns all information about network traffic as {Exchange}
+    #   instance which in general is a wrapper around `request`, `response` and
+    #   `error`.
+    #
+    # @example
+    #   browser.go_to("https://github.com/")
+    #   browser.network.traffic # => [#<Ferrum::Network::Exchange, ...]
     attr_reader :traffic
 
     def initialize(page)
