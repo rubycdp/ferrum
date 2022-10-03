@@ -7,6 +7,11 @@ module Ferrum
       @headers = {}
     end
 
+    #
+    # Get all headers.
+    #
+    # @return [Hash{String => String}]
+    #
     def get
       @headers
     end
