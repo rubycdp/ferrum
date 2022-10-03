@@ -78,6 +78,15 @@ module Ferrum
       @exchange&.request
     end
 
+    #
+    # Page response of the main frame.
+    #
+    # @return [Response, nil]
+    #
+    # @example
+    #   browser.go_to("https://github.com/")
+    #   browser.network.response # => #<Ferrum::Network::Response...
+    #
     def response
       @exchange&.response
     end
