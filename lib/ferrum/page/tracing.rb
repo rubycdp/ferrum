@@ -19,6 +19,32 @@ module Ferrum
         @subscribed_tracing_complete = false
       end
 
+      #
+      # Accepts block, records trace and by default returns trace data from `Tracing.tracingComplete` event as output.
+      #
+      # @param [String, nil] path
+      #   Save data on the disk.
+      #
+      # @param [:binary, :base64] encoding
+      #   Encode output as Base64 or plain text.
+      #
+      # @param [Float, nil] timeout
+      #   Wait until file streaming finishes in the specified time or raise
+      #   error.
+      #
+      # @param [Boolean] screenshots
+      #   capture screenshots in the trace.
+      #
+      # @param [Hash{String => Object}] trace_config
+      #   config for [trace](https://chromedevtools.github.io/devtools-protocol/tot/Tracing/#type-TraceConfig),
+      #   for categories see [getCategories](https://chromedevtools.github.io/devtools-protocol/tot/Tracing/#method-getCategories),
+      #   only one trace config can be active at a time per browser.
+      #
+      # @return [String, true]
+      #   The trace data from the `Tracing.tracingComplete` event.
+      #   When `path` is specified returns `true` and stores trace data into
+      #   file.
+      #
       def record(path: nil, encoding: :binary, timeout: nil, trace_config: nil, screenshots: false)
         @path = path
         @encoding = encoding
