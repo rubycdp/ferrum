@@ -154,10 +154,27 @@ module Ferrum
       command("Page.stopLoading", slowmoable: true)
     end
 
+    #
+    # Navigates to the previous URL in the browser's history.
+    #
+    # @example
+    #   browser.go_to("https://github.com/")
+    #   browser.at_xpath("//a").click
+    #   browser.back
+    #
     def back
       history_navigate(delta: -1)
     end
 
+    #
+    # Navigates to the next URL in the browser's history.
+    #
+    # @example
+    #   browser.go_to("https://github.com/")
+    #   browser.at_xpath("//a").click
+    #   browser.back
+    #   browser.forward
+    #
     def forward
       history_navigate(delta: 1)
     end
