@@ -145,6 +145,13 @@ module Ferrum
                        bounds: { left: options[:left], top: options[:top] })
     end
 
+    #
+    # Reloads the current page.
+    #
+    # @example
+    #   browser.go_to("https://github.com/")
+    #   browser.refresh
+    #
     def refresh
       command("Page.reload", wait: timeout, slowmoable: true)
     end
