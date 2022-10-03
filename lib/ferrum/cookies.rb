@@ -185,7 +185,21 @@ module Ferrum
       @page.command("Network.setCookie", **cookie)["success"]
     end
 
-    # Supports :url, :domain and :path options
+    #
+    # Removes given cookie.
+    #
+    # @param [String] name
+    #
+    # @param [Hash{Symbol => Object}] options
+    #   Additional keyword arguments.
+    #
+    # @option options [String] :domain
+    #
+    # @option options [String] :url
+    #
+    # @example
+    #   browser.cookies.remove(name: "stealth", domain: "google.com") # => true
+    #
     def remove(name:, **options)
       raise "Specify :domain or :url option" if !options[:domain] && !options[:url] && !default_domain
 
