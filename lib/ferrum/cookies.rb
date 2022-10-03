@@ -129,6 +129,18 @@ module Ferrum
       cookies.to_h { |c| [c["name"], Cookie.new(c)] }
     end
 
+    #
+    # Returns cookie.
+    #
+    # @param [String] name
+    #   The cookie name to fetch.
+    #
+    # @return [Cookie, nil]
+    #   The cookie with the matching name.
+    #
+    # @example
+    #   browser.cookies["NID"] # => <Ferrum::Cookies::Cookie:0x0000558624b67a88 @attributes={"name"=>"NID", "value"=>"...", "domain"=>".google.com", "path"=>"/", "expires"=>1583211046.575681, "size"=>178, "httpOnly"=>true, "secure"=>false, "session"=>false}>
+    #
     def [](name)
       all[name]
     end
