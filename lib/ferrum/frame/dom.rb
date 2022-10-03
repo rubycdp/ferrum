@@ -36,6 +36,22 @@ module Ferrum
         evaluate("document.documentElement.outerHTML")
       end
 
+      #
+      # Finds nodes by using a XPath selector.
+      #
+      # @param [String] selector
+      #   The XPath selector.
+      #
+      # @param [Node, nil] within
+      #   The parent node to search within.
+      #
+      # @return [Array<Node>]
+      #   The matching nodes.
+      #
+      # @example
+      #   browser.go_to("https://github.com/")
+      #   browser.xpath("//a[@aria-label='Issues you created']") # => [Node]
+      #
       def xpath(selector, within: nil)
         expr = <<~JS
           function(selector, within) {
