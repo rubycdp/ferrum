@@ -211,6 +211,14 @@ module Ferrum
       true
     end
 
+    #
+    # Removes all cookies for current page.
+    #
+    # @return [true]
+    #
+    # @example
+    #   browser.cookies.clear # => true
+    #
     def clear
       @page.command("Network.clearBrowserCookies")
       true
