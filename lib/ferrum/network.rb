@@ -91,6 +91,16 @@ module Ferrum
       @exchange&.response
     end
 
+    #
+    # Contains the status code of the main page response (e.g., 200 for a
+    # success). This is just a shortcut for `response.status`.
+    # 
+    # @return [Integer, nil]
+    #
+    # @example
+    #   browser.go_to("https://github.com/")
+    #   browser.network.status # => 200
+    #
     def status
       response&.status
     end
