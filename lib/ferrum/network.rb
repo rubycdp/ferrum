@@ -194,6 +194,31 @@ module Ferrum
       @page.command("Fetch.enable", handleAuthRequests: true, patterns: [pattern])
     end
 
+    #
+    # Sets HTTP Basic-Auth credentials.
+    #
+    # @param [String] user
+    #   The username to send.
+    #
+    # @param [String] password
+    #   The password to send.
+    #
+    # @param [:server, :proxy] type
+    #   Specifies whether the credentials are for a website or a proxy.
+    #
+    # @yield [request]
+    #   The given block will be passed each authenticated request and can allow
+    #   or deny the request.
+    #
+    # @yieldparam [Request] request
+    #   An HTTP request.
+    #
+    # @example
+    #   browser.network.authorize(user: "login", password: "pass") { |req| req.continue }
+    #   browser.go_to("http://example.com/authenticated")
+    #   puts browser.network.status # => 200
+    #   puts browser.body # => Welcome, authenticated client
+    #
     def authorize(user:, password:, type: :server, &block)
       raise ArgumentError, AUTHORIZE_TYPE_WRONG unless AUTHORIZE_TYPE.include?(type)
       raise ArgumentError, AUTHORIZE_BLOCK_MISSING if !block_given? && !@page.subscribed?("Fetch.requestPaused")
