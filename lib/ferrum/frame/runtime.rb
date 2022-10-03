@@ -126,6 +126,21 @@ module Ferrum
         call(expression: expression, on: node, wait: wait, **options)
       end
 
+      #
+      # Adds a `<script>` tag to the document.
+      #
+      # @param [String, nil] url
+      #
+      # @param [String, nil] path
+      #
+      # @param [String, nil] content
+      #
+      # @param [String] type
+      #
+      # @example
+      #   browser.add_script_tag(url: "http://example.com/stylesheet.css") # => true
+
+      #
       def add_script_tag(url: nil, path: nil, content: nil, type: "text/javascript")
         expr, *args = if url
                         [SCRIPT_SRC_TAG, url, type]
