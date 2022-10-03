@@ -39,6 +39,16 @@ module Ferrum
       true
     end
 
+    #
+    # Adds given headers to already set ones.
+    #
+    # @param [Hash{String => String}] headers
+    #   key-value pairs for example `"Referer" => "http://example.com"`.
+    #
+    # @param [Boolean] permanent
+    #
+    # @return [true]
+    #
     def add(headers, permanent: true)
       if headers["Referer"]
         @page.referrer = headers["Referer"]
