@@ -45,9 +45,14 @@ module Ferrum
 
     attr_accessor :referrer
     attr_reader :target_id, :browser,
-                :headers, :cookies, :network,
+                :headers, :cookies,
                 :mouse, :keyboard, :event,
                 :tracing
+
+    # Network object.
+    #
+    # @return [Network]
+    attr_reader :network
 
     def initialize(target_id, browser)
       @frames = {}
