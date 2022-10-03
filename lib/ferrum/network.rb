@@ -124,6 +124,21 @@ module Ferrum
       response&.status
     end
 
+    #
+    # Clear browser's cache or collected traffic.
+    #
+    # @param [:traffic, :cache] type
+    #   The type of traffic to clear.
+    #
+    # @return [true]
+    #
+    # @example
+    #   traffic = browser.network.traffic # => []
+    #   browser.go_to("https://github.com/")
+    #   traffic.size # => 51
+    #   browser.network.clear(:traffic)
+    #   traffic.size # => 0
+    #
     def clear(type)
       raise ArgumentError, ":type should be in #{CLEAR_TYPE}" unless CLEAR_TYPE.include?(type)
 
