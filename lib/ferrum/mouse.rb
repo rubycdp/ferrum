@@ -10,6 +10,21 @@ module Ferrum
       @x = @y = 0
     end
 
+    #
+    # Scroll page to a given x, y coordinates.
+    #
+    # @param [Integer] top
+    #  The pixel along the horizontal axis of the document that you want
+    #  displayed in the upper left.
+    #
+    # @param [Integer] left
+    #   The pixel along the vertical axis of the document that you want
+    #   displayed in the upper left.
+    #
+    # @example
+    #   browser.go_to("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
+    #   browser.mouse.scroll_to(0, 400)
+    #
     def scroll_to(top, left)
       tap { @page.execute("window.scrollTo(#{top}, #{left})") }
     end
