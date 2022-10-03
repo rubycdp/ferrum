@@ -62,6 +62,21 @@ module Ferrum
         call(expression: expression, arguments: args)
       end
 
+      #
+      # Evaluate asynchronous expression and return result.
+      #
+      # @param [String] expression
+      #   The JavaScript to evaluate.
+      #
+      # @param [Integer] wait
+      #   How long we should wait for Promise to resolve or reject.
+      #
+      # @param [Array] args
+      #   Additional arguments to pass to the JavaScript code.
+      #
+      # @example
+      #   browser.evaluate_async(%(arguments[0]({foo: "bar"})), 5) # => { "foo" => "bar" }
+      #
       def evaluate_async(expression, wait, *args)
         template = <<~JS
           function() {
