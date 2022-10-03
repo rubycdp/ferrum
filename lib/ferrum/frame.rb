@@ -14,8 +14,30 @@ module Ferrum
       stopped_loading
     ].freeze
 
-    attr_accessor :id, :name
-    attr_reader :page, :parent_id, :state
+    # The Frame's unique id.
+    #
+    # @return [String]
+    attr_accessor :id
+
+    # If frame was given a name it should be here.
+    #
+    # @return [String, nil]
+    attr_accessor :name
+
+    # The page the frame belongs to.
+    #
+    # @return [Page]
+    attr_reader :page
+
+    # Parent frame id if this one is nested in another one.
+    #
+    # @return [String, nil]
+    attr_reader :parent_id
+
+    # One of the states frame's in.
+    #
+    # @return [:started_loading, :navigated, :stopped_loading, nil]
+    attr_reader :state
 
     def initialize(id, page, parent_id = nil)
       @id = id
