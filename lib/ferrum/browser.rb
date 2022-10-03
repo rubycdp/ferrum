@@ -221,6 +221,20 @@ module Ferrum
       raise
     end
 
+    #
+    # Closes browser tabs opened by the `Browser` instance.
+    #
+    # @example
+    #   # connect to a long-running Chrome process
+    #   browser = Ferrum::Browser.new(url: 'http://localhost:9222')
+    #
+    #   browser.go_to("https://github.com/")
+    #
+    #   # clean up, lest the tab stays there hanging forever
+    #   browser.reset
+    #
+    #   browser.quit
+    #
     def reset
       @window_size = @original_window_size
       contexts.reset
