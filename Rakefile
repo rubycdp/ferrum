@@ -10,6 +10,9 @@ end
 
 task default: :test
 
-require 'yard'
-YARD::Rake::YardocTask.new
-task docs: :yard
+begin
+  require 'yard'
+  YARD::Rake::YardocTask.new
+  task docs: :yard
+rescue LoadError
+end
