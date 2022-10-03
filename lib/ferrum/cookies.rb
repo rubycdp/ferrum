@@ -145,6 +145,30 @@ module Ferrum
       all[name]
     end
 
+    #
+    # Sets a cookie.
+    #
+    # @param [Hash{Symbol => Object}, Cookie] options
+    #
+    # @option options [String] :name
+    #
+    # @option options [String] :value
+    #
+    # @option options [String] :domain
+    #
+    # @option options [Integer] :expires
+    #
+    # @option options [String] :samesite
+    #
+    # @option options [Boolean] :httponly
+    #
+    # @example
+    #   browser.cookies.set(name: "stealth", value: "omg", domain: "google.com") # => true
+    #
+    # @example
+    #   nid_cookie = browser.cookies["NID"] # => <Ferrum::Cookies::Cookie:0x0000558624b67a88>
+    #   browser.cookies.set(nid_cookie) # => true
+    #
     def set(options)
       cookie = (
         options.is_a?(Cookie) ? options.attributes : options
