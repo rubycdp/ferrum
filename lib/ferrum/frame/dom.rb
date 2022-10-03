@@ -65,6 +65,22 @@ module Ferrum
         evaluate_func(expr, selector, within)
       end
 
+      #
+      # Finds nodes by using a CSS path selector.
+      #
+      # @param [String] selector
+      #   The CSS path selector.
+      #
+      # @param [Node, nil] within
+      #   The parent node to search within.
+      #
+      # @return [Array<Node>]
+      #   The matching nodes.
+      #
+      # @example
+      #   browser.go_to("https://github.com/")
+      #   browser.css("a[aria-label='Issues you created']") # => [Node]
+      #
       def css(selector, within: nil)
         expr = <<~JS
           function(selector, within) {
