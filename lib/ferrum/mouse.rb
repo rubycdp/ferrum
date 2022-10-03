@@ -104,6 +104,18 @@ module Ferrum
       tap { mouse_event(type: "mouseReleased", **options) }
     end
 
+    #
+    # Mouse move to given x and y.
+    #
+    # @param [Integer] x
+    #
+    # @param [Integer] y
+    #
+    # @param [Integer] steps
+    #   Sends intermediate mousemove events.
+    #
+    # @return [self]
+    #
     def move(x:, y:, steps: 1)
       from_x = @x
       from_y = @y
