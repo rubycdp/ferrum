@@ -66,6 +66,16 @@ module Ferrum
       evaluate("document.location.href")
     end
 
+    #
+    # Returns current frame's title.
+    #
+    # @return [String]
+    #
+    # @example
+    #   browser.go_to("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
+    #   frame = browser.frames[1]
+    #   frame.title # => HTML Demo: <iframe>
+    #
     def title
       evaluate("document.title")
     end
