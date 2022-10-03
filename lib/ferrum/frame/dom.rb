@@ -54,6 +54,22 @@ module Ferrum
         evaluate_func(expr, selector, within)
       end
 
+      #
+      # Finds a node by using a XPath selector.
+      #
+      # @param [String] selector
+      #   The XPath selector.
+      #
+      # @param [Node, nil] within
+      #   The parent node to search within.
+      #
+      # @return [Node, nil]
+      #   The matching node.
+      #
+      # @example
+      #   browser.go_to("https://github.com/")
+      #   browser.at_xpath("//a[@aria-label='Issues you created']") # => Node
+      #
       def at_xpath(selector, within: nil)
         expr = <<~JS
           function(selector, within) {
