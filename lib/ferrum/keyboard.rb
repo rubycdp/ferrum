@@ -59,6 +59,15 @@ module Ferrum
       self
     end
 
+    #
+    # Sends a keydown, keypress/input, and keyup event for each character in
+    # the text.
+    #
+    # @param [Array<String, Symbol, (Symbol, String)>] keys
+    #   The text to type into a focused element, `[:Shift, "s"], "tring"`.
+    #
+    # @return [self]
+    #
     def type(*keys)
       keys = normalize_keys(Array(keys))
 
