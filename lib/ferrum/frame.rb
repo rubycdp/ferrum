@@ -74,6 +74,14 @@ module Ferrum
     end
     alias set_content content=
 
+    #
+    # Execution context id which is used by JS, each frame has it's own
+    # context in which JS evaluates.
+    #
+    # @return [Integer]
+    #
+    # @raise [NoExecutionContextError]
+    #
     def execution_id
       value = @execution_id.borrow(@page.timeout, &:itself)
       raise NoExecutionContextError if value.instance_of?(Object)
