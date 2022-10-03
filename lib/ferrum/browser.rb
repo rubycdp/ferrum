@@ -206,6 +206,19 @@ module Ferrum
       end
     end
 
+    #
+    # Evaluate JavaScript to modify things before a page load.
+    #
+    # @param [String] expression
+    #   The JavaScript to add to each new document.
+    #
+    # @example
+    #   browser.evaluate_on_new_document <<~JS
+    #     Object.defineProperty(navigator, "languages", {
+    #       get: function() { return ["tlh"]; }
+    #     });
+    #   JS
+    #
     def evaluate_on_new_document(expression)
       extensions << expression
     end
