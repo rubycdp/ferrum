@@ -3,6 +3,11 @@
 module Ferrum
   class Page
     module Animation
+      #
+      # Returns playback rate for CSS animations, defaults to `1`.
+      #
+      # @return [Integer]
+      #
       def playback_rate
         command("Animation.getPlaybackRate")["playbackRate"]
       end
