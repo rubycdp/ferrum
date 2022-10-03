@@ -74,6 +74,22 @@ module Ferrum
       expect(browser.body).to include("Hello world")
     end
 
+    it "must return allow requesting the browser version information" do
+      version_info = browser.version
+
+      expect(version_info).to be_kind_of(Ferrum::Browser::VersionInfo)
+      expect(version_info.protocol_version).to_not be(nil)
+      expect(version_info.protocol_version).to_not be_empty
+      expect(version_info.product).to_not be(nil)
+      expect(version_info.product).to_not be_empty
+      expect(version_info.revision).to_not be(nil)
+      expect(version_info.revision).to_not be_empty
+      expect(version_info.user_agent).to_not be(nil)
+      expect(version_info.user_agent).to_not be_empty
+      expect(version_info.js_version).to_not be(nil)
+      expect(version_info.js_version).to_not be_empty
+    end
+
     it "stops silently before goto call" do
       browser = Browser.new
       expect { browser.quit }.not_to raise_error
