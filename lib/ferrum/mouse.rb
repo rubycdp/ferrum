@@ -29,6 +29,31 @@ module Ferrum
       tap { @page.execute("window.scrollTo(#{top}, #{left})") }
     end
 
+    # 
+    # Click given coordinates, fires mouse move, down and up events.
+    #
+    # @param [Integer] x
+    #
+    # @param [Integer] y
+    #
+    # @param [Float] delay
+    #   Delay between mouse down and mouse up events.
+    #
+    # @param [Float] wait
+    #
+    # @param [Hash{Symbol => Object}] options
+    #   Additional keyword arguments.
+    #
+    # @option options [:left, :right] :button (:left)
+    #   The mouse button to click.
+    #
+    # @option options [Integer] :count (1)
+    #
+    # @option options [Integer] :modifiers
+    #   Bitfield for key modifiers. See`keyboard.modifiers`.
+    #
+    # @return [self]
+    #
     def click(x:, y:, delay: 0, wait: CLICK_WAIT, **options)
       move(x: x, y: y)
       down(**options)
