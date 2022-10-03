@@ -166,6 +166,15 @@ module Ferrum
       start
     end
 
+    #
+    # Sets the base URL.
+    #
+    # @param [String] value
+    #   The new base URL value.
+    #
+    # @return [String]
+    #   The base URL value.
+    #
     def base_url=(value)
       parsed = Addressable::URI.parse(value)
       unless BASE_URL_SCHEMA.include?(parsed.normalized_scheme)
