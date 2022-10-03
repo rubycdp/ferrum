@@ -65,6 +65,15 @@ module Ferrum
       total_connections - finished_connections
     end
 
+    #
+    # Page request of the main frame.
+    #
+    # @return [Request]
+    #
+    # @example
+    #   browser.go_to("https://github.com/")
+    #   browser.network.request # => #<Ferrum::Network::Request...
+    #
     def request
       @exchange&.request
     end
