@@ -123,6 +123,16 @@ module Ferrum
         stream_to(path: path, encoding: encoding, handle: handle)
       end
 
+      #
+      # Saves MHTML on a disk or returns it as a string.
+      #
+      # @param [String, nil] path
+      #   The path to save a file on the disk.
+      #
+      # @example
+      #   browser.go_to("https://google.com/")
+      #   browser.mhtml(path: "google.mhtml") # => 87742
+      #
       def mhtml(path: nil)
         data = command("Page.captureSnapshot", format: :mhtml).fetch("data")
         return data if path.nil?
