@@ -148,6 +148,20 @@ module Ferrum
       @browser.command("Browser.getWindowBounds", windowId: window_id).fetch("bounds").values_at("left", "top")
     end
 
+    #
+    # Sets the position of the browser window.
+    #
+    # @param [Hash{Symbol => Object}] options
+    #
+    # @option options [Integer] :left
+    #   The number of pixels from the left-hand side of the screen.
+    #
+    # @option options [Integer] :top
+    #   The number of pixels from the top of the screen.
+    #
+    # @example
+    #   browser.position = { left: 10, top: 20 }
+    #
     def position=(options)
       @browser.command("Browser.setWindowBounds",
                        windowId: window_id,
