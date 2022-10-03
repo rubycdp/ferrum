@@ -272,6 +272,37 @@ module Ferrum
       Network::Exchange.new(@page, id).tap { |e| @traffic << e }
     end
 
+    #
+    # Activates emulation of network conditions.
+    #
+    # @param [Boolean] offline
+    #   Emulate internet disconnection,
+    #
+    # @param [Integer] latency
+    #   Minimum latency from request sent to response headers received (ms).
+    #
+    # @param [Integer] download_throughput
+    #   Maximal aggregated download throughput (bytes/sec).
+    #
+    # @param [Integer] upload_throughput
+    #   Maximal aggregated upload throughput (bytes/sec).
+    #
+    # @param [String, nil] connection_type
+    #   Connection type if known:
+    #   * `"none"`
+    #   * `"cellular2g"`
+    #   * `"cellular3g"`
+    #   * `"cellular4g"`
+    #   * `"bluetooth"`
+    #   * `"ethernet"`
+    #   * `"wifi"`
+    #   * `"wimax"`
+    #   * `"other"`
+    #
+    # @example
+    #   browser.network.emulate_network_conditions(connection_type: "cellular2g")
+    #   browser.go_to("https://github.com/")
+    #
     def emulate_network_conditions(offline: false, latency: 0,
                                    download_throughput: -1, upload_throughput: -1,
                                    connection_type: nil)
