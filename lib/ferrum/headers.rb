@@ -7,20 +7,48 @@ module Ferrum
       @headers = {}
     end
 
+    #
+    # Get all headers.
+    #
+    # @return [Hash{String => String}]
+    #
     def get
       @headers
     end
 
+    #
+    # Set given headers. Eventually clear all headers and set given ones.
+    #
+    # @param [Hash{String => String}] headers
+    #   key-value pairs for example `"User-Agent" => "Browser"`.
+    #
+    # @return [true]
+    #
     def set(headers)
       clear
       add(headers)
     end
 
+    #
+    # Clear all headers.
+    #
+    # @return [true]
+    #
     def clear
       @headers = {}
       true
     end
 
+    #
+    # Adds given headers to already set ones.
+    #
+    # @param [Hash{String => String}] headers
+    #   key-value pairs for example `"Referer" => "http://example.com"`.
+    #
+    # @param [Boolean] permanent
+    #
+    # @return [true]
+    #
     def add(headers, permanent: true)
       if headers["Referer"]
         @page.referrer = headers["Referer"]

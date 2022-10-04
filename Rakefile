@@ -9,3 +9,10 @@ RSpec::Core::RakeTask.new("test") do |t|
 end
 
 task default: :test
+
+begin
+  require 'yard'
+  YARD::Rake::YardocTask.new
+  task docs: :yard
+rescue LoadError
+end

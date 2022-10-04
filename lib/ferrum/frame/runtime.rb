@@ -45,11 +45,38 @@ module Ferrum
         document.head.appendChild(link);
       JS
 
+      #
+      # Evaluate and return result for given JS expression.
+      #
+      # @param [String] expression
+      #   The JavaScript to evaluate.
+      #
+      # @param [Array] args
+      #   Additional arguments to pass to the JavaScript code.
+      #
+      # @example
+      #   browser.evaluate("[window.scrollX, window.scrollY]")
+      #
       def evaluate(expression, *args)
         expression = format("function() { return %s }", expression)
         call(expression: expression, arguments: args)
       end
 
+      #
+      # Evaluate asynchronous expression and return result.
+      #
+      # @param [String] expression
+      #   The JavaScript to evaluate.
+      #
+      # @param [Integer] wait
+      #   How long we should wait for Promise to resolve or reject.
+      #
+      # @param [Array] args
+      #   Additional arguments to pass to the JavaScript code.
+      #
+      # @example
+      #   browser.evaluate_async(%(arguments[0]({foo: "bar"})), 5) # => { "foo" => "bar" }
+      #
       def evaluate_async(expression, wait, *args)
         template = <<~JS
           function() {
@@ -70,6 +97,18 @@ module Ferrum
         call(expression: expression, arguments: args, awaitPromise: true)
       end
 
+      #
+      # Execute expression. Doesn't return the result.
+      #
+      # @param [String] expression
+      #   The JavaScript to evaluate.
+      #
+      # @param [Array] args
+      #   Additional arguments to pass to the JavaScript code.
+      #
+      # @example
+      #   browser.execute(%(1 + 1)) # => true
+      #
       def execute(expression, *args)
         expression = format("function() { %s }", expression)
         call(expression: expression, arguments: args, handle: false, returnByValue: true)
@@ -87,6 +126,21 @@ module Ferrum
         call(expression: expression, on: node, wait: wait, **options)
       end
 
+      #
+      # Adds a `<script>` tag to the document.
+      #
+      # @param [String, nil] url
+      #
+      # @param [String, nil] path
+      #
+      # @param [String, nil] content
+      #
+      # @param [String] type
+      #
+      # @example
+      #   browser.add_script_tag(url: "http://example.com/stylesheet.css") # => true
+
+      #
       def add_script_tag(url: nil, path: nil, content: nil, type: "text/javascript")
         expr, *args = if url
                         [SCRIPT_SRC_TAG, url, type]
@@ -101,6 +155,18 @@ module Ferrum
         evaluate_async(expr, @page.timeout, *args)
       end
 
+      #
+      # Adds a `<style>` tag to the document.
+      #
+      # @param [String, nil] url
+      #
+      # @param [String, nil] path
+      #
+      # @param [String, nil] content
+      #
+      # @example
+      #   browser.add_style_tag(content: "h1 { font-size: 40px; }") # => true
+      #
       def add_style_tag(url: nil, path: nil, content: nil)
         expr, *args = if url
                         [LINK_TAG, url]

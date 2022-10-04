@@ -7,4 +7,8 @@ gem "rubocop", "~> 1.22"
 gem "rubocop-rake", require: false
 gem "rubocop-rspec", require: false
 
+gem 'kramdown', '~> 2.0', require: false
+gem 'redcarpet', require: false, platform: :mri
+gem 'yard', '~> 0.9', require: false
+
 gemspec

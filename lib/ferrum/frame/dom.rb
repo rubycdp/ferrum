@@ -20,10 +20,30 @@
 module Ferrum
   class Frame
     module DOM
+      #
+      # Returns current top window `location href`.
+      #
+      # @return [String]
+      #   The window's current URL.
+      #
+      # @example
+      #   browser.go_to("https://google.com/")
+      #   browser.current_url # => "https://www.google.com/"
+      #
       def current_url
         evaluate("window.top.location.href")
       end
 
+      #
+      # Returns current top window title.
+      #
+      # @return [String]
+      #   The window's current title.
+      #
+      # @example
+      #   browser.go_to("https://google.com/")
+      #   browser.current_title # => "Google"
+      #
       def current_title
         evaluate("window.top.document.title")
       end
@@ -32,10 +52,36 @@ module Ferrum
         evaluate("document.doctype && new XMLSerializer().serializeToString(document.doctype)")
       end
 
+      #
+      # Returns current page's html.
+      #
+      # @return [String]
+      #   The HTML source of the current page.
+      #
+      # @example
+      #   browser.go_to("https://google.com/")
+      #   browser.body # => '<html itemscope="" itemtype="http://schema.org/WebPage" lang="ru"><head>...
+      #
       def body
         evaluate("document.documentElement.outerHTML")
       end
 
+      #
+      # Finds nodes by using a XPath selector.
+      #
+      # @param [String] selector
+      #   The XPath selector.
+      #
+      # @param [Node, nil] within
+      #   The parent node to search within.
+      #
+      # @return [Array<Node>]
+      #   The matching nodes.
+      #
+      # @example
+      #   browser.go_to("https://github.com/")
+      #   browser.xpath("//a[@aria-label='Issues you created']") # => [Node]
+      #
       def xpath(selector, within: nil)
         expr = <<~JS
           function(selector, within) {
@@ -54,6 +100,22 @@ module Ferrum
         evaluate_func(expr, selector, within)
       end
 
+      #
+      # Finds a node by using a XPath selector.
+      #
+      # @param [String] selector
+      #   The XPath selector.
+      #
+      # @param [Node, nil] within
+      #   The parent node to search within.
+      #
+      # @return [Node, nil]
+      #   The matching node.
+      #
+      # @example
+      #   browser.go_to("https://github.com/")
+      #   browser.at_xpath("//a[@aria-label='Issues you created']") # => Node
+      #
       def at_xpath(selector, within: nil)
         expr = <<~JS
           function(selector, within) {
@@ -65,6 +127,22 @@ module Ferrum
         evaluate_func(expr, selector, within)
       end
 
+      #
+      # Finds nodes by using a CSS path selector.
+      #
+      # @param [String] selector
+      #   The CSS path selector.
+      #
+      # @param [Node, nil] within
+      #   The parent node to search within.
+      #
+      # @return [Array<Node>]
+      #   The matching nodes.
+      #
+      # @example
+      #   browser.go_to("https://github.com/")
+      #   browser.css("a[aria-label='Issues you created']") # => [Node]
+      #
       def css(selector, within: nil)
         expr = <<~JS
           function(selector, within) {
@@ -76,6 +154,22 @@ module Ferrum
         evaluate_func(expr, selector, within)
       end
 
+      #
+      # Finds a node by using a CSS path selector.
+      #
+      # @param [String] selector
+      #   The CSS path selector.
+      #
+      # @param [Node, nil] within
+      #   The parent node to search within.
+      #
+      # @return [Node, nil]
+      #   The matching node.
+      #
+      # @example
+      #   browser.go_to("https://github.com/")
+      #   browser.at_css("a[aria-label='Issues you created']") # => Node
+      #
       def at_css(selector, within: nil)
         expr = <<~JS
           function(selector, within) {

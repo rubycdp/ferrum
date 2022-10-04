@@ -26,6 +26,51 @@ module Ferrum
         A6: { width:  4.13, height:  5.83 }
       }.freeze
 
+      #
+      # Saves screenshot on a disk or returns it as base64.
+      #
+      # @param [Hash{Symbol => Object}] opts
+      # 
+      # @option opts [String] :path
+      #  The path to save a screenshot on the disk. `:encoding` will be set to
+      #  `:binary` automatically.
+      #
+      # @option opts [:base64, :binary] :encoding
+      #   The encoding the image should be returned in.
+      #
+      # @option opts ["jpeg", "png"] :format
+      #   The format the image should be returned in.
+      #
+      # @option opts [Integer] :quality
+      #   The image quality. **Note:** 0-100 works for jpeg only.
+      #
+      # @option opts [Boolean] :full
+      #   Whether you need full page screenshot or a viewport.
+      #
+      # @option opts [String] :selector
+      #   CSS selector for the given element.
+      #
+      # @option opts [Float] :scale
+      #   Zoom in/out.
+      #
+      # @option opts [Ferrum::RGBA] :background_color
+      #   Sets the background color.
+      #
+      # @example
+      #   browser.go_to("https://google.com/")
+      #
+      # @example Save on the disk in PNG:
+      #   browser.screenshot(path: "google.png") # => 134660
+      #
+      # @example Save on the disk in JPG:
+      #   browser.screenshot(path: "google.jpg") # => 30902
+      # 
+      # @example Save to Base64 the whole page not only viewport and reduce quality:
+      #   browser.screenshot(full: true, quality: 60) # "iVBORw0KGgoAAAANSUhEUgAABAAAAAMACAYAAAC6uhUNAAAAAXNSR0IArs4c6Q...
+      # 
+      # @example Save with specific background color:
+      #   browser.screenshot(background_color: Ferrum::RGBA.new(0, 0, 0, 0.0))
+      #
       def screenshot(**opts)
         path, encoding = common_options(**opts)
         options = screenshot_options(path, **opts)
@@ -36,6 +81,41 @@ module Ferrum
         save_file(path, bin)
       end
 
+      #
+      # Saves PDF on a disk or returns it as Base64.
+      #
+      # @param [Hash{Symbol => Object}] opts
+      # 
+      # @option opts [String] :path
+      #  The path to save a screenshot on the disk. `:encoding` will be set to
+      #  `:binary` automatically.
+      #
+      # @option opts [:base64, :binary] :encoding
+      #   The encoding the image should be returned in.
+      #
+      # @option opts [Boolean] :landscape (false)
+      #   Page orientation.
+      #
+      # @option opts [Float] :scale
+      #   Zoom in/out.
+      #
+      # @option opts [:letter, :legal, :tabloid, :ledger, :A0, :A1, :A2, :A3, :A4, :A5, :A6] :format
+      #   The standard paper size.
+      #
+      # @option opts [Float] :paper_width
+      #   Sets the paper's width.
+      #
+      # @option opts [Float] :paper_height
+      #   Sets the paper's height.
+      #
+      # @note
+      #   See other [native options](https://chromedevtools.github.io/devtools-protocol/tot/Page#method-printToPDF) you can pass.
+      #
+      # @example
+      #   browser.go_to("https://google.com/")
+      #   # Save to disk as a PDF
+      #   browser.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => true
+      #
       def pdf(**opts)
         path, encoding = common_options(**opts)
         options = pdf_options(**opts).merge(transferMode: "ReturnAsStream")
@@ -43,6 +123,16 @@ module Ferrum
         stream_to(path: path, encoding: encoding, handle: handle)
       end
 
+      #
+      # Saves MHTML on a disk or returns it as a string.
+      #
+      # @param [String, nil] path
+      #   The path to save a file on the disk.
+      #
+      # @example
+      #   browser.go_to("https://google.com/")
+      #   browser.mhtml(path: "google.mhtml") # => 87742
+      #
       def mhtml(path: nil)
         data = command("Page.captureSnapshot", format: :mhtml).fetch("data")
         return data if path.nil?

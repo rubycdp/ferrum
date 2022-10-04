@@ -5,12 +5,45 @@ require "ferrum/frame"
 module Ferrum
   class Page
     module Frames
+      # The page's main frame, the top of the tree and the parent of all frames.
+      #
+      # @return [Frame]
       attr_reader :main_frame
 
+      #
+      # Returns all the frames current page have.
+      #
+      # @return [Array<Frame>]
+      #
+      # @example
+      #   browser.go_to("https://www.w3schools.com/tags/tag_frame.asp")
+      #   browser.frames # =>
+      #   # [
+      #   #   #<Ferrum::Frame @id="C6D104CE454A025FBCF22B98DE612B12" @parent_id=nil @name=nil @state=:stopped_loading @execution_id=1>,
+      #   #   #<Ferrum::Frame @id="C09C4E4404314AAEAE85928EAC109A93" @parent_id="C6D104CE454A025FBCF22B98DE612B12" @state=:stopped_loading @execution_id=2>,
+      #   #   #<Ferrum::Frame @id="2E9C7F476ED09D87A42F2FEE3C6FBC3C" @parent_id="C6D104CE454A025FBCF22B98DE612B12" @state=:stopped_loading @execution_id=3>,
+      #   #   ...
+      #   # ]
+      #
       def frames
         @frames.values
       end
 
+      #
+      # Find frame by given options.
+      #
+      # @param [String] id
+      #   Unique frame's id that browser provides.
+      #
+      # @param [String] name
+      #   Frame's name if there's one.
+      #
+      # @return [Frame, nil]
+      #   The matching frame.
+      #
+      # @example
+      #   browser.frame_by(id: "C6D104CE454A025FBCF22B98DE612B12")
+      #
       def frame_by(id: nil, name: nil, execution_id: nil)
         if id
           @frames[id]

@@ -19,6 +19,16 @@ module Ferrum
     AUTHORIZE_TYPE_WRONG = ":type should be in #{AUTHORIZE_TYPE}"
     ALLOWED_CONNECTION_TYPE = %w[none cellular2g cellular3g cellular4g bluetooth ethernet wifi wimax other].freeze
 
+    # Network traffic.
+    #
+    # @return [Array<Exchange>]
+    #   Returns all information about network traffic as {Exchange}
+    #   instance which in general is a wrapper around `request`, `response` and
+    #   `error`.
+    #
+    # @example
+    #   browser.go_to("https://github.com/")
+    #   browser.network.traffic # => [#<Ferrum::Network::Exchange, ...]
     attr_reader :traffic
 
     def initialize(page)
@@ -29,6 +39,25 @@ module Ferrum
       @whitelist = nil
     end
 
+    #
+    # Waits for network idle or raises {Ferrum::TimeoutError} error.
+    #
+    # @param [Integer] connections
+    #   how many connections are allowed for network to be idling,
+    #
+    # @param [Float] duration
+    #   Sleep for given amount of time and check again.
+    #
+    # @param [Float] timeout
+    #   During what time we try to check idle.
+    #
+    # @raise [Ferrum::TimeoutError]
+    #
+    # @example
+    #   browser.go_to("https://example.com/")
+    #   browser.at_xpath("//a[text() = 'No UI changes button']").click
+    #   browser.network.wait_for_idle
+    #
     def wait_for_idle(connections: 0, duration: 0.05, timeout: @page.browser.timeout)
       start = Utils::ElapsedTime.monotonic_time
 
@@ -55,18 +84,61 @@ module Ferrum
       total_connections - finished_connections
     end
 
+    #
+    # Page request of the main frame.
+    #
+    # @return [Request]
+    #
+    # @example
+    #   browser.go_to("https://github.com/")
+    #   browser.network.request # => #<Ferrum::Network::Request...
+    #
     def request
       @exchange&.request
     end
 
+    #
+    # Page response of the main frame.
+    #
+    # @return [Response, nil]
+    #
+    # @example
+    #   browser.go_to("https://github.com/")
+    #   browser.network.response # => #<Ferrum::Network::Response...
+    #
     def response
       @exchange&.response
     end
 
+    #
+    # Contains the status code of the main page response (e.g., 200 for a
+    # success). This is just a shortcut for `response.status`.
+    # 
+    # @return [Integer, nil]
+    #
+    # @example
+    #   browser.go_to("https://github.com/")
+    #   browser.network.status # => 200
+    #
     def status
       response&.status
     end
 
+    #
+    # Clear browser's cache or collected traffic.
+    #
+    # @param [:traffic, :cache] type
+    #   The type of traffic to clear.
+    #
+    # @return [true]
+    #
+    # @example
+    #   traffic = browser.network.traffic # => []
+    #   browser.go_to("https://github.com/")
+    #   traffic.size # => 51
+    #   browser.network.clear(:traffic)
+    #   traffic.size # => 0
+    #
     def clear(type)
       raise ArgumentError, ":type should be in #{CLEAR_TYPE}" unless CLEAR_TYPE.include?(type)
 
@@ -91,6 +163,30 @@ module Ferrum
     end
     alias allowlist= whitelist=
 
+    #
+    # Set request interception for given options. This method is only sets
+    # request interception, you should use `on` callback to catch requests and
+    # abort or continue them.
+    #
+    # @param [String] pattern
+    #
+    # @param [Symbol, nil] resource_type
+    #   One of the [resource types](https://chromedevtools.github.io/devtools-protocol/tot/Network#type-ResourceType)
+    #
+    # @example
+    #   browser = Ferrum::Browser.new
+    #   browser.network.intercept
+    #   browser.on(:request) do |request|
+    #     if request.match?(/bla-bla/)
+    #       request.abort
+    #     elsif request.match?(/lorem/)
+    #       request.respond(body: "Lorem ipsum")
+    #     else
+    #       request.continue
+    #     end
+    #   end
+    #   browser.go_to("https://google.com")
+    #
     def intercept(pattern: "*", resource_type: nil)
       pattern = { urlPattern: pattern }
       pattern[:resourceType] = resource_type if resource_type && RESOURCE_TYPES.include?(resource_type.to_s)
@@ -98,6 +194,31 @@ module Ferrum
       @page.command("Fetch.enable", handleAuthRequests: true, patterns: [pattern])
     end
 
+    #
+    # Sets HTTP Basic-Auth credentials.
+    #
+    # @param [String] user
+    #   The username to send.
+    #
+    # @param [String] password
+    #   The password to send.
+    #
+    # @param [:server, :proxy] type
+    #   Specifies whether the credentials are for a website or a proxy.
+    #
+    # @yield [request]
+    #   The given block will be passed each authenticated request and can allow
+    #   or deny the request.
+    #
+    # @yieldparam [Request] request
+    #   An HTTP request.
+    #
+    # @example
+    #   browser.network.authorize(user: "login", password: "pass") { |req| req.continue }
+    #   browser.go_to("http://example.com/authenticated")
+    #   puts browser.network.status # => 200
+    #   puts browser.body # => Welcome, authenticated client
+    #
     def authorize(user:, password:, type: :server, &block)
       raise ArgumentError, AUTHORIZE_TYPE_WRONG unless AUTHORIZE_TYPE.include?(type)
       raise ArgumentError, AUTHORIZE_BLOCK_MISSING if !block_given? && !@page.subscribed?("Fetch.requestPaused")
@@ -151,6 +272,37 @@ module Ferrum
       Network::Exchange.new(@page, id).tap { |e| @traffic << e }
     end
 
+    #
+    # Activates emulation of network conditions.
+    #
+    # @param [Boolean] offline
+    #   Emulate internet disconnection,
+    #
+    # @param [Integer] latency
+    #   Minimum latency from request sent to response headers received (ms).
+    #
+    # @param [Integer] download_throughput
+    #   Maximal aggregated download throughput (bytes/sec).
+    #
+    # @param [Integer] upload_throughput
+    #   Maximal aggregated upload throughput (bytes/sec).
+    #
+    # @param [String, nil] connection_type
+    #   Connection type if known:
+    #   * `"none"`
+    #   * `"cellular2g"`
+    #   * `"cellular3g"`
+    #   * `"cellular4g"`
+    #   * `"bluetooth"`
+    #   * `"ethernet"`
+    #   * `"wifi"`
+    #   * `"wimax"`
+    #   * `"other"`
+    #
+    # @example
+    #   browser.network.emulate_network_conditions(connection_type: "cellular2g")
+    #   browser.go_to("https://github.com/")
+    #
     def emulate_network_conditions(offline: false, latency: 0,
                                    download_throughput: -1, upload_throughput: -1,
                                    connection_type: nil)
@@ -166,6 +318,13 @@ module Ferrum
       true
     end
 
+    #
+    # Activates offline mode for a page.
+    #
+    # @example
+    #   browser.network.offline_mode
+    #   browser.go_to("https://github.com/") # => Ferrum::StatusError (Request to https://github.com/ failed to reach server, check DNS and server status)
+    #
     def offline_mode
       emulate_network_conditions(offline: true, latency: 0, download_throughput: 0, upload_throughput: 0)
     end

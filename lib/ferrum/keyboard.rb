@@ -30,6 +30,14 @@ module Ferrum
       @page = page
     end
 
+    #
+    # Dispatches a `keydown` event.
+    #
+    # @param [String, Symbol] key
+    #   Name of the key, such as `"a"`, `:enter`, or `:backspace`.
+    #
+    # @return [self]
+    #
     def down(key)
       key = normalize_keys(Array(key)).first
       type = key[:text] ? "keyDown" : "rawKeyDown"
@@ -37,12 +45,29 @@ module Ferrum
       self
     end
 
+    #
+    # Dispatches a `keyup` event.
+    #
+    # @param [String, Symbol] key
+    #   Name of the key, such as `"a"`, `:enter`, or `:backspace`.
+    #
+    # @return [self]
+    #
     def up(key)
       key = normalize_keys(Array(key)).first
       @page.command("Input.dispatchKeyEvent", slowmoable: true, type: "keyUp", **key)
       self
     end
 
+    #
+    # Sends a keydown, keypress/input, and keyup event for each character in
+    # the text.
+    #
+    # @param [Array<String, Symbol, (Symbol, String)>] keys
+    #   The text to type into a focused element, `[:Shift, "s"], "tring"`.
+    #
+    # @return [self]
+    #
     def type(*keys)
       keys = normalize_keys(Array(keys))
 
@@ -55,6 +80,13 @@ module Ferrum
       self
     end
 
+    #
+    # Returns bitfield for a given keys.
+    #
+    # @param [Array<:alt, :ctrl, :command, :shift>] keys
+    #
+    # @return [Integer]
+    #
     def modifiers(keys)
       keys.map { |k| MODIFIERS[k.to_s] }.compact.reduce(0, :|)
     end

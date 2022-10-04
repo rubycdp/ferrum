@@ -45,9 +45,33 @@ module Ferrum
 
     attr_accessor :referrer
     attr_reader :target_id, :browser,
-                :headers, :cookies, :network,
-                :mouse, :keyboard, :event,
+                :event,
                 :tracing
+
+    # Mouse object.
+    #
+    # @return [Mouse]
+    attr_reader :mouse
+
+    # Keyboard object.
+    #
+    # @return [Keyboard]
+    attr_reader :keyboard
+
+    # Network object.
+    #
+    # @return [Network]
+    attr_reader :network
+
+    # Headers object.
+    #
+    # @return [Headers]
+    attr_reader :headers
+
+    # Cookie store.
+    #
+    # @return [Cookies]
+    attr_reader :cookies
 
     def initialize(target_id, browser)
       @frames = {}
@@ -80,6 +104,16 @@ module Ferrum
       @browser.contexts.find_by(target_id: target_id)
     end
 
+    #
+    # Navigates the page to a URL.
+    #
+    # @param [String, nil] url
+    #   The URL to navigate to. The url should include scheme unless you set
+    #   {Browser#base_url= base_url}` when configuring driver.
+    #
+    # @example
+    #   browser.go_to("https://github.com/")
+    #
     def go_to(url = nil)
       options = { url: combine_url!(url) }
       options.merge!(referrer: referrer) if referrer
@@ -125,29 +159,83 @@ module Ferrum
                                                     fitWindow: false)
     end
 
+    #
+    # The current position of the browser window.
+    #
+    # @return [(Integer, Integer)]
+    #   The left,top coordinates of the browser window.
+    #
+    # @example
+    #   browser.position # => [10, 20]
+    #
     def position
       @browser.command("Browser.getWindowBounds", windowId: window_id).fetch("bounds").values_at("left", "top")
     end
 
+    #
+    # Sets the position of the browser window.
+    #
+    # @param [Hash{Symbol => Object}] options
+    #
+    # @option options [Integer] :left
+    #   The number of pixels from the left-hand side of the screen.
+    #
+    # @option options [Integer] :top
+    #   The number of pixels from the top of the screen.
+    #
+    # @example
+    #   browser.position = { left: 10, top: 20 }
+    #
     def position=(options)
       @browser.command("Browser.setWindowBounds",
                        windowId: window_id,
                        bounds: { left: options[:left], top: options[:top] })
     end
 
+    #
+    # Reloads the current page.
+    #
+    # @example
+    #   browser.go_to("https://github.com/")
+    #   browser.refresh
+    #
     def refresh
       command("Page.reload", wait: timeout, slowmoable: true)
     end
     alias reload refresh
 
+    #
+    # Stop all navigations and loading pending resources on the page.
+    #
+    # @example
+    #   browser.go_to("https://github.com/")
+    #   browser.stop
+    #
     def stop
       command("Page.stopLoading", slowmoable: true)
     end
 
+    #
+    # Navigates to the previous URL in the browser's history.
+    #
+    # @example
+    #   browser.go_to("https://github.com/")
+    #   browser.at_xpath("//a").click
+    #   browser.back
+    #
     def back
       history_navigate(delta: -1)
     end
 
+    #
+    # Navigates to the next URL in the browser's history.
+    #
+    # @example
+    #   browser.go_to("https://github.com/")
+    #   browser.at_xpath("//a").click
+    #   browser.back
+    #   browser.forward
+    #
     def forward
       history_navigate(delta: 1)
     end
@@ -158,6 +246,20 @@ module Ferrum
       @event.set
     end
 
+    #
+    # Enables/disables CSP bypass.
+    #
+    # @param [Boolean] enabled
+    #
+    # @return [Boolean]
+    #
+    # @example
+    #   browser.bypass_csp # => true
+    #   browser.go_to("https://github.com/ruby-concurrency/concurrent-ruby/blob/master/docs-source/promises.in.md")
+    #   browser.refresh
+    #   browser.add_script_tag(content: "window.__injected = 42")
+    #   browser.evaluate("window.__injected") # => 42
+    #
     def bypass_csp(enabled: true)
       command("Page.setBypassCSP", enabled: enabled)
       enabled
