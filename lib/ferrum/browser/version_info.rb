@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Ferrum
   class Browser
     #
@@ -27,7 +29,7 @@ module Ferrum
       # @return [String]
       #
       def protocol_version
-        @properties['protocolVersion']
+        @properties["protocolVersion"]
       end
 
       #
@@ -36,7 +38,7 @@ module Ferrum
       # @return [String]
       #
       def product
-        @properties['product']
+        @properties["product"]
       end
 
       #
@@ -45,7 +47,7 @@ module Ferrum
       # @return [String]
       #
       def revision
-        @properties['revision']
+        @properties["revision"]
       end
 
       #
@@ -54,7 +56,7 @@ module Ferrum
       # @return [String]
       #
       def user_agent
-        @properties['userAgent']
+        @properties["userAgent"]
       end
 
       #
@@ -63,7 +65,7 @@ module Ferrum
       # @return [String]
       #
       def js_version
-        @properties['jsVersion']
+        @properties["jsVersion"]
       end
 
     end
