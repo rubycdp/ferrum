@@ -19,9 +19,15 @@ module Ferrum
       #   browser.go_to("https://www.w3schools.com/tags/tag_frame.asp")
       #   browser.frames # =>
       #   # [
-      #   #   #<Ferrum::Frame @id="C6D104CE454A025FBCF22B98DE612B12" @parent_id=nil @name=nil @state=:stopped_loading @execution_id=1>,
-      #   #   #<Ferrum::Frame @id="C09C4E4404314AAEAE85928EAC109A93" @parent_id="C6D104CE454A025FBCF22B98DE612B12" @state=:stopped_loading @execution_id=2>,
-      #   #   #<Ferrum::Frame @id="2E9C7F476ED09D87A42F2FEE3C6FBC3C" @parent_id="C6D104CE454A025FBCF22B98DE612B12" @state=:stopped_loading @execution_id=3>,
+      #   #   #<Ferrum::Frame
+      #   #     @id="C6D104CE454A025FBCF22B98DE612B12"
+      #   #     @parent_id=nil @name=nil @state=:stopped_loading @execution_id=1>,
+      #   #   #<Ferrum::Frame
+      #   #     @id="C09C4E4404314AAEAE85928EAC109A93"
+      #   #     @parent_id="C6D104CE454A025FBCF22B98DE612B12" @state=:stopped_loading @execution_id=2>,
+      #   #   #<Ferrum::Frame
+      #   #     @id="2E9C7F476ED09D87A42F2FEE3C6FBC3C"
+      #   #     @parent_id="C6D104CE454A025FBCF22B98DE612B12" @state=:stopped_loading @execution_id=3>,
       #   #   ...
       #   # ]
       #

@@ -29,7 +29,7 @@ module Ferrum
       tap { @page.execute("window.scrollTo(#{top}, #{left})") }
     end
 
-    # 
+    #
     # Click given coordinates, fires mouse move, down and up events.
     #
     # @param [Integer] x

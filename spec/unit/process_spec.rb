@@ -29,7 +29,7 @@ module Ferrum
           allow(::Process).to receive(:wait).and_return(nil)
           allow(Client).to receive(:new).and_return(double.as_null_object)
 
-          allow(::Process).to receive(:spawn).with({ "LD_PRELOAD" => "some.so" }, any_args)
+          allow(::Process).to receive(:spawn).with({ "LD_PRELOAD" => "some.so" }, any_args).and_return(123_456_789)
 
           allow_any_instance_of(Process).to receive(:parse_ws_url)
 

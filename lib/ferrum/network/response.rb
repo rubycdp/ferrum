@@ -3,7 +3,8 @@
 module Ferrum
   class Network
     #
-    # Represents a [Network.Response](https://chromedevtools.github.io/devtools-protocol/1-3/Network/#type-Response) object.
+    # Represents a [Network.Response](https://chromedevtools.github.io/devtools-protocol/1-3/Network/#type-Response)
+    # object.
     #
     class Response
       # The response body size.
@@ -22,7 +23,7 @@ module Ferrum
       #
       # @param [Page] page
       #   The page associated with the network response.
-      # 
+      #
       # @param [Hash{String => Object}] params
       #   The parsed JSON attributes for the [Network.Response](https://chromedevtools.github.io/devtools-protocol/1-3/Network/#type-Response)
       #

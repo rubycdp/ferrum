@@ -5,7 +5,8 @@ require "time"
 module Ferrum
   class Network
     #
-    # Represents a [Network.Request](https://chromedevtools.github.io/devtools-protocol/1-3/Network/#type-Request) object.
+    # Represents a [Network.Request](https://chromedevtools.github.io/devtools-protocol/1-3/Network/#type-Request)
+    # object.
     #
     class Request
       #
@@ -42,7 +43,7 @@ module Ferrum
       #
       # @param [String, Symbol] value
       #   The type value to compare against.
-      #   
+      #
       # @return [Boolean]
       #
       def type?(value)
@@ -67,7 +68,7 @@ module Ferrum
         @request["url"]
       end
 
-      # 
+      #
       # The URL fragment for the request.
       #
       # @return [String, nil]

@@ -119,7 +119,8 @@ module Ferrum
     #   Specify proxy settings, [read more](https://github.com/rubycdp/ferrum#proxy).
     #
     # @option options [String] :save_path
-    #   Path to save attachments with [Content-Disposition](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition) header.
+    #   Path to save attachments with [Content-Disposition](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition)
+    #   header.
     #
     # @option options [Hash] :env
     #   Environment variables you'd like to pass through to the process.

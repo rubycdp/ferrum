@@ -30,7 +30,7 @@ module Ferrum
       # Saves screenshot on a disk or returns it as base64.
       #
       # @param [Hash{Symbol => Object}] opts
-      # 
+      #
       # @option opts [String] :path
       #  The path to save a screenshot on the disk. `:encoding` will be set to
       #  `:binary` automatically.
@@ -64,10 +64,10 @@ module Ferrum
       #
       # @example Save on the disk in JPG:
       #   browser.screenshot(path: "google.jpg") # => 30902
-      # 
+      #
       # @example Save to Base64 the whole page not only viewport and reduce quality:
-      #   browser.screenshot(full: true, quality: 60) # "iVBORw0KGgoAAAANSUhEUgAABAAAAAMACAYAAAC6uhUNAAAAAXNSR0IArs4c6Q...
-      # 
+      #   browser.screenshot(full: true, quality: 60) # "iVBORw0KGgoAAAANS...
+      #
       # @example Save with specific background color:
       #   browser.screenshot(background_color: Ferrum::RGBA.new(0, 0, 0, 0.0))
       #
@@ -85,7 +85,7 @@ module Ferrum
       # Saves PDF on a disk or returns it as Base64.
       #
       # @param [Hash{Symbol => Object}] opts
-      # 
+      #
       # @option opts [String] :path
       #  The path to save a screenshot on the disk. `:encoding` will be set to
       #  `:binary` automatically.
@@ -109,7 +109,8 @@ module Ferrum
       #   Sets the paper's height.
       #
       # @note
-      #   See other [native options](https://chromedevtools.github.io/devtools-protocol/tot/Page#method-printToPDF) you can pass.
+      #   See other [native options](https://chromedevtools.github.io/devtools-protocol/tot/Page#method-printToPDF) you
+      #   can pass.
       #
       # @example
       #   browser.go_to("https://google.com/")

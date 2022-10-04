@@ -6,8 +6,11 @@ module Ferrum
       let(:protocol_version) { "1.3" }
       let(:product)          { "HeadlessChrome/106.0.5249.91" }
       let(:revision)         { "@fa96d5f07b1177d1bf5009f647a5b8c629762157" }
-      let(:user_agent)       { "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/106.0.5249.91 Safari/537.36" }
-      let(:js_version)       { "10.6.194.17" }
+      let(:user_agent)       do
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 " \
+          "(KHTML, like Gecko) HeadlessChrome/106.0.5249.91 Safari/537.36"
+      end
+      let(:js_version) { "10.6.194.17" }
       let(:properties) do
         {
           "protocolVersion" => protocol_version,
@@ -33,19 +36,19 @@ module Ferrum
       end
 
       describe "#revision" do
-        it "must return the 'revision' property" do
+        it "must return the revision property" do
           expect(subject.revision).to eq(properties["revision"])
         end
       end
 
       describe "#user_agent" do
-        it "must return the 'userAgent' property" do
+        it "must return the userAgent property" do
           expect(subject.user_agent).to eq(properties["userAgent"])
         end
       end
 
       describe "#js_version" do
-        it "must return the 'jsVersion' property" do
+        it "must return the jsVersion property" do
           expect(subject.js_version).to eq(properties["jsVersion"])
         end
       end

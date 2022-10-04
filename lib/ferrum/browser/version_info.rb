@@ -10,7 +10,6 @@ module Ferrum
     # @since 0.13
     #
     class VersionInfo
-
       #
       # Initializes the browser's version information.
       #
@@ -67,7 +66,6 @@ module Ferrum
       def js_version
         @properties["jsVersion"]
       end
-
     end
   end
 end

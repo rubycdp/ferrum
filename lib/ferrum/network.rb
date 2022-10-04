@@ -113,7 +113,7 @@ module Ferrum
     #
     # Contains the status code of the main page response (e.g., 200 for a
     # success). This is just a shortcut for `response.status`.
-    # 
+    #
     # @return [Integer, nil]
     #
     # @example
@@ -323,7 +323,8 @@ module Ferrum
     #
     # @example
     #   browser.network.offline_mode
-    #   browser.go_to("https://github.com/") # => Ferrum::StatusError (Request to https://github.com/ failed to reach server, check DNS and server status)
+    #   browser.go_to("https://github.com/") # => Ferrum::StatusError (Request to https://github.com/ failed to reach
+    #   server, check DNS and server status)
     #
     def offline_mode
       emulate_network_conditions(offline: true, latency: 0, download_throughput: 0, upload_throughput: 0)

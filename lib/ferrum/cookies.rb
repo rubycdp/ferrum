@@ -122,7 +122,12 @@ module Ferrum
     # @return [Hash{String => Cookie}]
     #
     # @example
-    #   browser.cookies.all # => {"NID"=>#<Ferrum::Cookies::Cookie:0x0000558624b37a40 @attributes={"name"=>"NID", "value"=>"...", "domain"=>".google.com", "path"=>"/", "expires"=>1583211046.575681, "size"=>178, "httpOnly"=>true, "secure"=>false, "session"=>false}>}
+    #   browser.cookies.all # => {
+    #   #  "NID" => #<Ferrum::Cookies::Cookie:0x0000558624b37a40 @attributes={
+    #   #     "name"=>"NID", "value"=>"...", "domain"=>".google.com", "path"=>"/",
+    #   #     "expires"=>1583211046.575681, "size"=>178, "httpOnly"=>true, "secure"=>false, "session"=>false
+    #   #  }>
+    #   # }
     #
     def all
       cookies = @page.command("Network.getAllCookies")["cookies"]
@@ -139,7 +144,12 @@ module Ferrum
     #   The cookie with the matching name.
     #
     # @example
-    #   browser.cookies["NID"] # => <Ferrum::Cookies::Cookie:0x0000558624b67a88 @attributes={"name"=>"NID", "value"=>"...", "domain"=>".google.com", "path"=>"/", "expires"=>1583211046.575681, "size"=>178, "httpOnly"=>true, "secure"=>false, "session"=>false}>
+    #   browser.cookies["NID"] # =>
+    #   # <Ferrum::Cookies::Cookie:0x0000558624b67a88 @attributes={
+    #   #  "name"=>"NID", "value"=>"...", "domain"=>".google.com",
+    #   #  "path"=>"/", "expires"=>1583211046.575681, "size"=>178,
+    #   #  "httpOnly"=>true, "secure"=>false, "session"=>false
+    #   # }>
     #
     def [](name)
       all[name]

@@ -139,7 +139,6 @@ module Ferrum
       #
       # @example
       #   browser.add_script_tag(url: "http://example.com/stylesheet.css") # => true
-
       #
       def add_script_tag(url: nil, path: nil, content: nil, type: "text/javascript")
         expr, *args = if url
