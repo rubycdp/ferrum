@@ -2,6 +2,10 @@
 
 ### Added
 
+- `Ferrum::Browser::VersionInfo`
+- `Ferrum::Browser`
+  - `#version` requests the browser's version information.
+
 ### Changed
 
 ### Fixed
