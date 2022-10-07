@@ -3,6 +3,8 @@
 module Ferrum
   describe Page do
     describe "#go_to" do
+      let(:port) { server.port }
+
       context "with success response" do
         it "works when DNS correct" do
           expect { browser.go_to("http://localhost:#{port}/") }.not_to raise_error
@@ -18,8 +20,6 @@ module Ferrum
       end
 
       context "with failing response" do
-        let(:port) { server.port }
-
         it "handles when a non-existent file was specified" do
           file_name = "file:non-existent"
 

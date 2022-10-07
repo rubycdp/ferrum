@@ -364,8 +364,7 @@ module Ferrum
       browser.go_to("/ferrum/index")
 
       allow_any_instance_of(Node).to receive(:content_quads)
-                                       .and_raise(Ferrum::CoordinatesNotFoundError,
-                                                  "Could not compute content quads")
+        .and_raise(Ferrum::CoordinatesNotFoundError, "Could not compute content quads")
 
       browser.at_xpath("//a[text() = 'JS redirect']").click
       expect(browser.body).to include("Hello world")
