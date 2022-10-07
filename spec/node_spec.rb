@@ -306,5 +306,88 @@ module Ferrum
         expect(styles["font-weight"]).to eq("700")
       end
     end
+
+    context "whitespace stripping tests", skip: true do
+      before do
+        browser.go_to("/ferrum/filter_text_test")
+      end
+
+      it "gets text" do
+        expect(browser.at_css("#foo").text).to eq "foo"
+      end
+
+      it "gets text stripped whitespace" do
+        expect(browser.at_css("#bar").inner_text).to eq "bar"
+      end
+
+      it "gets text stripped whitespace and then converts nbsp to space" do
+        expect(browser.at_css("#baz").inner_text).to eq " baz    "
+      end
+
+      it "gets text stripped whitespace" do
+        expect(browser.at_css("#qux").text).to eq "  \u3000 qux \u3000  "
+      end
+    end
+
+    context "supports accessing element properties" do
+      before do
+        browser.go_to("/ferrum/attributes_properties")
+      end
+
+      it "gets property innerHTML" do
+        expect(browser.at_css(".some_other_class").property("innerHTML")).to eq "<p>foobar</p>"
+      end
+
+      it "gets property outerHTML" do
+        el = browser.at_css(".some_other_class")
+        expect(el.property("outerHTML"))
+          .to eq %(<div class="some_other_class"><p>foobar</p></div>)
+      end
+
+      it "gets non existent property" do
+        el = browser.at_css(".some_other_class")
+        expect(el.property("does_not_exist")).to eq nil
+      end
+    end
+
+    context "SVG tests" do
+      before do
+        browser.go_to("/ferrum/svg_test")
+      end
+
+      it "gets text from tspan node" do
+        expect(browser.at_css("tspan").text).to eq "svg foo"
+      end
+    end
+
+    it "does not run into content quads error" do
+      browser.go_to("/ferrum/index")
+
+      allow_any_instance_of(Node).to receive(:content_quads)
+                                       .and_raise(Ferrum::CoordinatesNotFoundError,
+                                                  "Could not compute content quads")
+
+      browser.at_xpath("//a[text() = 'JS redirect']").click
+      expect(browser.body).to include("Hello world")
+    end
+
+    it "returns BR as new line in #text" do
+      browser.go_to("/ferrum/simple")
+      el = browser.at_css("#break")
+      expect(el.inner_text).to eq("Foo\nBar")
+      expect(browser.at_css("#break").text).to eq("FooBar")
+    end
+
+    it "synchronizes page loads properly" do
+      browser.go_to("/ferrum/index")
+      browser.at_xpath("//a[text() = 'JS redirect']").click
+      sleep 0.1
+      expect(browser.body).to include("Hello world")
+    end
+
+    it "handles obsolete node during an attach_file", skip: true do
+      browser.go_to("/ferrum/attach_file")
+      browser.attach_file "file", __FILE__
+    end
   end
 end

@@ -130,6 +130,21 @@ module Ferrum
       end
     end
 
+    it "supports clicking precise coordinates" do
+      browser.go_to("/ferrum/click_coordinates")
+      browser.mouse.click(x: 100, y: 150)
+      expect(browser.body).to include("x: 100, y: 150")
+    end
+
+    it "allows the page to be scrolled" do
+      browser.go_to("/ferrum/long_page")
+      browser.resize(width: 10, height: 10)
+      browser.mouse.scroll_to(200, 100)
+      expect(
+        browser.evaluate("[window.scrollX, window.scrollY]")
+      ).to eq([200, 100])
+    end
+
     it "has no trouble clicking elements when the size of a document changes", skip: true do
       browser.go_to("/ferrum/long_page")
       browser.at_css("#penultimate").click

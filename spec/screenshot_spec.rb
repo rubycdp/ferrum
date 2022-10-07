@@ -388,6 +388,22 @@ module Ferrum
           expect(content).to match(/Foo<br>Bar/)
         end
       end
+
+      describe "#viewport_size" do
+        it "has a size of 1024x768 by default" do
+          browser.go_to
+
+          expect(browser.viewport_size).to eq([1024, 768])
+        end
+
+        it "supports specifying viewport size with an option" do
+          browser = Browser.new(window_size: [800, 600])
+          browser.go_to(base_url)
+          expect(browser.viewport_size).to eq([800, 600])
+        ensure
+          browser&.quit
+        end
+      end
     end
   end
 end
