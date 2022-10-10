@@ -8,7 +8,7 @@ module Ferrum
     class Cookie
       # The parsed JSON attributes.
       #
-      # @return [Hash{String => String}]
+      # @return [Hash{String => [String, Boolean, nil]}]
       attr_reader :attributes
 
       #
@@ -27,7 +27,7 @@ module Ferrum
       # @return [String]
       #
       def name
-        @attributes["name"]
+        attributes["name"]
       end
 
       #
@@ -36,7 +36,7 @@ module Ferrum
       # @return [String]
       #
       def value
-        @attributes["value"]
+        attributes["value"]
       end
 
       #
@@ -45,7 +45,7 @@ module Ferrum
       # @return [String]
       #
       def domain
-        @attributes["domain"]
+        attributes["domain"]
       end
 
       #
@@ -54,7 +54,7 @@ module Ferrum
       # @return [String]
       #
       def path
-        @attributes["path"]
+        attributes["path"]
       end
 
       #
@@ -63,8 +63,9 @@ module Ferrum
       # @return ["Strict", "Lax", "None", nil]
       #
       def samesite
-        @attributes["sameSite"]
+        attributes["sameSite"]
       end
+      alias same_site samesite
 
       #
       # The cookie's size.
@@ -72,7 +73,7 @@ module Ferrum
       # @return [Integer]
       #
       def size
-        @attributes["size"]
+        attributes["size"]
       end
 
       #
@@ -81,7 +82,7 @@ module Ferrum
       # @return [Boolean]
       #
       def secure?
-        @attributes["secure"]
+        attributes["secure"]
       end
 
       #
@@ -90,8 +91,9 @@ module Ferrum
       # @return [Boolean]
       #
       def httponly?
-        @attributes["httpOnly"]
+        attributes["httpOnly"]
       end
+      alias http_only? httponly?
 
       #
       # Specifies whether the cookie is a session cookie or not.
@@ -99,7 +101,7 @@ module Ferrum
       # @return [Boolean]
       #
       def session?
-        @attributes["session"]
+        attributes["session"]
       end
 
       #
@@ -108,7 +110,16 @@ module Ferrum
       # @return [Time, nil]
       #
       def expires
-        Time.at(@attributes["expires"]) if @attributes["expires"].positive?
+        Time.at(attributes["expires"]) if attributes["expires"].positive?
+      end
+
+      #
+      # Compares different cookie objects.
+      #
+      # @return [Time, nil]
+      #
+      def ==(other)
+        other.class == self.class && other.attributes == attributes
       end
     end
 

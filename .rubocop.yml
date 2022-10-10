@@ -1,6 +1,7 @@
 AllCops:
   TargetRubyVersion: 2.6
   NewCops: enable
+  SuggestExtensions: false
 
 Layout/FirstArrayElementIndentation:
   EnforcedStyle: consistent
@@ -38,6 +39,8 @@ Metrics/AbcSize:
 
 Metrics/ClassLength:
   Max: 258
+  Exclude:
+    - spec/**/*
 
 Metrics/CyclomaticComplexity:
   Max: 14
@@ -53,6 +56,5 @@ Metrics/ModuleLength:
 Metrics/PerceivedComplexity:
   Max: 14
 
-#require:
-#  - rubocop-rake
-#  - rubocop-rspec
+require:
+  - rubocop-rake

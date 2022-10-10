@@ -30,7 +30,7 @@ module Ferrum
         ENV["PATHEXT"] = @original_env_pathext
       end
 
-      context "#find" do
+      describe "#find" do
         it "finds one binary" do
           expect(Binary.find("bin1")).to eq(bin1)
         end
@@ -64,7 +64,7 @@ module Ferrum
         end
       end
 
-      context "#all" do
+      describe "#all" do
         it "finds one binary" do
           expect(Binary.all("bin1")).to eq([bin1])
         end
@@ -92,10 +92,12 @@ module Ferrum
         end
       end
 
-      it "works lazily" do
-        enum = Binary.lazy_find(%w[ls which none])
+      describe "#lazy_find" do
+        it "works lazily" do
+          enum = Binary.lazy_find(%w[ls which none])
 
-        expect(enum.instance_of?(Enumerator::Lazy)).to be_truthy
+          expect(enum.instance_of?(Enumerator::Lazy)).to be_truthy
+        end
       end
     end
   end

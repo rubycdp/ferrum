@@ -13,7 +13,6 @@ task default: :test
 begin
   require "yard"
   YARD::Rake::YardocTask.new
-  task docs: :yard
 rescue LoadError
   # nop
 end

@@ -2,7 +2,7 @@
 
 module Ferrum
   describe Network do
-    context "#traffic" do
+    describe "#traffic" do
       it "keeps track of network traffic" do
         page.go_to("/ferrum/with_js")
         urls = traffic.map { |e| e.request.url }
@@ -92,7 +92,7 @@ module Ferrum
       skip
     end
 
-    context "#clear" do
+    describe "#clear" do
       it "raises error when type is not in the list" do
         page.go_to("/ferrum/with_js")
         expect(traffic.length).to eq(4)
@@ -132,7 +132,7 @@ module Ferrum
       end
     end
 
-    context "#blacklist=" do
+    describe "#blacklist=" do
       let(:blocked_urls) { traffic.select(&:blocked?).map { |e| e.request.url } }
 
       it "allows all requests when blacklist is not set" do
@@ -253,7 +253,7 @@ module Ferrum
       end
     end
 
-    context "#whitelist=" do
+    describe "#whitelist=" do
       let(:blocked_urls) { traffic.select(&:blocked?).map { |e| e.request.url } }
 
       it "allows all requests when blacklist is not set" do
@@ -302,7 +302,7 @@ module Ferrum
       end
     end
 
-    context "#intercept" do
+    describe "#intercept" do
       it "supports custom responses" do
         network.intercept
         page.on(:request) do |request|
@@ -316,7 +316,7 @@ module Ferrum
       end
     end
 
-    context "#authorize" do
+    describe "#authorize" do
       it "raises error when authorize is without block" do
         expect do
           network.authorize(user: "login", password: "pass")

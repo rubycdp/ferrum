@@ -6,8 +6,8 @@ require "chunky_png"
 require "ferrum/rgba"
 
 module Ferrum
-  describe Browser do
-    context "screenshot support" do
+  class Page
+    describe Screenshot do
       shared_examples "screenshot screen" do
         it "supports screenshotting the whole of a page that goes outside the viewport" do
           browser.go_to("/ferrum/long_page")
@@ -79,6 +79,25 @@ module Ferrum
         end
       end
 
+      shared_examples "when scale is set" do
+        it "changes image dimensions" do
+          browser.go_to("/ferrum/zoom_test")
+
+          black_pixels_count = lambda { |file|
+            img = ChunkyPNG::Image.from_file(file)
+            img.pixels.inject(0) { |i, p| p > 255 ? i + 1 : i }
+          }
+
+          browser.screenshot(path: file)
+          before = black_pixels_count[file]
+
+          browser.screenshot(path: file, scale: scale)
+          after = black_pixels_count[file]
+
+          expect(after.to_f / before).to eq(scale**2)
+        end
+      end
+
       describe "#screenshot" do
         let(:format) { :png }
         let(:file) { "#{PROJECT_ROOT}/spec/tmp/screenshot.#{format}" }
@@ -99,55 +118,12 @@ module Ferrum
           expect(File.exist?(file)).to be true
         end
 
-        it "supports screenshotting the page with a nonstring path" do
+        it "supports screenshotting the page with a non-string path" do
           browser.go_to
 
           browser.screenshot(path: Pathname(file))
 
           expect(File.exist?(file)).to be true
-        end
-
-        context "fullscreen" do
-          it "supports screenshotting of fullscreen" do
-            browser.go_to("/ferrum/custom_html_size")
-            expect(browser.viewport_size).to eq([1024, 768])
-
-            browser.screenshot(path: file, full: true)
-
-            File.open(file, "rb") do |f|
-              expect(ImageSize.new(f.read).size).to eq([1280, 1024])
-            end
-            expect(browser.viewport_size).to eq([1024, 768])
-          end
-
-          it "keeps current viewport" do
-            browser.go_to
-            browser.resize(width: 800, height: 200)
-
-            browser.screenshot(path: file, full: true)
-
-            expect(File.exist?(file)).to be(true)
-            expect(browser.viewport_size).to eq([800, 200])
-          end
-
-          it "resets to previous viewport when exception is raised" do
-            browser.go_to("/ferrum/custom_html_size")
-            browser.resize(width: 100, height: 100)
-
-            allow(browser.page).to receive(:command).and_call_original
-            expect(browser.page).to receive(:command)
-              .with("Page.captureScreenshot", format: "png", clip: {
-                      x: 0, y: 0, width: 1280, height: 1024, scale: 1.0
-                    }).and_raise(StandardError)
-            expect { browser.screenshot(path: file, full: true) }
-              .to raise_exception(StandardError)
-
-            # Fix Ruby 3 `and_call_original` bug
-            RSpec::Mocks.space.proxy_for(browser.page).reset
-
-            expect(File.exist?(file)).not_to be
-            expect(browser.viewport_size).to eq([100, 100])
-          end
         end
 
         it "supports screenshotting the page to file without extension when format is specified" do
@@ -178,7 +154,52 @@ module Ferrum
           end
         end
 
-        describe "background_color option" do
+        include_examples "screenshot screen"
+
+        context "with fullscreen" do
+          it "supports screenshotting of fullscreen" do
+            browser.go_to("/ferrum/custom_html_size")
+            expect(browser.viewport_size).to eq([1024, 768])
+
+            browser.screenshot(path: file, full: true)
+
+            File.open(file, "rb") do |f|
+              expect(ImageSize.new(f.read).size).to eq([1280, 1024])
+            end
+            expect(browser.viewport_size).to eq([1024, 768])
+          end
+
+          it "keeps current viewport" do
+            browser.go_to
+            browser.resize(width: 800, height: 200)
+
+            browser.screenshot(path: file, full: true)
+
+            expect(File.exist?(file)).to be(true)
+            expect(browser.viewport_size).to eq([800, 200])
+          end
+
+          it "resets to previous viewport when exception is raised" do
+            browser.go_to("/ferrum/custom_html_size")
+            browser.resize(width: 100, height: 100)
+
+            allow(browser.page).to receive(:command).and_call_original
+            expect(browser.page).to receive(:command)
+              .with("Page.captureScreenshot",
+                    format: "png", clip: { x: 0, y: 0, width: 1280, height: 1024, scale: 1.0 })
+              .and_raise(StandardError)
+            expect { browser.screenshot(path: file, full: true) }
+              .to raise_exception(StandardError)
+
+            # Fix Ruby 3 `and_call_original` bug
+            RSpec::Mocks.space.proxy_for(browser.page).reset
+
+            expect(File.exist?(file)).not_to be
+            expect(browser.viewport_size).to eq([100, 100])
+          end
+        end
+
+        context "with :background_color option" do
           it "supports screenshotting page with the specific background color" do
             file = "#{PROJECT_ROOT}/spec/tmp/screenshot.jpeg"
             browser.go_to
@@ -199,25 +220,6 @@ module Ferrum
           end
         end
 
-        shared_examples "when scale is set" do
-          it "changes image dimensions" do
-            browser.go_to("/ferrum/zoom_test")
-
-            black_pixels_count = lambda { |file|
-              img = ChunkyPNG::Image.from_file(file)
-              img.pixels.inject(0) { |i, p| p > 255 ? i + 1 : i }
-            }
-
-            browser.screenshot(path: file)
-            before = black_pixels_count[file]
-
-            browser.screenshot(path: file, scale: scale)
-            after = black_pixels_count[file]
-
-            expect(after.to_f / before).to eq(scale**2)
-          end
-        end
-
         context "zoom in" do
           let(:scale) { 2 }
           include_examples "when scale is set"
@@ -227,8 +229,6 @@ module Ferrum
           let(:scale) { 0.5 }
           include_examples "when scale is set"
         end
-
-        include_examples "screenshot screen"
 
         context "when encoding is base64" do
           let(:file) { "#{PROJECT_ROOT}/spec/tmp/screenshot.#{format}" }
@@ -254,14 +254,14 @@ module Ferrum
             expect(screenshot.length).to be > 100
           end
 
-          context "png" do
+          context "with png" do
             let(:format) { :png }
             after { FileUtils.rm_f(file) }
 
             include_examples "screenshot screen"
           end
 
-          context "jpeg" do
+          context "with jpeg" do
             let(:format) { :jpeg }
             after { FileUtils.rm_f(file) }
 

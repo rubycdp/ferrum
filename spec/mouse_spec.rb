@@ -2,6 +2,76 @@
 
 module Ferrum
   describe Mouse do
+    describe "#click" do
+      it "supports clicking precise coordinates" do
+        browser.go_to("/ferrum/click_coordinates")
+        browser.mouse.click(x: 100, y: 150)
+        expect(browser.body).to include("x: 100, y: 150")
+      end
+
+      it "has no trouble clicking elements when the size of a document changes", skip: true do
+        browser.go_to("/ferrum/long_page")
+        browser.at_css("#penultimate").click
+        browser.execute <<~JS
+          el = document.getElementById("penultimate")
+          el.parentNode.removeChild(el)
+        JS
+        browser.at_xpath("//a[text() = 'Phasellus blandit velit']").click
+        expect(browser.body).to include("Hello")
+      end
+
+      it "handles click when the target is in the view, but the document is smaller than the viewport" do
+        browser.go_to("/ferrum/simple")
+        browser.at_xpath("//a[text() = 'Link']").click
+        expect(browser.body).to include("Hello world")
+      end
+
+      it "handles clicks where a parent element has a border" do
+        browser.go_to("/ferrum/table")
+        browser.at_xpath("//a[text() = 'Link']").click
+        expect(browser.body).to include("Hello world")
+      end
+    end
+
+    describe "#scroll_to" do
+      it "allows the page to be scrolled" do
+        browser.go_to("/ferrum/long_page")
+        browser.resize(width: 10, height: 10)
+        browser.mouse.scroll_to(200, 100)
+        expect(
+          browser.evaluate("[window.scrollX, window.scrollY]")
+        ).to eq([200, 100])
+      end
+    end
+
+    describe "#move" do
+      let(:tracking_code) do
+        <<~JS
+          window.result = [];
+          document.addEventListener("mousemove", e => {
+            window.result.push([e.clientX, e.clientY]);
+          });
+          arguments[0]();
+        JS
+      end
+
+      it "splits into steps" do
+        browser.go_to("/ferrum/simple")
+        browser.mouse.move(x: 100, y: 100)
+        browser.evaluate_async(tracking_code, browser.timeout)
+
+        browser.mouse.move(x: 200, y: 300, steps: 5)
+
+        expect(browser.evaluate("window.result")).to eq([
+          [120, 140],
+          [140, 180],
+          [160, 220],
+          [180, 260],
+          [200, 300]
+        ])
+      end
+    end
+
     context "mouse support", skip: true do
       before do
         browser.go_to("/ferrum/click_test")
@@ -127,72 +197,6 @@ module Ferrum
             expect(log.text).to eq(instruction)
           end
         end
-      end
-    end
-
-    it "supports clicking precise coordinates" do
-      browser.go_to("/ferrum/click_coordinates")
-      browser.mouse.click(x: 100, y: 150)
-      expect(browser.body).to include("x: 100, y: 150")
-    end
-
-    it "allows the page to be scrolled" do
-      browser.go_to("/ferrum/long_page")
-      browser.resize(width: 10, height: 10)
-      browser.mouse.scroll_to(200, 100)
-      expect(
-        browser.evaluate("[window.scrollX, window.scrollY]")
-      ).to eq([200, 100])
-    end
-
-    it "has no trouble clicking elements when the size of a document changes", skip: true do
-      browser.go_to("/ferrum/long_page")
-      browser.at_css("#penultimate").click
-      browser.execute <<~JS
-        el = document.getElementById("penultimate")
-        el.parentNode.removeChild(el)
-      JS
-      browser.at_xpath("//a[text() = 'Phasellus blandit velit']").click
-      expect(browser.body).to include("Hello")
-    end
-
-    it "handles clicks where the target is in view, but the document is smaller than the viewport" do
-      browser.go_to("/ferrum/simple")
-      browser.at_xpath("//a[text() = 'Link']").click
-      expect(browser.body).to include("Hello world")
-    end
-
-    it "handles clicks where a parent element has a border" do
-      browser.go_to("/ferrum/table")
-      browser.at_xpath("//a[text() = 'Link']").click
-      expect(browser.body).to include("Hello world")
-    end
-
-    context "#move" do
-      let(:tracking_code) do
-        <<~JS
-          window.result = [];
-          document.addEventListener("mousemove", e => {
-            window.result.push([e.clientX, e.clientY]);
-          });
-          arguments[0]();
-        JS
-      end
-
-      it "splits into steps" do
-        browser.go_to("/ferrum/simple")
-        browser.mouse.move(x: 100, y: 100)
-        browser.evaluate_async(tracking_code, browser.timeout)
-
-        browser.mouse.move(x: 200, y: 300, steps: 5)
-
-        expect(browser.evaluate("window.result")).to eq([
-          [120, 140],
-          [140, 180],
-          [160, 220],
-          [180, 260],
-          [200, 300]
-        ])
       end
     end
   end

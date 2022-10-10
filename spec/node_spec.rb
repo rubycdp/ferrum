@@ -2,85 +2,137 @@
 
 module Ferrum
   describe Node do
-    it "raises an error if the element has been removed from the DOM" do
-      browser.go_to("/ferrum/with_js")
-      node = browser.at_css("#remove_me")
-      expect(node.text).to eq("Remove me")
-      browser.at_css("#remove").click
-      expect { node.text }.to raise_error(Ferrum::NodeNotFoundError)
+    describe "#click" do
+      it "hovers an element before clicking it" do
+        browser.go_to("/ferrum/with_js")
+
+        browser.at_xpath("//a[span[text() = 'Hidden link']]").click
+
+        expect(browser.current_url).to eq(base_url("/"))
+      end
+
+      it "does not run into content quads error" do
+        browser.go_to("/ferrum/index")
+
+        allow_any_instance_of(Node).to receive(:content_quads)
+          .and_raise(Ferrum::CoordinatesNotFoundError, "Could not compute content quads")
+
+        browser.at_xpath("//a[text() = 'JS redirect']").click
+        expect(browser.body).to include("Hello world")
+      end
+
+      it "synchronizes page loads properly" do
+        browser.go_to("/ferrum/index")
+        browser.at_xpath("//a[text() = 'JS redirect']").click
+        sleep 0.1
+        expect(browser.body).to include("Hello world")
+      end
+
+      it "raises an error if the element has been removed from the DOM" do
+        browser.go_to("/ferrum/with_js")
+        node = browser.at_css("#remove_me")
+        expect(node.text).to eq("Remove me")
+
+        browser.at_css("#remove").click
+
+        expect { node.text }.to raise_error(Ferrum::NodeNotFoundError)
+      end
+
+      it "raises an error if the element is not visible" do
+        browser.go_to("/ferrum/index")
+
+        browser.execute <<~JS
+          document.querySelector("a[href=js_redirect]").style.display = "none"
+        JS
+
+        sleep 0.2 # Wait for node to disappear
+
+        expect do
+          browser.at_xpath("//a[text()='JS redirect']").click
+        end.to raise_error(
+          Ferrum::CoordinatesNotFoundError,
+          "Node is either not visible or not an HTMLElement"
+        )
+      end
+
+      context "when the element is not in the viewport" do
+        before do
+          browser.go_to("/ferrum/with_js")
+        end
+
+        it "raises a MouseEventFailed error", skip: "needs fix" do
+          expect do
+            browser.at_xpath("//a[text() = 'O hai']").click
+          end.to raise_error(Ferrum::MouseEventFailed)
+        end
+
+        it "clicks properly when then brought in with animate" do
+          browser.execute %($("#off-the-left").animate({left: "10"});)
+
+          expect { browser.at_xpath("//a[text() = 'O hai']") }.to_not raise_error
+        end
+      end
+
+      context "when the element is not in the viewport of parent element", skip: true do
+        before do
+          browser.go_to("/ferrum/scroll")
+        end
+
+        it "scrolls into view", skip: "needs fix" do
+          browser.at_xpath("//a[text() = 'Link outside viewport']").click
+          expect(browser.current_url).to eq("/")
+        end
+
+        it "scrolls into view if scrollIntoViewIfNeeded fails" do
+          browser.click_link "Below the fold"
+          expect(browser.current_path).to eq("/")
+        end
+      end
     end
 
-    it "raises an error if the element was on a previous page" do
-      browser.go_to("/ferrum/index")
-      node = browser.at_xpath(".//a")
-      browser.execute "window.location = 'about:blank'"
-      expect { node.text }.to raise_error(Ferrum::NodeNotFoundError)
+    describe "#at_xpath" do
+      it "searches relatively current node" do
+        browser.go_to("/ferrum/with_js")
+
+        p = browser.at_xpath("//p[@id='with_content']")
+
+        expect(p.at_xpath("a").text).to eq("Open for match")
+        expect(p.at_xpath(".//a").text).to eq("Open for match")
+      end
     end
 
-    it "raises an error if the element is not visible" do
-      browser.go_to("/ferrum/index")
+    describe "#xpath" do
+      it "searches relatively current node" do
+        browser.go_to("/ferrum/with_js")
 
-      browser.execute <<~JS
-        document.querySelector("a[href=js_redirect]").style.display = "none"
-      JS
+        p = browser.at_xpath("//p[@id='with_content']")
+        links = p.xpath("a")
 
-      sleep 0.2 # Wait for node to disappear
-
-      expect do
-        browser.at_xpath("//a[text()='JS redirect']").click
-      end.to raise_error(
-        Ferrum::CoordinatesNotFoundError,
-        "Node is either not visible or not an HTMLElement"
-      )
+        expect(links.size).to eq(1)
+        expect(links.first.text).to eq("Open for match")
+      end
     end
 
-    it "hovers an element before clicking it" do
-      browser.go_to("/ferrum/with_js")
-      browser.at_xpath("//a[span[text() = 'Hidden link']]").click
-      expect(browser.current_url).to eq(base_url("/"))
+    describe "#at_css" do
+      it "searches relatively current node" do
+        browser.go_to("/ferrum/with_js")
+
+        p = browser.at_css("p#with_content")
+
+        expect(p.at_css("a").text).to eq("Open for match")
+      end
     end
 
-    it "works correctly when JSON is overwritten" do
-      browser.go_to("/ferrum/index")
-      browser.execute("JSON = {};")
-      expect { browser.at_xpath("//a[text() = 'JS redirect']") }.not_to raise_error
-    end
+    describe "#css" do
+      it "searches relatively current node" do
+        browser.go_to("/ferrum/with_js")
 
-    it "#at_xpath searches relatively current node" do
-      browser.go_to("/ferrum/with_js")
+        p = browser.at_xpath("//p[@id='with_content']")
+        links = p.css("a")
 
-      p = browser.at_xpath("//p[@id='with_content']")
-
-      expect(p.at_xpath("a").text).to eq("Open for match")
-      expect(p.at_xpath(".//a").text).to eq("Open for match")
-    end
-
-    it "#xpath searches relatively current node" do
-      browser.go_to("/ferrum/with_js")
-
-      p = browser.at_xpath("//p[@id='with_content']")
-      links = p.xpath("a")
-
-      expect(links.size).to eq(1)
-      expect(links.first.text).to eq("Open for match")
-    end
-
-    it "#at_css searches relatively current node" do
-      browser.go_to("/ferrum/with_js")
-
-      p = browser.at_css("p#with_content")
-
-      expect(p.at_css("a").text).to eq("Open for match")
-    end
-
-    it "#css searches relatively current node" do
-      browser.go_to("/ferrum/with_js")
-
-      p = browser.at_xpath("//p[@id='with_content']")
-      links = p.css("a")
-
-      expect(links.size).to eq(1)
-      expect(links.first.text).to eq("Open for match")
+        expect(links.size).to eq(1)
+        expect(links.first.text).to eq("Open for match")
+      end
     end
 
     describe "#selected" do
@@ -90,6 +142,12 @@ module Ferrum
 
       it "returns texts of selected options" do
         expect(browser.at_xpath("//*[@id='form_region']").selected.map(&:text)).to eq(["Norway"])
+      end
+
+      it "returns selected options within frame" do
+        frame = browser.at_xpath("//iframe[@name='frame']").frame
+
+        expect(frame.at_xpath("//*[@id='select']").selected.map(&:text)).to eq(["One"])
       end
 
       context "when options exists but no selected option" do
@@ -109,11 +167,6 @@ module Ferrum
           expect { browser.at_xpath("//*[@id='customer_name']").selected.map(&:text) }
             .to raise_exception(Ferrum::JavaScriptError, /Element is not a <select> element/)
         end
-      end
-
-      it "returns selected options within frame" do
-        frame = browser.at_xpath("//iframe[@name='frame']").frame
-        expect(frame.at_xpath("//*[@id='select']").selected.map(&:text)).to eq(["One"])
       end
     end
 
@@ -205,45 +258,7 @@ module Ferrum
       end
     end
 
-    context "when the element is not in the viewport" do
-      before do
-        browser.go_to("/ferrum/with_js")
-      end
-
-      it "raises a MouseEventFailed error", skip: "needs fix" do
-        expect do
-          browser.at_xpath("//a[text() = 'O hai']").click
-        end.to raise_error(Ferrum::MouseEventFailed)
-      end
-
-      context "and is then brought in" do
-        before do
-          browser.execute %($("#off-the-left").animate({left: "10"});)
-        end
-
-        it "clicks properly" do
-          expect { browser.at_xpath("//a[text() = 'O hai']") }.to_not raise_error
-        end
-      end
-    end
-
-    context "when the element is not in the viewport of parent element", skip: true do
-      before do
-        browser.go_to("/ferrum/scroll")
-      end
-
-      it "scrolls into view", skip: "needs fix" do
-        browser.at_xpath("//a[text() = 'Link outside viewport']").click
-        expect(browser.current_url).to eq("/")
-      end
-
-      it "scrolls into view if scrollIntoViewIfNeeded fails" do
-        browser.click_link "Below the fold"
-        expect(browser.current_path).to eq("/")
-      end
-    end
-
-    describe "Node#[]" do
+    describe "#[]" do
       before do
         browser.go_to("/ferrum/attributes_properties")
       end
@@ -269,14 +284,14 @@ module Ferrum
       end
     end
 
-    describe "Node#==" do
+    describe "#==" do
       it "does not equal a node from another page" do
         browser.go_to("/ferrum/simple")
         el1 = browser.at_css("#nav")
         browser.go_to("/ferrum/set")
         el2 = browser.at_css("#filled_div")
-        expect(el2 == el1).to be false
-        expect(el1 == el2).to be false
+        expect(el2 == el1).to be_falsey
+        expect(el1 == el2).to be_falsey
       end
     end
 
@@ -329,7 +344,7 @@ module Ferrum
       end
     end
 
-    context "supports accessing element properties" do
+    describe "#property" do
       before do
         browser.go_to("/ferrum/attributes_properties")
       end
@@ -350,43 +365,401 @@ module Ferrum
       end
     end
 
-    context "SVG tests" do
-      before do
-        browser.go_to("/ferrum/svg_test")
+    describe "#text" do
+      it "skips BR" do
+        browser.go_to("/ferrum/simple")
+        el = browser.at_css("#break")
+
+        expect(el.text).to eq("FooBar")
       end
 
-      it "gets text from tspan node" do
-        expect(browser.at_css("tspan").text).to eq "svg foo"
+      context "SVG tests" do
+        before do
+          browser.go_to("/ferrum/svg_test")
+        end
+
+        it "gets text from tspan node" do
+          expect(browser.at_css("tspan").text).to eq("svg foo")
+        end
       end
     end
 
-    it "does not run into content quads error" do
-      browser.go_to("/ferrum/index")
+    describe "#inner_text" do
+      it "returns BR as new line" do
+        browser.go_to("/ferrum/simple")
+        el = browser.at_css("#break")
 
-      allow_any_instance_of(Node).to receive(:content_quads)
-        .and_raise(Ferrum::CoordinatesNotFoundError, "Could not compute content quads")
-
-      browser.at_xpath("//a[text() = 'JS redirect']").click
-      expect(browser.body).to include("Hello world")
+        expect(el.inner_text).to eq("Foo\nBar")
+      end
     end
 
-    it "returns BR as new line in #text" do
-      browser.go_to("/ferrum/simple")
-      el = browser.at_css("#break")
-      expect(el.inner_text).to eq("Foo\nBar")
-      expect(browser.at_css("#break").text).to eq("FooBar")
+    describe "#type" do
+      let(:empty_input) { browser.at_css("#empty_input") }
+
+      context "with mixed input" do
+        before { browser.go_to("/ferrum/type") }
+
+        it "sends keys to empty input" do
+          empty_input.focus.type("Input")
+
+          expect(empty_input.value).to eq("Input")
+        end
+
+        it "sends keys to filled input" do
+          input = browser.at_css("#filled_input")
+
+          input.click.type(" appended")
+
+          expect(input.value).to eq("Text appended")
+        end
+
+        it "sends keys to empty textarea" do
+          input = browser.at_css("#empty_textarea")
+
+          input.focus.type("Input")
+
+          expect(input.value).to eq("Input")
+        end
+
+        it "sends keys to filled textarea" do
+          input = browser.at_css("#filled_textarea")
+
+          input.click.type(" appended")
+
+          expect(input.value).to eq("Description appended")
+        end
+
+        it "persists focus across multiple calls" do
+          input = browser.at_css("#empty_div")
+
+          input.focus.type("helo").type(:Left).type("l")
+
+          expect(input.text).to eq("hello")
+        end
+
+        it "sends sequences" do
+          empty_input.focus.type([:Shift], "S", [:Alt], "t", "r", "i", "g", :Left, "n")
+
+          expect(empty_input.value).to eq("String")
+        end
+
+        it "submits the form with sequence" do
+          input = browser.at_css("#without_submit_button input")
+
+          input.focus.type(:Enter)
+
+          expect(input.value).to eq("Submitted")
+        end
+
+        it "sends sequences with modifiers and letters" do
+          empty_input.focus.type([:Shift, "s"], "t", "r", "i", "n", "g")
+
+          expect(empty_input.value).to eq("String")
+        end
+
+        it "moves cursor in front and types char" do
+          keys = Utils::Platform.mac? ? %i[Alt Left] : %i[Ctrl Left]
+
+          empty_input.focus.type("t", "r", "i", "n", "g", keys, "s")
+
+          expect(empty_input.value).to eq("string")
+        end
+
+        it "selects text and replaces with char" do
+          keys = Utils::Platform.mac? ? %i[Alt Shift Left] : %i[Ctrl Shift Left]
+
+          empty_input.focus.type("t", "r", "i", "n", "g", keys, "s")
+
+          expect(empty_input.value).to eq("s")
+        end
+
+        it "sends modifiers with sequences" do
+          empty_input.focus.type("s", [:Shift, "tring"])
+
+          expect(empty_input.value).to eq("sTRING")
+        end
+
+        it "sends modifiers with multiple keys" do
+          empty_input.focus.type("helo", %i[Shift Left Left], "llo")
+
+          expect(empty_input.value).to eq("hello")
+        end
+
+        it "raises error for unknown keys" do
+          expect do
+            empty_input.focus.type("abc", :blah)
+          end.to raise_error(KeyError, "key not found: :blah")
+        end
+
+        it "sets a date fields" do
+          browser.go_to("/ferrum/date_fields")
+          input = browser.at_css("#date_field")
+
+          input.focus.type("02-02-2016")
+
+          expect(input.value).to eq("2016-02-02")
+        end
+
+        it "accepts numbers in a maxlength field" do
+          browser.go_to("/ferrum/with_js")
+          element = browser.at_css("#change_me_maxlength")
+
+          element.focus.type("100")
+
+          expect(element.value).to eq("100")
+        end
+
+        it "accepts negatives in a number field" do
+          browser.go_to("/ferrum/with_js")
+          element = browser.at_css("#change_me_number")
+
+          element.focus.type("-100")
+
+          expect(element.value).to eq("-100")
+        end
+      end
+
+      context "with contenteditable" do
+        let(:delete_all) { [[(Utils::Platform.mac? ? :alt : :ctrl), :shift, :right], :backspace] }
+
+        before { browser.go_to("/ferrum/type") }
+
+        it "sends keys to empty div" do
+          input = browser.at_css("#empty_div")
+
+          input.click.type("Input")
+
+          expect(input.text).to eq("Input")
+        end
+
+        it "sends keys to filled div" do
+          input = browser.at_css("#filled_div")
+
+          input.click.type(" appended")
+
+          expect(input.text).to eq("Content appended")
+        end
+
+        it "sets content" do
+          input = browser.at_css("#filled_div")
+
+          input.focus.type(delete_all, "new text")
+
+          expect(input.text).to eq("new text")
+        end
+
+        it "sets multiple inputs" do
+          input = browser.at_css("#empty_div")
+          input.focus.type("new text")
+          expect(input.text).to eq("new text")
+
+          input = browser.at_css("#filled_div")
+          input.focus.type(delete_all, "replacement text")
+          expect(input.text).to eq("replacement text")
+        end
+
+        it "sets children content" do
+          browser.go_to("/orig_with_js")
+          input = browser.at_css("#existing_content_editable_child")
+
+          input.click.type(" WYSIWYG")
+
+          expect(input.text).to eq("Content WYSIWYG")
+        end
+      end
+
+      context "with correct key codes" do
+        let(:events_output) { browser.at_css("#key-events-output") }
+
+        before { browser.go_to("/ferrum/type") }
+
+        it "generates correct events with key codes for modified punctuation" do
+          empty_input.focus.type([:shift, "."], [:shift, "t"])
+
+          expect(events_output.text.strip).to eq("keydown:16 keydown:190 keydown:16 keydown:84")
+        end
+
+        it "supports snake case specified keys" do
+          empty_input.focus.type(:PageUp, :page_up)
+
+          expect(events_output.text.strip).to eq("keydown:33 keydown:33")
+        end
+
+        it "supports :control alias for :Ctrl" do
+          empty_input.focus.type([:Ctrl, "a"], [:control, "a"])
+
+          expect(events_output.text.strip).to eq("keydown:17 keydown:65 keydown:17 keydown:65")
+        end
+
+        it "supports :command alias for :Meta" do
+          empty_input.focus.type([:Meta, "z"], [:command, "z"])
+
+          expect(events_output.text.strip).to eq("keydown:91 keydown:90 keydown:91 keydown:90")
+        end
+
+        it "supports specified numpad keys" do
+          empty_input.focus.type(:numpad2, :numpad8, :divide, :decimal)
+
+          expect(events_output.text.strip).to eq("keydown:98 keydown:104 keydown:111 keydown:110")
+        end
+      end
+
+      context "with correct changes" do
+        let(:change_me) { browser.at_css("#change_me") }
+
+        before do
+          browser.go_to("/ferrum/with_js")
+          change_me.focus.type("Hello!")
+        end
+
+        it "fires the change event", skip: true do
+          expect(browser.at_css("#changes").text).to eq("Hello!")
+        end
+
+        it "fires the input event" do
+          expect(browser.at_css("#changes_on_input").text).to eq("Hello!")
+        end
+
+        it "fires the keydown event" do
+          expect(browser.at_css("#changes_on_keydown").text).to eq("6")
+        end
+
+        it "fires the keyup event" do
+          expect(browser.at_css("#changes_on_keyup").text).to eq("6")
+        end
+
+        it "fires the keypress event" do
+          expect(browser.at_css("#changes_on_keypress").text).to eq("6")
+        end
+
+        it "fires the focus event" do
+          expect(browser.at_css("#changes_on_focus").text).to eq("Focus")
+        end
+
+        it "fires the blur event" do
+          change_me.blur
+
+          expect(browser.at_css("#changes_on_blur").text).to eq("Blur")
+        end
+
+        it "fires the keydown event before the value is updated" do
+          expect(browser.at_css("#value_on_keydown").text).to eq("Hello")
+        end
+
+        it "fires the keyup event after the value is updated" do
+          expect(browser.at_css("#value_on_keyup").text).to eq("Hello!")
+        end
+
+        it "clears the input" do
+          keys = Utils::Platform.mac? ? %i[Alt Shift Left] : %i[Ctrl Shift Left]
+          change_me.type(2.times.map { keys }, :backspace)
+
+          expect(change_me.value).to eq("")
+        end
+
+        it "supports special characters" do
+          change_me.type("$52.00")
+
+          expect(change_me.value).to eq("Hello!$52.00")
+        end
+      end
+
+      context "with correct events" do
+        let(:input) { browser.at_css("#input") }
+        let(:output) { browser.at_css("#output") }
+
+        before { browser.go_to("/ferrum/input_events") }
+
+        it "calls event handlers in the correct order" do
+          input.focus.type("a").blur
+
+          expect(output.text.strip).to eq("keydown keypress input keyup change")
+          expect(input.value).to eq("a")
+        end
+
+        it "respects preventDefault() calls in keydown handlers" do
+          browser.execute "input.addEventListener('keydown', e => e.preventDefault())"
+          input.focus.type("a")
+          expect(output.text.strip).to eq("keydown keyup")
+          expect(input.value).to be_empty
+        end
+
+        it "respects preventDefault() calls in keypress handlers" do
+          browser.execute "input.addEventListener('keypress', e => e.preventDefault())"
+          input.focus.type("a")
+          expect(output.text.strip).to eq("keydown keypress keyup")
+          expect(input.value).to be_empty
+        end
+
+        it "calls event handlers for each character input" do
+          input.focus.type("abc").blur
+          expect(output.text.strip).to eq("#{(['keydown keypress input keyup'] * 3).join(' ')} change")
+          expect(input.value).to eq("abc")
+        end
+
+        it "doesn't call the change event if there is no change" do
+          input.focus.type("a").blur
+          input.focus.type("a")
+
+          expect(output.text.strip).to eq("keydown keypress input keyup change keydown keypress input keyup")
+        end
+      end
     end
 
-    it "synchronizes page loads properly" do
-      browser.go_to("/ferrum/index")
-      browser.at_xpath("//a[text() = 'JS redirect']").click
-      sleep 0.1
-      expect(browser.body).to include("Hello world")
+    describe "#attach_file", skip: true do
+      it "handles obsolete node" do
+        browser.go_to("/ferrum/attach_file")
+        browser.attach_file "file", __FILE__
+      end
+
+      it "attaches a file when passed a Pathname" do
+        filename = Pathname.new("spec/tmp/a_test_pathname").expand_path
+        File.write(filename, "text")
+
+        element = browser.at_css("#change_me_file")
+        element.set(filename)
+        expect(element.value).to eq("C:\\fakepath\\a_test_pathname")
+      ensure
+        FileUtils.rm_f(filename)
+      end
     end
 
-    it "handles obsolete node during an attach_file", skip: true do
-      browser.go_to("/ferrum/attach_file")
-      browser.attach_file "file", __FILE__
+    describe "#drag_to", skip: true do
+      before { browser.go_to("/ferrum/drag") }
+
+      it "supports drag_to" do
+        draggable = browser.at_css("#drag_to #draggable")
+        droppable = browser.at_css("#drag_to #droppable")
+
+        draggable.drag_to(droppable)
+        expect(droppable).to have_content("Dropped")
+      end
+
+      it "supports drag_by on native element" do
+        draggable = browser.at_css("#drag_by .draggable")
+
+        top_before = browser.evaluate(%($("#drag_by .draggable").position().top))
+        left_before = browser.evaluate(%($("#drag_by .draggable").position().left))
+
+        draggable.native.drag_by(15, 15)
+
+        top_after = browser.evaluate(%($("#drag_by .draggable").position().top))
+        left_after = browser.evaluate(%($("#drag_by .draggable").position().left))
+
+        expect(top_after).to eq(top_before + 15)
+        expect(left_after).to eq(left_before + 15)
+      end
+    end
+
+    context "with disappearing node" do
+      it "raises an error if the element was on a previous page" do
+        browser.go_to("/ferrum/index")
+        node = browser.at_xpath(".//a")
+
+        browser.execute "window.location = 'about:blank'"
+
+        expect { node.text }.to raise_error(Ferrum::NodeNotFoundError)
+      end
     end
   end
 end

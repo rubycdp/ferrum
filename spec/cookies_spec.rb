@@ -1,9 +1,31 @@
 # frozen_string_literal: true
 
 module Ferrum
-  describe Browser do
-    context "cookies support" do
-      it "returns cookies" do
+  describe Cookies do
+    describe "#all" do
+      it "returns cookie object" do
+        browser.go_to("/set_cookie")
+
+        cookies = browser.cookies.all
+
+        expect(cookies).to eq({ "stealth" => Cookies::Cookie.new("name" => "stealth",
+                                                                 "value" => "test_cookie",
+                                                                 "domain" => "127.0.0.1",
+                                                                 "path" => "/",
+                                                                 "expires" => -1,
+                                                                 "size" => 18,
+                                                                 "httpOnly" => false,
+                                                                 "secure" => false,
+                                                                 "session" => true,
+                                                                 "priority" => "Medium",
+                                                                 "sameParty" => false,
+                                                                 "sourceScheme" => "NonSecure",
+                                                                 "sourcePort" => server.port) })
+      end
+    end
+
+    describe "#[]" do
+      it "returns cookie object" do
         browser.go_to("/set_cookie")
 
         cookie = browser.cookies["stealth"]
@@ -17,7 +39,9 @@ module Ferrum
         expect(cookie.session?).to be true
         expect(cookie.expires).to be_nil
       end
+    end
 
+    describe "#set" do
       it "sets cookies" do
         browser.cookies.set(name: "stealth", value: "omg")
         browser.go_to("/get_cookie")
@@ -42,18 +66,6 @@ module Ferrum
         expect(browser.cookies["stealth"].path).to eq("/ferrum")
         expect(browser.cookies["stealth"].httponly?).to be_truthy
         expect(browser.cookies["stealth"].samesite).to eq("Strict")
-      end
-
-      it "removes a cookie" do
-        browser.go_to("/set_cookie")
-
-        browser.go_to("/get_cookie")
-        expect(browser.body).to include("test_cookie")
-
-        browser.cookies.remove(name: "stealth")
-
-        browser.go_to("/get_cookie")
-        expect(browser.body).to_not include("test_cookie")
       end
 
       it "sets a retrieved cookie" do
@@ -135,18 +147,6 @@ module Ferrum
         expect(cookie.attributes).to eq(original_attributes)
       end
 
-      it "clears cookies" do
-        browser.go_to("/set_cookie")
-
-        browser.go_to("/get_cookie")
-        expect(browser.body).to include("test_cookie")
-
-        browser.cookies.clear
-
-        browser.go_to("/get_cookie")
-        expect(browser.body).to_not include("test_cookie")
-      end
-
       it "sets cookies with an expires time" do
         time = Time.at(Time.now.to_i + 10_000)
         browser.go_to
@@ -178,6 +178,34 @@ module Ferrum
         expect(browser.body).not_to include("123456")
       ensure
         browser&.quit
+      end
+    end
+
+    describe "#remove" do
+      it "removes a cookie" do
+        browser.go_to("/set_cookie")
+
+        browser.go_to("/get_cookie")
+        expect(browser.body).to include("test_cookie")
+
+        browser.cookies.remove(name: "stealth")
+
+        browser.go_to("/get_cookie")
+        expect(browser.body).to_not include("test_cookie")
+      end
+    end
+
+    describe "#clear" do
+      it "clears cookies" do
+        browser.go_to("/set_cookie")
+
+        browser.go_to("/get_cookie")
+        expect(browser.body).to include("test_cookie")
+
+        browser.cookies.clear
+
+        browser.go_to("/get_cookie")
+        expect(browser.body).to_not include("test_cookie")
       end
     end
   end
