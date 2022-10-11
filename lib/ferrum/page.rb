@@ -130,7 +130,7 @@ module Ferrum
       response["frameId"]
     rescue TimeoutError
       if @browser.pending_connection_errors
-        pendings = network.traffic.select(&:pending?).map { |e| e.request.url }
+        pendings = network.traffic.select(&:pending?).map(&:url).compact
         raise PendingConnectionsError.new(options[:url], pendings) unless pendings.empty?
       end
     end
@@ -285,7 +285,7 @@ module Ferrum
         # changed which means there was some network event for
         # the main frame and it started to load new content.
         if iteration != @event.iteration
-          set = @event.wait(@browser.timeout)
+          set = @event.wait(timeout)
           raise TimeoutError unless set
         end
       end
