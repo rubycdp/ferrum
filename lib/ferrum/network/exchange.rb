@@ -3,6 +3,9 @@
 module Ferrum
   class Network
     class Exchange
+      # ID of the request.
+      #
+      # @return String
       attr_reader :id
 
       # The intercepted request.
@@ -20,6 +23,9 @@ module Ferrum
       # @return [Response, nil]
       attr_accessor :response
 
+      # The error object.
+      #
+      # @return [Error, nil]
       attr_accessor :error
 
       #
@@ -45,8 +51,7 @@ module Ferrum
       # @return [Boolean]
       #
       def navigation_request?(frame_id)
-        request.type?(:document) &&
-          request.frame_id == frame_id
+        request.type?(:document) && request&.frame_id == frame_id
       end
 
       #
@@ -74,7 +79,7 @@ module Ferrum
       # @return [Boolean]
       #
       def finished?
-        blocked? || response || error
+        blocked? || !response.nil? || !error.nil?
       end
 
       #
@@ -92,7 +97,16 @@ module Ferrum
       # @return [Boolean]
       #
       def intercepted?
-        intercepted_request
+        !intercepted_request.nil?
+      end
+
+      #
+      # Returns request's URL.
+      #
+      # @return [String, nil]
+      #
+      def url
+        request&.url
       end
 
       #
