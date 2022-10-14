@@ -10,6 +10,11 @@
 
 ### Fixed
 
+- `Ferrum::Keyboard`
+  - `#up, #down` accept only one key.
+- `Ferrum::Page#goto` fixed undefined method url for nil:NilClass when page times out and there are pending requests.
+
+
 ## [0.12](https://github.com/rubycdp/ferrum/compare/v0.11...v0.12) - (Sep 13, 2022) ##
 
 ### Added

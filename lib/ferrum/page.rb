@@ -44,9 +44,7 @@ module Ferrum
     include Stream
 
     attr_accessor :referrer
-    attr_reader :target_id, :browser,
-                :event,
-                :tracing
+    attr_reader :target_id, :browser, :event, :tracing
 
     # Mouse object.
     #
@@ -374,7 +372,7 @@ module Ferrum
 
         @browser.command("Browser.setDownloadBehavior",
                          browserContextId: context.id,
-                         downloadPath: browser.options[:save_path],
+                         downloadPath: @browser.options[:save_path],
                          behavior: "allow", eventsEnabled: true)
       end
 
