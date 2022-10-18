@@ -71,7 +71,7 @@ describe Ferrum::Browser do
     context ":extensions argument" do
       it "extends the browser's world with files" do
         browser = Ferrum::Browser.new(base_url: base_url,
-                              extensions: [File.expand_path("support/geolocation.js", __dir__)])
+                                      extensions: [File.expand_path("support/geolocation.js", __dir__)])
 
         browser.go_to("/ferrum/requiring_custom_extension")
 
@@ -92,7 +92,7 @@ describe Ferrum::Browser do
 
       it "extends the browser's world with source" do
         browser = Ferrum::Browser.new(base_url: base_url,
-                              extensions: [{ source: "window.secret = 'top'" }])
+                                      extensions: [{ source: "window.secret = 'top'" }])
 
         browser.go_to("/ferrum/requiring_custom_extension")
 

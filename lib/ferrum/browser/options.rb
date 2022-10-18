@@ -55,7 +55,7 @@ module Ferrum
       def parse_base_url(value)
         parsed = Addressable::URI.parse(value)
         unless BASE_URL_SCHEMA.include?(parsed&.normalized_scheme)
-          raise ArgumentError, "`base_url` should be absolute and include schema: #{BASE_URL_SCHEMA.join(" | ")}"
+          raise ArgumentError, "`base_url` should be absolute and include schema: #{BASE_URL_SCHEMA.join(' | ')}"
         end
 
         parsed

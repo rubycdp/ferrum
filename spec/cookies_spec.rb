@@ -8,18 +8,18 @@ describe Ferrum::Cookies do
       cookies = browser.cookies.all
 
       expect(cookies).to eq({ "stealth" => Ferrum::Cookies::Cookie.new("name" => "stealth",
-                                                               "value" => "test_cookie",
-                                                               "domain" => "127.0.0.1",
-                                                               "path" => "/",
-                                                               "expires" => -1,
-                                                               "size" => 18,
-                                                               "httpOnly" => false,
-                                                               "secure" => false,
-                                                               "session" => true,
-                                                               "priority" => "Medium",
-                                                               "sameParty" => false,
-                                                               "sourceScheme" => "NonSecure",
-                                                               "sourcePort" => server.port) })
+                                                                       "value" => "test_cookie",
+                                                                       "domain" => "127.0.0.1",
+                                                                       "path" => "/",
+                                                                       "expires" => -1,
+                                                                       "size" => 18,
+                                                                       "httpOnly" => false,
+                                                                       "secure" => false,
+                                                                       "session" => true,
+                                                                       "priority" => "Medium",
+                                                                       "sameParty" => false,
+                                                                       "sourceScheme" => "NonSecure",
+                                                                       "sourcePort" => server.port) })
     end
   end
 
