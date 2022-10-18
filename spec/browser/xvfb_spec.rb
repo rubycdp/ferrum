@@ -2,7 +2,7 @@
 
 describe Ferrum::Browser::Xvfb, skip: !Ferrum::Browser::Binary.find("Xvfb") do
   let(:process) { xvfb_browser.process }
-  let(:xvfb_browser) { Browser.new(default_options.merge(options)) }
+  let(:xvfb_browser) { Ferrum::Browser.new(default_options.merge(options)) }
   let(:default_options) { Hash(headless: true, xvfb: true) }
 
   context "headless" do
