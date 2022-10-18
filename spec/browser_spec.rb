@@ -189,17 +189,17 @@ describe Ferrum::Browser do
       context "with rotation", skip: "Think how to make it working on CI" do
         it "works after disposing context" do
           browser = Ferrum::Browser.new(
-            proxy: { server: true }
+            proxy: { host: proxy.host, port: proxy.port, **options }
           )
 
-          browser.proxy_server.rotate(host: "host", port: 0, user: "user", password: "password")
+          proxy.rotate(host: "host", port: 0, user: "user", password: "password")
           browser.create_page(new_context: true) do |page|
             page.go_to("https://api.ipify.org?format=json")
             expect(page.network.status).to eq(200)
             expect(page.body).to include("x.x.x.x")
           end
 
-          browser.proxy_server.rotate(host: "host", port: 0, user: "user", password: "password")
+          proxy.rotate(host: "host", port: 0, user: "user", password: "password")
           browser.create_page(new_context: true) do |page|
             page.go_to("https://api.ipify.org?format=json")
             expect(page.network.status).to eq(200)

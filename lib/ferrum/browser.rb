@@ -30,7 +30,7 @@ module Ferrum
                 playback_rate playback_rate=] => :page
     delegate %i[default_user_agent] => :process
 
-    attr_reader :client, :process, :contexts, :proxy_server, :options, :window_size, :base_url
+    attr_reader :client, :process, :contexts, :options, :window_size, :base_url
     attr_accessor :timeout
 
     #
@@ -127,11 +127,6 @@ module Ferrum
       @timeout = @options.timeout
       @window_size = @options.window_size
       @base_url = @options.base_url if @options.base_url
-
-      if @options.proxy&.dig(:server)
-        @proxy_server = Proxy.start(**@options.proxy.slice(:host, :port, :user, :password))
-        @options.proxy.merge!(host: @proxy_server.host, port: @proxy_server.port)
-      end
 
       start
     end

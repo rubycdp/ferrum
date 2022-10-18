@@ -68,8 +68,8 @@ module Ferrum
 
         raise ArgumentError, "proxy options must be a Hash" unless options.is_a?(Hash)
 
-        if options[:host].nil? && options[:port].nil? && !options[:server]
-          raise ArgumentError, "proxy options must be a Hash with at least :host | :port or :server"
+        if options[:host].nil? && options[:port].nil?
+          raise ArgumentError, "proxy options must be a Hash with at least :host | :port"
         end
 
         options
