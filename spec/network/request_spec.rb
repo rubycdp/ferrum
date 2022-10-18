@@ -1,9 +1,5 @@
 # frozen_string_literal: true
 
-module Ferrum
-  class Network
-    describe Request do
-      skip
-    end
-  end
+describe Ferrum::Network::Request do
+  skip
 end

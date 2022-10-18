@@ -4,11 +4,8 @@ require "singleton"
 
 module Ferrum
   class Browser
-    module Options
+    class Options
       class Base
-        BROWSER_HOST = "127.0.0.1"
-        BROWSER_PORT = "0"
-
         include Singleton
 
         def self.options

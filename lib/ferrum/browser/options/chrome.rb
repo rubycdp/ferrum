@@ -2,7 +2,7 @@
 
 module Ferrum
   class Browser
-    module Options
+    class Options
       class Chrome < Base
         DEFAULT_OPTIONS = {
           "headless" => nil,
@@ -59,17 +59,15 @@ module Ferrum
         }.freeze
 
         def merge_required(flags, options, user_data_dir)
-          port = options.fetch(:port, BROWSER_PORT)
-          host = options.fetch(:host, BROWSER_HOST)
-          flags.merge("remote-debugging-port" => port,
-                      "remote-debugging-address" => host,
+          flags.merge("remote-debugging-port" => options.port,
+                      "remote-debugging-address" => options.host,
                       # Doesn't work on MacOS, so we need to set it by CDP
-                      "window-size" => options[:window_size]&.join(","),
+                      "window-size" => options.window_size&.join(","),
                       "user-data-dir" => user_data_dir)
         end
 
         def merge_default(flags, options)
-          defaults = except("headless", "disable-gpu") unless options.fetch(:headless, true)
+          defaults = except("headless", "disable-gpu") unless options.headless
 
           defaults ||= DEFAULT_OPTIONS
           defaults.merge(flags)

@@ -1,9 +1,5 @@
 # frozen_string_literal: true
 
-module Ferrum
-  class Network
-    describe InterceptedRequest do
-      skip
-    end
-  end
+describe Ferrum::Network::InterceptedRequest do
+  skip
 end

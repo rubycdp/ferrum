@@ -127,7 +127,7 @@ module Ferrum
 
       response["frameId"]
     rescue TimeoutError
-      if @browser.pending_connection_errors
+      if @browser.options.pending_connection_errors
         pendings = network.traffic.select(&:pending?).map(&:url).compact
         raise PendingConnectionsError.new(options[:url], pendings) unless pendings.empty?
       end
@@ -274,7 +274,7 @@ module Ferrum
 
     def command(method, wait: 0, slowmoable: false, **params)
       iteration = @event.reset if wait.positive?
-      sleep(@browser.slowmo) if slowmoable && @browser.slowmo.positive?
+      sleep(@browser.options.slowmo) if slowmoable && @browser.options.slowmo.positive?
       result = @client.command(method, params)
 
       if wait.positive?
@@ -325,13 +325,13 @@ module Ferrum
       frames_subscribe
       network.subscribe
 
-      if @browser.logger
+      if @browser.options.logger
         on("Runtime.consoleAPICalled") do |params|
           params["args"].each { |r| @browser.logger.puts(r["value"]) }
         end
       end
 
-      if @browser.js_errors
+      if @browser.options.js_errors
         on("Runtime.exceptionThrown") do |params|
           # FIXME: https://jvns.ca/blog/2015/11/27/why-rubys-timeout-is-dangerous-and-thread-dot-raise-is-terrifying/
           Thread.main.raise JavaScriptError.new(
@@ -358,21 +358,21 @@ module Ferrum
       command("Log.enable")
       command("Network.enable")
 
-      if @browser.proxy_options && @browser.proxy_options[:user] && @browser.proxy_options[:password]
-        auth_options = @browser.proxy_options.slice(:user, :password)
+      if @browser.options.proxy && @browser.options.proxy[:user] && @browser.options.proxy[:password]
+        auth_options = @browser.options.proxy.slice(:user, :password)
         network.authorize(type: :proxy, **auth_options) do |request, _index, _total|
           request.continue
         end
       end
 
-      if @browser.options[:save_path]
-        unless Pathname.new(@browser.options[:save_path]).absolute?
+      if @browser.options.save_path
+        unless Pathname.new(@browser.options.save_path).absolute?
           raise Error, "supply absolute path for `:save_path` option"
         end
 
         @browser.command("Browser.setDownloadBehavior",
                          browserContextId: context.id,
-                         downloadPath: @browser.options[:save_path],
+                         downloadPath: @browser.options.save_path,
                          behavior: "allow", eventsEnabled: true)
       end
 

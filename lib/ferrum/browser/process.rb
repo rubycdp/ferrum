@@ -15,7 +15,6 @@ module Ferrum
     class Process
       KILL_TIMEOUT = 2
       WAIT_KILLED = 0.05
-      PROCESS_TIMEOUT = ENV.fetch("FERRUM_PROCESS_TIMEOUT", 10).to_i
 
       attr_reader :host, :port, :ws_url, :pid, :command,
                   :default_user_agent, :browser_version, :protocol_version,
@@ -63,17 +62,17 @@ module Ferrum
       def initialize(options)
         @pid = @xvfb = @user_data_dir = nil
 
-        if options[:url]
-          url = URI.join(options[:url].to_s, "/json/version")
+        if options.url
+          url = URI.join(options.url, "/json/version")
           response = JSON.parse(::Net::HTTP.get(url))
           self.ws_url = response["webSocketDebuggerUrl"]
           parse_browser_versions
           return
         end
 
-        @logger = options[:logger]
-        @process_timeout = options.fetch(:process_timeout, PROCESS_TIMEOUT)
-        @env = Hash(options[:env])
+        @logger = options.logger
+        @process_timeout = options.process_timeout
+        @env = Hash(options.env)
 
         tmpdir = Dir.mktmpdir("ferrum_user_data_dir_")
         ObjectSpace.define_finalizer(self, self.class.directory_remover(tmpdir))

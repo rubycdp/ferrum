@@ -10,7 +10,7 @@ module Ferrum
       # Currently only these browsers support CDP:
       # https://github.com/cyrus-and/chrome-remote-interface#implementations
       def self.build(options, user_data_dir)
-        defaults = case options[:browser_name]
+        defaults = case options.browser_name
                    when :firefox
                      Options::Firefox.options
                    when :chrome, :opera, :edge, nil
@@ -29,14 +29,14 @@ module Ferrum
         @defaults = defaults
         @options = options
         @user_data_dir = user_data_dir
-        @path = options[:browser_path] || ENV.fetch("BROWSER_PATH", nil) || defaults.detect_path
+        @path = options.browser_path || ENV.fetch("BROWSER_PATH", nil) || defaults.detect_path
         raise BinaryNotFoundError, NOT_FOUND unless @path
 
         merge_options
       end
 
       def xvfb?
-        !!options[:xvfb]
+        !!options.xvfb
       end
 
       def to_a
@@ -47,9 +47,8 @@ module Ferrum
 
       def merge_options
         @flags = defaults.merge_required(@flags, options, @user_data_dir)
-        @flags = defaults.merge_default(@flags, options) unless options[:ignore_default_browser_options]
-
-        @flags.merge!(options.fetch(:browser_options, {}))
+        @flags = defaults.merge_default(@flags, options) unless options.ignore_default_browser_options
+        @flags.merge!(options.browser_options)
       end
     end
   end

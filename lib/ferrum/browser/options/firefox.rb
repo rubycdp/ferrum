@@ -2,7 +2,7 @@
 
 module Ferrum
   class Browser
-    module Options
+    class Options
       class Firefox < Base
         DEFAULT_OPTIONS = {
           "headless" => nil
@@ -23,14 +23,11 @@ module Ferrum
         }.freeze
 
         def merge_required(flags, options, user_data_dir)
-          port = options.fetch(:port, BROWSER_PORT)
-          host = options.fetch(:host, BROWSER_HOST)
-          flags.merge("remote-debugger" => "#{host}:#{port}",
-                      "profile" => user_data_dir)
+          flags.merge("remote-debugger" => "#{options.host}:#{options.port}", "profile" => user_data_dir)
         end
 
         def merge_default(flags, options)
-          defaults = except("headless") unless options.fetch(:headless, true)
+          defaults = except("headless") unless options.headless
 
           defaults ||= DEFAULT_OPTIONS
           defaults.merge(flags)
