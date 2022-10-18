@@ -16,7 +16,7 @@ module Ferrum
         @path = Binary.find("Xvfb")
         raise BinaryNotFoundError, NOT_FOUND unless @path
 
-        @screen_size = "#{options.fetch(:window_size, [1024, 768]).join('x')}x24"
+        @screen_size = "#{options.window_size.join('x')}x24"
         @display_id = (Time.now.to_f * 1000).to_i % 100_000_000
       end
 
