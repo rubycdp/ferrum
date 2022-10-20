@@ -71,7 +71,7 @@ module Ferrum
     # @return [Cookies]
     attr_reader :cookies
 
-    def initialize(target_id, browser)
+    def initialize(target_id, browser, proxy: nil)
       @frames = {}
       @main_frame = Frame.new(nil, self)
       @browser = browser
@@ -82,6 +82,9 @@ module Ferrum
       port = @browser.process.port
       ws_url = "ws://#{host}:#{port}/devtools/page/#{@target_id}"
       @client = Browser::Client.new(browser, ws_url, id_starts_with: 1000)
+
+      @proxy_user = proxy&.[](:user) || @browser.options.proxy&.[](:user)
+      @proxy_password = proxy&.[](:password) || @browser.options.proxy&.[](:password)
 
       @mouse = Mouse.new(self)
       @keyboard = Keyboard.new(self)
@@ -127,7 +130,7 @@ module Ferrum
 
       response["frameId"]
     rescue TimeoutError
-      if @browser.pending_connection_errors
+      if @browser.options.pending_connection_errors
         pendings = network.traffic.select(&:pending?).map(&:url).compact
         raise PendingConnectionsError.new(options[:url], pendings) unless pendings.empty?
       end
@@ -162,7 +165,7 @@ module Ferrum
     # The current position of the browser window.
     #
     # @return [(Integer, Integer)]
-    #   The left,top coordinates of the browser window.
+    #   The left, top coordinates of the browser window.
     #
     # @example
     #   browser.position # => [10, 20]
@@ -274,7 +277,7 @@ module Ferrum
 
     def command(method, wait: 0, slowmoable: false, **params)
       iteration = @event.reset if wait.positive?
-      sleep(@browser.slowmo) if slowmoable && @browser.slowmo.positive?
+      sleep(@browser.options.slowmo) if slowmoable && @browser.options.slowmo.positive?
       result = @client.command(method, params)
 
       if wait.positive?
@@ -325,13 +328,13 @@ module Ferrum
       frames_subscribe
       network.subscribe
 
-      if @browser.logger
+      if @browser.options.logger
         on("Runtime.consoleAPICalled") do |params|
           params["args"].each { |r| @browser.logger.puts(r["value"]) }
         end
       end
 
-      if @browser.js_errors
+      if @browser.options.js_errors
         on("Runtime.exceptionThrown") do |params|
           # FIXME: https://jvns.ca/blog/2015/11/27/why-rubys-timeout-is-dangerous-and-thread-dot-raise-is-terrifying/
           Thread.main.raise JavaScriptError.new(
@@ -358,21 +361,22 @@ module Ferrum
       command("Log.enable")
       command("Network.enable")
 
-      if @browser.proxy_options && @browser.proxy_options[:user] && @browser.proxy_options[:password]
-        auth_options = @browser.proxy_options.slice(:user, :password)
-        network.authorize(type: :proxy, **auth_options) do |request, _index, _total|
+      if @proxy_user && @proxy_password
+        network.authorize(user: @proxy_user,
+                          password: @proxy_password,
+                          type: :proxy) do |request, _index, _total|
           request.continue
         end
       end
 
-      if @browser.options[:save_path]
-        unless Pathname.new(@browser.options[:save_path]).absolute?
+      if @browser.options.save_path
+        unless Pathname.new(@browser.options.save_path).absolute?
           raise Error, "supply absolute path for `:save_path` option"
         end
 
         @browser.command("Browser.setDownloadBehavior",
                          browserContextId: context.id,
-                         downloadPath: @browser.options[:save_path],
+                         downloadPath: @browser.options.save_path,
                          behavior: "allow", eventsEnabled: true)
       end
 

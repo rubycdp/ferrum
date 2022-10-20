@@ -40,8 +40,9 @@ module Ferrum
       windows.map(&:page)
     end
 
-    def create_page
-      create_target.page
+    def create_page(**options)
+      target = create_target
+      target.page = target.build_page(**options)
     end
 
     def create_target

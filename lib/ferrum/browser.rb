@@ -6,6 +6,7 @@ require "ferrum/page"
 require "ferrum/proxy"
 require "ferrum/contexts"
 require "ferrum/browser/xvfb"
+require "ferrum/browser/options"
 require "ferrum/browser/process"
 require "ferrum/browser/client"
 require "ferrum/browser/binary"
@@ -13,10 +14,6 @@ require "ferrum/browser/version_info"
 
 module Ferrum
   class Browser
-    DEFAULT_TIMEOUT = ENV.fetch("FERRUM_DEFAULT_TIMEOUT", 5).to_i
-    WINDOW_SIZE = [1024, 768].freeze
-    BASE_URL_SCHEMA = %w[http https].freeze
-
     extend Forwardable
     delegate %i[default_context] => :contexts
     delegate %i[targets create_target page pages windows] => :default_context
@@ -33,10 +30,8 @@ module Ferrum
                 playback_rate playback_rate=] => :page
     delegate %i[default_user_agent] => :process
 
-    attr_reader :client, :process, :contexts, :logger, :js_errors, :pending_connection_errors,
-                :slowmo, :base_url, :options, :window_size, :ws_max_receive_size, :proxy_options,
-                :proxy_server
-    attr_writer :timeout
+    attr_reader :client, :process, :contexts, :options, :window_size, :base_url
+    attr_accessor :timeout
 
     #
     # Initializes the browser.
@@ -63,7 +58,7 @@ module Ferrum
     #
     # @option options [Integer, Float] :slowmo
     #   Set a delay in seconds to wait before sending command.
-    #   Usefull companion of headless option, so that you have time to see
+    #   Useful companion of headless option, so that you have time to see
     #   changes.
     #
     # @option options [Numeric] :timeout (5)
@@ -126,43 +121,12 @@ module Ferrum
     #   Environment variables you'd like to pass through to the process.
     #
     def initialize(options = nil)
-      options ||= {}
+      @options = Options.new(options)
+      @client = @process = @contexts = nil
 
-      @client = nil
-      @window_size = options.fetch(:window_size, WINDOW_SIZE)
-      @original_window_size = @window_size
-
-      @options = Hash(options.merge(window_size: @window_size))
-      @logger, @timeout, @ws_max_receive_size =
-        @options.values_at(:logger, :timeout, :ws_max_receive_size)
-      @js_errors = @options.fetch(:js_errors, false)
-
-      if @options[:proxy]
-        @proxy_options = @options[:proxy]
-
-        if @proxy_options[:server]
-          @proxy_server = Proxy.start(**@proxy_options.slice(:host, :port, :user, :password))
-          @proxy_options.merge!(host: @proxy_server.host, port: @proxy_server.port)
-        end
-
-        @options[:browser_options] ||= {}
-        address = "#{@proxy_options[:host]}:#{@proxy_options[:port]}"
-        @options[:browser_options].merge!("proxy-server" => address)
-        @options[:browser_options].merge!("proxy-bypass-list" => @proxy_options[:bypass]) if @proxy_options[:bypass]
-      end
-
-      @pending_connection_errors = @options.fetch(:pending_connection_errors, true)
-      @slowmo = @options[:slowmo].to_f
-
-      self.base_url = @options[:base_url] if @options.key?(:base_url)
-
-      if ENV.fetch("FERRUM_DEBUG", nil) && !@logger
-        $stdout.sync = true
-        @logger = $stdout
-        @options[:logger] = @logger
-      end
-
-      @options.freeze
+      @timeout = @options.timeout
+      @window_size = @options.window_size
+      @base_url = @options.base_url if @options.base_url
 
       start
     end
@@ -173,22 +137,39 @@ module Ferrum
     # @param [String] value
     #   The new base URL value.
     #
-    # @return [String]
-    #   The base URL value.
+    # @raise [ArgumentError] when path is not absolute or doesn't include schema
+    #
+    # @return [Addressable::URI]
+    #   The parsed base URI value.
     #
     def base_url=(value)
-      parsed = Addressable::URI.parse(value)
-      unless BASE_URL_SCHEMA.include?(parsed.normalized_scheme)
-        raise "Set `base_url` should be absolute and include schema: #{BASE_URL_SCHEMA}"
-      end
-
-      @base_url = parsed
+      @base_url = options.parse_base_url(value)
     end
 
-    def create_page(new_context: false)
-      page = if new_context
-               context = contexts.create
-               context.create_page
+    #
+    # Creates a new page.
+    #
+    # @param [Boolean] new_context
+    #   Whether to create a page in a new context or not.
+    #
+    # @param [Hash] proxy
+    #   Whether to use proxy for a page. The page will be created in a new context if so.
+    #
+    # @return [Ferrum::Page]
+    #   Created page.
+    #
+    def create_page(new_context: false, proxy: nil)
+      page = if new_context || proxy
+               params = {}
+
+               if proxy
+                 options.parse_proxy(proxy)
+                 params.merge!(proxyServer: "#{proxy[:host]}:#{proxy[:port]}")
+                 params.merge!(proxyBypassList: proxy[:bypass]) if proxy[:bypass]
+               end
+
+               context = contexts.create(**params)
+               context.create_page(proxy: proxy)
              else
                default_context.create_page
              end
@@ -202,7 +183,7 @@ module Ferrum
     end
 
     def extensions
-      @extensions ||= Array(@options[:extensions]).map do |ext|
+      @extensions ||= Array(options.extensions).map do |ext|
         (ext.is_a?(Hash) && ext[:source]) || File.read(ext)
       end
     end
@@ -222,10 +203,6 @@ module Ferrum
     #
     def evaluate_on_new_document(expression)
       extensions << expression
-    end
-
-    def timeout
-      @timeout || DEFAULT_TIMEOUT
     end
 
     def command(*args)
@@ -250,7 +227,7 @@ module Ferrum
     #   browser.quit
     #
     def reset
-      @window_size = @original_window_size
+      @window_size = options.window_size
       contexts.reset
     end
 
@@ -289,7 +266,7 @@ module Ferrum
 
     def start
       Utils::ElapsedTime.start
-      @process = Process.start(@options)
+      @process = Process.start(options)
       @client = Client.new(self, @process.ws_url)
       @contexts = Contexts.new(self)
     end

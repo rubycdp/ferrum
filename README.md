@@ -605,21 +605,24 @@ You can set a proxy with the `proxy` option.
 
 ```ruby
 browser = Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800" })
-browser = Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800", user: "user", pasword: "pa$$" })
+browser = Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800", user: "user", password: "pa$$" })
 ```
 
-Chrome Devtools Protocol does not support changing proxies after the browser is launched. If you want to change proxies, you must restart your browser, which may not be convenient. There is a workaround. Ferrum provides a wrapper for a proxy server that can rotate proxies. We can run a proxy in the same process and rotate proxies inside this proxy server:
+Chrome Devtools Protocol does not support changing proxies after the browser is launched. If you want to change proxies,
+you must restart your browser, which may not be convenient. There is a workaround. Ferrum provides a wrapper for a proxy
+server that can rotate proxies. We can run a proxy in the same process and rotate proxies inside this proxy server:
 
 ```ruby
-browser = Ferrum::Browser.new(proxy: { server: true })
+proxy = Ferrum::Proxy.start(**options)
+browser = Ferrum::Browser.new(proxy: { host: proxy.host, port: proxy.port })
 
-browser.proxy_server.rotate(host: "x.x.x.x", port: 31337, user: "user", password: "password")
+proxy.rotate(host: "x.x.x.x", port: 31337, user: "user", password: "password")
 browser.create_page(new_context: true) do |page|
   page.go_to("https://api.ipify.org?format=json")
   page.body # => "x.x.x.x"
 end
 
-browser.proxy_server.rotate(host: "y.y.y.y", port: 31337, user: "user", password: "password")
+proxy.rotate(host: "y.y.y.y", port: 31337, user: "user", password: "password")
 browser.create_page(new_context: true) do |page|
   page.go_to("https://api.ipify.org?format=json")
   page.body # => "y.y.y.y"
@@ -633,7 +636,6 @@ You can specify semi-colon-separated list of hosts for which proxy shouldn't be 
 
 ```ruby
 browser = Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800", bypass: "*.google.com;*foo.com" })
-browser = Ferrum::Browser.new(proxy: { server: true, bypass: "*.google.com;*foo.com" })
 ```
 
 

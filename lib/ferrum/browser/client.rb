@@ -12,7 +12,7 @@ module Ferrum
         @browser = browser
         @command_id = id_starts_with
         @pendings = Concurrent::Hash.new
-        @ws = WebSocket.new(ws_url, @browser.ws_max_receive_size, @browser.logger)
+        @ws = WebSocket.new(ws_url, @browser.options.ws_max_receive_size, @browser.options.logger)
         @subscriber, @interrupter = Subscriber.build(2)
 
         @thread = Thread.new do

@@ -23,8 +23,8 @@ module Ferrum
       context
     end
 
-    def create
-      response = @browser.command("Target.createBrowserContext")
+    def create(**options)
+      response = @browser.command("Target.createBrowserContext", **options)
       context_id = response["browserContextId"]
       context = Context.new(@browser, self, context_id)
       @contexts[context_id] = context

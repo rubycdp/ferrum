@@ -33,7 +33,7 @@ RSpec.shared_context "Global helpers" do
   end
 
   def with_external_browser(host: "127.0.0.1", port: 32_001)
-    options = { host: host, port: port, window_size: [1400, 1400], headless: true }
+    options = Ferrum::Browser::Options.new(host: host, port: port, window_size: [1400, 1400], headless: true)
     process = Ferrum::Browser::Process.new(options)
 
     begin
