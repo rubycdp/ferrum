@@ -154,7 +154,7 @@ Ferrum::Browser.new(options)
   * `:logger` (Object responding to `puts`) - When present, debug output is
       written to this object.
   * `:slowmo` (Integer | Float) - Set a delay in seconds to wait before sending command.
-      Usefull companion of headless option, so that you have time to see changes.
+      Useful companion of headless option, so that you have time to see changes.
   * `:timeout` (Numeric) - The number of seconds we'll wait for a response when
       communicating with browser. Default is 5.
   * `:js_errors` (Boolean) - When true, JavaScript errors get re-raised in Ruby.
@@ -601,41 +601,34 @@ browser.go_to("https://github.com/") # => Ferrum::StatusError (Request to https:
 
 ## Proxy
 
-You can set a proxy with the `proxy` option.
+You can set a proxy with a `:proxy` option:
 
 ```ruby
-browser = Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800" })
 browser = Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800", user: "user", password: "pa$$" })
 ```
 
-Chrome Devtools Protocol does not support changing proxies after the browser is launched. If you want to change proxies,
-you must restart your browser, which may not be convenient. There is a workaround. Ferrum provides a wrapper for a proxy
-server that can rotate proxies. We can run a proxy in the same process and rotate proxies inside this proxy server:
+`:bypass` can specify semi-colon-separated list of hosts for which proxy shouldn't be used:
 
 ```ruby
-proxy = Ferrum::Proxy.start(**options)
-browser = Ferrum::Browser.new(proxy: { host: proxy.host, port: proxy.port })
+browser = Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800", bypass: "*.google.com;*foo.com" })
+```
 
-proxy.rotate(host: "x.x.x.x", port: 31337, user: "user", password: "password")
-browser.create_page(new_context: true) do |page|
+In general passing a proxy option when instantiating a browser results in a browser running with proxy command line
+flags, so that it affects all pages and contexts. You can create a page in a new context which can use its own proxy
+settings:
+
+```ruby
+browser = Ferrum::Browser.new
+
+browser.create_page(proxy: { host: "x.x.x.x", port: 31337, user: "user", password: "password" }) do |page|
   page.go_to("https://api.ipify.org?format=json")
   page.body # => "x.x.x.x"
 end
 
-proxy.rotate(host: "y.y.y.y", port: 31337, user: "user", password: "password")
-browser.create_page(new_context: true) do |page|
+browser.create_page(proxy: { host: "y.y.y.y", port: 31337, user: "user", password: "password" }) do |page|
   page.go_to("https://api.ipify.org?format=json")
   page.body # => "y.y.y.y"
 end
-```
-
-Make sure to create page in the new context, because Chrome doesn't break the connection with the proxy for `CONNECT`
-requests even if you close the page.
-
-You can specify semi-colon-separated list of hosts for which proxy shouldn't be used:
-
-```ruby
-browser = Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800", bypass: "*.google.com;*foo.com" })
 ```
 
 

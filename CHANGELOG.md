@@ -5,6 +5,8 @@
 - `Ferrum::Browser::VersionInfo`
 - `Ferrum::Browser`
   - `#version` requests the browser's version information.
+  - `#create_page(proxy: { host: "x.x.x.x", port: "8800", user: "user", password: "pa$$" })`
+  proxy option, supports creating a page in a new context that uses proxy settings.
 
 ### Changed
 
@@ -13,6 +15,11 @@
 - `Ferrum::Keyboard`
   - `#up, #down` accept only one key.
 - `Ferrum::Page#goto` fixed undefined method url for nil:NilClass when page times out and there are pending requests.
+
+### Removed
+
+- `Ferrum::Browser#proxy_server`
+- `Ferrum::Browser.new(proxy: { server: true })` :server option.
 
 
 ## [0.12](https://github.com/rubycdp/ferrum/compare/v0.11...v0.12) - (Sep 13, 2022) ##
