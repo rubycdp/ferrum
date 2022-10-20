@@ -59,11 +59,18 @@ module Ferrum
         }.freeze
 
         def merge_required(flags, options, user_data_dir)
-          flags.merge("remote-debugging-port" => options.port,
-                      "remote-debugging-address" => options.host,
-                      # Doesn't work on MacOS, so we need to set it by CDP
-                      "window-size" => options.window_size&.join(","),
-                      "user-data-dir" => user_data_dir)
+          flags = flags.merge("remote-debugging-port" => options.port,
+                              "remote-debugging-address" => options.host,
+                              # Doesn't work on MacOS, so we need to set it by CDP
+                              "window-size" => options.window_size&.join(","),
+                              "user-data-dir" => user_data_dir)
+
+          if options.proxy
+            flags.merge!("proxy-server" => "#{options.proxy[:host]}:#{options.proxy[:port]}")
+            flags.merge!("proxy-bypass-list" => options.proxy[:bypass]) if options.proxy[:bypass]
+          end
+
+          flags
         end
 
         def merge_default(flags, options)

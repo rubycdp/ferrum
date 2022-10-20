@@ -58,7 +58,7 @@ module Ferrum
     #
     # @option options [Integer, Float] :slowmo
     #   Set a delay in seconds to wait before sending command.
-    #   Usefull companion of headless option, so that you have time to see
+    #   Useful companion of headless option, so that you have time to see
     #   changes.
     #
     # @option options [Numeric] :timeout (5)
@@ -137,17 +137,39 @@ module Ferrum
     # @param [String] value
     #   The new base URL value.
     #
-    # # @return [Addressable::URI]
+    # @raise [ArgumentError] when path is not absolute or doesn't include schema
+    #
+    # @return [Addressable::URI]
     #   The parsed base URI value.
     #
     def base_url=(value)
       @base_url = options.parse_base_url(value)
     end
 
-    def create_page(new_context: false)
-      page = if new_context
-               context = contexts.create
-               context.create_page
+    #
+    # Creates a new page.
+    #
+    # @param [Boolean] new_context
+    #   Whether to create a page in a new context or not.
+    #
+    # @param [Hash] proxy
+    #   Whether to use proxy for a page. The page will be created in a new context if so.
+    #
+    # @return [Ferrum::Page]
+    #   Created page.
+    #
+    def create_page(new_context: false, proxy: nil)
+      page = if new_context || proxy
+               params = {}
+
+               if proxy
+                 options.parse_proxy(proxy)
+                 params.merge!(proxyServer: "#{proxy[:host]}:#{proxy[:port]}")
+                 params.merge!(proxyBypassList: proxy[:bypass]) if proxy[:bypass]
+               end
+
+               context = contexts.create(**params)
+               context.create_page(proxy: proxy)
              else
                default_context.create_page
              end

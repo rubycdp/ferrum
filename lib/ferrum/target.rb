@@ -23,10 +23,12 @@ module Ferrum
     end
 
     def page
-      @page ||= begin
-        maybe_sleep_if_new_window
-        Page.new(id, @browser)
-      end
+      @page ||= build_page
+    end
+
+    def build_page(**options)
+      maybe_sleep_if_new_window
+      Page.new(id, @browser, **options)
     end
 
     def id

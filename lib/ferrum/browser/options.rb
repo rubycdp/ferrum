@@ -43,9 +43,8 @@ module Ferrum
         @base_url = parse_base_url(@options[:base_url]) if @options[:base_url]
         @url = @options[:url].to_s if @options[:url]
 
-        merge_proxy_options!
-        @browser_options.freeze
         @options.freeze
+        @browser_options.freeze
       end
 
       def to_h
@@ -61,8 +60,6 @@ module Ferrum
         parsed
       end
 
-      private
-
       def parse_proxy(options)
         return unless options
 
@@ -75,18 +72,12 @@ module Ferrum
         options
       end
 
+      private
+
       def parse_logger(logger)
         return logger if logger
 
         !logger && DEBUG_MODE ? $stdout.tap { |s| s.sync = true } : logger
-      end
-
-      def merge_proxy_options!
-        return unless @proxy
-
-        address = "#{@proxy[:host]}:#{@proxy[:port]}"
-        @browser_options.merge!("proxy-server" => address)
-        @browser_options.merge!("proxy-bypass-list" => @proxy[:bypass]) if @proxy[:bypass]
       end
     end
   end

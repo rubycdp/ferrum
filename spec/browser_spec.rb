@@ -145,6 +145,8 @@ describe Ferrum::Browser do
       let(:options) { {} }
       let(:proxy) { Ferrum::Proxy.start(**options) }
 
+      after { proxy.stop }
+
       context "without authorization" do
         it "works without authorization" do
           browser = Ferrum::Browser.new(
@@ -321,13 +323,13 @@ describe Ferrum::Browser do
       expect(browser.targets.size).to eq(1)
 
       browser.execute <<-JS
-      window.open("/ferrum/simple", "popup1")
+        window.open("/ferrum/simple", "popup1")
       JS
 
       sleep 0.1
 
       browser.execute <<-JS
-      window.open("/ferrum/simple", "popup2")
+        window.open("/ferrum/simple", "popup2")
       JS
 
       popup1, popup2 = browser.windows(:last, 2)
@@ -470,29 +472,78 @@ describe Ferrum::Browser do
       expect(browser.targets.size).to eq(0)
     end
 
-    it "supports calling with :new_context and without block" do
-      expect(browser.contexts.size).to eq(0)
+    context "with :new_context" do
+      it "supports calling without block" do
+        expect(browser.contexts.size).to eq(0)
 
-      page = browser.create_page(new_context: true)
-      page.go_to("/ferrum/simple")
-
-      expect(browser.contexts.size).to eq(1)
-      expect(page.context.targets.size).to eq(1)
-
-      page.context.create_page
-      expect(page.context.targets.size).to eq(2)
-      page.context.dispose
-      expect(browser.contexts.size).to eq(0)
-    end
-
-    it "supports calling with :new_context and with block" do
-      expect(browser.contexts.size).to eq(0)
-
-      browser.create_page(new_context: true) do |page|
+        page = browser.create_page(new_context: true)
         page.go_to("/ferrum/simple")
+
+        expect(browser.contexts.size).to eq(1)
+        expect(page.context.targets.size).to eq(1)
+
+        page.context.create_page
+        expect(page.context.targets.size).to eq(2)
+        page.context.dispose
+        expect(browser.contexts.size).to eq(0)
       end
 
-      expect(browser.contexts.size).to eq(0)
+      it "supports calling with block" do
+        expect(browser.contexts.size).to eq(0)
+
+        browser.create_page(new_context: true) do |page|
+          page.go_to("/ferrum/simple")
+        end
+
+        expect(browser.contexts.size).to eq(0)
+      end
+    end
+
+    context "with :proxy" do
+      let(:options) { {} }
+      let(:proxy) { Ferrum::Proxy.start(**options) }
+
+      after { proxy.stop }
+
+      context "without authorization" do
+        it "succeeds" do
+          expect(browser.contexts.size).to eq(0)
+
+          page = browser.create_page(proxy: { host: proxy.host, port: proxy.port })
+          page.go_to("https://example.com")
+
+          expect(browser.contexts.size).to eq(1)
+          expect(page.context.targets.size).to eq(1)
+          expect(page.network.status).to eq(200)
+          expect(page.body).to include("Example Domain")
+
+          page = browser.create_page(proxy: { host: proxy.host, port: proxy.port })
+          expect(browser.contexts.size).to eq(2)
+          page.context.dispose
+          expect(browser.contexts.size).to eq(1)
+        end
+      end
+
+      context "with authorization" do
+        let(:options) { { user: "user", password: "password" } }
+
+        it "fails with wrong password" do
+          page = browser.create_page(proxy: { host: proxy.host, port: proxy.port,
+                                              user: options[:user], password: "$$" })
+          page.go_to("https://example.com")
+
+          expect(page.network.status).to eq(407)
+        end
+
+        it "succeeds with correct password" do
+          page = browser.create_page(proxy: { host: proxy.host, port: proxy.port,
+                                              user: options[:user], password: options[:password] })
+          page.go_to("https://example.com")
+
+          expect(page.network.status).to eq(200)
+          expect(page.body).to include("Example Domain")
+        end
+      end
     end
   end
 
