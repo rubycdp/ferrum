@@ -267,7 +267,9 @@ module Ferrum
     def start
       Utils::ElapsedTime.start
       @process = Process.start(options)
-      @client = Client.new(self, @process.ws_url)
+      @client = Client.new(@process.ws_url, self,
+                           logger: options.logger,
+                           ws_max_receive_size: options.ws_max_receive_size)
       @contexts = Contexts.new(self)
     end
   end

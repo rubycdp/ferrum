@@ -8,11 +8,11 @@ module Ferrum
     class Client
       INTERRUPTIONS = %w[Fetch.requestPaused Fetch.authRequired].freeze
 
-      def initialize(browser, ws_url, id_starts_with: 0)
-        @browser = browser
+      def initialize(ws_url, connectable, logger: nil, ws_max_receive_size: nil, id_starts_with: 0)
+        @connectable = connectable
         @command_id = id_starts_with
         @pendings = Concurrent::Hash.new
-        @ws = WebSocket.new(ws_url, @browser.options.ws_max_receive_size, @browser.options.logger)
+        @ws = WebSocket.new(ws_url, ws_max_receive_size, logger)
         @subscriber, @interrupter = Subscriber.build(2)
 
         @thread = Thread.new do
@@ -39,7 +39,7 @@ module Ferrum
         message = build_message(method, params)
         @pendings[message[:id]] = pending
         @ws.send_message(message)
-        data = pending.value!(@browser.timeout)
+        data = pending.value!(@connectable.timeout)
         @pendings.delete(message[:id])
 
         raise DeadBrowserError if data.nil? && @ws.messages.closed?

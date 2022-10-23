@@ -6,15 +6,12 @@ describe Ferrum::Page do
 
     context "with success response" do
       it "works when DNS correct" do
-        expect { browser.go_to("http://localhost:#{port}/") }.not_to raise_error
+        expect { page.go_to("http://localhost:#{port}/") }.not_to raise_error
       end
 
       it "reports no open resources when there are none" do
-        old_timeout = browser.timeout
-        browser.timeout = 4
-        expect { browser.go_to("/ferrum/really_slow") }.not_to raise_error
-      ensure
-        browser.timeout = old_timeout
+        page.timeout = 4
+        expect { page.go_to("/ferrum/really_slow") }.not_to raise_error
       end
     end
 
@@ -31,7 +28,7 @@ describe Ferrum::Page do
       end
 
       it "handles when DNS is incorrect" do
-        expect { browser.go_to("http://nope:#{port}/") }.to raise_error(
+        expect { page.go_to("http://nope:#{port}/") }.to raise_error(
           Ferrum::StatusError,
           %r{Request to http://nope:\d+/ failed to reach server, check DNS and server status}
         )
@@ -41,7 +38,7 @@ describe Ferrum::Page do
         url = "http://nope:#{port}/"
 
         expect do
-          browser.go_to(url)
+          page.go_to(url)
         end.to raise_error(
           Ferrum::StatusError,
           /Request to #{url} failed to reach server, check DNS and server status/
@@ -80,98 +77,117 @@ describe Ferrum::Page do
   describe "#position=" do
     it "allows the window to be positioned", if: !Ferrum::Utils::Platform.mac? do
       expect do
-        browser.position = { left: 10, top: 20 }
+        page.position = { left: 10, top: 20 }
       end.to change {
-        browser.position
+        page.position
       }.from([0, 0]).to([10, 20])
     end
   end
 
   describe "#current_url" do
     it "supports whitespace characters" do
-      browser.go_to("/ferrum/arbitrary_path/200/foo%20bar%20baz")
-      expect(browser.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo%20bar%20baz"))
+      page.go_to("/ferrum/arbitrary_path/200/foo%20bar%20baz")
+
+      expect(page.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo%20bar%20baz"))
     end
 
     it "supports escaped characters" do
-      browser.go_to("/ferrum/arbitrary_path/200/foo?a%5Bb%5D=c")
-      expect(browser.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo?a%5Bb%5D=c"))
+      page.go_to("/ferrum/arbitrary_path/200/foo?a%5Bb%5D=c")
+
+      expect(page.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo?a%5Bb%5D=c"))
     end
 
     it "supports url in parameter" do
-      browser.go_to("/ferrum/arbitrary_path/200/foo%20asd?a=http://example.com/asd%20asd")
-      expect(browser.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo%20asd?a=http://example.com/asd%20asd"))
+      page.go_to("/ferrum/arbitrary_path/200/foo%20asd?a=http://example.com/asd%20asd")
+
+      expect(page.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo%20asd?a=http://example.com/asd%20asd"))
     end
 
     it "supports restricted characters ' []:/+&='" do
-      browser.go_to("/ferrum/arbitrary_path/200/foo?a=%20%5B%5D%3A%2F%2B%26%3D")
-      expect(browser.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo?a=%20%5B%5D%3A%2F%2B%26%3D"))
+      page.go_to("/ferrum/arbitrary_path/200/foo?a=%20%5B%5D%3A%2F%2B%26%3D")
+
+      expect(page.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo?a=%20%5B%5D%3A%2F%2B%26%3D"))
     end
 
     it "returns about:blank when on about:blank" do
-      browser.go_to("about:blank")
-      expect(browser.current_url).to eq("about:blank")
+      page.go_to("about:blank")
+
+      expect(page.current_url).to eq("about:blank")
     end
 
     it "handles hash changes" do
-      browser.go_to("/#omg")
-      expect(browser.current_url).to match(%r{/#omg$})
-      browser.execute <<-JS
+      page.go_to("/#omg")
+      expect(page.current_url).to match(%r{/#omg$})
+      page.execute <<-JS
         window.onhashchange = function() { window.last_hashchange = window.location.hash }
       JS
 
-      browser.go_to("/#foo")
+      page.go_to("/#foo")
 
-      expect(browser.current_url).to match(%r{/#foo$})
-      expect(browser.evaluate("window.last_hashchange")).to eq("#foo")
+      expect(page.current_url).to match(%r{/#foo$})
+      expect(page.evaluate("window.last_hashchange")).to eq("#foo")
     end
   end
 
   describe "#back" do
     it "goes back when history state has been pushed" do
-      browser.go_to
-      browser.execute(%(window.history.pushState({foo: "bar"}, "title", "bar2.html");))
-      expect(browser.current_url).to eq(base_url("/bar2.html"))
-      expect { browser.back }.not_to raise_error
-      expect(browser.current_url).to eq(base_url("/"))
+      page.go_to
+
+      page.execute(%(window.history.pushState({foo: "bar"}, "title", "bar2.html");))
+
+      expect(page.current_url).to eq(base_url("/bar2.html"))
+      expect { page.back }.not_to raise_error
+      expect(page.current_url).to eq(base_url("/"))
     end
   end
 
   describe "#forward" do
     it "goes forward when history state is used" do
-      browser.go_to
-      browser.execute(%(window.history.pushState({foo: "bar"}, "title", "bar2.html");))
-      expect(browser.current_url).to eq(base_url("/bar2.html"))
+      page.go_to
+
+      page.execute(%(window.history.pushState({foo: "bar"}, "title", "bar2.html");))
+      expect(page.current_url).to eq(base_url("/bar2.html"))
       # don't use #back here to isolate the test
-      browser.execute("window.history.go(-1);")
-      expect(browser.current_url).to eq(base_url("/"))
-      expect { browser.forward }.not_to raise_error
-      expect(browser.current_url).to eq(base_url("/bar2.html"))
+      page.execute("window.history.go(-1);")
+
+      expect(page.current_url).to eq(base_url("/"))
+      expect { page.forward }.not_to raise_error
+      expect(page.current_url).to eq(base_url("/bar2.html"))
     end
   end
 
   describe "#wait_for_reload" do
     it "waits for page to be reloaded" do
-      browser.go_to("/ferrum/auto_refresh")
-      expect(browser.body).to include("Visited 0 times")
+      page.go_to("/ferrum/auto_refresh")
+      expect(page.body).to include("Visited 0 times")
 
-      browser.wait_for_reload(5)
+      page.wait_for_reload(5)
 
-      expect(browser.body).to include("Visited 1 times")
+      expect(page.body).to include("Visited 1 times")
     end
   end
 
   describe "#bypass_csp" do
     it "can bypass csp headers" do
-      browser.go_to("/csp")
-      browser.add_script_tag(content: "window.__injected = 42")
-      expect(browser.evaluate("window.__injected")).to be_nil
+      page.go_to("/csp")
+      page.add_script_tag(content: "window.__injected = 42")
+      expect(page.evaluate("window.__injected")).to be_nil
 
-      browser.bypass_csp
-      browser.reload
-      browser.add_script_tag(content: "window.__injected = 42")
+      page.bypass_csp
+      page.reload
+      page.add_script_tag(content: "window.__injected = 42")
 
-      expect(browser.evaluate("window.__injected")).to eq(42)
+      expect(page.evaluate("window.__injected")).to eq(42)
+    end
+  end
+
+  describe "#timeout=" do
+    it "supports to change timeout dynamically" do
+      page.timeout = 4
+      expect { page.go_to("/ferrum/really_slow") }.not_to raise_error
+
+      page.timeout = 2
+      expect { page.go_to("/ferrum/really_slow") }.to raise_error(Ferrum::PendingConnectionsError)
     end
   end
 end
