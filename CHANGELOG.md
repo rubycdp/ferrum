@@ -7,6 +7,7 @@
   - `#version` requests the browser's version information.
   - `#create_page(proxy: { host: "x.x.x.x", port: "8800", user: "user", password: "pa$$" })`
   proxy option, supports creating a page in a new context that uses proxy settings.
+- `Ferrum::Page#timeout = n` page supports its own timeout
 
 ### Changed
 

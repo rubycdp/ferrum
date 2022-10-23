@@ -43,7 +43,7 @@ module Ferrum
     include Frames
     include Stream
 
-    attr_accessor :referrer
+    attr_accessor :referrer, :timeout
     attr_reader :target_id, :browser, :event, :tracing
 
     # Mouse object.
@@ -76,12 +76,13 @@ module Ferrum
       @main_frame = Frame.new(nil, self)
       @browser = browser
       @target_id = target_id
+      @timeout = @browser.timeout
       @event = Event.new.tap(&:set)
 
-      host = @browser.process.host
-      port = @browser.process.port
-      ws_url = "ws://#{host}:#{port}/devtools/page/#{@target_id}"
-      @client = Browser::Client.new(browser, ws_url, id_starts_with: 1000)
+      @client = Browser::Client.new(ws_url, self,
+                                    logger: @browser.options.logger,
+                                    ws_max_receive_size: @browser.options.ws_max_receive_size,
+                                    id_starts_with: 1000)
 
       @proxy_user = proxy&.[](:user) || @browser.options.proxy&.[](:user)
       @proxy_password = proxy&.[](:password) || @browser.options.proxy&.[](:password)
@@ -97,10 +98,6 @@ module Ferrum
       prepare_page
     end
 
-    def timeout
-      @browser.timeout
-    end
-
     def context
       @browser.contexts.find_by(target_id: target_id)
     end
@@ -110,7 +107,7 @@ module Ferrum
     #
     # @param [String, nil] url
     #   The URL to navigate to. The url should include scheme unless you set
-    #   {Browser#base_url= base_url}` when configuring driver.
+    #   `{Browser#base_url = url}` when configuring driver.
     #
     # @example
     #   browser.go_to("https://github.com/")
@@ -440,6 +437,10 @@ module Ferrum
 
     def document_node_id
       command("DOM.getDocument", depth: 0).dig("root", "nodeId")
+    end
+
+    def ws_url
+      "ws://#{@browser.process.host}:#{@browser.process.port}/devtools/page/#{@target_id}"
     end
   end
 end
