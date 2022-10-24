@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
   s.description   = "Ferrum allows you to control headless Chrome browser"
   s.license       = "MIT"
   s.require_paths = ["lib"]
-  s.files         = Dir["{lib}/**/*"] + %w[LICENSE README.md]
+  s.files         = Dir["lib/**/*", "LICENSE", "README.md"]
   s.metadata = {
     "homepage_uri" => "https://ferrum.rubycdp.com/",
     "bug_tracker_uri" => "https://github.com/rubycdp/ferrum/issues",
