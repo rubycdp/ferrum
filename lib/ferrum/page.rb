@@ -78,14 +78,12 @@ module Ferrum
       @target_id = target_id
       @timeout = @browser.timeout
       @event = Event.new.tap(&:set)
+      self.proxy = proxy
 
       @client = Browser::Client.new(ws_url, self,
                                     logger: @browser.options.logger,
                                     ws_max_receive_size: @browser.options.ws_max_receive_size,
                                     id_starts_with: 1000)
-
-      @proxy_user = proxy&.[](:user) || @browser.options.proxy&.[](:user)
-      @proxy_password = proxy&.[](:password) || @browser.options.proxy&.[](:password)
 
       @mouse = Mouse.new(self)
       @keyboard = Keyboard.new(self)
@@ -319,6 +317,14 @@ module Ferrum
       @client.subscribed?(event)
     end
 
+    def use_proxy?
+      @proxy_host && @proxy_port
+    end
+
+    def use_authorized_proxy?
+      use_proxy? && @proxy_user && @proxy_password
+    end
+
     private
 
     def subscribe
@@ -358,7 +364,7 @@ module Ferrum
       command("Log.enable")
       command("Network.enable")
 
-      if @proxy_user && @proxy_password
+      if use_authorized_proxy?
         network.authorize(user: @proxy_user,
                           password: @proxy_password,
                           type: :proxy) do |request, _index, _total|
@@ -441,6 +447,13 @@ module Ferrum
 
     def ws_url
       "ws://#{@browser.process.host}:#{@browser.process.port}/devtools/page/#{@target_id}"
+    end
+
+    def proxy=(options)
+      @proxy_host = options&.[](:host) || @browser.options.proxy&.[](:host)
+      @proxy_port = options&.[](:port) || @browser.options.proxy&.[](:port)
+      @proxy_user = options&.[](:user) || @browser.options.proxy&.[](:user)
+      @proxy_password = options&.[](:password) || @browser.options.proxy&.[](:password)
     end
   end
 end
