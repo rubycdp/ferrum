@@ -64,6 +64,7 @@ module Ferrum
 
       def frames_subscribe
         subscribe_frame_attached
+        subscribe_frame_detached
         subscribe_frame_started_loading
         subscribe_frame_navigated
         subscribe_frame_stopped_loading
@@ -83,6 +84,18 @@ module Ferrum
         on("Page.frameAttached") do |params|
           parent_frame_id, frame_id = params.values_at("parentFrameId", "frameId")
           @frames[frame_id] = Frame.new(frame_id, self, parent_frame_id)
+        end
+      end
+
+      def subscribe_frame_detached
+        on("Page.frameDetached") do |params|
+          frame = @frames[params["frameId"]]
+
+          if frame.main?
+            frame.execution_id = nil
+          else
+            @frames.delete(frame.id)
+          end
         end
       end
 

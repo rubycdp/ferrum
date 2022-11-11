@@ -20,6 +20,35 @@
 module Ferrum
   class Frame
     module DOM
+      SCRIPT_SRC_TAG = <<~JS
+        const script = document.createElement("script");
+        script.src = arguments[0];
+        script.type = arguments[1];
+        script.onload = arguments[2];
+        document.head.appendChild(script);
+      JS
+      SCRIPT_TEXT_TAG = <<~JS
+        const script = document.createElement("script");
+        script.text = arguments[0];
+        script.type = arguments[1];
+        document.head.appendChild(script);
+        arguments[2]();
+      JS
+      STYLE_TAG = <<~JS
+        const style = document.createElement("style");
+        style.type = "text/css";
+        style.appendChild(document.createTextNode(arguments[0]));
+        document.head.appendChild(style);
+        arguments[1]();
+      JS
+      LINK_TAG = <<~JS
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = arguments[0];
+        link.onload = arguments[1];
+        document.head.appendChild(link);
+      JS
+
       #
       # Returns current top window `location href`.
       #
@@ -179,6 +208,60 @@ module Ferrum
         JS
 
         evaluate_func(expr, selector, within)
+      end
+
+      #
+      # Adds a `<script>` tag to the document.
+      #
+      # @param [String, nil] url
+      #
+      # @param [String, nil] path
+      #
+      # @param [String, nil] content
+      #
+      # @param [String] type
+      #
+      # @example
+      #   browser.add_script_tag(url: "http://example.com/stylesheet.css") # => true
+      #
+      def add_script_tag(url: nil, path: nil, content: nil, type: "text/javascript")
+        expr, *args = if url
+                        [SCRIPT_SRC_TAG, url, type]
+                      elsif path || content
+                        if path
+                          content = File.read(path)
+                          content += "\n//# sourceURL=#{path}"
+                        end
+                        [SCRIPT_TEXT_TAG, content, type]
+                      end
+
+        evaluate_async(expr, @page.timeout, *args)
+      end
+
+      #
+      # Adds a `<style>` tag to the document.
+      #
+      # @param [String, nil] url
+      #
+      # @param [String, nil] path
+      #
+      # @param [String, nil] content
+      #
+      # @example
+      #   browser.add_style_tag(content: "h1 { font-size: 40px; }") # => true
+      #
+      def add_style_tag(url: nil, path: nil, content: nil)
+        expr, *args = if url
+                        [LINK_TAG, url]
+                      elsif path || content
+                        if path
+                          content = File.read(path)
+                          content += "\n//# sourceURL=#{path}"
+                        end
+                        [STYLE_TAG, content]
+                      end
+
+        evaluate_async(expr, @page.timeout, *args)
       end
     end
   end
