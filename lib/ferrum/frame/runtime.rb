@@ -184,10 +184,8 @@ module Ferrum
 
       def call(expression:, arguments: [], on: nil, wait: 0, handle: true, **options)
         errors = [NodeNotFoundError, NoExecutionContextError]
-        sleep = INTERMITTENT_SLEEP
-        attempts = INTERMITTENT_ATTEMPTS
 
-        Utils::Attempt.with_retry(errors: errors, max: attempts, wait: sleep) do
+        Utils::Attempt.with_retry(errors: errors, max: INTERMITTENT_ATTEMPTS, wait: INTERMITTENT_SLEEP) do
           params = options.dup
 
           if on
