@@ -8,6 +8,8 @@
   - `#create_page(proxy: { host: "x.x.x.x", port: "8800", user: "user", password: "pa$$" })`
   proxy option, supports creating a page in a new context that uses proxy settings.
 - `Ferrum::Page#timeout = n` page supports its own timeout
+- `Ferrum::Frame#execution_id` returns execution context id and doesn't raises error
+- `Ferrum::Frame#execution_id!` returns execution context id and raises error when times out on borrowing
 
 ### Changed
 
@@ -16,6 +18,10 @@
 - `Ferrum::Keyboard`
   - `#up, #down` accept only one key.
 - `Ferrum::Page#goto` fixed undefined method url for nil:NilClass when page times out and there are pending requests.
+- `Runtime.consoleAPICalled` didn't show log messages
+- `Ferrum::Page#subscribe_frame_detached` added to clean up old frames
+- `Ferrum::Proxy` was hanging at the exit due to issue in Webrick
+- `Ferrum::NoExecutionContextError` is raised sometimes when we block on `Ferrum::Page#frame_by`
 
 ### Removed
 
