@@ -276,10 +276,10 @@ module Ferrum
       result = @client.command(method, params)
 
       if wait.positive?
-        @event.wait(wait)
         # Wait a bit after command and check if iteration has
         # changed which means there was some network event for
         # the main frame and it started to load new content.
+        @event.wait(wait)
         if iteration != @event.iteration
           set = @event.wait(timeout)
           raise TimeoutError unless set
@@ -333,7 +333,7 @@ module Ferrum
 
       if @browser.options.logger
         on("Runtime.consoleAPICalled") do |params|
-          params["args"].each { |r| @browser.logger.puts(r["value"]) }
+          params["args"].each { |r| @browser.options.logger.puts(r["value"]) }
         end
       end
 
