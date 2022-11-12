@@ -118,15 +118,30 @@ module Ferrum
 
     #
     # Execution context id which is used by JS, each frame has it's own
-    # context in which JS evaluates.
+    # context in which JS evaluates. Locks for a page timeout and raises
+    # an error if an execution id hasn't been set yet, if id is set
+    # returns immediately.
     #
     # @return [Integer]
     #
     # @raise [NoExecutionContextError]
     #
-    def execution_id
+    def execution_id!
       value = @execution_id.borrow(@page.timeout, &:itself)
       raise NoExecutionContextError if value.instance_of?(Object)
+
+      value
+    end
+
+    #
+    # Execution context id which is used by JS, each frame has it's own
+    # context in which JS evaluates.
+    #
+    # @return [Integer, nil]
+    #
+    def execution_id
+      value = @execution_id.value
+      return if value.instance_of?(Object)
 
       value
     end

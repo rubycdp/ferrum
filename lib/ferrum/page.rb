@@ -35,7 +35,7 @@ module Ferrum
     extend Forwardable
     delegate %i[at_css at_xpath css xpath
                 current_url current_title url title body doctype content=
-                execution_id evaluate evaluate_on evaluate_async execute evaluate_func
+                execution_id execution_id! evaluate evaluate_on evaluate_async execute evaluate_func
                 add_script_tag add_style_tag] => :main_frame
 
     include Animation
@@ -72,7 +72,7 @@ module Ferrum
     attr_reader :cookies
 
     def initialize(target_id, browser, proxy: nil)
-      @frames = {}
+      @frames = Concurrent::Map.new
       @main_frame = Frame.new(nil, self)
       @browser = browser
       @target_id = target_id
@@ -411,7 +411,7 @@ module Ferrum
         # We also evaluate script just in case because
         # `Page.addScriptToEvaluateOnNewDocument` doesn't work in popups.
         command("Runtime.evaluate", expression: extension,
-                                    contextId: execution_id,
+                                    executionContextId: execution_id!,
                                     returnByValue: true)
       end
     end

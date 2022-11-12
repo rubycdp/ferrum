@@ -112,7 +112,7 @@ module Ferrum
           end
 
           if params[:executionContextId].nil? && params[:objectId].nil?
-            params = params.merge(executionContextId: execution_id)
+            params = params.merge(executionContextId: execution_id!)
           end
 
           response = @page.command("Runtime.callFunctionOn",
