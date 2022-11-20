@@ -113,6 +113,7 @@ module Ferrum
         document.close();
         arguments[1](true);
       ), @page.timeout, html)
+      @page.document_node_id
     end
     alias set_content content=
 

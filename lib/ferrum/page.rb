@@ -325,6 +325,10 @@ module Ferrum
       use_proxy? && @proxy_user && @proxy_password
     end
 
+    def document_node_id
+      command("DOM.getDocument", depth: 0).dig("root", "nodeId")
+    end
+
     private
 
     def subscribe
@@ -439,10 +443,6 @@ module Ferrum
       end
 
       (nil_or_relative ? @browser.base_url.join(url.to_s) : url).to_s
-    end
-
-    def document_node_id
-      command("DOM.getDocument", depth: 0).dig("root", "nodeId")
     end
 
     def ws_url
