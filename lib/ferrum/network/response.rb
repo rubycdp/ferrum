@@ -18,8 +18,13 @@ module Ferrum
       # @return [Hash{String => Object}]
       attr_reader :params
 
+      # The response is fully loaded by the browser.
       #
-      # Initializes the respones object.
+      # @return [Boolean]
+      attr_writer :loaded
+
+      #
+      # Initializes the responses object.
       #
       # @param [Page] page
       #   The page associated with the network response.
@@ -121,9 +126,8 @@ module Ferrum
       #
       def body
         @body ||= begin
-          body, encoded = @page
-                          .command("Network.getResponseBody", requestId: id)
-                          .values_at("body", "base64Encoded")
+          body, encoded = @page.command("Network.getResponseBody", requestId: id)
+                               .values_at("body", "base64Encoded")
           encoded ? Base64.decode64(body) : body
         end
       end
@@ -133,6 +137,13 @@ module Ferrum
       #
       def main?
         @page.network.response == self
+      end
+
+      # The response is fully loaded by the browser or not.
+      #
+      # @return [Boolean]
+      def loaded?
+        @loaded
       end
 
       #

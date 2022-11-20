@@ -51,6 +51,15 @@ module Ferrum
       end
 
       #
+      # Determines if the request is XHR.
+      #
+      # @return [Boolean]
+      #
+      def xhr?
+        type?("xhr")
+      end
+
+      #
       # The frame ID of the request.
       #
       # @return [String]
