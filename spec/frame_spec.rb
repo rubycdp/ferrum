@@ -181,9 +181,10 @@ describe Ferrum::Frame do
   end
 
   it "can set page content" do
-    browser.content = "<html><head></head><body>Voila!</body></html>"
+    browser.content = "<html><head></head><body>Voila! <a href='#'>Link</a></body></html>"
 
     expect(browser.body).to include("Voila!")
+    expect(browser.at_css("a").text).to eq("Link")
   end
 
   it "gets page doctype" do
