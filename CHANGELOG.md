@@ -1,10 +1,14 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.13...main) ##
 
 ### Added
+- `Ferrum::Network::Exchange#xhr?` determines if the exchange is XHR
+- `Ferrum::Network::Request#xhr?` determines if the request is XHR
+- `Ferrum::Network::Response#loaded?` returns true if the response is fully loaded
 
 ### Changed
 
 ### Fixed
+- `Ferrum::Network::Exchange#finished?` returns `true` only fully loaded responses
 
 ### Removed
 

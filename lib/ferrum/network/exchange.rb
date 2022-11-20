@@ -79,7 +79,7 @@ module Ferrum
       # @return [Boolean]
       #
       def finished?
-        blocked? || !response.nil? || !error.nil?
+        blocked? || response&.loaded? || !error.nil?
       end
 
       #
@@ -98,6 +98,15 @@ module Ferrum
       #
       def intercepted?
         !intercepted_request.nil?
+      end
+
+      #
+      # Determines if the exchange is XHR.
+      #
+      # @return [Boolean]
+      #
+      def xhr?
+        !!request&.xhr?
       end
 
       #

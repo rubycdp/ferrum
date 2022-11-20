@@ -374,8 +374,12 @@ module Ferrum
 
     def subscribe_loading_finished
       @page.on("Network.loadingFinished") do |params|
-        exchange = select(params["requestId"]).last
-        exchange.response.body_size = params["encodedDataLength"] if exchange&.response
+        response = select(params["requestId"]).last&.response
+
+        if response
+          response.loaded = true
+          response.body_size = params["encodedDataLength"]
+        end
       end
     end
 
