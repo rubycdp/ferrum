@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
-<body>
-<iframe name="frame"></iframe>
-<iframe></iframe>
-<iframe id="id_frame"></iframe>
-</body>
-<script type="text/javascript">
-document.getElementsByName("frame")[0].src = "http://localhost:" + location.port + "/ferrum/slow";
-document.querySelector("iframe:not([name]):not([id])").src = "http://localhost:" + location.port + "/ferrum/headers";
-document.querySelector("#id_frame").src = "http://localhost:" + location.port + "/ferrum/get_cookie";
-</script>
+  <body>
+    <iframe name="frame"></iframe>
+    <iframe></iframe>
+    <iframe id="id_frame"></iframe>
+  </body>
+  <script type="text/javascript">
+    document.getElementsByName("frame")[0].src = "http://localhost:" + location.port + "/ferrum/slow";
+    document.querySelector("iframe:not([name]):not([id])").src = "http://localhost:" + location.port + "/ferrum/headers";
+    document.querySelector("#id_frame").src = "http://localhost:" + location.port + "/ferrum/get_cookie";
+  </script>
 </html>

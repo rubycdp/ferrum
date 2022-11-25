@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html>
-<head>
-</head>
-<body>
-  <p>Location: <span id="location"></span></p>
+  <head></head>
+  <body>
+    <p>Location: <span id="location"></span></p>
 
-  <script type="text/javascript">
-    navigator.geolocation.getCurrentPosition(function(position) {
-      document.getElementById("location").innerHTML = position.coords.latitude + "," + position.coords.longitude;
-    });
-  </script>
-</body>
+    <script type="text/javascript">
+      navigator.geolocation.getCurrentPosition(function(position) {
+        document.getElementById("location").innerHTML = position.coords.latitude + "," + position.coords.longitude;
+      });
+    </script>
+  </body>
 </html>

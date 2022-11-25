@@ -1,11 +1,12 @@
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<!DOCTYPE html>
+<html>
   <head>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
     <title>ferrum drag_to and drag_by</title>
     <script src="/ferrum/jquery.min.js" type="text/javascript" charset="utf-8"></script>
     <script src="/ferrum/jquery-ui.min.js" type="text/javascript" charset="utf-8"></script>
 
-    <style type="text/css">
+    <style>
       #drag_by {
         position: relative;
         width: 200px;
@@ -22,28 +23,24 @@
     </style>
 
     <script>
-    $(function() {
-      $( ".draggable" ).draggable();
-      $( "#droppable" ).droppable({
-        drop: function( event, ui ) {
-          $( this )
-            .addClass( "dropped" )
-            .find( "p" )
-              .html( "Dropped!" );
-        }
+      $(function() {
+        $( ".draggable" ).draggable();
+        $( "#droppable" ).droppable({
+          drop: function( event, ui ) {
+            $( this )
+              .addClass( "dropped" )
+              .find( "p" )
+                .html( "Dropped!" );
+          }
+        });
       });
-    });
     </script>
   </head>
-
-
   <body>
-
     <div id="drag_to">
       <div id="draggable" class="draggable">
         <p>Drag me</p>
       </div>
-
       <div id="droppable">
         <p>Drop here</p>
       </div>
@@ -54,6 +51,5 @@
         <p>Drag me by</p>
       </div>
     </div>
-
   </body>
 </html>

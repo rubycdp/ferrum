@@ -1,5 +1,5 @@
-
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<!DOCTYPE html>
+<html>
   <head>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
     <title>with_animation</title>
@@ -44,8 +44,8 @@
       }
 
       @keyframes animation {
-          0%   {height: 20px; width: 100%;}
-          100% {height: 0px; width: 0%;}
+          0%   { height: 20px; width: 100%; }
+          100% { height: 0px; width: 0%; }
       }
 
       a.animation.away {
@@ -55,7 +55,7 @@
       }
 
       @keyframes pseudo_grow {
-        100% { height: 100px, width: 100px };
+        100% { height: 100px; width: 100px; }
       }
 
       a.animation.pseudo::after {
@@ -71,4 +71,3 @@
     </a>
   </body>
 </html>
-
