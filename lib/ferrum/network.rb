@@ -11,9 +11,10 @@ module Ferrum
   class Network
     CLEAR_TYPE = %i[traffic cache].freeze
     AUTHORIZE_TYPE = %i[server proxy].freeze
-    RESOURCE_TYPES = %w[Document Stylesheet Image Media Font Script TextTrack
-                        XHR Fetch EventSource WebSocket Manifest
-                        SignedExchange Ping CSPViolationReport Other].freeze
+    REQUEST_STAGES = %i[Request Response].freeze
+    RESOURCE_TYPES = %i[Document Stylesheet Image Media Font Script TextTrack
+                        XHR Fetch Prefetch EventSource WebSocket Manifest
+                        SignedExchange Ping CSPViolationReport Preflight Other].freeze
     AUTHORIZE_BLOCK_MISSING = "Block is missing, call `authorize(...) { |r| r.continue } " \
                               "or subscribe to `on(:request)` events before calling it"
     AUTHORIZE_TYPE_WRONG = ":type should be in #{AUTHORIZE_TYPE}"
@@ -187,11 +188,20 @@ module Ferrum
     #   end
     #   browser.go_to("https://google.com")
     #
-    def intercept(pattern: "*", resource_type: nil)
+    def intercept(pattern: "*", resource_type: nil, request_stage: nil, handle_auth_requests: true)
       pattern = { urlPattern: pattern }
-      pattern[:resourceType] = resource_type if resource_type && RESOURCE_TYPES.include?(resource_type.to_s)
 
-      @page.command("Fetch.enable", handleAuthRequests: true, patterns: [pattern])
+      if resource_type && RESOURCE_TYPES.none?(resource_type.to_sym)
+        raise ArgumentError, "Unknown resource type '#{resource_type}' must be #{RESOURCE_TYPES.join(' | ')}"
+      end
+
+      if request_stage && REQUEST_STAGES.none?(request_stage.to_sym)
+        raise ArgumentError, "Unknown request stage '#{request_stage}' must be #{REQUEST_STAGES.join(' | ')}"
+      end
+
+      pattern[:resourceType] = resource_type if resource_type
+      pattern[:requestStage] = request_stage if request_stage
+      @page.command("Fetch.enable", patterns: [pattern], handleAuthRequests: handle_auth_requests)
     end
 
     #

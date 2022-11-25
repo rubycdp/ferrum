@@ -302,6 +302,55 @@ describe Ferrum::Network do
   end
 
   describe "#intercept" do
+    it "supports :pattern argument" do
+      network.intercept(pattern: "*/ferrum/frame_child")
+      page.on(:request) do |request|
+        request.respond(body: "<h1>hello</h1>")
+      end
+
+      page.go_to("/ferrum/frame_parent")
+
+      expect(network.status).to eq(200)
+      frame = page.at_xpath("//iframe").frame
+      expect(frame.body).to include("hello")
+    end
+
+    context "with :resource_type argument" do
+      it "raises an error with wrong type" do
+        expect { network.intercept(resource_type: :BlaBla) }.to raise_error(ArgumentError)
+      end
+
+      it "intercepts only given type" do
+        network.intercept(resource_type: :Document)
+        page.on(:request) do |request|
+          request.respond(body: "<h1>hello</h1>")
+        end
+
+        page.go_to("/ferrum/non_existing")
+
+        expect(network.status).to eq(200)
+        expect(page.body).to include("hello")
+      end
+    end
+
+    context "with :request_stage argument" do
+      it "raises an error with wrong stage" do
+        expect { network.intercept(request_stage: :BlaBla) }.to raise_error(ArgumentError)
+      end
+
+      it "intercepts only given stage" do
+        network.intercept(request_stage: :Response)
+        page.on(:request) do |request|
+          request.respond(body: "<h1>hello</h1>")
+        end
+
+        page.go_to("/ferrum/index")
+
+        expect(network.status).to eq(200)
+        expect(page.body).to include("hello")
+      end
+    end
+
     it "supports custom responses" do
       network.intercept
       page.on(:request) do |request|
