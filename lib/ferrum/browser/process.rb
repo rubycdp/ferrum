@@ -9,6 +9,7 @@ require "ferrum/browser/options/base"
 require "ferrum/browser/options/chrome"
 require "ferrum/browser/options/firefox"
 require "ferrum/browser/command"
+require "pry"
 
 module Ferrum
   class Browser
@@ -27,18 +28,21 @@ module Ferrum
         new(*args).tap(&:start)
       end
 
-      def self.process_killer(pid)
+      def self.process_killer(pid, logger)
         proc do
           if Utils::Platform.windows?
             # Process.kill is unreliable on Windows
             ::Process.kill("KILL", pid) unless system("taskkill /f /t /pid #{pid} >NUL 2>NUL")
           else
             ::Process.kill("USR1", pid)
+            logger&.puts("\nAttemping to kill chrome (#{pid})")
             start = Utils::ElapsedTime.monotonic_time
             while ::Process.wait(pid, ::Process::WNOHANG).nil?
+              logger&.puts("Waiting for chrome (#{pid}) to end")
               sleep(WAIT_KILLED)
               next unless Utils::ElapsedTime.timeout?(start, KILL_TIMEOUT)
 
+              logger&.puts("Forcefully killing chrome (#{pid})")
               ::Process.kill("KILL", pid)
               ::Process.wait(pid)
               break
@@ -92,14 +96,20 @@ module Ferrum
 
           if @command.xvfb?
             @xvfb = Xvfb.start(@command.options)
-            ObjectSpace.define_finalizer(self, self.class.process_killer(@xvfb.pid))
+            ObjectSpace.define_finalizer(self, self.class.process_killer(@xvfb.pid, @logger))
           end
 
           env = Hash(@xvfb&.to_env).merge(@env)
+          @logger&.puts("\nAttemping to spawn chrome with:")
+          @logger&.puts("  env: #{env}")
+          @logger&.puts("  command: #{@command.to_a.join(' ')}")
+          @logger&.puts("  process options: #{process_options}")
+          @logger&.puts("")
           @pid = ::Process.spawn(env, *@command.to_a, process_options)
-          ObjectSpace.define_finalizer(self, self.class.process_killer(@pid))
+          @logger&.puts("spawned chrome (#{@pid}):\n" +`ps #{pid}`)
+          ObjectSpace.define_finalizer(self, self.class.process_killer(@pid, @logger))
 
-          parse_ws_url(read_io, @process_timeout)
+          parse_ws_url(read_io, @process_timeout, @pid)
           parse_browser_versions
         ensure
           close_io(read_io, write_io)
@@ -125,7 +135,7 @@ module Ferrum
       private
 
       def kill(pid)
-        self.class.process_killer(pid).call
+        self.class.process_killer(pid, @logger).call
       end
 
       def remove_user_data_dir
@@ -133,19 +143,28 @@ module Ferrum
         @user_data_dir = nil
       end
 
-      def parse_ws_url(read_io, timeout)
+      def parse_ws_url(read_io, timeout, pid)
         output = ""
         start = Utils::ElapsedTime.monotonic_time
         max_time = start + timeout
         regexp = %r{DevTools listening on (ws://.*)}
+        counter = 1
+        @logger&.puts("Attemping to detect websocket for chrome (#{pid})")
         while (now = Utils::ElapsedTime.monotonic_time) < max_time
           begin
+            @logger&.puts("Listening for websocket loop: #{counter} [#{now}]\n")
+            counter += 1
+            log_chrome_ps(pid)
             output += read_io.read_nonblock(512)
+            @logger&.puts("chrome (#{pid}) IO stream output:\n#{output}\n***\n")
           rescue IO::WaitReadable
+            @logger&.puts("No new IO stream output from chrome (#{pid}). Retrying ...\n")
             read_io.wait_readable(max_time - now)
           else
             if output.match(regexp)
               self.ws_url = output.match(regexp)[1].strip
+              @logger&.puts("\nwebsocket detected for chrome (#{pid}): #{self.ws_url}")
+              @logger&.puts("Chrome (#{pid}) is ready")
               break
             end
           end
@@ -153,7 +172,8 @@ module Ferrum
 
         return if ws_url
 
-        @logger&.puts(output)
+        log_chrome_ps(pid, "\nNo websocket detected for chrome")
+        @logger&.puts("chrome (#{pid}) IO stream output: #{output}***\n")
         raise ProcessTimeoutError.new(timeout, output)
       end
 
@@ -182,6 +202,10 @@ module Ferrum
         rescue IOError
           raise unless RUBY_ENGINE == "jruby"
         end
+      end
+
+      def log_chrome_ps(pid, message="chrome")
+        @logger&.puts("#{message} (#{pid}):\n #{`ps #{pid}`}\n")
       end
     end
   end
