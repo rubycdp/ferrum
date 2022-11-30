@@ -90,12 +90,12 @@ module Ferrum
         if ENV["FERRUM_CHROME_LOG"]
           File.open(ENV["FERRUM_CHROME_LOG"], "w") do |output_log|
             launch_chrome(stdout_and_stderr: output_log)
-            File.open(output_log.path, "r") do |read_from_log|
+            File.open(output_log.path, "r:#{Encoding.default_external}") do |read_from_log|
               parse_ws_url(read_from_log, @process_timeout, @pid)
             end
           end
         else
-          IO.pipe do |read_io, write_io|
+          IO.pipe(Encoding.default_external) do |read_io, write_io|
             begin
               launch_chrome(stdout_and_stderr: write_io)
               parse_ws_url(read_io, @process_timeout, @pid)
