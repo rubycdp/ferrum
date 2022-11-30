@@ -9,7 +9,6 @@ require "ferrum/browser/options/base"
 require "ferrum/browser/options/chrome"
 require "ferrum/browser/options/firefox"
 require "ferrum/browser/command"
-require "pry"
 
 module Ferrum
   class Browser
