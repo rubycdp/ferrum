@@ -34,14 +34,14 @@ module Ferrum
             ::Process.kill("KILL", pid) unless system("taskkill /f /t /pid #{pid} >NUL 2>NUL")
           else
             ::Process.kill("USR1", pid)
-            logger&.puts("\nAttemping to kill chrome (#{pid})")
+            logger&.puts("\nAttemping to kill #{pid}")
             start = Utils::ElapsedTime.monotonic_time
             while ::Process.wait(pid, ::Process::WNOHANG).nil?
-              logger&.puts("Waiting for chrome (#{pid}) to end")
+              logger&.puts("Waiting for #{pid} to end")
               sleep(WAIT_KILLED)
               next unless Utils::ElapsedTime.timeout?(start, KILL_TIMEOUT)
 
-              logger&.puts("Forcefully killing chrome (#{pid})")
+              logger&.puts("Forcefully killing #{pid}")
               ::Process.kill("KILL", pid)
               ::Process.wait(pid)
               break
