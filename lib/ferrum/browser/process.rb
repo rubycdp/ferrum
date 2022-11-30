@@ -166,22 +166,23 @@ module Ferrum
         counter = 1
         @logger&.puts("Attemping to detect websocket for chrome (#{pid})")
         while (now = Utils::ElapsedTime.monotonic_time) < max_time
-          begin
-            @logger&.puts("Listening for websocket loop: #{counter} [#{now}]\n")
-            counter += 1
-            log_chrome_ps(pid)
-            output += read_io.gets(512)
-            @logger&.puts("chrome (#{pid}) IO stream output:\n#{output}\n***\n")
-          rescue IO::WaitReadable
+          @logger&.puts("Listening for websocket loop: #{counter} [#{now}]\n")
+          counter += 1
+          log_chrome_ps(pid)
+          chunk = read_io.gets(512)
+          if chunk.nil?
             @logger&.puts("No new IO stream output from chrome (#{pid}). Retrying ...\n")
             read_io.wait_readable(max_time - now)
           else
-            if output.match(regexp)
-              self.ws_url = output.match(regexp)[1].strip
-              @logger&.puts("\nwebsocket detected for chrome (#{pid}): #{self.ws_url}")
-              @logger&.puts("Chrome (#{pid}) is ready")
-              break
-            end
+            @logger&.puts("chrome (#{pid}) IO stream output:\n#{chunk}\n***\n")
+            output += chunk
+          end
+
+          if output.match(regexp)
+            self.ws_url = output.match(regexp)[1].strip
+            @logger&.puts("\nwebsocket detected for chrome (#{pid}): #{self.ws_url}")
+            @logger&.puts("Chrome (#{pid}) is ready")
+            break
           end
         end
 
