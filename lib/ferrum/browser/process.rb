@@ -5,6 +5,7 @@ require "json"
 require "addressable"
 require "tmpdir"
 require "forwardable"
+require "fcntl"
 require "ferrum/browser/options/base"
 require "ferrum/browser/options/chrome"
 require "ferrum/browser/options/firefox"
@@ -90,14 +91,15 @@ module Ferrum
         if ENV["FERRUM_CHROME_LOG"]
           File.open(ENV["FERRUM_CHROME_LOG"], "w") do |output_log|
             launch_chrome(stdout_and_stderr: output_log)
-            File.open(output_log.path, "r:#{Encoding.default_external}") do |read_from_log|
+            File.open(output_log.path, Fcntl::O_NONBLOCK|Fcntl::O_RDONLY) do |read_from_log|
               parse_ws_url(read_from_log, @process_timeout, @pid)
             end
           end
         else
-          IO.pipe(Encoding.default_external) do |read_io, write_io|
+          IO.pipe do |read_io, write_io|
             begin
               launch_chrome(stdout_and_stderr: write_io)
+              read_io.fcntl(Fcntl::F_SETFL, read_io.fcntl(Fcntl::F_GETFL)|Fcntl::O_RDONLY)
               parse_ws_url(read_io, @process_timeout, @pid)
             ensure
               close_io(read_io, write_io)
@@ -168,7 +170,7 @@ module Ferrum
             @logger&.puts("Listening for websocket loop: #{counter} [#{now}]\n")
             counter += 1
             log_chrome_ps(pid)
-            output += read_io.read_nonblock(512)
+            output += read_io.gets(512)
             @logger&.puts("chrome (#{pid}) IO stream output:\n#{output}\n***\n")
           rescue IO::WaitReadable
             @logger&.puts("No new IO stream output from chrome (#{pid}). Retrying ...\n")
