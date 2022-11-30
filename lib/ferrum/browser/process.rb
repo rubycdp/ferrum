@@ -87,32 +87,46 @@ module Ferrum
         # Don't do anything as browser is already running as external process.
         return if ws_url
 
-        begin
-          read_io, write_io = IO.pipe
-          process_options = { in: File::NULL }
-          process_options[:pgroup] = true unless Utils::Platform.windows?
-          process_options[:out] = process_options[:err] = write_io
-
-          if @command.xvfb?
-            @xvfb = Xvfb.start(@command.options)
-            ObjectSpace.define_finalizer(self, self.class.process_killer(@xvfb.pid, @logger))
+        if ENV["FERRUM_CHROME_LOG"]
+          File.open(ENV["FERRUM_CHROME_LOG"], "w") do |output_log|
+            launch_chrome(stdout_and_stderr: output_log)
+            File.open(output_log.path, "r") do |read_from_log|
+              parse_ws_url(read_from_log, @process_timeout, @pid)
+            end
           end
-
-          env = Hash(@xvfb&.to_env).merge(@env)
-          @logger&.puts("\nAttemping to spawn chrome with:")
-          @logger&.puts("  env: #{env}")
-          @logger&.puts("  command: #{@command.to_a.join(' ')}")
-          @logger&.puts("  process options: #{process_options}")
-          @logger&.puts("")
-          @pid = ::Process.spawn(env, *@command.to_a, process_options)
-          @logger&.puts("spawned chrome (#{@pid}):\n" +`ps #{pid}`)
-          ObjectSpace.define_finalizer(self, self.class.process_killer(@pid, @logger))
-
-          parse_ws_url(read_io, @process_timeout, @pid)
-          parse_browser_versions
-        ensure
-          close_io(read_io, write_io)
+        else
+          IO.pipe do |read_io, write_io|
+            begin
+              launch_chrome(stdout_and_stderr: write_io)
+              parse_ws_url(read_io, @process_timeout, @pid)
+            ensure
+              close_io(read_io, write_io)
+            end
+          end
         end
+
+        parse_browser_versions
+      end
+
+      def launch_chrome(stdout_and_stderr:)
+        process_options = { in: File::NULL }
+        process_options[:pgroup] = true unless Utils::Platform.windows?
+        process_options[:out] = process_options[:err] = stdout_and_stderr
+
+        if @command.xvfb?
+          @xvfb = Xvfb.start(@command.options)
+          ObjectSpace.define_finalizer(self, self.class.process_killer(@xvfb.pid, @logger))
+        end
+
+        env = Hash(@xvfb&.to_env).merge(@env)
+        @logger&.puts("\nAttemping to spawn chrome with:")
+        @logger&.puts("  env: #{env}")
+        @logger&.puts("  command: #{@command.to_a.join(' ')}")
+        @logger&.puts("  process options: #{process_options}")
+        @logger&.puts("")
+        @pid = ::Process.spawn(env, *@command.to_a, process_options)
+        @logger&.puts("spawned chrome (#{@pid}):\n" +`ps #{pid}`)
+        ObjectSpace.define_finalizer(self, self.class.process_killer(@pid, @logger))
       end
 
       def stop
