@@ -186,10 +186,10 @@ module Ferrum
           end
         end
 
+        @logger&.puts("chrome (#{pid}) IO stream output: #{output}***\n")
         return if ws_url
 
         log_chrome_ps(pid, "\nNo websocket detected for chrome")
-        @logger&.puts("chrome (#{pid}) IO stream output: #{output}***\n")
         raise ProcessTimeoutError.new(timeout, output)
       end
 
