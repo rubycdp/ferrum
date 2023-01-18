@@ -137,7 +137,7 @@ module Ferrum
         output = ""
         start = Utils::ElapsedTime.monotonic_time
         max_time = start + timeout
-        regexp = %r{DevTools listening on (ws://.*)}
+        regexp = %r{DevTools listening on (ws://.*[a-zA-Z0-9-]{36})}
         while (now = Utils::ElapsedTime.monotonic_time) < max_time
           begin
             output += read_io.read_nonblock(512)
