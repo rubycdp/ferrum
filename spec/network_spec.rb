@@ -456,7 +456,7 @@ describe Ferrum::Network do
 
     expect { page.go_to("/ferrum/with_js") }.to raise_error(
       Ferrum::StatusError,
-      %r{Request to http://.*/ferrum/with_js failed to reach server, check DNS and server status}
+      %r{Request to http://.*/ferrum/with_js failed \(net::ERR_INTERNET_DISCONNECTED\)}
     )
 
     expect(page.body).to eq("<html><head></head><body></body></html>")
