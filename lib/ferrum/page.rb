@@ -114,14 +114,7 @@ module Ferrum
       options = { url: combine_url!(url) }
       options.merge!(referrer: referrer) if referrer
       response = command("Page.navigate", wait: GOTO_WAIT, **options)
-      # https://cs.chromium.org/chromium/src/net/base/net_error_list.h
-      if %w[net::ERR_NAME_NOT_RESOLVED
-            net::ERR_NAME_RESOLUTION_FAILED
-            net::ERR_INTERNET_DISCONNECTED
-            net::ERR_CONNECTION_TIMED_OUT
-            net::ERR_FILE_NOT_FOUND].include?(response["errorText"])
-        raise StatusError, options[:url]
-      end
+      raise StatusError.new(options[:url], "Request to #{options[:url]} failed (#{response['errorText']})") if response['errorText']
 
       response["frameId"]
     rescue TimeoutError

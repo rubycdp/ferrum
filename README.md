@@ -595,9 +595,8 @@ Activates offline mode for a page.
 
 ```ruby
 browser.network.offline_mode
-browser.go_to("https://github.com/") # => Ferrum::StatusError (Request to https://github.com/ failed to reach server, check DNS and server status)
+browser.go_to("https://github.com/") # => Ferrum::StatusError (Request to https://github.com/ failed(net::ERR_INTERNET_DISCONNECTED))
 ```
-
 
 ## Proxy
 
