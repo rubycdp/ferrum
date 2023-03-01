@@ -362,6 +362,7 @@ module Ferrum
         if params["redirectResponse"]
           previous_exchange = select(request.id)[-2]
           response = Network::Response.new(@page, params)
+          response.loaded = true
           previous_exchange.response = response
         end
 
