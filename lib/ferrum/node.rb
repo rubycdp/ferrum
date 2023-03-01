@@ -228,7 +228,7 @@ module Ferrum
 
     def content_quads
       quads = page.command("DOM.getContentQuads", nodeId: node_id)["quads"]
-      raise CoordinatesNotFoundError, "Node is either not visible or not an HTMLElement" if quads.size.zero?
+      raise CoordinatesNotFoundError, "Node is either not visible or not an HTMLElement" if quads.empty?
 
       quads
     end
