@@ -57,7 +57,7 @@ describe Ferrum::Browser::Xvfb, skip: !Ferrum::Browser::Binary.find("Xvfb") do
   def process_alive?(pid)
     return false unless pid
 
-    ::Process.kill(0, pid) == 1
+    Process.kill(0, pid) == 1
   rescue Errno::ESRCH
     false
   end

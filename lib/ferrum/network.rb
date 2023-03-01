@@ -333,7 +333,8 @@ module Ferrum
     #
     # @example
     #   browser.network.offline_mode
-    #   browser.go_to("https://github.com/") # => Ferrum::StatusError (Request to https://github.com/ failed (net::ERR_INTERNET_DISCONNECTED))
+    #   browser.go_to("https://github.com/")
+    #     # => Request to https://github.com/ failed (net::ERR_INTERNET_DISCONNECTED) (Ferrum::StatusError)
     #
     def offline_mode
       emulate_network_conditions(offline: true, latency: 0, download_throughput: 0, upload_throughput: 0)
