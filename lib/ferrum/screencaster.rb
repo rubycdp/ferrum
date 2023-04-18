@@ -19,21 +19,27 @@ module Ferrum
       end
 
       def add_frame(params)
-        @page.command("Page.screencastFrameAck")
+        warn 'frame'
+        @page.command("Page.screencastFrameAck", sessionId: params["sessionId"])
         img = params["data"]
         img_decoded = Base64.decode64(img)
         @stdin.write(img_decoded)
+
       end
 
       def start_screencast #(options)
-        cmd = "ffmpeg -y -f rawvideo -pix_fmt rgb24 -s 640x480 -r 30 -i - -vcodec mp4v -c:v libx264 -preset slow -crf 22 output_video.mp4"
+        cmd = "ffmpeg -y -f image2pipe -i - -c:v libx264 -preset slow -crf 22 -r 1 -an -f mp4 -movflags +faststart output_video2.mp4"
         @stdin, @stdout, @stderr, @wait_thr = Open3.popen3(cmd)
-        @page.command("Page.startScreencast") #, **options)
+        @page.command("Page.startScreencast", format: "jpeg") #, **options)
       end
 
       def stop_screencast
+        warn 'stopped'
         @page.command("Page.stopScreencast")
         @stdin.close
+        @stdout.close
+        @stderr.close
+        @wait_thr.join
       end
   end
 end
