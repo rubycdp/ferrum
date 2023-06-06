@@ -8,9 +8,10 @@ module Ferrum
     FERRUM_VIEWS  = "#{File.dirname(__FILE__)}/views"
     FERRUM_PUBLIC = "#{File.dirname(__FILE__)}/public"
 
-    class TestAppError < Exception; end # rubocop:disable Lint/InheritException
+    class TestAppError < StandardError
+    end
 
-    class TestAppOtherError < Exception # rubocop:disable Lint/InheritException
+    class TestAppOtherError < StandardError
       def initialize(something, message)
         super(something)
         @something = something
