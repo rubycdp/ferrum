@@ -4,4 +4,6 @@ source "https://rubygems.org"
 
 gem "websocket-driver", "~> 0.6.5"
 
+eval_gemfile "../../Gemfile"
+
 gemspec path: "../../"
