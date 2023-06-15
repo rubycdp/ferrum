@@ -196,6 +196,17 @@ describe Ferrum::Frame::Runtime do
     end
   end
 
+  describe "#evaluate_on" do
+    it "does not retry if node is not around anymore" do
+      browser.go_to("/ferrum/table")
+      node = browser.at_xpath(".//td")
+
+      browser.go_to("/ferrum/table")
+      expect(Ferrum::Utils::Attempt).to receive(:with_retry).with(hash_including(errors: [])).and_call_original
+      expect { browser.evaluate_on(node: node, expression: "this.textContent") }.to raise_error(Ferrum::NodeNotFoundError)
+    end
+  end
+
   describe "#add_script_tag" do
     it "adds by url" do
       browser.go_to
