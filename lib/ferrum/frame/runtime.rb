@@ -152,6 +152,10 @@ module Ferrum
 
           case response["subtype"]
           when "node"
+            # Ensure node is not requested & returned if it has been disconnected
+            # between execution and response handling (addresses timing issues).
+            raise NodeNotFoundError, "Node is disconnected" if disconnected?(object_id).dig("result", "value")
+
             # We cannot store object_id in the node because page can be reloaded
             # and node destroyed so we need to retrieve it each time for given id.
             # Though we can try to subscribe to `DOM.childNodeRemoved` and
@@ -240,6 +244,18 @@ module Ferrum
 
       def cyclic_object
         CyclicObject.instance
+      end
+
+      def disconnected?(object_id)
+        @page.command(
+          "Runtime.callFunctionOn",
+          objectId: object_id,
+          functionDeclaration: <<~JS
+            function() {
+              return !this.isConnected;
+            }
+          JS
+        )
       end
     end
   end
