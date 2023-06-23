@@ -134,6 +134,7 @@ In docker as root you must pass the no-sandbox browser option:
 Ferrum::Browser.new(browser_options: { 'no-sandbox': nil })
 ```
 
+It has also been reported that the Chrome process repeatedly crashes when running inside a Docker container on an M1 Mac. After deploying to a container on an AWS server the problem goes away.
 
 ## Customization
 
