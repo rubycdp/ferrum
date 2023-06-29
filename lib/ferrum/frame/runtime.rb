@@ -152,17 +152,19 @@ module Ferrum
 
           case response["subtype"]
           when "node"
-            # Ensure node is not requested & returned if it has been disconnected
-            # between execution and response handling (addresses timing issues).
-            raise NodeNotFoundError, "Node is disconnected" if disconnected?(object_id).dig("result", "value")
-
             # We cannot store object_id in the node because page can be reloaded
             # and node destroyed so we need to retrieve it each time for given id.
             # Though we can try to subscribe to `DOM.childNodeRemoved` and
             # `DOM.childNodeInserted` in the future.
             node_id = @page.command("DOM.requestNode", objectId: object_id)["nodeId"]
             description = @page.command("DOM.describeNode", nodeId: node_id)["node"]
-            Node.new(self, @page.target_id, node_id, description)
+            node = Node.new(self, @page.target_id, node_id, description)
+
+            # Ensure node has not been disconnected between execution and
+            # response handling (addresses timing issues).
+            raise NodeNotFoundError, "Node is disconnected" unless node.evaluate('this.isConnected')
+
+            node
           when "array"
             reduce_props(object_id, []) do |memo, key, value|
               next(memo) unless Integer(key, exception: false)
@@ -244,18 +246,6 @@ module Ferrum
 
       def cyclic_object
         CyclicObject.instance
-      end
-
-      def disconnected?(object_id)
-        @page.command(
-          "Runtime.callFunctionOn",
-          objectId: object_id,
-          functionDeclaration: <<~JS
-            function() {
-              return !this.isConnected;
-            }
-          JS
-        )
       end
     end
   end
