@@ -4,8 +4,32 @@ require "ferrum/cookies/cookie"
 
 module Ferrum
   class Cookies
+    include Enumerable
+
     def initialize(page)
       @page = page
+    end
+
+    #
+    # Enumerates over all cookies.
+    #
+    # @yield [cookie]
+    #   The given block will be passed each cookie.
+    #
+    # @yieldparam [Cookie] cookie
+    #   A cookie in the browser.
+    #
+    # @return [Enumerator]
+    #   If no block is given, an Enumerator object will be returned.
+    #
+    def each
+      return enum_for(__method__) unless block_given?
+
+      cookies = @page.command("Network.getAllCookies")["cookies"]
+
+      cookies.each do |c|
+        yield Cookie.new(c)
+      end
     end
 
     #
@@ -22,8 +46,9 @@ module Ferrum
     #   # }
     #
     def all
-      cookies = @page.command("Network.getAllCookies")["cookies"]
-      cookies.to_h { |c| [c["name"], Cookie.new(c)] }
+      each.to_h do |cookie|
+        [cookie.name, cookie]
+      end
     end
 
     #

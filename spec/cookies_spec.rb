@@ -1,6 +1,62 @@
 # frozen_string_literal: true
 
 describe Ferrum::Cookies do
+  describe "#each" do
+    context "when a block is given" do
+      it "must yield each Cookie" do
+        browser.go_to("/set_cookie")
+
+        yielded_cookies = []
+
+        browser.cookies.each do |cookie|
+          yielded_cookies << cookie
+        end
+
+        expect(yielded_cookies).to eq(
+          [
+            Ferrum::Cookies::Cookie.new("name" => "stealth",
+                                        "value" => "test_cookie",
+                                        "domain" => "127.0.0.1",
+                                        "path" => "/",
+                                        "expires" => -1,
+                                        "size" => 18,
+                                        "httpOnly" => false,
+                                        "secure" => false,
+                                        "session" => true,
+                                        "priority" => "Medium",
+                                        "sameParty" => false,
+                                        "sourceScheme" => "NonSecure",
+                                        "sourcePort" => server.port)
+          ]
+        )
+      end
+    end
+
+    context "when no block is given" do
+      it "must return an Enumerator" do
+        browser.go_to("/set_cookie")
+
+        expect(browser.cookies.each.to_a).to eq(
+          [
+            Ferrum::Cookies::Cookie.new("name" => "stealth",
+                                        "value" => "test_cookie",
+                                        "domain" => "127.0.0.1",
+                                        "path" => "/",
+                                        "expires" => -1,
+                                        "size" => 18,
+                                        "httpOnly" => false,
+                                        "secure" => false,
+                                        "session" => true,
+                                        "priority" => "Medium",
+                                        "sameParty" => false,
+                                        "sourceScheme" => "NonSecure",
+                                        "sourcePort" => server.port)
+          ]
+        )
+      end
+    end
+  end
+
   describe "#all" do
     it "returns cookie object" do
       browser.go_to("/set_cookie")
