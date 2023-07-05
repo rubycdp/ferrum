@@ -69,7 +69,7 @@ module Ferrum
     #   # }>
     #
     def [](name)
-      all[name]
+      find { |cookie| cookie.name == name }
     end
 
     #
