@@ -114,6 +114,38 @@ module Ferrum
       end
 
       #
+      # The priority of the cookie.
+      #
+      # @return [String]
+      #
+      def priority
+        @attributes['priority']
+      end
+
+      #
+      # @return [Boolean]
+      #
+      def sameparty?
+        @attributes['sameParty']
+      end
+
+      alias same_party? sameparty?
+
+      #
+      # @return [String]
+      #
+      def source_scheme
+        @attributes['sourceScheme']
+      end
+
+      #
+      # @return [Integer]
+      #
+      def source_port
+        @attributes['sourcePort']
+      end
+
+      #
       # Compares different cookie objects.
       #
       # @return [Boolean]

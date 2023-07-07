@@ -83,6 +83,30 @@ describe Ferrum::Cookies::Cookie do
     end
   end
 
+  describe "#priority" do
+    it "must return the 'priority' attribute" do
+      expect(subject.priority).to eq(attributes['priority'])
+    end
+  end
+
+  describe "#sameparty?" do
+    it "must return the 'sameParty' attribute" do
+      expect(subject.sameparty?).to eq(attributes['sameParty'])
+    end
+  end
+
+  describe "#source_scheme" do
+    it "must return the 'sourceScheme' attribute" do
+      expect(subject.source_scheme).to eq(attributes['sourceScheme'])
+    end
+  end
+
+  describe "#source_port" do
+    it "must return the 'sourcePort' attribute" do
+      expect(subject.source_port).to eq(attributes['sourcePort'])
+    end
+  end
+
   describe "#==" do
     context "when given a #{described_class}" do
       context "and the other #{described_class}'s attributes are the same" do
