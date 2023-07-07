@@ -70,6 +70,7 @@ module Ferrum
     #
     # @option options [String] :samesite
     #
+    # @option options [Boolean] :session
     #
     # @example
     #   browser.cookies.set(name: "stealth", value: "omg", domain: "google.com") # => true
