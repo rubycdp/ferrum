@@ -78,23 +78,34 @@ module Ferrum
     # @param [Hash{Symbol => Object}, Cookie] options
     #
     # @option options [String] :name
+    #   The cookie param name.
     #
     # @option options [String] :value
+    #   The cookie param value.
     #
     # @option options [String] :domain
+    #   The domain the cookie belongs to.
     #
     # @option options [String] :path
+    #   The path that the cookie is bound to.
     #
     # @option options [Integer] :expires
+    #   When the cookie will expire.
     #
     # @option options [Integer] :size
+    #   The size of the cookie.
     #
     # @option options [Boolean] :httponly
+    #   Specifies whether the cookie `HttpOnly`.
     #
     # @option options [Boolean] :secure
+    #   Specifies whether the cookie is marked as `Secure`.
     #
     # @option options [String] :samesite
+    #   Specifies whether the cookie is `SameSite`.
     #
+    # @option options [Boolean] :session
+    #   Specifies whether the cookie is a session cookie.
     #
     # @example
     #   browser.cookies.set(name: "stealth", value: "omg", domain: "google.com") # => true
