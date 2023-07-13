@@ -203,4 +203,10 @@ describe Ferrum::Cookies::Cookie do
       end
     end
   end
+      
+  describe "#to_h" do
+    it "must return #attributes" do
+      expect(subject.to_h).to eq(subject.attributes)
+    end
+  end
 end

@@ -131,7 +131,7 @@ module Ferrum
       def to_s
         string = String.new("#{@attributes['name']}=#{@attributes['value']}")
 
-        @attributes.each do |key,value|
+        @attributes.each do |key, value|
           case key
           when 'name', 'value' # no-op
           when 'domain'   then string << "; Domain=#{value}"
@@ -144,6 +144,8 @@ module Ferrum
 
         return string
       end
+
+      alias to_h attributes
     end
   end
 end
