@@ -123,6 +123,16 @@ module Ferrum
         @request["postData"]
       end
       alias body post_data
+
+      #
+      # Converts the request to a Hash.
+      #
+      # @return [Hash{String => Object}]
+      #   The params of the request.
+      #
+      def to_h
+        @params
+      end
     end
   end
 end
