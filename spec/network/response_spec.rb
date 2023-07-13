@@ -89,4 +89,12 @@ describe Ferrum::Network::Response do
       end
     end
   end
+
+  describe "#to_h" do
+    it "must return #params" do
+      page.go_to("/ferrum/with_js")
+
+      expect(last_exchange.response.to_h).to eq(last_exchange.response.params)
+    end
+  end
 end
