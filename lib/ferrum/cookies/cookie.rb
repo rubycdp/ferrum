@@ -121,6 +121,8 @@ module Ferrum
       def ==(other)
         other.class == self.class && other.attributes == attributes
       end
+
+      alias to_h attributes
     end
   end
 end
