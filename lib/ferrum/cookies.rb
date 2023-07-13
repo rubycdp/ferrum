@@ -4,8 +4,32 @@ require "ferrum/cookies/cookie"
 
 module Ferrum
   class Cookies
+    include Enumerable
+
     def initialize(page)
       @page = page
+    end
+
+    #
+    # Enumerates over all cookies.
+    #
+    # @yield [cookie]
+    #   The given block will be passed each cookie.
+    #
+    # @yieldparam [Cookie] cookie
+    #   A cookie in the browser.
+    #
+    # @return [Enumerator]
+    #   If no block is given, an Enumerator object will be returned.
+    #
+    def each
+      return enum_for(__method__) unless block_given?
+
+      cookies = @page.command("Network.getAllCookies")["cookies"]
+
+      cookies.each do |c|
+        yield Cookie.new(c)
+      end
     end
 
     #
@@ -22,8 +46,9 @@ module Ferrum
     #   # }
     #
     def all
-      cookies = @page.command("Network.getAllCookies")["cookies"]
-      cookies.to_h { |c| [c["name"], Cookie.new(c)] }
+      each.to_h do |cookie|
+        [cookie.name, cookie]
+      end
     end
 
     #
@@ -44,7 +69,7 @@ module Ferrum
     #   # }>
     #
     def [](name)
-      all[name]
+      find { |cookie| cookie.name == name }
     end
 
     #
@@ -53,23 +78,34 @@ module Ferrum
     # @param [Hash{Symbol => Object}, Cookie] options
     #
     # @option options [String] :name
+    #   The cookie param name.
     #
     # @option options [String] :value
+    #   The cookie param value.
     #
     # @option options [String] :domain
+    #   The domain the cookie belongs to.
     #
     # @option options [String] :path
+    #   The path that the cookie is bound to.
     #
     # @option options [Integer] :expires
+    #   When the cookie will expire.
     #
     # @option options [Integer] :size
+    #   The size of the cookie.
     #
     # @option options [Boolean] :httponly
+    #   Specifies whether the cookie `HttpOnly`.
     #
     # @option options [Boolean] :secure
+    #   Specifies whether the cookie is marked as `Secure`.
     #
     # @option options [String] :samesite
+    #   Specifies whether the cookie is `SameSite`.
     #
+    # @option options [Boolean] :session
+    #   Specifies whether the cookie is a session cookie.
     #
     # @example
     #   browser.cookies.set(name: "stealth", value: "omg", domain: "google.com") # => true

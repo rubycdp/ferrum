@@ -165,6 +165,8 @@ module Ferrum
       def inspect
         %(#<#{self.class} @params=#{@params.inspect} @response=#{@response.inspect}>)
       end
+
+      alias to_h params
     end
   end
 end

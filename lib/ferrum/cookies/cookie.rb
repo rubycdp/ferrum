@@ -153,6 +153,31 @@ module Ferrum
       def ==(other)
         other.class == self.class && other.attributes == attributes
       end
+
+      #
+      # Converts the cookie back into a raw cookie String.
+      #
+      # @return [String]
+      #   The raw cookie string.
+      #
+      def to_s
+        string = String.new("#{@attributes['name']}=#{@attributes['value']}")
+
+        @attributes.each do |key, value|
+          case key
+          when 'name', 'value' # no-op
+          when 'domain'   then string << "; Domain=#{value}"
+          when 'path'     then string << "; Path=#{value}"
+          when 'expires'  then string << "; Expires=#{Time.at(value).httpdate}"
+          when 'httpOnly' then string << "; httpOnly" if value
+          when 'secure'   then string << "; Secure"   if value
+          end
+        end
+
+        return string
+      end
+
+      alias to_h attributes
     end
   end
 end
