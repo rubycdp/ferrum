@@ -113,6 +113,97 @@ describe Ferrum::Cookies::Cookie do
     end
   end
 
+  describe "#to_s" do
+    let(:name)  { 'foo' }
+    let(:value) { 'bar' }
+
+    context "when only 'name' and 'value' attributes are set" do
+      let(:attributes) do
+        {
+          'name'  => name,
+          'value' => value
+        }
+      end
+
+      it "must only return 'name=value'" do
+        expect(subject.to_s).to eq("#{name}=#{value}")
+      end
+    end
+
+    context "when the 'domain' attribute is set" do
+      let(:domain) { 'example.com' }
+      let(:attributes) do
+        {
+          'name'   => name,
+          'value'  => value,
+          'domain' => domain
+        }
+      end
+
+      it "must include the 'Domain=' attribute in the String" do
+        expect(subject.to_s).to eq("#{name}=#{value}; Domain=#{domain}")
+      end
+    end
+
+    context "when the 'path' attribute is set" do
+      let(:path) { '/' }
+      let(:attributes) do
+        {
+          'name'   => name,
+          'value'  => value,
+          'path'   => path
+        }
+      end
+
+      it "must include the 'Path=' attribute in the String" do
+        expect(subject.to_s).to eq("#{name}=#{value}; Path=#{path}")
+      end
+    end
+
+    context "when the 'expires' attribute is set" do
+      let(:expires) { 1691287370 }
+      let(:attributes) do
+        {
+          'name'    => name,
+          'value'   => value,
+          'expires' => expires
+        }
+      end
+
+      it "must include the 'Expires=' attribute and HTTP formatted time in the String" do
+        expect(subject.to_s).to eq("#{name}=#{value}; Expires=#{Time.at(expires).httpdate}")
+      end
+    end
+
+    context "when the 'httpOnly' attribute is set" do
+      let(:attributes) do
+        {
+          'name'     => name,
+          'value'    => value,
+          'httpOnly' => true
+        }
+      end
+
+      it "must include the 'httpOnly' flag in the String" do
+        expect(subject.to_s).to eq("#{name}=#{value}; httpOnly")
+      end
+    end
+
+    context "when the 'secure' attribute is set" do
+      let(:attributes) do
+        {
+          'name'   => name,
+          'value'  => value,
+          'secure' => true
+        }
+      end
+
+      it "must include the 'Secure' flag in the String" do
+        expect(subject.to_s).to eq("#{name}=#{value}; Secure")
+      end
+    end
+  end
+      
   describe "#to_h" do
     it "must return #attributes" do
       expect(subject.to_h).to eq(subject.attributes)
