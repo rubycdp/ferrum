@@ -6,11 +6,28 @@
 - `Ferrum::Network::Response#loaded?` returns true if the response is fully loaded
 - `Ferrum::Node#in_viewport?` checks if the element in viewport (optional argument `scope` as `Ferrum::Node`)
 - `Ferrum::Node#scroll_into_view` - scrolls to element if needed (when it's not in the viewport)
+- `Ferrum::Cookies#each` - is now Enumerable and supports `each` method
+- `Ferrum::Cookies::Cookie`
+  - `#priority`
+  - `#sameparty?`
+  - `#source_scheme`
+  - `#source_port`
+  - `#to_s`
+  - `#to_h`
+- `Ferrum::Network::Request#to_h`
+- `Ferrum::Network::Response#to_h`
 
 ### Changed
 
 ### Fixed
 - `Ferrum::Network::Exchange#finished?` returns `true` only fully loaded responses
+- `Ferrum::Page#resize` set deviceScaleFactor as `0` by default [#330]
+- `Ferrum::Network#intercept` silently discards unknown resource_types [#313]
+- Truncated Chrome WS URL results in Ferrum::DeadBrowserError [#327]
+- Websocket connection remains indefinitely in :connecting state and causes TimeoutError [#329]
+- `Exchange#navigation_request?` Handle nil request [#339]
+- Raise `Ferrum::StatusError` for any top frame navigation error [#341]
+- `Ferrum::Network::Response#loaded?` for redirect response [#338]
 
 ### Removed
 
