@@ -8,9 +8,10 @@ module Ferrum
     FERRUM_VIEWS  = "#{File.dirname(__FILE__)}/views"
     FERRUM_PUBLIC = "#{File.dirname(__FILE__)}/public"
 
-    class TestAppError < Exception; end # rubocop:disable Lint/InheritException
+    class TestAppError < StandardError
+    end
 
-    class TestAppOtherError < Exception # rubocop:disable Lint/InheritException
+    class TestAppOtherError < StandardError
       def initialize(something, message)
         super(something)
         @something = something
@@ -54,7 +55,7 @@ module Ferrum
     end
 
     get "/referer_base" do
-      <<~HERE.gsub(/\n/, "")
+      <<~HERE.gsub("\n", "")
         <a href="/get_referer">direct link</a>
         <a href="/redirect_to_get_referer">link via redirect</a>
         <form action="/get_referer" method="get"><input type="submit"></form>

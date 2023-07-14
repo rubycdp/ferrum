@@ -23,7 +23,7 @@ describe Ferrum::Page do
         )
       end
 
-      it "reports open resource requests" do
+      it "reports pending connection for image" do
         old_timeout = browser.timeout
         browser.timeout = 2
         expect do
@@ -36,9 +36,9 @@ describe Ferrum::Page do
         browser.timeout = old_timeout
       end
 
-      it "reports open resource requests for main frame" do
+      it "reports pending connection for main frame" do
         prev_timeout = browser.timeout
-        browser.timeout = 0.1
+        browser.timeout = 0.5
 
         expect do
           browser.go_to("/ferrum/really_slow")
