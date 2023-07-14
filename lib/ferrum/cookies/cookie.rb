@@ -119,14 +119,14 @@ module Ferrum
       # @return [String]
       #
       def priority
-        @attributes['priority']
+        @attributes["priority"]
       end
 
       #
       # @return [Boolean]
       #
       def sameparty?
-        @attributes['sameParty']
+        @attributes["sameParty"]
       end
 
       alias same_party? sameparty?
@@ -135,14 +135,14 @@ module Ferrum
       # @return [String]
       #
       def source_scheme
-        @attributes['sourceScheme']
+        @attributes["sourceScheme"]
       end
 
       #
       # @return [Integer]
       #
       def source_port
-        @attributes['sourcePort']
+        @attributes["sourcePort"]
       end
 
       #
@@ -165,16 +165,16 @@ module Ferrum
 
         @attributes.each do |key, value|
           case key
-          when 'name', 'value' # no-op
-          when 'domain'   then string << "; Domain=#{value}"
-          when 'path'     then string << "; Path=#{value}"
-          when 'expires'  then string << "; Expires=#{Time.at(value).httpdate}"
-          when 'httpOnly' then string << "; httpOnly" if value
-          when 'secure'   then string << "; Secure"   if value
+          when "name", "value" # no-op
+          when "domain"   then string << "; Domain=#{value}"
+          when "path"     then string << "; Path=#{value}"
+          when "expires"  then string << "; Expires=#{Time.at(value).httpdate}"
+          when "httpOnly" then string << "; httpOnly" if value
+          when "secure"   then string << "; Secure"   if value
           end
         end
 
-        return string
+        string
       end
 
       alias to_h attributes

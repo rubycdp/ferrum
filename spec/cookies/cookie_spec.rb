@@ -3,19 +3,19 @@
 describe Ferrum::Cookies::Cookie do
   let(:attributes) do
     {
-      "name"=>"OGP",
-      "value"=>"-19027681:",
-      "domain"=>".google.com",
-      "path"=>"/",
-      "expires"=>1691287370,
-      "size"=>13,
-      "httpOnly"=>false,
-      "secure"=>false,
-      "session"=>false,
-      "priority"=>"Medium",
-      "sameParty"=>false,
-      "sourceScheme"=>"Secure",
-      "sourcePort"=>443
+      "name" => "OGP",
+      "value" => "-19027681:",
+      "domain" => ".google.com",
+      "path" => "/",
+      "expires" => 1_691_287_370,
+      "size" => 13,
+      "httpOnly" => false,
+      "secure" => false,
+      "session" => false,
+      "priority" => "Medium",
+      "sameParty" => false,
+      "sourceScheme" => "Secure",
+      "sourcePort" => 443
     }
   end
 
@@ -23,59 +23,59 @@ describe Ferrum::Cookies::Cookie do
 
   describe "#name" do
     it "must return the 'name' attribute" do
-      expect(subject.name).to eq(attributes['name'])
+      expect(subject.name).to eq(attributes["name"])
     end
   end
 
   describe "#value" do
     it "must return the 'value' attribute" do
-      expect(subject.value).to eq(attributes['value'])
+      expect(subject.value).to eq(attributes["value"])
     end
   end
 
   describe "#domain" do
     it "must return the 'domain' attribute" do
-      expect(subject.domain).to eq(attributes['domain'])
+      expect(subject.domain).to eq(attributes["domain"])
     end
   end
 
   describe "#path" do
     it "must return the 'path' attribute" do
-      expect(subject.path).to eq(attributes['path'])
+      expect(subject.path).to eq(attributes["path"])
     end
   end
 
   describe "#size" do
     it "must return the 'size' attribute" do
-      expect(subject.size).to eq(attributes['size'])
+      expect(subject.size).to eq(attributes["size"])
     end
   end
 
   describe "#secure?" do
     it "must return the 'secure' attribute" do
-      expect(subject.secure?).to eq(attributes['secure'])
+      expect(subject.secure?).to eq(attributes["secure"])
     end
   end
 
   describe "#httponly?" do
     it "must return the 'httpOnly' attribute" do
-      expect(subject.httponly?).to eq(attributes['httpOnly'])
+      expect(subject.httponly?).to eq(attributes["httpOnly"])
     end
   end
 
   describe "#session?" do
     it "must return the 'session' attribute" do
-      expect(subject.session?).to eq(attributes['session'])
+      expect(subject.session?).to eq(attributes["session"])
     end
   end
 
   describe "#expires" do
     it "must parse the 'expires' attribute as a Time object" do
-      expect(subject.expires).to eq(Time.at(attributes['expires']))
+      expect(subject.expires).to eq(Time.at(attributes["expires"]))
     end
 
     context "when the 'expires' attribute is negative" do
-      let(:attributes) { {'expires' => -1} }
+      let(:attributes) { { "expires" => -1 } }
 
       it "must return nil" do
         expect(subject.expires).to be(nil)
@@ -85,25 +85,25 @@ describe Ferrum::Cookies::Cookie do
 
   describe "#priority" do
     it "must return the 'priority' attribute" do
-      expect(subject.priority).to eq(attributes['priority'])
+      expect(subject.priority).to eq(attributes["priority"])
     end
   end
 
   describe "#sameparty?" do
     it "must return the 'sameParty' attribute" do
-      expect(subject.sameparty?).to eq(attributes['sameParty'])
+      expect(subject.sameparty?).to eq(attributes["sameParty"])
     end
   end
 
   describe "#source_scheme" do
     it "must return the 'sourceScheme' attribute" do
-      expect(subject.source_scheme).to eq(attributes['sourceScheme'])
+      expect(subject.source_scheme).to eq(attributes["sourceScheme"])
     end
   end
 
   describe "#source_port" do
     it "must return the 'sourcePort' attribute" do
-      expect(subject.source_port).to eq(attributes['sourcePort'])
+      expect(subject.source_port).to eq(attributes["sourcePort"])
     end
   end
 
@@ -119,7 +119,7 @@ describe Ferrum::Cookies::Cookie do
 
       context "but the other #{described_class}'s attributes are different" do
         let(:other) do
-          described_class.new('name' => 'other', 'value' => 'other')
+          described_class.new("name" => "other", "value" => "other")
         end
 
         it "must return false" do
@@ -138,14 +138,14 @@ describe Ferrum::Cookies::Cookie do
   end
 
   describe "#to_s" do
-    let(:name)  { 'foo' }
-    let(:value) { 'bar' }
+    let(:name)  { "foo" }
+    let(:value) { "bar" }
 
     context "when only 'name' and 'value' attributes are set" do
       let(:attributes) do
         {
-          'name'  => name,
-          'value' => value
+          "name" => name,
+          "value" => value
         }
       end
 
@@ -155,12 +155,12 @@ describe Ferrum::Cookies::Cookie do
     end
 
     context "when the 'domain' attribute is set" do
-      let(:domain) { 'example.com' }
+      let(:domain) { "example.com" }
       let(:attributes) do
         {
-          'name'   => name,
-          'value'  => value,
-          'domain' => domain
+          "name" => name,
+          "value" => value,
+          "domain" => domain
         }
       end
 
@@ -170,12 +170,12 @@ describe Ferrum::Cookies::Cookie do
     end
 
     context "when the 'path' attribute is set" do
-      let(:path) { '/' }
+      let(:path) { "/" }
       let(:attributes) do
         {
-          'name'   => name,
-          'value'  => value,
-          'path'   => path
+          "name" => name,
+          "value" => value,
+          "path" => path
         }
       end
 
@@ -185,12 +185,12 @@ describe Ferrum::Cookies::Cookie do
     end
 
     context "when the 'expires' attribute is set" do
-      let(:expires) { 1691287370 }
+      let(:expires) { 1_691_287_370 }
       let(:attributes) do
         {
-          'name'    => name,
-          'value'   => value,
-          'expires' => expires
+          "name" => name,
+          "value" => value,
+          "expires" => expires
         }
       end
 
@@ -202,9 +202,9 @@ describe Ferrum::Cookies::Cookie do
     context "when the 'httpOnly' attribute is set" do
       let(:attributes) do
         {
-          'name'     => name,
-          'value'    => value,
-          'httpOnly' => true
+          "name" => name,
+          "value" => value,
+          "httpOnly" => true
         }
       end
 
@@ -216,9 +216,9 @@ describe Ferrum::Cookies::Cookie do
     context "when the 'secure' attribute is set" do
       let(:attributes) do
         {
-          'name'   => name,
-          'value'  => value,
-          'secure' => true
+          "name" => name,
+          "value" => value,
+          "secure" => true
         }
       end
 
@@ -227,7 +227,7 @@ describe Ferrum::Cookies::Cookie do
       end
     end
   end
-      
+
   describe "#to_h" do
     it "must return #attributes" do
       expect(subject.to_h).to eq(subject.attributes)

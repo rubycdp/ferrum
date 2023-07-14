@@ -55,7 +55,7 @@ module Ferrum
     end
 
     get "/referer_base" do
-      <<~HERE.gsub(/\n/, "")
+      <<~HERE.gsub("\n", "")
         <a href="/get_referer">direct link</a>
         <a href="/redirect_to_get_referer">link via redirect</a>
         <form action="/get_referer" method="get"><input type="submit"></form>
