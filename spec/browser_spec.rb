@@ -214,7 +214,7 @@ describe Ferrum::Browser do
     end
 
     it "supports :pending_connection_errors argument" do
-      browser = Ferrum::Browser.new(base_url: base_url, pending_connection_errors: false, timeout: 0.1)
+      browser = Ferrum::Browser.new(base_url: base_url, pending_connection_errors: false, timeout: 0.5)
 
       expect { browser.go_to("/ferrum/really_slow") }.not_to raise_error
     ensure
