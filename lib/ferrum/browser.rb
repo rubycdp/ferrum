@@ -237,11 +237,11 @@ module Ferrum
     end
 
     def quit
-      if @client
-        @client.close
-        @process.stop
-        @client = @process = @contexts = nil
-      end
+      return unless @client
+
+      @client.close
+      @process.stop
+      @client = @process = @contexts = nil
     end
 
     def resize(**options)

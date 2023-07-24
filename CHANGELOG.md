@@ -1,6 +1,7 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.13...main) ##
 
 ### Added
+- `Ferrum::Network#cache(disable: true | false)` whether or not to use cache for every request
 - `Ferrum::Network::Exchange#xhr?` determines if the exchange is XHR
 - `Ferrum::Network::Request#xhr?` determines if the request is XHR
 - `Ferrum::Network::Response#loaded?` returns true if the response is fully loaded

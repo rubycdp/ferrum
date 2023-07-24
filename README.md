@@ -599,6 +599,14 @@ browser.network.offline_mode
 browser.go_to("https://github.com/") # => Ferrum::StatusError (Request to https://github.com/ failed(net::ERR_INTERNET_DISCONNECTED))
 ```
 
+#### cache(disable: `Boolean`)
+
+Toggles ignoring cache for each request. If true, cache will not be used.
+
+```ruby
+browser.network.cache(disable: true)
+```
+
 ## Proxy
 
 You can set a proxy with a `:proxy` option:

@@ -340,6 +340,16 @@ module Ferrum
       emulate_network_conditions(offline: true, latency: 0, download_throughput: 0, upload_throughput: 0)
     end
 
+    #
+    # Toggles ignoring cache for each request. If true, cache will not be used.
+    #
+    # @example
+    #   browser.network.cache(disable: true)
+    #
+    def cache(disable:)
+      @page.command("Network.setCacheDisabled", cacheDisabled: disable)
+    end
+
     private
 
     def subscribe_request_will_be_sent
