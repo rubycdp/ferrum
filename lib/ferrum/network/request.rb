@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "ferrum/network/request_params"
 require "time"
 
 module Ferrum
@@ -9,6 +10,8 @@ module Ferrum
     # object.
     #
     class Request
+      include RequestParams
+
       #
       # Initializes the request object.
       #
@@ -69,42 +72,6 @@ module Ferrum
       end
 
       #
-      # The URL for the request.
-      #
-      # @return [String]
-      #
-      def url
-        @request["url"]
-      end
-
-      #
-      # The URL fragment for the request.
-      #
-      # @return [String, nil]
-      #
-      def url_fragment
-        @request["urlFragment"]
-      end
-
-      #
-      # The request method.
-      #
-      # @return [String]
-      #
-      def method
-        @request["method"]
-      end
-
-      #
-      # The request headers.
-      #
-      # @return [Hash{String => String}]
-      #
-      def headers
-        @request["headers"]
-      end
-
-      #
       # The request timestamp.
       #
       # @return [Time]
@@ -112,17 +79,6 @@ module Ferrum
       def time
         @time ||= Time.strptime(@params["wallTime"].to_s, "%s")
       end
-
-      #
-      # The optional HTTP `POST` form data.
-      #
-      # @return [String, nil]
-      #   The HTTP `POST` form data.
-      #
-      def post_data
-        @request["postData"]
-      end
-      alias body post_data
 
       #
       # Converts the request to a Hash.
