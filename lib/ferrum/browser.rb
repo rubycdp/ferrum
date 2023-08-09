@@ -177,7 +177,7 @@ module Ferrum
       block_given? ? yield(page) : page
     ensure
       if block_given?
-        page.close
+        page&.close
         context.dispose if new_context
       end
     end
