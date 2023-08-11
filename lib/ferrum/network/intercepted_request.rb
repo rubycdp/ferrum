@@ -1,10 +1,13 @@
 # frozen_string_literal: true
 
+require "ferrum/network/request_params"
 require "base64"
 
 module Ferrum
   class Network
     class InterceptedRequest
+      include RequestParams
+
       attr_accessor :request_id, :frame_id, :resource_type, :network_id, :status
 
       def initialize(page, params)
@@ -52,18 +55,6 @@ module Ferrum
       def abort
         @status = :aborted
         @page.command("Fetch.failRequest", requestId: request_id, errorReason: "BlockedByClient")
-      end
-
-      def url
-        @request["url"]
-      end
-
-      def method
-        @request["method"]
-      end
-
-      def headers
-        @request["headers"]
       end
 
       def initial_priority
