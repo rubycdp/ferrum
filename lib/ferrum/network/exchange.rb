@@ -110,6 +110,15 @@ module Ferrum
       end
 
       #
+      # Determines if the exchange is a redirect.
+      #
+      # @return [Boolean]
+      #
+      def redirect?
+        response&.redirect?
+      end
+
+      #
       # Returns request's URL.
       #
       # @return [String, nil]

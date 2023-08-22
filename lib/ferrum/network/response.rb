@@ -146,8 +146,15 @@ module Ferrum
         @loaded
       end
 
+      # Whether the response is a redirect.
       #
-      # Comapres the respones ID to another response's ID.
+      # @return [Boolean]
+      def redirect?
+        params.key?("redirectResponse")
+      end
+
+      #
+      # Compares the response's ID to another response's ID.
       #
       # @return [Boolean]
       #   Indicates whether the response has the same ID as the other response

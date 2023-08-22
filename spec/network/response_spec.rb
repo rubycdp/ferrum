@@ -73,6 +73,15 @@ describe Ferrum::Network::Response do
     end
   end
 
+  describe "#redirect?" do
+    it "captures errors" do
+      page.go_to("/redirect_again")
+
+      expect(page.body).to include("You landed")
+      expect(first_exchange.response.redirect?).to be
+    end
+  end
+
   describe "#body_size" do
     it "counts network traffic for each loaded resource" do
       page.go_to("/ferrum/with_js")

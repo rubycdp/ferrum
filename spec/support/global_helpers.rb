@@ -23,6 +23,10 @@ RSpec.shared_context "Global helpers" do
     network.traffic
   end
 
+  def first_exchange
+    traffic.first
+  end
+
   def last_exchange
     traffic.last
   end
