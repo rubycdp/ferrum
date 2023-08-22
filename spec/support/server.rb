@@ -121,7 +121,7 @@ module Ferrum
       return false if @server_thread&.join(0)
 
       res = Net::HTTP.start(host, port, read_timeout: 2, max_retries: 0) { |h| h.get("/__identify__") }
-      return res.body == app.object_id.to_s if res.is_a?(Net::HTTPSuccess) || res.is_a?(Net::HTTPRedirection)
+      res.body == app.object_id.to_s if res.is_a?(Net::HTTPSuccess) || res.is_a?(Net::HTTPRedirection)
     rescue SystemCallError, Net::ReadTimeout
       false
     end
