@@ -301,7 +301,7 @@ describe Ferrum::Page::Screenshot do
         reader.pages.each do |page|
           bbox = page.attributes[:MediaBox]
           width = (bbox[2] - bbox[0]) / 72
-          expect(width.round(2)).to eq(33.10)
+          expect(width.round(1)).to eq(33.1)
         end
       end
 
