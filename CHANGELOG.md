@@ -2,9 +2,11 @@
 
 ### Added
 - `Ferrum::Network#cache(disable: true | false)` whether or not to use cache for every request
+- `Ferrum::Network::Exchange#redirect?` determines if the exchange is a redirect
 - `Ferrum::Network::Exchange#xhr?` determines if the exchange is XHR
 - `Ferrum::Network::Request#xhr?` determines if the request is XHR
 - `Ferrum::Network::Response#loaded?` returns true if the response is fully loaded
+- `Ferrum::Network::Response#redirect?` returns true if the response is a redirect
 - `Ferrum::Node#in_viewport?` checks if the element in viewport (optional argument `scope` as `Ferrum::Node`)
 - `Ferrum::Node#scroll_into_view` - scrolls to element if needed (when it's not in the viewport)
 - `Ferrum::Cookies#each` - is now Enumerable and supports `each` method

@@ -145,7 +145,7 @@ describe Ferrum::Page::Screenshot do
         browser.screenshot(path: file, quality: 0) # ignored for png
         browser.screenshot(path: file2) # defaults to a quality of 75
         browser.screenshot(path: file3, quality: 100)
-        expect(File.size(file)).to be > File.size(file2) # png by defult is bigger
+        expect(File.size(file)).to be > File.size(file2) # png by default is bigger
         expect(File.size(file2)).to be < File.size(file3)
       ensure
         FileUtils.rm_f([file2, file3])
