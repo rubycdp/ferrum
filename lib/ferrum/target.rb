@@ -24,7 +24,7 @@ module Ferrum
     end
 
     def page
-      connection
+      connection if page?
     end
 
     def network
