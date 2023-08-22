@@ -1,11 +1,12 @@
 <html>
   <body>
-    <div id="service_worker_code" style="display: none">
+    <script>
+      let code = `
       async function imageFromUrl(url) {
           const response = await fetch(url);
 
           if (!response.ok) {
-              throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
+              throw new Error(\`Failed to fetch \${url}: \${response.status} \${response.statusText}\`);
           }
 
           const blobResult = await response.blob();
@@ -27,12 +28,10 @@
               });
           }
       };
-    </div>
-    <script>
-      var code = document.getElementById("service_worker_code").innerText;
-      var objectUrl = URL.createObjectURL(new Blob([code],{ type: "application/javascript"}))
-      var worker = new Worker(objectUrl);
-      
+      `;
+      let objectUrl = URL.createObjectURL(new Blob([code],{ type: "application/javascript"}))
+      let worker = new Worker(objectUrl);
+
       worker.addEventListener("message", function(event) {
         let canvas = document.getElementById('canvas');
         let context = canvas.getContext('2d');
