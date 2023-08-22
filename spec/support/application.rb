@@ -270,6 +270,11 @@ module Ferrum
       File.read("#{FERRUM_PUBLIC}/jquery-ui-1.11.4.min.js")
     end
 
+    get "/ferrum/one.png" do
+      content_type :png
+      File.read("#{FERRUM_PUBLIC}/one.png")
+    end
+
     get "/ferrum/unexist.png" do
       halt 404
     end

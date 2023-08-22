@@ -1,0 +1,49 @@
+<html>
+  <body>
+    <div id="service_worker_code" style="display: none">
+      async function imageFromUrl(url) {
+          const response = await fetch(url);
+
+          if (!response.ok) {
+              throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
+          }
+
+          const blobResult = await response.blob();
+          const imageBitmap = await createImageBitmap(blobResult);
+          return imageBitmap;
+      }
+      self.onmessage = async (event) => {
+          try {
+              const image = await imageFromUrl(event.data.url);
+
+              self.postMessage({
+                  data: image
+              }, [image]);
+          }
+          catch(e)
+          {
+              self.postMessage({
+                  error: e
+              });
+          }
+      };
+    </div>
+    <script>
+      var code = document.getElementById("service_worker_code").innerText;
+      var objectUrl = URL.createObjectURL(new Blob([code],{ type: "application/javascript"}))
+      var worker = new Worker(objectUrl);
+      
+      worker.addEventListener("message", function(event) {
+        let canvas = document.getElementById('canvas');
+        let context = canvas.getContext('2d');
+        let imageBitmap = event.data.data;
+        context.drawImage(imageBitmap, 0, 0);
+      });
+
+      let path = "one.png"
+      let url = new URL(path, document.baseURI).href;
+      worker.postMessage({ url: url });
+    </script>
+    <canvas width="400" height="400" id="canvas"></canvas>
+  </body>
+</html>

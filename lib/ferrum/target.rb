@@ -7,6 +7,7 @@ module Ferrum
     # You can create page yourself and assign it to target, used in cuprite
     # where we enhance page class and build page ourselves.
     attr_writer :page
+    attr_reader :connection
 
     def initialize(browser, params = nil)
       @page = nil
@@ -23,12 +24,19 @@ module Ferrum
     end
 
     def page
-      @page ||= build_page
+      connection
+    end
+
+    def network
+      connection.network
+    end
+
+    def build(**options)
+      connection(**options)
     end
 
     def build_page(**options)
-      maybe_sleep_if_new_window
-      Page.new(id, @browser, **options)
+      connection(**options)
     end
 
     def id
@@ -59,9 +67,27 @@ module Ferrum
       !!opener_id
     end
 
+    def page?
+      @params["type"] == "page"
+    end
+
+    def worker?
+      @params["type"] == "worker"
+    end
+
     def maybe_sleep_if_new_window
       # Dirty hack because new window doesn't have events at all
       sleep(NEW_WINDOW_WAIT) if window?
+    end
+
+    def connection(**options)
+      @connection ||= begin
+        maybe_sleep_if_new_window if page?
+
+        options.merge!(type: @params["type"])
+
+        Page.new(id, @browser, **options)
+      end
     end
   end
 end

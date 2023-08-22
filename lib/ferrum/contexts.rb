@@ -50,19 +50,30 @@ module Ferrum
 
     private
 
+    TARGET_TYPES = %w[page worker].freeze
+
     def subscribe
       @browser.client.on("Target.targetCreated") do |params|
         info = params["targetInfo"]
-        next unless info["type"] == "page"
+        type = info["type"]
+        next unless TARGET_TYPES.include?(type)
+
+        target_id = info["targetId"]
+        @browser.command(
+          "Target.autoAttachRelated",
+          targetId: target_id,
+          waitForDebuggerOnStart: true, # Needed to capture all network requests
+          filter: [{type: "worker"}])
 
         context_id = info["browserContextId"]
-        @contexts[context_id]&.add_target(info)
+        target = @contexts[context_id]&.add_target(info)
+        target.build if type == "worker"
       end
 
       @browser.client.on("Target.targetInfoChanged") do |params|
         info = params["targetInfo"]
-        next unless info["type"] == "page"
-
+        next unless TARGET_TYPES.include?(info["type"])
+q
         context_id, target_id = info.values_at("browserContextId", "targetId")
         @contexts[context_id]&.update_target(target_id, info)
       end

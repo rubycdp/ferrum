@@ -30,6 +30,19 @@ describe Ferrum::Network do
       browser.go_to("/ferrum/with_js")
       expect(browser.network.traffic.length).to eq(4)
     end
+
+    it "keeps track of service workers" do
+      page.go_to("/ferrum/service_worker")
+
+      browser.network.wait_for_idle
+      traffic = browser.targets.values.map { _1.network.traffic }.flatten
+      urls = traffic.map { |e| e.request.url }
+
+      expect(urls.size).to eq(3)
+      expect(urls.grep(%r{/ferrum/service_worker$}).size).to eq(1)
+      expect(urls.grep(%r{/ferrum/one.png$}).size).to eq(1)
+      expect(urls.grep(%r{^blob:}).size).to eq(1)
+    end
   end
 
   it "#wait_for_idle" do
