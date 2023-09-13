@@ -180,7 +180,7 @@ module Ferrum
         ios.each do |io|
           io.close unless io.closed?
         rescue IOError
-          raise unless RUBY_ENGINE == "jruby"
+          raise unless Utils::Platform.jruby?
         end
       end
     end

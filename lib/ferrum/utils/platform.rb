@@ -23,6 +23,10 @@ module Ferrum
       def mri?
         defined?(RUBY_ENGINE) && RUBY_ENGINE == "ruby"
       end
+
+      def jruby?
+        defined?(RUBY_ENGINE) && RUBY_ENGINE == "jruby"
+      end
     end
   end
 end

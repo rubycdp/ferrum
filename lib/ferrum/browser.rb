@@ -8,6 +8,7 @@ require "ferrum/contexts"
 require "ferrum/browser/xvfb"
 require "ferrum/browser/options"
 require "ferrum/browser/process"
+require "ferrum/browser/jruby_process"
 require "ferrum/browser/client"
 require "ferrum/browser/binary"
 require "ferrum/browser/version_info"
@@ -268,7 +269,8 @@ module Ferrum
 
     def start
       Utils::ElapsedTime.start
-      @process = Process.start(options)
+      process_class = Utils::Platform.jruby? ? JrubyProcess : Process
+      @process = process_class.start(options)
       @client = Client.new(@process.ws_url, self,
                            logger: options.logger,
                            ws_max_receive_size: options.ws_max_receive_size)
