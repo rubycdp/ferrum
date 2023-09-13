@@ -468,6 +468,7 @@ describe Ferrum::Browser do
         page.go_to("/ferrum/simple")
       end
 
+      sleep 1 # It may take longer to close the target
       expect(browser.contexts.size).to eq(1)
       expect(browser.targets.size).to eq(0)
     end
