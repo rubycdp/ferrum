@@ -138,17 +138,20 @@ describe Ferrum::Page::Screenshot do
     it "supports screenshotting the page with different quality settings" do
       file2 = "#{PROJECT_ROOT}/spec/tmp/screenshot2.jpeg"
       file3 = "#{PROJECT_ROOT}/spec/tmp/screenshot3.jpeg"
-      FileUtils.rm_f([file2, file3])
+      file4 = "#{PROJECT_ROOT}/spec/tmp/screenshot4.#{format}"
+      FileUtils.rm_f([file2, file3, file4])
 
       begin
         browser.go_to
         browser.screenshot(path: file, quality: 0) # ignored for png
         browser.screenshot(path: file2) # defaults to a quality of 75
         browser.screenshot(path: file3, quality: 100)
-        expect(File.size(file)).to be > File.size(file2) # png by default is bigger
+        browser.screenshot(path: file4, quality: 60) # ignored for png
+
+        expect(File.size(file)).to eq(File.size(file4))
         expect(File.size(file2)).to be < File.size(file3)
       ensure
-        FileUtils.rm_f([file2, file3])
+        FileUtils.rm_f([file2, file3, file4])
       end
     end
 

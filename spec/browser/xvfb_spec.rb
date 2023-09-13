@@ -50,7 +50,8 @@ describe Ferrum::Browser::Xvfb, skip: !Ferrum::Browser::Binary.find("Xvfb") do
       expect(process.xvfb.screen_size).to eq("1024x768x24")
     ensure
       xvfb_browser&.quit
-      expect(process_alive?(process.xvfb.pid)).to be(false)
+      pid = process&.xvfb&.pid
+      expect(process_alive?(pid)).to be(false) if pid
     end
   end
 
