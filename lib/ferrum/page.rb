@@ -145,7 +145,7 @@ module Ferrum
       command("Emulation.setDeviceMetricsOverride", slowmoable: true,
                                                     width: width,
                                                     height: height,
-                                                    deviceScaleFactor: 0,
+                                                    deviceScaleFactor: 1,
                                                     mobile: false,
                                                     fitWindow: false)
     end
