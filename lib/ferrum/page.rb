@@ -390,7 +390,8 @@ module Ferrum
       resize(width: width, height: height)
 
       response = command("Page.getNavigationHistory")
-      return unless response.dig("entries", 0, "transitionType") != "typed"
+      transition_type = response.dig("entries", 0, "transitionType")
+      return if transition_type == "auto_toplevel"
 
       # If we create page by clicking links, submitting forms and so on it
       # opens a new window for which `frameStoppedLoading` event never

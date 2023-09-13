@@ -84,7 +84,8 @@ module Ferrum
         case error["message"]
         # Node has disappeared while we were trying to get it
         when "No node with given id found",
-             "Could not find node with given id"
+             "Could not find node with given id",
+             "Inspected target navigated or closed"
           raise NodeNotFoundError, error
         # Context is lost, page is reloading
         when "Cannot find context with specified id"
