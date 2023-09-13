@@ -25,7 +25,7 @@ module Ferrum
       end
 
       def jruby?
-        defined?(RUBY_ENGINE) && RUBY_ENGINE == "jruby"
+        defined?(JRUBY_VERSION)
       end
     end
   end
