@@ -5,7 +5,7 @@ module Ferrum
     class Options
       class Chrome < Base
         DEFAULT_OPTIONS = {
-          "headless" => "new",
+          "headless" => nil,
           "disable-gpu" => nil,
           "hide-scrollbars" => nil,
           "mute-audio" => nil,
@@ -76,7 +76,12 @@ module Ferrum
         end
 
         def merge_default(flags, options)
-          defaults = except("headless", "disable-gpu") unless options.headless
+          defaults = case options.headless
+                     when false
+                       except("headless", "disable-gpu")
+                     when "new"
+                       except("headless").merge("headless" => "new")
+                     end
 
           defaults ||= DEFAULT_OPTIONS
           defaults.merge(flags)
