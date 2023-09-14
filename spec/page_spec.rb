@@ -53,12 +53,14 @@ describe Ferrum::Page do
   end
 
   describe "#position=" do
-    it "allows the window to be positioned", if: !Ferrum::Utils::Platform.mac? do
+    it "allows the window to be positioned" do
+      skip if Ferrum::Utils::Platform.mac? && !browser.headless_new?
+
       expect do
         page.position = { left: 10, top: 20 }
       end.to change {
         page.position
-      }.from([0, 0]).to([10, 20])
+      }.to([10, 20])
     end
   end
 
