@@ -147,6 +147,12 @@ module Ferrum
         JS
       end
 
+      def device_pixel_ratio
+        evaluate <<~JS
+          window.devicePixelRatio
+        JS
+      end
+
       def document_size
         evaluate <<~JS
           [document.documentElement.scrollWidth,
