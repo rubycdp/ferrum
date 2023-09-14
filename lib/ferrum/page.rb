@@ -146,8 +146,7 @@ module Ferrum
                                                     width: width,
                                                     height: height,
                                                     deviceScaleFactor: 0,
-                                                    mobile: false,
-                                                    fitWindow: false)
+                                                    mobile: false)
     end
 
     #

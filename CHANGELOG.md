@@ -1,6 +1,8 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.13...main) ##
 
 ### Added
+- `Ferrum::Page#device_pixel_ratio` returns the ratio of the resolution in physical pixels to the
+  resolution in CSS pixels for the current display device.
 - `Ferrum::Network#cache(disable: true | false)` whether or not to use cache for every request
 - `Ferrum::Network::Exchange#redirect?` determines if the exchange is a redirect
 - `Ferrum::Network::Exchange#xhr?` determines if the exchange is XHR
