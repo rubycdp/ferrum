@@ -181,7 +181,15 @@ describe Ferrum::Browser do
             proxy: { host: proxy.host, port: proxy.port, user: "u1", password: "p1" }
           )
 
-          browser.go_to("https://example.com")
+          if browser.headless_new?
+            expect { browser.go_to("https://example.com") }.to raise_error(
+              Ferrum::StatusError,
+              "Request to https://example.com failed (net::ERR_HTTP_RESPONSE_CODE_FAILURE)"
+            )
+          else
+            browser.go_to("https://example.com")
+          end
+
           expect(browser.network.status).to eq(407)
         ensure
           browser&.quit
@@ -234,6 +242,9 @@ describe Ferrum::Browser do
         let(:save_path) { "/tmp/ferrum" }
 
         it "saves an attachment" do
+          # Also https://github.com/puppeteer/puppeteer/issues/10161
+          skip "https://bugs.chromium.org/p/chromium/issues/detail?id=1444729" if browser.headless_new?
+
           browser.go_to("/#{filename}")
 
           expect(File.exist?("#{save_path}/#{filename}")).to be true
@@ -531,7 +542,15 @@ describe Ferrum::Browser do
         it "fails with wrong password" do
           page = browser.create_page(proxy: { host: proxy.host, port: proxy.port,
                                               user: options[:user], password: "$$" })
-          page.go_to("https://example.com")
+
+          if browser.headless_new?
+            expect { page.go_to("https://example.com") }.to raise_error(
+              Ferrum::StatusError,
+              "Request to https://example.com failed (net::ERR_HTTP_RESPONSE_CODE_FAILURE)"
+            )
+          else
+            page.go_to("https://example.com")
+          end
 
           expect(page.network.status).to eq(407)
         end

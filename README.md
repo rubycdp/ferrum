@@ -145,7 +145,8 @@ Ferrum::Browser.new(options)
 ```
 
 * options `Hash`
-  * `:headless` (Boolean) - Set browser as headless or not, `true` by default.
+  * `:headless` (String | Boolean) - Set browser as headless or not, `true` by default. You can set `"new"` to support
+      [new headless mode](https://developer.chrome.com/articles/new-headless/).
   * `:xvfb` (Boolean) - Run browser in a virtual framebuffer, `false` by default.
   * `:window_size` (Array) - The dimensions of the browser window in which to
       test, expressed as a 2-element array, e.g. [1024, 768]. Default: [1024, 768]

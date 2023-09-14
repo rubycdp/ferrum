@@ -19,8 +19,9 @@ module Ferrum
           "keep-alive-for-test" => nil,
           "disable-popup-blocking" => nil,
           "disable-extensions" => nil,
+          "disable-component-extensions-with-background-pages" => nil,
           "disable-hang-monitor" => nil,
-          "disable-features" => "site-per-process,TranslateUI",
+          "disable-features" => "site-per-process,IsolateOrigins,TranslateUI",
           "disable-translate" => nil,
           "disable-background-networking" => nil,
           "enable-features" => "NetworkService,NetworkServiceInProcess",
@@ -32,6 +33,7 @@ module Ferrum
           "disable-ipc-flooding-protection" => nil,
           "disable-prompt-on-repost" => nil,
           "disable-renderer-backgrounding" => nil,
+          "disable-site-isolation-trials" => nil,
           "force-color-profile" => "srgb",
           "metrics-recording-only" => nil,
           "safebrowsing-disable-auto-update" => nil,
@@ -74,7 +76,12 @@ module Ferrum
         end
 
         def merge_default(flags, options)
-          defaults = except("headless", "disable-gpu") unless options.headless
+          defaults = case options.headless
+                     when false
+                       except("headless", "disable-gpu")
+                     when "new"
+                       except("headless").merge("headless" => "new")
+                     end
 
           defaults ||= DEFAULT_OPTIONS
           defaults.merge(flags)
