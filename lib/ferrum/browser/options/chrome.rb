@@ -5,7 +5,7 @@ module Ferrum
     class Options
       class Chrome < Base
         DEFAULT_OPTIONS = {
-          "headless" => nil,
+          "headless" => "new",
           "disable-gpu" => nil,
           "hide-scrollbars" => nil,
           "mute-audio" => nil,

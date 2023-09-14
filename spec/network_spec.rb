@@ -23,11 +23,15 @@ describe Ferrum::Network do
 
     it "gets cleared on restart" do
       browser.go_to("/ferrum/with_js")
+      # Due to async nature of browser and the timing of favicon.ico request unpredictability
+      # we might get from x to y requests including favicon.ico
       expect(browser.network.traffic.length).to be_between(4, 5)
 
       browser.restart
 
       browser.go_to("/ferrum/with_js")
+      # Due to async nature of browser and the timing of favicon.ico request unpredictability
+      # we might get from x to y requests including favicon.ico
       expect(browser.network.traffic.length).to be_between(4, 5)
     end
   end
@@ -58,8 +62,8 @@ describe Ferrum::Network do
     page.go_to("/ferrum/with_ajax_connection_refused")
     network.wait_for_idle
 
-    # Due to async nature of browser and the timing of favicon.ico request is unpredictability
-    # we might get from 3 to 4 requests including favicon.ico
+    # Due to async nature of browser and the timing of favicon.ico request unpredictability
+    # we might get from x to y requests including favicon.ico
     expect(network.total_connections).to be_between(3, 4)
   end
 
@@ -69,8 +73,8 @@ describe Ferrum::Network do
     page.go_to("/ferrum/with_ajax_connection_refused")
     network.wait_for_idle
 
-    # Due to async nature of browser and the timing of favicon.ico request is unpredictability
-    # we might get from 3 to 4 requests including favicon.ico
+    # Due to async nature of browser and the timing of favicon.ico request unpredictability
+    # we might get from x to y requests including favicon.ico
     expect(network.finished_connections).to be_between(3, 4)
   end
 
@@ -78,8 +82,8 @@ describe Ferrum::Network do
     expect(network.pending_connections).to eq(0)
 
     page.go_to("/ferrum/with_slow_ajax_connection")
-    # Due to async nature of browser and the timing of favicon.ico request is unpredictability
-    # we might get from 3 to 4 requests including favicon.ico
+    # Due to async nature of browser and the timing of favicon.ico request unpredictability
+    # we might get from x to y requests including favicon.ico
     expect(network.pending_connections).to be_between(1, 2)
 
     network.wait_for_idle
