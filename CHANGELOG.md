@@ -1,4 +1,15 @@
-## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.13...main) ##
+## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.14...main) ##
+
+### Added
+
+### Changed
+
+### Fixed
+
+### Removed
+
+
+## [0.14](https://github.com/rubycdp/ferrum/compare/v0.13...v0.14) - (Sep 14, 2023) ##
 
 ### Added
 - `Ferrum::Page#device_pixel_ratio` returns the ratio of the resolution in physical pixels to the
