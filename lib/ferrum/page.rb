@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "forwardable"
+require "pathname"
 require "ferrum/mouse"
 require "ferrum/keyboard"
 require "ferrum/headers"
