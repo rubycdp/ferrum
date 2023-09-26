@@ -1,6 +1,7 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.14...main) ##
 
 ### Added
+- `Ferrum::Page#disable_javascript` disables the JavaScript from the HTML source
 
 ### Changed
 

@@ -909,6 +909,19 @@ browser.evaluate("window.__injected") # => 42
 ```
 
 
+## Emulation
+
+#### disable_javascript
+
+Disables Javascripts from the loaded HTML source.
+You can still evaluate JavaScript with `evaluate` or `execute`.
+Returns nothing.
+
+```ruby
+browser.disable_javascript
+```
+
+
 ## Frames
 
 #### frames : `Array[Frame] | []`

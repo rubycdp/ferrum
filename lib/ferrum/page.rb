@@ -150,6 +150,15 @@ module Ferrum
     end
 
     #
+    # Disables JavaScript execution from the HTML source for the page.
+    #
+    # This doesn't prevent users evaluate JavaScript with Ferrum.
+    #
+    def disable_javascript
+      command("Emulation.setScriptExecutionDisabled", value: true)
+    end
+
+    #
     # The current position of the browser window.
     #
     # @return [(Integer, Integer)]

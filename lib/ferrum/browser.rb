@@ -27,7 +27,8 @@ module Ferrum
                 evaluate evaluate_on evaluate_async execute evaluate_func
                 add_script_tag add_style_tag bypass_csp
                 on position position=
-                playback_rate playback_rate=] => :page
+                playback_rate playback_rate=
+                disable_javascript] => :page
     delegate %i[default_user_agent] => :process
 
     attr_reader :client, :process, :contexts, :options, :window_size, :base_url
