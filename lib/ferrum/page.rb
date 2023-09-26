@@ -133,6 +133,30 @@ module Ferrum
       @client.close
     end
 
+    #
+    # Overrides device screen dimensions and emulates viewport according to parameters
+    #
+    # Read more [here](https://chromedevtools.github.io/devtools-protocol/tot/Emulation/#method-setDeviceMetricsOverride).
+    #
+    # @param [Integer] width width value in pixels. 0 disables the override
+    #
+    # @param [Integer] height height value in pixels. 0 disables the override
+    #
+    # @param [Float] scale_factor device scale factor value. 0 disables the override
+    #
+    # @param [Boolean] mobile whether to emulate mobile device
+    #
+    def set_viewport(width:, height:, scale_factor: 0, mobile: false)
+      command(
+        "Emulation.setDeviceMetricsOverride",
+        slowmoable: true,
+        width: width,
+        height: height,
+        deviceScaleFactor: scale_factor,
+        mobile: mobile
+      )
+    end
+
     def resize(width: nil, height: nil, fullscreen: false)
       if fullscreen
         width, height = document_size
@@ -142,11 +166,7 @@ module Ferrum
         set_window_bounds(width: width, height: height)
       end
 
-      command("Emulation.setDeviceMetricsOverride", slowmoable: true,
-                                                    width: width,
-                                                    height: height,
-                                                    deviceScaleFactor: 0,
-                                                    mobile: false)
+      set_viewport(width: width, height: height)
     end
 
     #

@@ -2,6 +2,7 @@
 
 ### Added
 - `Ferrum::Page#disable_javascript` disables the JavaScript from the HTML source
+- `Ferrum::Page#set_viewport` emulates the viewport
 
 ### Changed
 
