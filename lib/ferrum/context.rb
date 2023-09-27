@@ -58,11 +58,12 @@ module Ferrum
 
     def add_target(params)
       target = Target.new(@browser, params)
-      if target.window?
+      if target.window? || target.worker?
         @targets.put_if_absent(target.id, target)
       else
         @pendings.put(target, @browser.timeout)
       end
+      target
     end
 
     def update_target(target_id, params)

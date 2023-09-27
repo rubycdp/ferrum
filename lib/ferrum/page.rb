@@ -71,11 +71,12 @@ module Ferrum
     # @return [Cookies]
     attr_reader :cookies
 
-    def initialize(target_id, browser, proxy: nil)
+    def initialize(target_id, browser, proxy: nil, type: "page")
       @frames = Concurrent::Map.new
       @main_frame = Frame.new(nil, self)
       @browser = browser
       @target_id = target_id
+      @type = type
       @timeout = @browser.timeout
       @event = Event.new.tap(&:set)
       self.proxy = proxy
@@ -383,12 +384,20 @@ module Ferrum
     end
 
     def prepare_page
-      command("Page.enable")
-      command("Runtime.enable")
-      command("DOM.enable")
-      command("CSS.enable")
-      command("Log.enable")
+      if @type == "page"
+        command("Page.enable")
+        command("DOM.enable")
+        command("CSS.enable")
+        command("Runtime.enable")
+        command("Log.enable")
+        command("ServiceWorker.enable")
+      end
+
       command("Network.enable")
+
+      if @type == "worker"
+        command("Runtime.runIfWaitingForDebugger")
+      end
 
       if use_authorized_proxy?
         network.authorize(user: @proxy_user,
@@ -414,6 +423,8 @@ module Ferrum
       end
 
       inject_extensions
+
+      return if @type == "worker"
 
       width, height = @browser.window_size
       resize(width: width, height: height)
