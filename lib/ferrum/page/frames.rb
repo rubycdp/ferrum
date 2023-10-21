@@ -179,12 +179,16 @@ module Ferrum
           execution_id = params["executionContextId"]
           frame = frame_by(execution_id: execution_id)
           frame&.execution_id = nil
+          frame&.state = :stopped_loading
         end
       end
 
       def subscribe_execution_contexts_cleared
         on("Runtime.executionContextsCleared") do
-          @frames.each_value { |f| f.execution_id = nil }
+          @frames.each_value do |f|
+            f.execution_id = nil
+            f.state = :stopped_loading
+          end
         end
       end
 
