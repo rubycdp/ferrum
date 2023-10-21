@@ -28,6 +28,12 @@ module Ferrum
       # @return [Error, nil]
       attr_accessor :error
 
+      # Determines if the network exchange is unknown due to
+      # a lost of its context
+      #
+      # @return Boolean
+      attr_accessor :unknown
+
       # @api private
       attr_accessor :request_extra_info
 
@@ -44,6 +50,7 @@ module Ferrum
         @intercepted_request = nil
         @request = @response = @error = nil
         @request_extra_info = nil
+        @unknown = false
       end
 
       #
@@ -78,12 +85,12 @@ module Ferrum
 
       #
       # Determines if the request was blocked, a response was returned, or if an
-      # error occurred.
+      # error occurred or the exchange is unknown and cannot be inferred.
       #
       # @return [Boolean]
       #
       def finished?
-        blocked? || response&.loaded? || !error.nil? || ping? || blob?
+        blocked? || response&.loaded? || !error.nil? || ping? || blob? || unknown
       end
 
       #
@@ -169,7 +176,8 @@ module Ferrum
           "@intercepted_request=#{@intercepted_request.inspect} " \
           "@request=#{@request.inspect} " \
           "@response=#{@response.inspect} " \
-          "@error=#{@error.inspect}>"
+          "@error=#{@error.inspect}> " \
+          "@unknown=#{@unknown.inspect}>"
       end
     end
   end

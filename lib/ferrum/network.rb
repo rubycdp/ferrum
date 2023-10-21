@@ -86,11 +86,11 @@ module Ferrum
     end
 
     def total_connections
-      @traffic.size
+      exchange_connections.count
     end
 
     def finished_connections
-      @traffic.count(&:finished?)
+      exchange_connections.count(&:finished?)
     end
 
     def pending_connections
@@ -389,7 +389,10 @@ module Ferrum
         request.headers.merge!(Hash(exchange.request_extra_info&.dig("headers")))
         exchange.request = request
 
-        @exchange = exchange if exchange.navigation_request?(@page.main_frame.id)
+        if exchange.navigation_request?(@page.main_frame.id)
+          @exchange = exchange
+          mark_pending_exchanges_as_unknown(exchange)
+        end
       end
 
       @page.on("Network.requestWillBeSentExtraInfo") do |params|
@@ -397,6 +400,17 @@ module Ferrum
         exchange ||= build_exchange(params["requestId"])
         exchange.request_extra_info = params
         exchange.request&.headers&.merge!(params["headers"])
+      end
+    end
+
+    # When the main frame navigates Chrome doesn't send `Network.loadingFailed`
+    # for pending async requests. Therefore, we mark pending connections as unknown since
+    # they are not relevant to the current navigation.
+    def mark_pending_exchanges_as_unknown(navigation_exchange)
+      @traffic.each do |exchange|
+        break if exchange.id == navigation_exchange.id
+
+        exchange.unknown = true if exchange.pending?
       end
     end
 
@@ -414,6 +428,8 @@ module Ferrum
       @page.on("Network.loadingFinished") do |params|
         exchange = select(params["requestId"]).last
         next unless exchange
+
+        exchange.unknown = false
 
         if (response = exchange.response)
           response.loaded = true
@@ -496,6 +512,17 @@ module Ferrum
 
     def whitelist?
       Array(@whitelist).any?
+    end
+
+    def exchange_connections
+      @traffic.select { |e| exchange_connection?(e) }
+    end
+
+    def exchange_connection?(exchange)
+      return false if !@page.frames.any? { |f| f.id == exchange.request&.frame_id }
+      return false if exchange.request&.frame_id != @exchange.request&.frame_id
+
+      exchange.request&.loader_id == @exchange.request&.loader_id
     end
   end
 end
