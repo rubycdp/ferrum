@@ -6,6 +6,9 @@ require "rspec"
 PROJECT_ROOT = File.expand_path("..", __dir__)
 %w[/lib /spec].each { |p| $LOAD_PATH.unshift(p) }
 
+require "fileutils"
+require "shellwords"
+
 require "ferrum"
 require "support/server"
 require "support/global_helpers"
@@ -15,7 +18,7 @@ ENV["FERRUM_NEW_WINDOW_WAIT"] ||= "0.8" if ENV["CI"]
 
 puts ""
 command = Ferrum::Browser::Command.build(Ferrum::Browser::Options.new, nil)
-puts `'#{command.path}' --version`
+puts `'#{Shellwords.escape(command.path)}' --version`
 puts ""
 
 RSpec.configure do |config|
