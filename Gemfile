@@ -7,7 +7,7 @@ gem "chunky_png", "~> 1.3"
 gem "image_size", "~> 2.0"
 gem "kramdown", "~> 2.0", require: false
 gem "pdf-reader", "~> 2.2"
-gem "puma", "~> 4.1"
+gem "puma", ">= 5.6.7"
 gem "rake", "~> 13.0"
 gem "redcarpet", require: false, platform: :mri
 gem "rspec", "~> 3.8"

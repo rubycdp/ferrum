@@ -18,7 +18,7 @@ ENV["FERRUM_NEW_WINDOW_WAIT"] ||= "0.8" if ENV["CI"]
 
 puts ""
 command = Ferrum::Browser::Command.build(Ferrum::Browser::Options.new, nil)
-puts `'#{Shellwords.escape(command.path)}' --version`
+puts `#{Shellwords.escape(command.path)} --version`
 puts ""
 
 RSpec.configure do |config|
