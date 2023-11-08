@@ -246,6 +246,7 @@ describe Ferrum::Browser do
           skip "https://bugs.chromium.org/p/chromium/issues/detail?id=1444729" if browser.headless_new?
 
           browser.go_to("/#{filename}")
+          browser.downloads.wait
 
           expect(File.exist?("#{save_path}/#{filename}")).to be true
         ensure

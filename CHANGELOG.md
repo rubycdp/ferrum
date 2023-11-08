@@ -3,6 +3,10 @@
 ### Added
 - `Ferrum::Page#disable_javascript` disables the JavaScript from the HTML source
 - `Ferrum::Page#set_viewport` emulates the viewport
+- `Ferrum::Downloads`
+  - `#files` information about downloaded files
+  - `#wait` wait for file download to be completed
+  - `#set_behavior` where and whether to store file
 
 ### Changed
 

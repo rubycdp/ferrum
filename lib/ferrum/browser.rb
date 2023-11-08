@@ -20,7 +20,7 @@ module Ferrum
     delegate %i[go_to goto go back forward refresh reload stop wait_for_reload
                 at_css at_xpath css xpath current_url current_title url title
                 body doctype content=
-                headers cookies network
+                headers cookies network downloads
                 mouse keyboard
                 screenshot pdf mhtml viewport_size device_pixel_ratio
                 frames frame_by main_frame
