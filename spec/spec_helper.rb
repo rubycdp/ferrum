@@ -18,7 +18,7 @@ ENV["FERRUM_NEW_WINDOW_WAIT"] ||= "0.8" if ENV["CI"]
 
 puts ""
 command = Ferrum::Browser::Command.build(Ferrum::Browser::Options.new, nil)
-puts `'#{Shellwords.escape(command.path)}' --version`
+puts `#{Shellwords.escape(command.path)} --version`
 puts ""
 
 RSpec.configure do |config|
@@ -32,6 +32,7 @@ RSpec.configure do |config|
   config.before(:all) do
     base_url = Ferrum::Server.server.base_url
     options = { base_url: base_url }
+    options.merge!(headless: "new") if ENV["HEADLESS"] == "new"
     options.merge!(headless: false) if ENV["HEADLESS"] == "false"
     options.merge!(slowmo: ENV["SLOWMO"].to_f) if ENV["SLOWMO"].to_f > 0
 

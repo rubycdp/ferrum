@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 
 require "forwardable"
+require "ferrum/event"
 require "ferrum/mouse"
 require "ferrum/keyboard"
 require "ferrum/headers"
 require "ferrum/cookies"
 require "ferrum/dialog"
 require "ferrum/network"
+require "ferrum/downloads"
 require "ferrum/page/frames"
 require "ferrum/page/screenshot"
 require "ferrum/page/animation"
@@ -17,20 +19,6 @@ require "ferrum/browser/client"
 module Ferrum
   class Page
     GOTO_WAIT = ENV.fetch("FERRUM_GOTO_WAIT", 0.1).to_f
-
-    class Event < Concurrent::Event
-      def iteration
-        synchronize { @iteration }
-      end
-
-      def reset
-        synchronize do
-          @iteration += 1
-          @set = false if @set
-          @iteration
-        end
-      end
-    end
 
     extend Forwardable
     delegate %i[at_css at_xpath css xpath
@@ -71,6 +59,11 @@ module Ferrum
     # @return [Cookies]
     attr_reader :cookies
 
+    # Downloads object.
+    #
+    # @return [Downloads]
+    attr_reader :downloads
+
     def initialize(target_id, browser, proxy: nil)
       @frames = Concurrent::Map.new
       @main_frame = Frame.new(nil, self)
@@ -91,6 +84,7 @@ module Ferrum
       @cookies = Cookies.new(self)
       @network = Network.new(self)
       @tracing = Tracing.new(self)
+      @downloads = Downloads.new(self)
 
       subscribe
       prepare_page
@@ -114,8 +108,10 @@ module Ferrum
       options = { url: combine_url!(url) }
       options.merge!(referrer: referrer) if referrer
       response = command("Page.navigate", wait: GOTO_WAIT, **options)
-      error_text = response["errorText"]
-      raise StatusError.new(options[:url], "Request to #{options[:url]} failed (#{error_text})") if error_text
+      error_text = response["errorText"] # https://cs.chromium.org/chromium/src/net/base/net_error_list.h
+      if error_text && error_text != "net::ERR_ABORTED" # Request aborted due to user action or download
+        raise StatusError.new(options[:url], "Request to #{options[:url]} failed (#{error_text})")
+      end
 
       response["frameId"]
     rescue TimeoutError
@@ -259,9 +255,9 @@ module Ferrum
       history_navigate(delta: 1)
     end
 
-    def wait_for_reload(sec = 1)
+    def wait_for_reload(timeout = 1)
       @event.reset if @event.set?
-      @event.wait(sec)
+      @event.wait(timeout)
       @event.set
     end
 
@@ -356,6 +352,7 @@ module Ferrum
     def subscribe
       frames_subscribe
       network.subscribe
+      downloads.subscribe
 
       if @browser.options.logger
         on("Runtime.consoleAPICalled") do |params|
@@ -398,16 +395,7 @@ module Ferrum
         end
       end
 
-      if @browser.options.save_path
-        unless Pathname.new(@browser.options.save_path).absolute?
-          raise Error, "supply absolute path for `:save_path` option"
-        end
-
-        @browser.command("Browser.setDownloadBehavior",
-                         browserContextId: context.id,
-                         downloadPath: @browser.options.save_path,
-                         behavior: "allow", eventsEnabled: true)
-      end
+      downloads.set_behavior(save_path: @browser.options.save_path) if @browser.options.save_path
 
       @browser.extensions.each do |extension|
         command("Page.addScriptToEvaluateOnNewDocument", source: extension)

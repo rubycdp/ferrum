@@ -210,7 +210,7 @@ describe Ferrum::Frame::Runtime do
 
     it "adds by path" do
       browser.go_to
-      path = "#{Ferrum::Application::FERRUM_PUBLIC}/jquery-1.11.3.min.js"
+      path = "#{Ferrum::Application::FERRUM_PUBLIC}/jquery-3.7.1.min.js"
       expect do
         browser.evaluate("$('a').first().text()")
       end.to raise_error(Ferrum::JavaScriptError)

@@ -35,8 +35,8 @@ based on Ferrum and Mechanize.
 * [Navigation](https://github.com/rubycdp/ferrum#navigation)
 * [Finders](https://github.com/rubycdp/ferrum#finders)
 * [Screenshots](https://github.com/rubycdp/ferrum#screenshots)
-* [Cleaning Up](https://github.com/rubycdp/ferrum#cleaning-up)
 * [Network](https://github.com/rubycdp/ferrum#network)
+* [Downloads](https://github.com/rubycdp/ferrum#downloads)
 * [Proxy](https://github.com/rubycdp/ferrum#proxy)
 * [Mouse](https://github.com/rubycdp/ferrum#mouse)
 * [Keyboard](https://github.com/rubycdp/ferrum#keyboard)
@@ -49,6 +49,7 @@ based on Ferrum and Mechanize.
 * [Animation](https://github.com/rubycdp/ferrum#animation)
 * [Node](https://github.com/rubycdp/ferrum#node)
 * [Tracing](https://github.com/rubycdp/ferrum#tracing)
+* [Clean Up](https://github.com/rubycdp/ferrum#clean-up)
 * [Thread safety](https://github.com/rubycdp/ferrum#thread-safety)
 * [Development](https://github.com/rubycdp/ferrum#development)
 * [Contributing](https://github.com/rubycdp/ferrum#contributing)
@@ -411,25 +412,6 @@ browser.mhtml(path: "google.mhtml") # => 87742
 ```
 
 
-## Cleaning Up
-
-#### reset
-
-Closes browser tabs opened by the `Browser` instance.
-
-```ruby
-# connect to a long-running Chrome process
-browser = Ferrum::Browser.new(url: 'http://localhost:9222')
-
-browser.go_to("https://github.com/")
-
-# clean up, lest the tab stays there hanging forever
-browser.reset
-
-browser.quit
-```
-
-
 ## Network
 
 `browser.network`
@@ -607,6 +589,50 @@ Toggles ignoring cache for each request. If true, cache will not be used.
 ```ruby
 browser.network.cache(disable: true)
 ```
+
+
+## Downloads
+
+`browser.downloads`
+
+#### files `Array<Hash>`
+
+Returns all information about downloaded files as a `Hash`.
+
+```ruby
+browser.go_to("http://localhost/attachment.pdf")
+browser.downloads.files # => [{"frameId"=>"E3316DF1B5383D38F8ADF7485005FDE3", "guid"=>"11a68745-98ac-4d54-9b57-9f9016c268b3", "url"=>"http://localhost/attachment.pdf", "suggestedFilename"=>"attachment.pdf", "totalBytes"=>4911, "receivedBytes"=>4911, "state"=>"completed"}]
+```
+
+#### wait(timeout)
+
+Waits until the download is finished.
+
+```ruby
+browser.go_to("http://localhost/attachment.pdf")
+browser.downloads.wait
+```
+
+or
+
+```ruby
+browser.go_to("http://localhost/page")
+browser.downloads.wait { browser.at_css("#download").click }
+```
+
+#### set_behavior(\*\*options)
+
+Sets behavior in case of file to be downloaded.
+
+* options `Hash`
+  * :save_path `String` absolute path of where to store the file
+  * :behavior `Symbol` `deny | allow | allowAndName | default`, `allow` by default
+
+```ruby
+browser.go_to("https://example.com/")
+browser.downloads.set_behavior(save_path: "/tmp", behavior: :allow)
+```
+
 
 ## Proxy
 
@@ -1208,6 +1234,25 @@ Accepts block, records trace and by default returns trace data from `Tracing.tra
     [trace](https://chromedevtools.github.io/devtools-protocol/tot/Tracing/#type-TraceConfig), for categories
     see [getCategories](https://chromedevtools.github.io/devtools-protocol/tot/Tracing/#method-getCategories),
     only one trace config can be active at a time per browser.
+
+
+## Clean Up
+
+#### reset
+
+Closes browser tabs opened by the `Browser` instance.
+
+```ruby
+# connect to a long-running Chrome process
+browser = Ferrum::Browser.new(url: 'http://localhost:9222')
+
+browser.go_to("https://github.com/")
+
+# clean up, lest the tab stays there hanging forever
+browser.reset
+
+browser.quit
+```
 
 
 ## Thread safety ##
