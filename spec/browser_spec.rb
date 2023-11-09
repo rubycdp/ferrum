@@ -265,33 +265,35 @@ describe Ferrum::Browser do
       end
     end
 
-    it "stops process if an error is raised during process start" do
-      process = Ferrum::Browser::Process.new(Ferrum::Browser::Options.new(process_timeout: 0))
-      allow(Ferrum::Browser::Process).to receive(:new).and_return(process)
-      expect { Ferrum::Browser.new }.to raise_error(Ferrum::ProcessTimeoutError)
-      expect(process.pid).to be(nil)
-    end
+    context "with error on initialize" do
+      it "stops process if an error is raised during process start" do
+        process = Ferrum::Browser::Process.new(Ferrum::Browser::Options.new(process_timeout: 0))
+        allow(Ferrum::Browser::Process).to receive(:new).and_return(process)
+        expect { Ferrum::Browser.new }.to raise_error(Ferrum::ProcessTimeoutError)
+        expect(process.pid).to be(nil)
+      end
 
-    it "stops process if an error is raised during client creation" do
-      process = Ferrum::Browser::Process.new(Ferrum::Browser::Options.new)
-      allow(Ferrum::Browser::Process).to receive(:new).and_return(process)
+      it "stops process if an error is raised during client creation" do
+        process = Ferrum::Browser::Process.new(Ferrum::Browser::Options.new)
+        allow(Ferrum::Browser::Process).to receive(:new).and_return(process)
 
-      error = StandardError.new
-      allow(Ferrum::Browser::Client).to receive(:new).and_raise(error)
+        error = StandardError.new
+        allow(Ferrum::Browser::Client).to receive(:new).and_raise(error)
 
-      expect { Ferrum::Browser.new }.to raise_error(error)
-      expect(process.pid).to be(nil)
-    end
+        expect { Ferrum::Browser.new }.to raise_error(error)
+        expect(process.pid).to be(nil)
+      end
 
-    it "stops process if an error is raised during contexts creation" do
-      process = Ferrum::Browser::Process.new(Ferrum::Browser::Options.new)
-      allow(Ferrum::Browser::Process).to receive(:new).and_return(process)
+      it "stops process if an error is raised during contexts creation" do
+        process = Ferrum::Browser::Process.new(Ferrum::Browser::Options.new)
+        allow(Ferrum::Browser::Process).to receive(:new).and_return(process)
 
-      error = StandardError.new
-      allow(Ferrum::Contexts).to receive(:new).and_raise(error)
+        error = StandardError.new
+        allow(Ferrum::Contexts).to receive(:new).and_raise(error)
 
-      expect { Ferrum::Browser.new }.to raise_error(error)
-      expect(process.pid).to be(nil)
+        expect { Ferrum::Browser.new }.to raise_error(error)
+        expect(process.pid).to be(nil)
+      end
     end
   end
 
