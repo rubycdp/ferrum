@@ -170,4 +170,29 @@ describe Ferrum::Page do
       expect { page.go_to("/ferrum/really_slow") }.to raise_error(Ferrum::PendingConnectionsError)
     end
   end
+
+  describe "#disable_javascript" do
+    it "disables javascripts on page" do
+      page.disable_javascript
+
+      expect { page.go_to("/ferrum/js_error") }.not_to raise_error
+    end
+
+    it "allows javascript evaluation from Ferrum" do
+      page.disable_javascript
+
+      page.evaluate("document.body.innerHTML = '<p>text</p>'")
+
+      expect(page.main_frame.body).to eq("<html><head></head><body><p>text</p></body></html>")
+    end
+  end
+
+  describe "#set_viewport" do
+    it "overrides the viewport size" do
+      page.set_viewport(width: 500, height: 300, scale_factor: 2)
+
+      expect(page.viewport_size).to eq([500, 300])
+      expect(page.device_pixel_ratio).to eq(2)
+    end
+  end
 end
