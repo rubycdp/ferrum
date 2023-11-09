@@ -9,6 +9,7 @@
   - `#set_behavior` where and whether to store file
 
 ### Changed
+- `Ferrum::Page#screeshot` accepts :area option [#410]
 
 ### Fixed
 

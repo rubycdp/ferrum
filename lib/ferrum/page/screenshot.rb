@@ -5,8 +5,8 @@ require "ferrum/rgba"
 module Ferrum
   class Page
     module Screenshot
-      PARTIAL_SCREENSHOT_ARGUMENTS_MESSAGE = "Ignoring :selector or :area in #screenshot since full: true was given at "
-      AREA_SCREENSHOT_ARGUMENT_MESSAGE = "Ignoring :area in #screenshot since selector: was given at "
+      FULL_WARNING = "Ignoring :selector or :area in #screenshot since full: true was given at %s"
+      AREA_WARNING = "Ignoring :area in #screenshot since selector: was given at %s"
 
       DEFAULT_PDF_OPTIONS = {
         landscape: false,
@@ -221,8 +221,8 @@ module Ferrum
       end
 
       def area_options(full, selector, scale, area = nil)
-        warn("#{PARTIAL_SCREENSHOT_ARGUMENTS_MESSAGE}#{caller(1..1).first}") if full && (selector || area)
-        warn("#{AREA_SCREENSHOT_ARGUMENT_MESSAGE}#{caller(1..1).first}") if selector && area
+        warn(FULL_WARNING % caller(1..1).first) if full && (selector || area)
+        warn(AREA_WARNING % caller(1..1).first) if selector && area
 
         clip = if full
                  full_window_area || viewport_area
