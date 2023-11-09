@@ -278,13 +278,12 @@ module Ferrum
       begin
         @process.start
         @client = Client.new(
-          @process.ws_url,
-          self,
+          @process.ws_url, self,
           logger: options.logger,
           ws_max_receive_size: options.ws_max_receive_size
         )
         @contexts = Contexts.new(self)
-      rescue
+      rescue StandardError
         @process.stop
         raise
       end
