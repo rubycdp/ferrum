@@ -360,7 +360,12 @@ Saves screenshot on a disk or returns it as base64.
   * :format `String` "jpeg" | "png"
   * :quality `Integer` 0-100 works for jpeg only
   * :full `Boolean` whether you need full page screenshot or a viewport
-  * :selector `String` css selector for given element
+  * :selector `String` css selector for given element, optional
+  * :area `Hash` area for screenshot, optional
+    * :x `Integer`
+    * :y `Integer`
+    * :width `Integer`
+    * :height `Integer`
   * :scale `Float` zoom in/out
   * :background_color `Ferrum::RGBA.new(0, 0, 0, 0.0)` to have specific background color
 
@@ -371,7 +376,11 @@ browser.screenshot(path: "google.png") # => 134660
 # Save on the disk in JPG
 browser.screenshot(path: "google.jpg") # => 30902
 # Save to Base64 the whole page not only viewport and reduce quality
-browser.screenshot(full: true, quality: 60) # "iVBORw0KGgoAAAANSUhEUgAABAAAAAMACAYAAAC6uhUNAAAAAXNSR0IArs4c6Q...
+browser.screenshot(full: true, quality: 60, encoding: :base64) # "iVBORw0KGgoAAAANSUhEUgAABAAAAAMACAYAAAC6uhUNAAAAAXNSR0IArs4c6Q...
+# Save on the disk with the selected element in PNG
+browser.screenshot(path: "google.png", selector: 'textarea') # => 11340
+# Save to Base64 with an area of the page in PNG
+browser.screenshot(path: "google.png", area: { x: 0, y: 0, width: 400, height: 300 }) # => 54239
 # Save with specific background color
 browser.screenshot(background_color: Ferrum::RGBA.new(0, 0, 0, 0.0))
 ```

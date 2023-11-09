@@ -51,14 +51,32 @@ describe Ferrum::Page::Screenshot do
       end
     end
 
-    it "ignores :selector in #save_screenshot if full: true" do
+    it "ignores :selector and :area in #save_screenshot if full: true" do
       browser.go_to("/ferrum/long_page")
-      expect(browser.page).to receive(:warn).with(/Ignoring :selector/)
+      expect(browser.page).to receive(:warn).with(/Ignoring :selector or :area/)
 
       create_screenshot(path: file, full: true, selector: "#penultimate")
 
       File.open(file, "rb") do |f|
         size = browser.evaluate("[document.documentElement.clientWidth, document.documentElement.clientHeight]")
+        expect(ImageSize.new(f.read).size).to eq(size.map { |s| s * device_pixel_ratio })
+      end
+    end
+
+    it "ignores :area in #save_screenshot if selector is set" do
+      browser.go_to("/ferrum/long_page")
+      expect(browser.page).to receive(:warn).with(/Ignoring :area/)
+
+      create_screenshot(path: file, selector: "#penultimate", area: { x: 0, y: 0, width: 200, height: 100 })
+
+      File.open(file, "rb") do |f|
+        size = browser.evaluate <<-JS
+          function() {
+            var ele  = document.getElementById("penultimate");
+            var rect = ele.getBoundingClientRect();
+            return [rect.width, rect.height];
+          }();
+        JS
         expect(ImageSize.new(f.read).size).to eq(size.map { |s| s * device_pixel_ratio })
       end
     end
@@ -84,10 +102,10 @@ describe Ferrum::Page::Screenshot do
         img.pixels.inject(0) { |i, p| p > 255 ? i + 1 : i }
       }
 
-      browser.screenshot(path: file)
+      create_screenshot(path: file)
       before = black_pixels_count[file]
 
-      browser.screenshot(path: file, scale: scale)
+      create_screenshot(path: file, scale: scale)
       after = black_pixels_count[file]
 
       expect(after.to_f / before).to eq(scale**2)
@@ -196,6 +214,30 @@ describe Ferrum::Page::Screenshot do
 
         expect(File.exist?(file)).not_to be
         expect(browser.viewport_size).to eq([100, 100])
+      end
+    end
+
+    context "with area screenshot" do
+      it "supports screenshotting of an area" do
+        browser.go_to("/ferrum/custom_html_size")
+        expect(browser.viewport_size).to eq([1024, 768])
+
+        browser.screenshot(path: file, area: { x: 0, y: 0, width: 300, height: 200 })
+
+        File.open(file, "rb") do |f|
+          expect(ImageSize.new(f.read).size).to eq([300, 200].map { |s| s * device_pixel_ratio })
+        end
+        expect(browser.viewport_size).to eq([1024, 768])
+      end
+
+      it "keeps current viewport" do
+        browser.go_to
+        browser.set_viewport(width: 800, height: 200)
+
+        browser.screenshot(path: file, area: { x: 0, y: 0, width: 300, height: 200 })
+
+        expect(File.exist?(file)).to be(true)
+        expect(browser.viewport_size).to eq([800, 200])
       end
     end
 
