@@ -2,6 +2,7 @@
 
 require "bundler/setup"
 require "rspec"
+require "pathname"
 
 PROJECT_ROOT = File.expand_path("..", __dir__)
 %w[/lib /spec].each { |p| $LOAD_PATH.unshift(p) }
