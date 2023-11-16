@@ -81,6 +81,15 @@ module Ferrum
       end
 
       #
+      # Determines if a response is expected.
+      #
+      # @return [Boolean]
+      #
+      def response_expected?
+        !type?("ping")
+      end
+
+      #
       # Converts the request to a Hash.
       #
       # @return [Hash{String => Object}]
