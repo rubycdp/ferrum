@@ -79,7 +79,7 @@ module Ferrum
       # @return [Boolean]
       #
       def finished?
-        blocked? || response&.loaded? || !error.nil?
+        blocked? || response&.loaded? || !error.nil? || !response_expected?
       end
 
       #
