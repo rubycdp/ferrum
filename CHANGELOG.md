@@ -1,10 +1,32 @@
-## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.13...main) ##
+## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.14...main) ##
 
 ### Added
+- `Ferrum::Page#disable_javascript` disables the JavaScript from the HTML source
+- `Ferrum::Page#set_viewport` emulates the viewport
+- `Ferrum::Downloads`
+  - `#files` information about downloaded files
+  - `#wait` wait for file download to be completed
+  - `#set_behavior` where and whether to store file
+
+### Changed
+- `Ferrum::Page#screeshot` accepts :area option [#410]
+
+### Fixed
+
+### Removed
+
+
+## [0.14](https://github.com/rubycdp/ferrum/compare/v0.13...v0.14) - (Sep 14, 2023) ##
+
+### Added
+- `Ferrum::Page#device_pixel_ratio` returns the ratio of the resolution in physical pixels to the
+  resolution in CSS pixels for the current display device.
 - `Ferrum::Network#cache(disable: true | false)` whether or not to use cache for every request
+- `Ferrum::Network::Exchange#redirect?` determines if the exchange is a redirect
 - `Ferrum::Network::Exchange#xhr?` determines if the exchange is XHR
 - `Ferrum::Network::Request#xhr?` determines if the request is XHR
 - `Ferrum::Network::Response#loaded?` returns true if the response is fully loaded
+- `Ferrum::Network::Response#redirect?` returns true if the response is a redirect
 - `Ferrum::Node#in_viewport?` checks if the element in viewport (optional argument `scope` as `Ferrum::Node`)
 - `Ferrum::Node#scroll_into_view` - scrolls to element if needed (when it's not in the viewport)
 - `Ferrum::Cookies#each` - is now Enumerable and supports `each` method
@@ -36,7 +58,6 @@
 ## [0.13](https://github.com/rubycdp/ferrum/compare/v0.12...v0.13) - (Nov 12, 2022) ##
 
 ### Added
-
 - `Ferrum::Browser::VersionInfo`
 - `Ferrum::Browser`
   - `#version` requests the browser's version information.
@@ -49,7 +70,6 @@
 ### Changed
 
 ### Fixed
-
 - `Ferrum::Keyboard`
   - `#up, #down` accept only one key.
 - `Ferrum::Page#goto` fixed undefined method url for nil:NilClass when page times out and there are pending requests.
@@ -59,7 +79,6 @@
 - `Ferrum::NoExecutionContextError` is raised sometimes when we block on `Ferrum::Page#frame_by`
 
 ### Removed
-
 - `Ferrum::Browser#proxy_server`
 - `Ferrum::Browser.new(proxy: { server: true })` :server option.
 
@@ -67,7 +86,6 @@
 ## [0.12](https://github.com/rubycdp/ferrum/compare/v0.11...v0.12) - (Sep 13, 2022) ##
 
 ### Added
-
 - Alias `Ferrum::Frame#content=` to `Ferrum::Frame#set_content`
 - Alias `Ferrum::Node#propery` to `Ferrum::Node#[]`
 - Implement `Ferrum::Network#blacklist=` and `Ferrum::Network#whitelist=`
@@ -92,7 +110,6 @@ a block with this page, after which the page is closed.
 - `Ferrum::Page::Tracing#record(&block)` start/stop tracing for steps provided in passed block
 
 ### Changed
-
 - Use `Concurrent::MVar` as `execution_id` in `Ferrum::Frame`
 - Min Ruby version is 2.6 and 3.0 is supported
 - `Ferrum::Page#bypass_csp` accepts hash as argument `enabled: true` by default
@@ -109,7 +126,6 @@ a block with this page, after which the page is closed.
   - `Ferrum.mri?` -> `Ferrum::Utils::Platform.mri?`
 
 ### Fixed
-
 - `Ferrum::Node#selected`, `Ferrum::Node#select` to work in frame scope
 
 ### Removed
@@ -118,7 +134,6 @@ a block with this page, after which the page is closed.
 ## [0.11](https://github.com/rubycdp/ferrum/compare/v0.10.2...v0.11) - (Mar 11, 2021) ##
 
 ### Added
-
 - `Ferrum::CoordinatesNotFoundError`
 - `Ferrum::Node`
   - `#wait_for_stop_moving` wait for any js or css movements to finish
@@ -133,14 +148,12 @@ a block with this page, after which the page is closed.
 - `--no-startup-window` flag to Chrome by default
 
 ### Changed
-
 - `Ferrum::NodeIsMovingError` -> `Ferrum::NodeMovingError`
 - `Ferrum::Node::MOVING_WAIT` -> `Ferrum::Node::MOVING_WAIT_DELAY`
 - `Ferrum::Node::MOVING_ATTEMPTS` -> `Ferrum::Node::MOVING_WAIT_ATTEMPTS`
 - `Concurrent::Hash` -> `Concurrent::Map` in contexts
 
 ### Fixed
-
 - Typo `Ferrum::Page::Screenshot::PAPEP_FORMATS` -> `Ferrum::Page::Screenshot::PAPER_FORMATS`
 
 ### Removed
@@ -153,7 +166,6 @@ a block with this page, after which the page is closed.
 ### Changed
 
 ### Fixed
-
 - Set `Ferrum::Page` `@event` when setting up main frame
 
 ### Removed
@@ -166,7 +178,6 @@ a block with this page, after which the page is closed.
 ### Changed
 
 ### Fixed
-
 - Don't mutate options in `Ferrum::Frame::Runtime#call`
 
 ### Removed
@@ -175,7 +186,6 @@ a block with this page, after which the page is closed.
 ## [0.10](https://github.com/rubycdp/ferrum/compare/v0.9...v0.10) - (Feb 23, 2021) ##
 
 ### Added
-
 - Added alias `go_to` for `goto`
 - Introduce `Ferrum::Browser` option `:pending_connection_errors`
 - You can pass background to screenshot method `browser.screenshot(background_color: Ferrum::RGBA.new(0, 0, 0, 0.0))`
@@ -184,13 +194,11 @@ a block with this page, after which the page is closed.
 - `Ferrum::Page#mhtml`
 
 ### Changed
-
 - `Ferrum::Browser::Process::PROCESS_TIMEOUT` is 2 -> 10 by default
 - `Ferrum::Browser::Network#authorize` now accepts block
 - `Ferrum::Page#pdf` method now streams file with `transferMode: "ReturnAsStream"` mode good for large files
 
 ### Fixed
-
 - `execution_id` in Runtime is called with retry
 - Main frame is set correct under some circumstances
 - `Network.loadingFailed` event is added to catch canceled requests
@@ -204,7 +212,6 @@ a block with this page, after which the page is closed.
 ## [0.9](https://github.com/rubycdp/ferrum/compare/v0.8...v0.9) - (Jul 24, 2020) ##
 
 ### Added
-
 - `Ferrum::NodeIsMovingError` to raise error when node is moving before clicking
 - `FERRUM_NODE_MOVING_WAIT` and `FERRUM_NODE_MOVING_ATTEMPTS` envs are added to wait until node stops moving with
   at least `n` attempts
@@ -217,7 +224,6 @@ a block with this page, after which the page is closed.
 ### Changed
 
 ### Fixed
-
 - `Ferrum::Network::Request#respond` can accept content longer than 45 chars
 - `Ferrum::Browser::Subscriber` is thread safe
 
@@ -227,7 +233,6 @@ a block with this page, after which the page is closed.
 ## [0.8](https://github.com/rubycdp/ferrum/compare/v0.7...v0.8) - (Apr 7, 2020) ##
 
 ### Added
-
 - `Ferrum::Frame` supports looking up nodes inside frame with methods:
   - `#at_css`
   - `#css`
@@ -239,7 +244,6 @@ a block with this page, after which the page is closed.
 - `Ferrum::Page#stop` to stop loading page
 
 ### Changed
-
 - Fix Ruby 2.7 warnings
 - `Ferrum::Node#click` accepts `offset: { :x, :y, :position (:top | :center)` and `:delay` options
 - Instantiate empty main frame in advance
@@ -248,26 +252,22 @@ a block with this page, after which the page is closed.
 - `Ferrum::Browser::Cookies#set` supports `:httponly` and `:samesite` options
 
 ### Fixed
-
 - `Ferrum::Frame#execution_id` should be set only once
 - `Ferrum::Page#doctype` can be nil
 - Add `:slowmoable` option to all methods with visual representation
 - `Ferrum::Page#screenshot` works for html tag set with 100% width and height
 
 ### Removed
-
 - `.ruby-version` file from repository
 
 
 ## [0.7](https://github.com/rubycdp/ferrum/compare/v0.6.2...v0.7) - (Jan 28, 2020) ##
 
 ### Fixed
-
 - Fix issue when connection is refused and shows up as pending
 - Can set `Accept-Language` even if `User-Agent` is not provided
 
 ### Added
-
 - `FERRUM_GOTO_WAIT` env is added with default value of 0.1
 - `Ferrum::Network::Response#type` shows type of the response
 - `Ferrum::Network`
@@ -290,14 +290,12 @@ a block with this page, after which the page is closed.
   - `#bypass_csp` can now bypass csp headers when injecting scripts
 
 ### Changed
-
 - `Ferrum::StatusError#pendings` now shows all pending connections when time is out
 - `Ferrum::Browser::Process#path` is delegated to `Command`
 
 ### Fixed
 
 ### Removed
-
 - Stop listening to `Page.domContentEventFired`, `Page.frameScheduledNavigation` and
 `Page.frameClearedScheduledNavigation` events
 
@@ -305,7 +303,6 @@ a block with this page, after which the page is closed.
 ## [0.6.2](https://github.com/rubycdp/ferrum/compare/v0.6.1...v0.6.2) - (Oct 30, 2019) ##
 
 ### Added
-
 - `Ferrum::Target`:
   - `#page=` attribute writer
   - `#maybe_sleep_if_new_window` - sleep with `Ferrum::Target::NEW_WINDOW_WAIT` seconds by `Ferrum::Target#window?`
@@ -321,12 +318,10 @@ a block with this page, after which the page is closed.
 ## [0.6.1](https://github.com/rubycdp/ferrum/compare/v0.6...v0.6.1) - (Oct 30, 2019) ##
 
 ### Added
-
 - `Ferrum::Frame#execution_id?` - boolean of equals passed argument `execution_id` and current `execution_id` from
 current class instance
 
 ### Changed
-
 - `Ferrum::Page::Frames` - fix missing frame:
   - `#frame_by` - optional argument `execution_id` removed with change subscriber to search by
   `Ferrum::Frame#execution_id?`
@@ -339,7 +334,6 @@ current class instance
 ## [0.6.0](https://github.com/rubycdp/ferrum/compare/v0.5...v0.6) - (Oct 29, 2019) ##
 
 ### Added
-
 - description of `browser.add_script_tag/browser.add_style_tag` in README
 - `Ferrum::Target#attached?` - boolean of the check the exists of `Ferrum::Target#page`
 - `Ferrum::Page::Screenshot::DEFAULT_PDF_OPTIONS` - pdf settings constant
@@ -372,7 +366,6 @@ current class instance
   - `#inspect` - simple implementation of native `inspect` method with returns of the current internal state
 
 ### Changed
-
 - `Ferrum::Page::Screenshot#screenshot` - handle `:full` option
 - `Ferrum::Page::Frame` into `Ferrum::Frame`:
   - initializer accepts three arguments:
@@ -434,7 +427,6 @@ current class instance
 ### Fixed
 
 ### Removed
-
 - `Ferrum::Page`
   - `#frame_name`
   - `#frame_url`, with delegated `Ferrum::Browser#frame_url`
@@ -449,7 +441,6 @@ current class instance
 ## [0.5.0](https://github.com/rubycdp/ferrum/compare/v0.4...v0.5) - (Sep 27, 2019) ##
 
 ### Added
-
 - description of `Thread safety` approach section in README
 - `Ferrum::NoSuchTargetError`
 - `Ferrum::Network::Request#url_fragment` - delegation to `urlFragment` of instance `request`
@@ -518,7 +509,6 @@ object
   - `Ferrum::Browser#windows`
 
 ### Changed
-
 - `Ferrum::NoSuchWindowError` into `NoSuchPageError`
 - `Ferrum::Page::NEW_WINDOW_WAIT` moved as unchanged to `Ferrum::Target`
 - `Ferrum::Browser#page` - the delegation from `Ferrum::Browser#targets` to `Ferrum::Browser#default_context`
@@ -528,7 +518,6 @@ to `Ferrum::Browser#default_context`
 ### Fixed
 
 ### Removed
-
 - `Ferrum::EmptyTargetsError`
 - the `hack` to handle `new window` which doesn't have events at all by `Ferrum::Page#session_id` with
 `Target.attachToTarget` and `Target.detachFromTarget` usage
@@ -546,7 +535,6 @@ to `Ferrum::Browser#default_context`
 ## [0.4.0](https://github.com/rubycdp/ferrum/compare/v0.3...v0.4) - (Sep 17, 2019) ##
 
 ### Added
-
 - `Ferrum::Network` module - moved logic from `Ferrum::Page::Net` with addition changes
 - `Ferrum::Browser#network` - instance of `Ferrum::Network` from delegated `Ferrum::Page` instance
 - `Ferrum::Network#request` & `Ferrum::Network#response` - delegation to `Network::Exchange` instance
@@ -569,7 +557,6 @@ current internal state
 - `Ferrum::Page::Frame#frame_id` - reader to public available of `frameId` by `Ferrum::Page#frame_id`
 
 ### Changed
-
 - description of `Network/Authorization/Interception` sections in README
 - `Ferrum::Browser#screenshot` & `Ferrum::Browser#pdf` methods are returns bin when no path is given
 - `Ferrum::Browser#status` delegated to `Ferrum::Network`
@@ -587,7 +574,6 @@ to handle `encodedDataLength` when `Network.responseReceived` is not dispatched
 ### Fixed
 
 ### Removed
-
 - `Ferrum::Network::Response#redirect_url`
 - `Ferrum::Page::Net`
 - `Ferrum::Browser#abort_request`
@@ -600,7 +586,6 @@ to handle `encodedDataLength` when `Network.responseReceived` is not dispatched
 ## [0.3.0](https://github.com/rubycdp/ferrum/compare/v0.2.1...v0.3) - (Sep 12, 2019) ##
 
 ### Added
-
 - CI build by TravisCI for ruby versions: `2.3/2.4/2.5/2.6/jruby-9.2.8.0`
 - fix specs with support of MacOS time formats
 - `Ferrum::Mouse::CLICK_WAIT` as `FERRUM_CLICK_WAIT` `ENV-var` with `0.1` as default value
@@ -633,7 +618,6 @@ to handle `encodedDataLength` when `Network.responseReceived` is not dispatched
 - JRuby support by replaces of `::Process::CLOCK_MONOTONIC` usages according to `Elapsed-time` implementation
 
 ### Changed
-
 - fix globally changing of Thread behaviour on options `abort_on_exception/report_on_exception`
 - `Ferrum::Page::Input#find_position` into `Ferrum::Node#find_position`
 - `Ferrum::Browser#scroll_to` into `Ferrum::Mouse#scroll_to`
@@ -650,7 +634,6 @@ with `0.3` as default value
 ### Fixed
 
 ### Removed
-
 - `Ferrum::Page::Input`
 - `Ferrum::Browser#proxy_authorize` / `Ferrum::Page::Net#proxy_authorize`
 - `Ferrum::ModalNotFoundError`
@@ -665,12 +648,10 @@ with `0.3` as default value
 ## [0.2.1](https://github.com/rubycdp/ferrum/compare/v0.2...v0.2.1) - (Sep 5, 2019) ##
 
 ### Added
-
 - handle `EOFError/Errno::ECONNRESET/Errno::EPIPE` errors with rescue
 - description options of `Customization` in README
 
 ### Changed
-
 - increased `Browser::Process::PROCESS_TIMEOUT` constant by 1
 - `Ferrum::Network::InterceptedRequest#match?` to handle cases for `Ruby 2.3` and less
 
@@ -682,7 +663,6 @@ with `0.3` as default value
 ## [0.2.0](https://github.com/rubycdp/ferrum/compare/v0.1.2...v0.2) - (Sep 3, 2019) ##
 
 ### Added
-
 - snippet examples of the actions in README
 - `Ferrum::Node#focus` - fires the `command` `DOM.focus` on `Ferrum::Page` instance
 - `Ferrum::Node#blur` - evaluates JS: `this.blur()` on `Ferrum::Page` instance
@@ -722,7 +702,6 @@ into `Network.setRequestInterception`
 by passed interception_id
 
 ### Changed
-
 - `Ferrum::Page::Input#send_keys` into `Ferrum::Page::Input#type`
 - `Ferrum::DeadBrowser` into `Ferrum::DeadBrowserError`
 - `Ferrum::ModalNotFound` into `Ferrum::ModalNotFoundError`
@@ -738,7 +717,6 @@ by passed interception_id
 ### Fixed
 
 ### Removed
-
 - `Ferrum::ObsoleteNode` error
 - `Ferrum::FrameNotFound` error
 - `Ferrum::Page::Input#set`
@@ -768,7 +746,6 @@ by passed interception_id
 ## [0.1.2](https://github.com/rubycdp/ferrum/compare/v0.1.1...v0.1.2) - (Aug 27, 2019) ##
 
 ### Added
-
 - catch of the intermittent errors inside of `evaluate's` methods
 - `Ferrum::Page::Runtime#evaluate_on` - fires `Runtime.callFunctionOn` command
 with `functionDeclaration` on `Ferrum::Page`
@@ -778,14 +755,12 @@ with `functionDeclaration` on `Ferrum::Page`
 ### Fixed
 
 ### Removed
-
 - `Ferrum::Page::Runtime#evaluate_in`
 
 
 ## [0.1.1](https://github.com/rubycdp/ferrum/compare/v0.1.0...v0.1.1) - (Aug 26, 2019) ##
 
 ### Added
-
 - stringify the `url` which passed to `Ferrum::Page#goto`
 
 ### Changed
@@ -798,11 +773,9 @@ with `functionDeclaration` on `Ferrum::Page`
 ## [0.1.0](https://github.com/rubycdp/ferrum/compare/v0.1.0.alpha...v0.1.0) - (Aug 26, 2019) ##
 
 ### Added
-
 - fires the `Ferrum::NodeError` on zero of `node_id`
 
 ### Changed
-
 - basic description in README
 
 ### Fixed
@@ -813,7 +786,6 @@ with `functionDeclaration` on `Ferrum::Page`
 ## [0.1.0.alpha](https://github.com/rubycdp/ferrum/releases/tag/v0.1.0.alpha) - (Aug 2, 2019) ##
 
 ### Added
-
 - Initial implementation
   - `Ferrum`
   - `Ferrum::Network` - simple requests/responses data store

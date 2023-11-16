@@ -111,6 +111,14 @@ describe Ferrum::Network::Exchange do
     end
   end
 
+  describe "#redirect?" do
+    it "determines if exchange is a redirect" do
+      page.go_to("/redirect_again")
+
+      expect(first_exchange.response.redirect?).to be
+    end
+  end
+
   describe "#pending?" do
     it "determines if exchange is not fully loaded" do
       allow(page).to receive(:timeout) { 2 }

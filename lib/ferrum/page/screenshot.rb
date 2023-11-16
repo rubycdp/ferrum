@@ -5,6 +5,9 @@ require "ferrum/rgba"
 module Ferrum
   class Page
     module Screenshot
+      FULL_WARNING = "Ignoring :selector or :area in #screenshot since full: true was given at %s"
+      AREA_WARNING = "Ignoring :area in #screenshot since selector: was given at %s"
+
       DEFAULT_PDF_OPTIONS = {
         landscape: false,
         paper_width: 8.5,
@@ -49,6 +52,9 @@ module Ferrum
       #
       # @option opts [String] :selector
       #   CSS selector for the given element.
+      #
+      # @option opts [Hash] :area
+      #   x, y, width, height to screenshot an area.
       #
       # @option opts [Float] :scale
       #   Zoom in/out.
@@ -147,6 +153,12 @@ module Ferrum
         JS
       end
 
+      def device_pixel_ratio
+        evaluate <<~JS
+          window.devicePixelRatio
+        JS
+      end
+
       def document_size
         evaluate <<~JS
           [document.documentElement.scrollWidth,
@@ -192,7 +204,7 @@ module Ferrum
         screenshot_options.merge!(quality: quality) if quality
         screenshot_options.merge!(format: format)
 
-        clip = area_options(options[:full], options[:selector], scale)
+        clip = area_options(options[:full], options[:selector], scale, options[:area])
         screenshot_options.merge!(clip: clip) if clip
 
         screenshot_options
@@ -208,27 +220,33 @@ module Ferrum
         [format, quality]
       end
 
-      def area_options(full, selector, scale)
-        message = "Ignoring :selector in #screenshot since full: true was given at #{caller(1..1).first}"
-        warn(message) if full && selector
+      def area_options(full, selector, scale, area = nil)
+        warn(FULL_WARNING % caller(1..1).first) if full && (selector || area)
+        warn(AREA_WARNING % caller(1..1).first) if selector && area
 
         clip = if full
-                 width, height = document_size
-                 { x: 0, y: 0, width: width, height: height, scale: scale } if width.positive? && height.positive?
+                 full_window_area || viewport_area
                elsif selector
-                 bounding_rect(selector).merge(scale: scale)
+                 bounding_rect(selector)
+               elsif area
+                 area
+               else
+                 viewport_area
                end
 
-        if scale != 1
-          unless clip
-            width, height = viewport_size
-            clip = { x: 0, y: 0, width: width, height: height }
-          end
-
-          clip.merge!(scale: scale)
-        end
+        clip.merge!(scale: scale)
 
         clip
+      end
+
+      def full_window_area
+        width, height = document_size
+        { x: 0, y: 0, width: width, height: height } if width.positive? && height.positive?
+      end
+
+      def viewport_area
+        width, height = viewport_size
+        { x: 0, y: 0, width: width, height: height }
       end
 
       def bounding_rect(selector)

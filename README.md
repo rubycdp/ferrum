@@ -35,8 +35,8 @@ based on Ferrum and Mechanize.
 * [Navigation](https://github.com/rubycdp/ferrum#navigation)
 * [Finders](https://github.com/rubycdp/ferrum#finders)
 * [Screenshots](https://github.com/rubycdp/ferrum#screenshots)
-* [Cleaning Up](https://github.com/rubycdp/ferrum#cleaning-up)
 * [Network](https://github.com/rubycdp/ferrum#network)
+* [Downloads](https://github.com/rubycdp/ferrum#downloads)
 * [Proxy](https://github.com/rubycdp/ferrum#proxy)
 * [Mouse](https://github.com/rubycdp/ferrum#mouse)
 * [Keyboard](https://github.com/rubycdp/ferrum#keyboard)
@@ -49,6 +49,7 @@ based on Ferrum and Mechanize.
 * [Animation](https://github.com/rubycdp/ferrum#animation)
 * [Node](https://github.com/rubycdp/ferrum#node)
 * [Tracing](https://github.com/rubycdp/ferrum#tracing)
+* [Clean Up](https://github.com/rubycdp/ferrum#clean-up)
 * [Thread safety](https://github.com/rubycdp/ferrum#thread-safety)
 * [Development](https://github.com/rubycdp/ferrum#development)
 * [Contributing](https://github.com/rubycdp/ferrum#contributing)
@@ -145,7 +146,8 @@ Ferrum::Browser.new(options)
 ```
 
 * options `Hash`
-  * `:headless` (Boolean) - Set browser as headless or not, `true` by default.
+  * `:headless` (String | Boolean) - Set browser as headless or not, `true` by default. You can set `"new"` to support
+      [new headless mode](https://developer.chrome.com/articles/new-headless/).
   * `:xvfb` (Boolean) - Run browser in a virtual framebuffer, `false` by default.
   * `:window_size` (Array) - The dimensions of the browser window in which to
       test, expressed as a 2-element array, e.g. [1024, 768]. Default: [1024, 768]
@@ -358,7 +360,12 @@ Saves screenshot on a disk or returns it as base64.
   * :format `String` "jpeg" | "png"
   * :quality `Integer` 0-100 works for jpeg only
   * :full `Boolean` whether you need full page screenshot or a viewport
-  * :selector `String` css selector for given element
+  * :selector `String` css selector for given element, optional
+  * :area `Hash` area for screenshot, optional
+    * :x `Integer`
+    * :y `Integer`
+    * :width `Integer`
+    * :height `Integer`
   * :scale `Float` zoom in/out
   * :background_color `Ferrum::RGBA.new(0, 0, 0, 0.0)` to have specific background color
 
@@ -369,7 +376,11 @@ browser.screenshot(path: "google.png") # => 134660
 # Save on the disk in JPG
 browser.screenshot(path: "google.jpg") # => 30902
 # Save to Base64 the whole page not only viewport and reduce quality
-browser.screenshot(full: true, quality: 60) # "iVBORw0KGgoAAAANSUhEUgAABAAAAAMACAYAAAC6uhUNAAAAAXNSR0IArs4c6Q...
+browser.screenshot(full: true, quality: 60, encoding: :base64) # "iVBORw0KGgoAAAANSUhEUgAABAAAAAMACAYAAAC6uhUNAAAAAXNSR0IArs4c6Q...
+# Save on the disk with the selected element in PNG
+browser.screenshot(path: "google.png", selector: 'textarea') # => 11340
+# Save to Base64 with an area of the page in PNG
+browser.screenshot(path: "google.png", area: { x: 0, y: 0, width: 400, height: 300 }) # => 54239
 # Save with specific background color
 browser.screenshot(background_color: Ferrum::RGBA.new(0, 0, 0, 0.0))
 ```
@@ -407,25 +418,6 @@ Saves MHTML on a disk or returns it as a string.
 ```ruby
 browser.go_to("https://google.com/")
 browser.mhtml(path: "google.mhtml") # => 87742
-```
-
-
-## Cleaning Up
-
-#### reset
-
-Closes browser tabs opened by the `Browser` instance.
-
-```ruby
-# connect to a long-running Chrome process
-browser = Ferrum::Browser.new(url: 'http://localhost:9222')
-
-browser.go_to("https://github.com/")
-
-# clean up, lest the tab stays there hanging forever
-browser.reset
-
-browser.quit
 ```
 
 
@@ -606,6 +598,50 @@ Toggles ignoring cache for each request. If true, cache will not be used.
 ```ruby
 browser.network.cache(disable: true)
 ```
+
+
+## Downloads
+
+`browser.downloads`
+
+#### files `Array<Hash>`
+
+Returns all information about downloaded files as a `Hash`.
+
+```ruby
+browser.go_to("http://localhost/attachment.pdf")
+browser.downloads.files # => [{"frameId"=>"E3316DF1B5383D38F8ADF7485005FDE3", "guid"=>"11a68745-98ac-4d54-9b57-9f9016c268b3", "url"=>"http://localhost/attachment.pdf", "suggestedFilename"=>"attachment.pdf", "totalBytes"=>4911, "receivedBytes"=>4911, "state"=>"completed"}]
+```
+
+#### wait(timeout)
+
+Waits until the download is finished.
+
+```ruby
+browser.go_to("http://localhost/attachment.pdf")
+browser.downloads.wait
+```
+
+or
+
+```ruby
+browser.go_to("http://localhost/page")
+browser.downloads.wait { browser.at_css("#download").click }
+```
+
+#### set_behavior(\*\*options)
+
+Sets behavior in case of file to be downloaded.
+
+* options `Hash`
+  * :save_path `String` absolute path of where to store the file
+  * :behavior `Symbol` `deny | allow | allowAndName | default`, `allow` by default
+
+```ruby
+browser.go_to("https://example.com/")
+browser.downloads.set_behavior(save_path: "/tmp", behavior: :allow)
+```
+
 
 ## Proxy
 
@@ -908,6 +944,34 @@ browser.evaluate("window.__injected") # => 42
 ```
 
 
+## Emulation
+
+#### disable_javascript
+
+Disables Javascripts from the loaded HTML source.
+You can still evaluate JavaScript with `evaluate` or `execute`.
+Returns nothing.
+
+```ruby
+browser.disable_javascript
+```
+
+
+#### set_viewport
+
+Overrides device screen dimensions and emulates viewport.
+
+* options `Hash`
+  * :width `Integer`, viewport width. `0` by default
+  * :height `Integer`, viewport height. `0` by default
+  * :scale_factor `Float`, device scale factor. `0` by default
+  * :mobile `Boolean`, whether to emulate mobile device. `false` by default
+
+```ruby
+browser.set_viewport(width: 1000, height: 600, scale_factor: 3)
+```
+
+
 ## Frames
 
 #### frames : `Array[Frame] | []`
@@ -1179,6 +1243,25 @@ Accepts block, records trace and by default returns trace data from `Tracing.tra
     [trace](https://chromedevtools.github.io/devtools-protocol/tot/Tracing/#type-TraceConfig), for categories
     see [getCategories](https://chromedevtools.github.io/devtools-protocol/tot/Tracing/#method-getCategories),
     only one trace config can be active at a time per browser.
+
+
+## Clean Up
+
+#### reset
+
+Closes browser tabs opened by the `Browser` instance.
+
+```ruby
+# connect to a long-running Chrome process
+browser = Ferrum::Browser.new(url: 'http://localhost:9222')
+
+browser.go_to("https://github.com/")
+
+# clean up, lest the tab stays there hanging forever
+browser.reset
+
+browser.quit
+```
 
 
 ## Thread safety ##

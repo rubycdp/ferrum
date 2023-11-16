@@ -181,7 +181,15 @@ describe Ferrum::Browser do
             proxy: { host: proxy.host, port: proxy.port, user: "u1", password: "p1" }
           )
 
-          browser.go_to("https://example.com")
+          if browser.headless_new?
+            expect { browser.go_to("https://example.com") }.to raise_error(
+              Ferrum::StatusError,
+              "Request to https://example.com failed (net::ERR_HTTP_RESPONSE_CODE_FAILURE)"
+            )
+          else
+            browser.go_to("https://example.com")
+          end
+
           expect(browser.network.status).to eq(407)
         ensure
           browser&.quit
@@ -234,7 +242,11 @@ describe Ferrum::Browser do
         let(:save_path) { "/tmp/ferrum" }
 
         it "saves an attachment" do
+          # Also https://github.com/puppeteer/puppeteer/issues/10161
+          skip "https://bugs.chromium.org/p/chromium/issues/detail?id=1444729" if browser.headless_new?
+
           browser.go_to("/#{filename}")
+          browser.downloads.wait
 
           expect(File.exist?("#{save_path}/#{filename}")).to be true
         ensure
@@ -250,6 +262,37 @@ describe Ferrum::Browser do
             browser.go_to("/#{filename}")
           end.to raise_error(Ferrum::Error, "supply absolute path for `:save_path` option")
         end
+      end
+    end
+
+    context "with error on initialize" do
+      it "stops process if an error is raised during process start" do
+        process = Ferrum::Browser::Process.new(Ferrum::Browser::Options.new(process_timeout: 0))
+        allow(Ferrum::Browser::Process).to receive(:new).and_return(process)
+        expect { Ferrum::Browser.new }.to raise_error(Ferrum::ProcessTimeoutError)
+        expect(process.pid).to be(nil)
+      end
+
+      it "stops process if an error is raised during client creation" do
+        process = Ferrum::Browser::Process.new(Ferrum::Browser::Options.new)
+        allow(Ferrum::Browser::Process).to receive(:new).and_return(process)
+
+        error = StandardError.new
+        allow(Ferrum::Browser::Client).to receive(:new).and_raise(error)
+
+        expect { Ferrum::Browser.new }.to raise_error(error)
+        expect(process.pid).to be(nil)
+      end
+
+      it "stops process if an error is raised during contexts creation" do
+        process = Ferrum::Browser::Process.new(Ferrum::Browser::Options.new)
+        allow(Ferrum::Browser::Process).to receive(:new).and_return(process)
+
+        error = StandardError.new
+        allow(Ferrum::Contexts).to receive(:new).and_raise(error)
+
+        expect { Ferrum::Browser.new }.to raise_error(error)
+        expect(process.pid).to be(nil)
       end
     end
   end
@@ -468,6 +511,7 @@ describe Ferrum::Browser do
         page.go_to("/ferrum/simple")
       end
 
+      sleep 1 # It may take longer to close the target
       expect(browser.contexts.size).to eq(1)
       expect(browser.targets.size).to eq(0)
     end
@@ -530,7 +574,15 @@ describe Ferrum::Browser do
         it "fails with wrong password" do
           page = browser.create_page(proxy: { host: proxy.host, port: proxy.port,
                                               user: options[:user], password: "$$" })
-          page.go_to("https://example.com")
+
+          if browser.headless_new?
+            expect { page.go_to("https://example.com") }.to raise_error(
+              Ferrum::StatusError,
+              "Request to https://example.com failed (net::ERR_HTTP_RESPONSE_CODE_FAILURE)"
+            )
+          else
+            page.go_to("https://example.com")
+          end
 
           expect(page.network.status).to eq(407)
         end

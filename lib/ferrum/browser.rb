@@ -21,14 +21,15 @@ module Ferrum
     delegate %i[go_to goto go back forward refresh reload stop wait_for_reload
                 at_css at_xpath css xpath current_url current_title url title
                 body doctype content=
-                headers cookies network
+                headers cookies network downloads
                 mouse keyboard
-                screenshot pdf mhtml viewport_size
+                screenshot pdf mhtml viewport_size device_pixel_ratio
                 frames frame_by main_frame
                 evaluate evaluate_on evaluate_async execute evaluate_func
                 add_script_tag add_style_tag bypass_csp
                 on position position=
-                playback_rate playback_rate=] => :page
+                playback_rate playback_rate=
+                disable_javascript set_viewport] => :page
     delegate %i[default_user_agent] => :process
 
     attr_reader :client, :process, :contexts, :options, :window_size, :base_url
@@ -178,7 +179,7 @@ module Ferrum
       block_given? ? yield(page) : page
     ensure
       if block_given?
-        page.close
+        page&.close
         context.dispose if new_context
       end
     end
@@ -265,16 +266,29 @@ module Ferrum
       VersionInfo.new(command("Browser.getVersion"))
     end
 
+    def headless_new?
+      process&.command&.headless_new?
+    end
+
     private
 
     def start
       Utils::ElapsedTime.start
       process_class = Utils::Platform.jruby? ? JrubyProcess : Process
-      @process = process_class.start(options)
-      @client = Client.new(@process.ws_url, self,
-                           logger: options.logger,
-                           ws_max_receive_size: options.ws_max_receive_size)
-      @contexts = Contexts.new(self)
+      @process = process_class.new(options)
+
+      begin
+        @process.start
+        @client = Client.new(
+          @process.ws_url, self,
+          logger: options.logger,
+          ws_max_receive_size: options.ws_max_receive_size
+        )
+        @contexts = Contexts.new(self)
+      rescue StandardError
+        @process.stop
+        raise
+      end
     end
   end
 end

@@ -104,16 +104,17 @@ module Ferrum
     def run
       options = { Host: host, Port: port, Threads: "0:4", workers: 0, daemon: false }
       config = Rack::Handler::Puma.config(middleware, options)
-      events = config.options[:Silent] ? ::Puma::Events.strings : ::Puma::Events.stdio
+      log_writer = config.options[:Silent] ? ::Puma::LogWriter.strings : ::Puma::LogWriter.stdio
+      config.options[:log_writer] = log_writer
 
-      events.log "Starting Puma"
-      events.log "* Version #{Puma::Const::PUMA_VERSION} , codename: #{Puma::Const::CODE_NAME}"
-      events.log "* Min threads: #{config.options[:min_threads]}, max threads: #{config.options[:max_threads]}"
+      log_writer.log "Starting Puma"
+      log_writer.log "* Version #{Puma::Const::PUMA_VERSION} , codename: #{Puma::Const::CODE_NAME}"
+      log_writer.log "* Min threads: #{config.options[:min_threads]}, max threads: #{config.options[:max_threads]}"
 
-      Puma::Server.new(config.app, events, config.options).tap do |s|
-        s.binder.parse(config.options[:binds], s.events)
-        s.min_threads = config.options[:min_threads]
-        s.max_threads = config.options[:max_threads]
+      Puma::Server.new(config.app, nil, config.options).tap do |s|
+        s.binder.parse(config.options[:binds], log_writer)
+        s.min_threads = config.options[:min_threads] if s.respond_to?(:min_threads=)
+        s.max_threads = config.options[:max_threads] if s.respond_to?(:max_threads=)
       end.run.join
     end
 
@@ -121,7 +122,7 @@ module Ferrum
       return false if @server_thread&.join(0)
 
       res = Net::HTTP.start(host, port, read_timeout: 2, max_retries: 0) { |h| h.get("/__identify__") }
-      return res.body == app.object_id.to_s if res.is_a?(Net::HTTPSuccess) || res.is_a?(Net::HTTPRedirection)
+      res.body == app.object_id.to_s if res.is_a?(Net::HTTPSuccess) || res.is_a?(Net::HTTPRedirection)
     rescue SystemCallError, Net::ReadTimeout
       false
     end

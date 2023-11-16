@@ -54,10 +54,10 @@ describe Ferrum::Network::Response do
       expect(responses[0].body).to include("ferrum with_js")
 
       expect(responses[1].url).to end_with("/ferrum/jquery.min.js")
-      expect(responses[1].body).to include("jQuery v1.11.3")
+      expect(responses[1].body).to include("jQuery v3.7.1")
 
       expect(responses[2].url).to end_with("/ferrum/jquery-ui.min.js")
-      expect(responses[2].body).to include("jQuery UI - v1.11.4")
+      expect(responses[2].body).to include("jQuery UI - v1.13.2")
 
       expect(responses[3].url).to end_with("/ferrum/test.js")
       expect(responses[3].body).to include("This is test.js file content")
@@ -73,13 +73,22 @@ describe Ferrum::Network::Response do
     end
   end
 
+  describe "#redirect?" do
+    it "captures errors" do
+      page.go_to("/redirect_again")
+
+      expect(page.body).to include("You landed")
+      expect(first_exchange.response.redirect?).to be
+    end
+  end
+
   describe "#body_size" do
     it "counts network traffic for each loaded resource" do
       page.go_to("/ferrum/with_js")
       responses = traffic.map(&:response)
       resources_size = {
-        %r{/ferrum/jquery.min.js$} => File.size("#{PROJECT_ROOT}/spec/support/public/jquery-1.11.3.min.js"),
-        %r{/ferrum/jquery-ui.min.js$} => File.size("#{PROJECT_ROOT}/spec/support/public/jquery-ui-1.11.4.min.js"),
+        %r{/ferrum/jquery.min.js$} => File.size("#{PROJECT_ROOT}/spec/support/public/jquery-3.7.1.min.js"),
+        %r{/ferrum/jquery-ui.min.js$} => File.size("#{PROJECT_ROOT}/spec/support/public/jquery-ui-1.13.2.min.js"),
         %r{/ferrum/test.js$} => File.size("#{PROJECT_ROOT}/spec/support/public/test.js"),
         %r{/ferrum/with_js$} => 2312
       }
