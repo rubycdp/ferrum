@@ -119,6 +119,17 @@ module Ferrum
       end
 
       #
+      # Determines if the exchange expects a response
+      #
+      # @return [Boolean]
+      #
+      def response_expected?
+        return true if request.nil?
+
+        !!request.response_expected?
+      end
+
+      #
       # Returns request's URL.
       #
       # @return [String, nil]

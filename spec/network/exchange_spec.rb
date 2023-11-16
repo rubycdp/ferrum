@@ -119,6 +119,16 @@ describe Ferrum::Network::Exchange do
     end
   end
 
+  describe "#response_expected?" do
+    it "determines if exchange expects a response" do
+      exchange = Ferrum::Network::Exchange.new(page, "1")
+      expect(exchange.response_expected?).to be true
+
+      exchange.request = Ferrum::Network::Request.new({"type" => "Ping"})
+      expect(exchange.response_expected?).to be false
+    end
+  end
+
   describe "#pending?" do
     it "determines if exchange is not fully loaded" do
       allow(page).to receive(:timeout) { 2 }
