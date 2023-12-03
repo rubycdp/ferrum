@@ -47,13 +47,23 @@ describe Ferrum::Network do
     expect(page.body).to include("test_cookie")
   end
 
-  it "#idle?" do
-    page.go_to("/ferrum/with_slow_ajax_connection")
-    expect(page.at_xpath("//h1[text() = 'Slow AJAX']")).to be
+  describe "#idle?" do
+    it "waits for network to be idle" do
+      page.go_to("/ferrum/with_slow_ajax_connection")
+      expect(page.at_xpath("//h1[text() = 'Slow AJAX']")).to be
 
-    expect(network.idle?).to be_falsey
-    network.wait_for_idle
-    expect(network.idle?).to be_truthy
+      expect(network.idle?).to be_falsey
+      network.wait_for_idle
+      expect(network.idle?).to be_truthy
+    end
+
+    it "does not wait for responses to PING requests" do
+      page.go_to("/ferrum/link_with_ping")
+      page.at_css("a").click
+
+      network.wait_for_idle
+      expect(network.idle?).to be_truthy
+    end
   end
 
   it "#total_connections" do

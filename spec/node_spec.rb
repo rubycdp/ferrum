@@ -10,6 +10,16 @@ describe Ferrum::Node do
       expect(browser.current_url).to eq(base_url("/"))
     end
 
+    it "fires a ping request for anchor elements" do
+      browser.go_to("/ferrum/link_with_ping")
+
+      expect(browser.network.traffic.length).to eq(1) 
+      browser.at_css("a").click
+
+      # 1 for first load, 1 for load of new url, 1 for ping = 3 total
+      expect(browser.network.traffic.length).to eq(3)
+    end
+
     it "does not run into content quads error" do
       browser.go_to("/ferrum/index")
 
