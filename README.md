@@ -25,6 +25,8 @@ going to crawl sites you better use Ferrum or
 * [Vessel](https://github.com/rubycdp/vessel) high-level web crawling framework
 based on Ferrum and Mechanize.
 
+The development is done in [![RubyMine](https://resources.jetbrains.com/storage/products/company/brand/logos/RubyMine_icon.svg?width=10px)](https://jb.gg/ruby)
+provided by [OSS license](https://jb.gg/OpenSourceSupport).
 
 ## Index
 
