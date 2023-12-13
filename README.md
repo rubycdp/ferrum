@@ -166,6 +166,7 @@ Ferrum::Browser.new(options)
   * `:pending_connection_errors` (Boolean) - When main frame is still waiting for slow responses while timeout is
       reached `PendingConnectionsError` is raised. It's better to figure out why you have slow responses and fix or
       block them rather than turn this setting off. Default is true.
+  * `:resize_windows` (Boolean) - Determines whether windows are automatically set to the window_size. Default is true.
   * `:browser_name` (Symbol) - `:chrome` by default, only experimental support
       for `:firefox` for now.
   * `:browser_path` (String) - Path to Chrome binary, you can also set ENV

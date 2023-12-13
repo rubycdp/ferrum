@@ -16,7 +16,7 @@ module Ferrum
                   :js_errors, :base_url, :slowmo, :pending_connection_errors,
                   :url, :env, :process_timeout, :browser_name, :browser_path,
                   :save_path, :extensions, :proxy, :port, :host, :headless,
-                  :ignore_default_browser_options, :browser_options, :xvfb
+                  :ignore_default_browser_options, :browser_options, :xvfb, :resize_windows
 
       def initialize(options = nil)
         @options = Hash(options&.dup)
@@ -27,6 +27,7 @@ module Ferrum
         @js_errors = @options.fetch(:js_errors, false)
         @headless = @options.fetch(:headless, HEADLESS)
         @pending_connection_errors = @options.fetch(:pending_connection_errors, true)
+        @resize_windows = @options.fetch(:resize, true)
         @process_timeout = @options.fetch(:process_timeout, PROCESS_TIMEOUT)
         @browser_options = @options.fetch(:browser_options, {})
         @slowmo = @options[:slowmo].to_f

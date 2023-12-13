@@ -75,6 +75,9 @@ module Ferrum
     #   why you have slow responses and fix or block them rather than turn this
     #   setting off.
     #
+    # @option options [Boolean] :resize_windows (true)
+    #   Whether browsers windows are automatically set to the window_size option.
+    #
     # @option options [:chrome, :firefox] :browser_name (:chrome)
     #   Sets the browser's name. **Note:** only experimental support for
     #   `:firefox` for now.

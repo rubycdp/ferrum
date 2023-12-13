@@ -404,8 +404,10 @@ module Ferrum
 
       inject_extensions
 
-      width, height = @browser.window_size
-      resize(width: width, height: height)
+      if @browser.options.resize_windows 
+        width, height = @browser.window_size
+        resize(width: width, height: height)
+      end
 
       response = command("Page.getNavigationHistory")
       transition_type = response.dig("entries", 0, "transitionType")
