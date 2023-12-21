@@ -353,13 +353,6 @@ describe Ferrum::Browser do
       expect(browser.viewport_size).to eq([200, 400])
     end
 
-    it "inherits size for a new window" do
-      browser.go_to
-      browser.resize(width: 1200, height: 800)
-      page = browser.create_page
-      expect(page.viewport_size).to eq [1200, 800]
-    end
-
     it "resizes windows" do
       browser.go_to
 

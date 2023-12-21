@@ -28,10 +28,10 @@ module Ferrum
                 add_script_tag add_style_tag bypass_csp
                 on position position=
                 playback_rate playback_rate=
-                disable_javascript set_viewport] => :page
+                disable_javascript set_viewport resize] => :page
     delegate %i[default_user_agent] => :process
 
-    attr_reader :client, :process, :contexts, :options, :window_size, :base_url
+    attr_reader :client, :process, :contexts, :options, :base_url
     attr_accessor :timeout
 
     #
@@ -126,7 +126,6 @@ module Ferrum
       @client = @process = @contexts = nil
 
       @timeout = @options.timeout
-      @window_size = @options.window_size
       @base_url = @options.base_url if @options.base_url
 
       start
@@ -228,7 +227,6 @@ module Ferrum
     #   browser.quit
     #
     def reset
-      @window_size = options.window_size
       contexts.reset
     end
 
@@ -243,11 +241,6 @@ module Ferrum
       @client.close
       @process.stop
       @client = @process = @contexts = nil
-    end
-
-    def resize(**options)
-      @window_size = [options[:width], options[:height]]
-      page.resize(**options)
     end
 
     def crash
