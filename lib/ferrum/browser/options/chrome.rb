@@ -64,7 +64,6 @@ module Ferrum
         def merge_required(flags, options, user_data_dir)
           flags = flags.merge("remote-debugging-port" => options.port,
                               "remote-debugging-address" => options.host,
-                              # Doesn't work on MacOS, so we need to set it by CDP
                               "window-size" => options.window_size&.join(","),
                               "user-data-dir" => user_data_dir)
 

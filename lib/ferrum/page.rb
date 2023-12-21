@@ -404,9 +404,6 @@ module Ferrum
 
       inject_extensions
 
-      width, height = @browser.window_size
-      resize(width: width, height: height)
-
       response = command("Page.getNavigationHistory")
       transition_type = response.dig("entries", 0, "transitionType")
       return if transition_type == "auto_toplevel"
