@@ -70,6 +70,13 @@ module Ferrum
         @thread.kill unless @thread.join(1)
       end
 
+      def inspect
+        "#<#{self.class} " \
+          "@command_id=#{@command_id.inspect} " \
+          "@pendings=#{@pendings.inspect} " \
+          "@ws=#{@ws.inspect}>"
+      end
+
       private
 
       def build_message(method, params)
