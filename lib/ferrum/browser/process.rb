@@ -122,6 +122,17 @@ module Ferrum
         start
       end
 
+      def inspect
+        "#<#{self.class} " \
+          "@user_data_dir=#{@user_data_dir.inspect} " \
+          "@command=#<#{@command.class}:#{@command.object_id}> " \
+          "@default_user_agent=#{@default_user_agent.inspect} " \
+          "@ws_url=#{@ws_url.inspect} " \
+          "@v8_version=#{@v8_version.inspect} " \
+          "@browser_version=#{@browser_version.inspect} " \
+          "@webkit_version=#{@webkit_version.inspect}>"
+      end
+
       private
 
       def kill(pid)

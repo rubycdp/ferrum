@@ -47,6 +47,10 @@ module Ferrum
         [path] + @flags.map { |k, v| v.nil? ? "--#{k}" : "--#{k}=#{v}" }
       end
 
+      def to_s
+        to_a.join(" \\ \n  ")
+      end
+
       private
 
       def merge_options
