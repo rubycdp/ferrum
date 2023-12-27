@@ -11,13 +11,14 @@ jobs:
      runs-on: ubuntu-latest
      steps:
        - name: Checkout code
-         uses: actions/checkout@v3
+         uses: actions/checkout@v4
 
        - name: Setup Ruby
          uses: ruby/setup-ruby@v1
          with:
            ruby-version: ${{ matrix.ruby }}
            bundler-cache: true
+
        - name: Run linters
          run: |
            bundle exec rubocop --parallel
