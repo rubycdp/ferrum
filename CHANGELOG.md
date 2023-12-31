@@ -11,6 +11,7 @@
 ### Changed
 - `Ferrum::Page#screeshot` accepts :area option [#410]
 - Resizing page on creation is gone and moved to Cuprite [#427]
+- Min Ruby version is 2.7
 
 ### Fixed
 
