@@ -872,15 +872,19 @@ browser.evaluate("[window.scrollX, window.scrollY]")
 
 #### evaluate_async(expression, wait_time, \*args)
 
-Evaluate asynchronous expression and return result
+Evaluate an asynchronous expression and return result
 
-* expression `String` should be valid JavaScript
+* expression `String` should be valid JavaScript, and include the fulfill callback: `__f()`
 * wait_time How long we should wait for Promise to resolve or reject
 * args `Object` you can pass arguments, though it should be a valid `Node` or a
 simple value.
 
 ```ruby
-browser.evaluate_async(%(arguments[0]({foo: "bar"})), 5) # => { "foo" => "bar" }
+browser.evaluate_async <<JS, 5
+  fetch("https://www.httpbin.org/json")
+    .then(response => response.json())
+    .then(body => __f(body))
+JS
 ```
 
 #### execute(expression, \*args)
