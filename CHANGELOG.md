@@ -12,6 +12,8 @@
 - `Ferrum::Page#screeshot` accepts :area option [#410]
 - Resizing page on creation is gone and moved to Cuprite [#427]
 - Min Ruby version is 2.7
+- Refactored internal API of `Browser`, `Page`, `Context`, `Contexts`, `Target` instead of passing browser and making
+cyclic dependency on the browser instance, we pass now a simple client [#431]
 
 ### Fixed
 
