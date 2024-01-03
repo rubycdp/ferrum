@@ -13,7 +13,7 @@ gem "redcarpet", require: false, platform: :mri
 gem "rspec", "~> 3.8"
 gem "rubocop", "~> 1.22"
 gem "rubocop-rake", require: false
-gem "sinatra", "~> 2.0"
+gem "sinatra", "~> 3.2"
 gem "yard", "~> 0.9", require: false
 
 gemspec
