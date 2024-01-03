@@ -15,8 +15,8 @@ module Ferrum
       attr_reader :window_size, :logger, :ws_max_receive_size,
                   :js_errors, :base_url, :slowmo, :pending_connection_errors,
                   :url, :env, :process_timeout, :browser_name, :browser_path,
-                  :save_path, :extensions, :proxy, :port, :host, :headless,
-                  :ignore_default_browser_options, :browser_options, :xvfb
+                  :save_path, :proxy, :port, :host, :headless, :browser_options,
+                  :ignore_default_browser_options, :xvfb
       attr_accessor :timeout, :ws_url, :default_user_agent
 
       def initialize(options = nil)
@@ -43,9 +43,6 @@ module Ferrum
         @logger = parse_logger(@options[:logger])
         @base_url = parse_base_url(@options[:base_url]) if @options[:base_url]
         @url = @options[:url].to_s if @options[:url]
-        @extensions = Array(@options[:extensions]).map do |extension|
-          (extension.is_a?(Hash) && extension[:source]) || File.read(extension)
-        end
 
         @options.freeze
         @browser_options.freeze
@@ -53,6 +50,12 @@ module Ferrum
 
       def base_url=(value)
         @base_url = parse_base_url(value)
+      end
+
+      def extensions
+        @extensions ||= Array(@options[:extensions]).map do |extension|
+          (extension.is_a?(Hash) && extension[:source]) || File.read(extension)
+        end
       end
 
       def validate_proxy(options)
