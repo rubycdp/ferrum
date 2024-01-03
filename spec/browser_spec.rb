@@ -298,13 +298,10 @@ describe Ferrum::Browser do
   end
 
   describe "#crash" do
-    it "raises an error" do
-      expect { browser.crash }.to raise_error(Ferrum::DeadBrowserError)
-    end
-
-    it "restarts the client" do
+    it "works after crash with explicit restart" do
       expect { browser.crash }.to raise_error(Ferrum::DeadBrowserError)
 
+      browser.restart
       browser.go_to
 
       expect(browser.body).to include("Hello world")
@@ -516,12 +513,13 @@ describe Ferrum::Browser do
         page = browser.create_page(new_context: true)
         page.go_to("/ferrum/simple")
 
+        context = browser.contexts[page.context_id]
         expect(browser.contexts.size).to eq(1)
-        expect(page.context.targets.size).to eq(1)
+        expect(context.targets.size).to eq(1)
 
-        page.context.create_page
-        expect(page.context.targets.size).to eq(2)
-        page.context.dispose
+        context.create_page
+        expect(context.targets.size).to eq(2)
+        context.dispose
         expect(browser.contexts.size).to eq(0)
       end
 
@@ -550,13 +548,13 @@ describe Ferrum::Browser do
           page.go_to("https://example.com")
 
           expect(browser.contexts.size).to eq(1)
-          expect(page.context.targets.size).to eq(1)
+          expect(browser.contexts[page.context_id].targets.size).to eq(1)
           expect(page.network.status).to eq(200)
           expect(page.body).to include("Example Domain")
 
           page = browser.create_page(proxy: { host: proxy.host, port: proxy.port })
           expect(browser.contexts.size).to eq(2)
-          page.context.dispose
+          browser.contexts[page.context_id].dispose
           expect(browser.contexts.size).to eq(1)
         end
       end

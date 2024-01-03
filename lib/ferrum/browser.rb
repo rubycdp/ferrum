@@ -29,10 +29,11 @@ module Ferrum
                 on position position=
                 playback_rate playback_rate=
                 disable_javascript set_viewport resize] => :page
-    delegate %i[default_user_agent] => :process
 
-    attr_reader :client, :process, :contexts, :options, :base_url
-    attr_accessor :timeout
+    attr_reader :client, :process, :contexts, :options
+
+    delegate %i[timeout timeout= base_url base_url= default_user_agent default_user_agent= extensions] => :options
+    delegate %i[command] => :client
 
     #
     # Initializes the browser.
@@ -125,25 +126,7 @@ module Ferrum
       @options = Options.new(options)
       @client = @process = @contexts = nil
 
-      @timeout = @options.timeout
-      @base_url = @options.base_url if @options.base_url
-
       start
-    end
-
-    #
-    # Sets the base URL.
-    #
-    # @param [String] value
-    #   The new base URL value.
-    #
-    # @raise [ArgumentError] when path is not absolute or doesn't include schema
-    #
-    # @return [Addressable::URI]
-    #   The parsed base URI value.
-    #
-    def base_url=(value)
-      @base_url = options.parse_base_url(value)
     end
 
     #
@@ -163,7 +146,7 @@ module Ferrum
                params = {}
 
                if proxy
-                 options.parse_proxy(proxy)
+                 options.validate_proxy(proxy)
                  params.merge!(proxyServer: "#{proxy[:host]}:#{proxy[:port]}")
                  params.merge!(proxyBypassList: proxy[:bypass]) if proxy[:bypass]
                end
@@ -182,12 +165,6 @@ module Ferrum
       end
     end
 
-    def extensions
-      @extensions ||= Array(options.extensions).map do |ext|
-        (ext.is_a?(Hash) && ext[:source]) || File.read(ext)
-      end
-    end
-
     #
     # Evaluate JavaScript to modify things before a page load.
     #
@@ -203,13 +180,6 @@ module Ferrum
     #
     def evaluate_on_new_document(expression)
       extensions << expression
-    end
-
-    def command(*args)
-      @client.command(*args)
-    rescue DeadBrowserError
-      restart
-      raise
     end
 
     #
@@ -270,12 +240,11 @@ module Ferrum
 
       begin
         @process.start
-        @client = Client.new(
-          @process.ws_url, self,
-          logger: options.logger,
-          ws_max_receive_size: options.ws_max_receive_size
-        )
-        @contexts = Contexts.new(self)
+        @options.ws_url = @process.ws_url&.merge(path: "/")
+        @options.default_user_agent = @process.default_user_agent
+
+        @client = Client.new(@process.ws_url, options)
+        @contexts = Contexts.new(@client)
       rescue StandardError
         @process.stop
         raise

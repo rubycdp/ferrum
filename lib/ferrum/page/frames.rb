@@ -16,8 +16,8 @@ module Ferrum
       # @return [Array<Frame>]
       #
       # @example
-      #   browser.go_to("https://www.w3schools.com/tags/tag_frame.asp")
-      #   browser.frames # =>
+      #   page.go_to("https://www.w3schools.com/tags/tag_frame.asp")
+      #   page.frames # =>
       #   # [
       #   #   #<Ferrum::Frame
       #   #     @id="C6D104CE454A025FBCF22B98DE612B12"
@@ -39,7 +39,7 @@ module Ferrum
       # Find frame by given options.
       #
       # @param [String] id
-      #   Unique frame's id that browser provides.
+      #   Unique frame's id that page provides.
       #
       # @param [String] name
       #   Frame's name if there's one.
@@ -51,7 +51,7 @@ module Ferrum
       #   The matching frame.
       #
       # @example
-      #   browser.frame_by(id: "C6D104CE454A025FBCF22B98DE612B12")
+      #   page.frame_by(id: "C6D104CE454A025FBCF22B98DE612B12")
       #
       def frame_by(id: nil, name: nil, execution_id: nil)
         if id

@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "forwardable"
 require "ferrum/browser/subscriber"
 require "ferrum/browser/web_socket"
 
@@ -8,11 +9,16 @@ module Ferrum
     class Client
       INTERRUPTIONS = %w[Fetch.requestPaused Fetch.authRequired].freeze
 
-      def initialize(ws_url, connectable, logger: nil, ws_max_receive_size: nil, id_starts_with: 0)
-        @connectable = connectable
-        @command_id = id_starts_with
+      extend Forwardable
+      delegate %i[timeout timeout=] => :options
+
+      attr_reader :options
+
+      def initialize(ws_url, options)
+        @command_id = 0
+        @options = options
         @pendings = Concurrent::Hash.new
-        @ws = WebSocket.new(ws_url, ws_max_receive_size, logger)
+        @ws = WebSocket.new(ws_url, options.ws_max_receive_size, options.logger)
         @subscriber, @interrupter = Subscriber.build(2)
 
         @thread = Thread.new do
@@ -39,7 +45,7 @@ module Ferrum
         message = build_message(method, params)
         @pendings[message[:id]] = pending
         @ws.send_message(message)
-        data = pending.value!(@connectable.timeout)
+        data = pending.value!(timeout)
         @pendings.delete(message[:id])
 
         raise DeadBrowserError if data.nil? && @ws.messages.closed?

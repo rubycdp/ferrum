@@ -172,7 +172,7 @@ module Ferrum
     private
 
     def default_domain
-      URI.parse(@page.browser.base_url).host if @page.browser.base_url
+      URI.parse(@page.base_url).host if @page.base_url
     end
   end
 end

@@ -64,7 +64,7 @@ There's no official Chrome or Chromium package for Linux don't install it this
 way because it's either outdated or unofficial, both are bad. Download it from
 official source for [Chrome](https://www.google.com/chrome/) or
 [Chromium](https://www.chromium.org/getting-involved/download-chromium).
-Chrome binary should be in the `PATH` or `BROWSER_PATH` or you can pass it as an
+Chrome binary should be in the `PATH` or `BROWSER_PATH` and you can pass it as an
 option to browser instance see `:browser_path` in
 [Customization](https://github.com/rubycdp/ferrum#customization).
 
@@ -86,14 +86,17 @@ browser.screenshot(path: "google.png")
 browser.quit
 ```
 
-Interact with a page:
+When you work with browser instance Ferrum creates and maintains a default page for you, in fact all the methods above
+are sent to the `page` instance that is created in the `default_context` of the `browser` instance. You can interact
+with a page created manually and this is preferred:
 
 ```ruby
 browser = Ferrum::Browser.new
-browser.go_to("https://google.com")
-input = browser.at_xpath("//input[@name='q']")
+page = browser.create_page
+page.go_to("https://google.com")
+input = page.at_xpath("//input[@name='q']")
 input.focus.type("Ruby headless driver for Chrome", :Enter)
-browser.at_css("a > h3").text # => "rubycdp/ferrum: Ruby Chrome/Chromium driver - GitHub"
+page.at_css("a > h3").text # => "rubycdp/ferrum: Ruby Chrome/Chromium driver - GitHub"
 browser.quit
 ```
 
@@ -101,8 +104,9 @@ Evaluate some JavaScript and get full width/height:
 
 ```ruby
 browser = Ferrum::Browser.new
-browser.go_to("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
-width, height = browser.evaluate <<~JS
+page = browser.create_page
+page.go_to("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
+width, height = page.evaluate <<~JS
   [document.documentElement.offsetWidth,
    document.documentElement.offsetHeight]
 JS
@@ -115,8 +119,9 @@ Do any mouse movements you like:
 ```ruby
 # Trace a 100x100 square
 browser = Ferrum::Browser.new
-browser.go_to("https://google.com")
-browser.mouse
+page = browser.create_page
+page.go_to("https://google.com")
+page.mouse
   .move(x: 0, y: 0)
   .down
   .move(x: 0, y: 100)
@@ -201,7 +206,7 @@ Navigate page to.
   configuring driver.
 
 ```ruby
-browser.go_to("https://github.com/")
+page.go_to("https://github.com/")
 ```
 
 #### back
@@ -209,9 +214,9 @@ browser.go_to("https://github.com/")
 Navigate to the previous page in history.
 
 ```ruby
-browser.go_to("https://github.com/")
-browser.at_xpath("//a").click
-browser.back
+page.go_to("https://github.com/")
+page.at_xpath("//a").click
+page.back
 ```
 
 #### forward
@@ -219,10 +224,10 @@ browser.back
 Navigate to the next page in history.
 
 ```ruby
-browser.go_to("https://github.com/")
-browser.at_xpath("//a").click
-browser.back
-browser.forward
+page.go_to("https://github.com/")
+page.at_xpath("//a").click
+page.back
+page.forward
 ```
 
 #### refresh
@@ -230,8 +235,8 @@ browser.forward
 Reload current page.
 
 ```ruby
-browser.go_to("https://github.com/")
-browser.refresh
+page.go_to("https://github.com/")
+page.refresh
 ```
 
 #### stop
@@ -239,8 +244,8 @@ browser.refresh
 Stop all navigations and loading pending resources on the page
 
 ```ruby
-browser.go_to("https://github.com/")
-browser.stop
+page.go_to("https://github.com/")
+page.stop
 ```
 
 #### position = \*\*options
@@ -275,8 +280,8 @@ provided node.
     * :within `Node` | `nil`
 
 ```ruby
-browser.go_to("https://github.com/")
-browser.at_css("a[aria-label='Issues you created']") # => Node
+page.go_to("https://github.com/")
+page.at_css("a[aria-label='Issues you created']") # => Node
 ```
 
 
@@ -290,8 +295,8 @@ document or provided node.
   * :within `Node` | `nil`
 
 ```ruby
-browser.go_to("https://github.com/")
-browser.css("a[aria-label='Issues you created']") # => [Node]
+page.go_to("https://github.com/")
+page.css("a[aria-label='Issues you created']") # => [Node]
 ```
 
 #### at_xpath(selector, \*\*options) : `Node` | `nil`
@@ -303,8 +308,8 @@ Find node by xpath.
   * :within `Node` | `nil`
 
 ```ruby
-browser.go_to("https://github.com/")
-browser.at_xpath("//a[@aria-label='Issues you created']") # => Node
+page.go_to("https://github.com/")
+page.at_xpath("//a[@aria-label='Issues you created']") # => Node
 ```
 
 #### xpath(selector, \*\*options) : `Array<Node>` | `[]`
@@ -316,8 +321,8 @@ Find nodes by xpath.
   * :within `Node` | `nil`
 
 ```ruby
-browser.go_to("https://github.com/")
-browser.xpath("//a[@aria-label='Issues you created']") # => [Node]
+page.go_to("https://github.com/")
+page.xpath("//a[@aria-label='Issues you created']") # => [Node]
 ```
 
 #### current_url : `String`
@@ -325,8 +330,8 @@ browser.xpath("//a[@aria-label='Issues you created']") # => [Node]
 Returns current top window location href.
 
 ```ruby
-browser.go_to("https://google.com/")
-browser.current_url # => "https://www.google.com/"
+page.go_to("https://google.com/")
+page.current_url # => "https://www.google.com/"
 ```
 
 #### current_title : `String`
@@ -334,8 +339,8 @@ browser.current_url # => "https://www.google.com/"
 Returns current top window title
 
 ```ruby
-browser.go_to("https://google.com/")
-browser.current_title # => "Google"
+page.go_to("https://google.com/")
+page.current_title # => "Google"
 ```
 
 #### body : `String`
@@ -343,8 +348,8 @@ browser.current_title # => "Google"
 Returns current page's html.
 
 ```ruby
-browser.go_to("https://google.com/")
-browser.body # => '<html itemscope="" itemtype="http://schema.org/WebPage" lang="ru"><head>...
+page.go_to("https://google.com/")
+page.body # => '<html itemscope="" itemtype="http://schema.org/WebPage" lang="ru"><head>...
 ```
 
 
@@ -372,19 +377,19 @@ Saves screenshot on a disk or returns it as base64.
   * :background_color `Ferrum::RGBA.new(0, 0, 0, 0.0)` to have specific background color
 
 ```ruby
-browser.go_to("https://google.com/")
+page.go_to("https://google.com/")
 # Save on the disk in PNG
-browser.screenshot(path: "google.png") # => 134660
+page.screenshot(path: "google.png") # => 134660
 # Save on the disk in JPG
-browser.screenshot(path: "google.jpg") # => 30902
+page.screenshot(path: "google.jpg") # => 30902
 # Save to Base64 the whole page not only viewport and reduce quality
-browser.screenshot(full: true, quality: 60, encoding: :base64) # "iVBORw0KGgoAAAANSUhEUgAABAAAAAMACAYAAAC6uhUNAAAAAXNSR0IArs4c6Q...
+page.screenshot(full: true, quality: 60, encoding: :base64) # "iVBORw0KGgoAAAANSUhEUgAABAAAAAMACAYAAAC6uhUNAAAAAXNSR0IArs4c6Q...
 # Save on the disk with the selected element in PNG
-browser.screenshot(path: "google.png", selector: 'textarea') # => 11340
+page.screenshot(path: "google.png", selector: 'textarea') # => 11340
 # Save to Base64 with an area of the page in PNG
-browser.screenshot(path: "google.png", area: { x: 0, y: 0, width: 400, height: 300 }) # => 54239
+page.screenshot(path: "google.png", area: { x: 0, y: 0, width: 400, height: 300 }) # => 54239
 # Save with specific background color
-browser.screenshot(background_color: Ferrum::RGBA.new(0, 0, 0, 0.0))
+page.screenshot(background_color: Ferrum::RGBA.new(0, 0, 0, 0.0))
 ```
 
 #### pdf(\*\*options) : `String` | `Boolean`
@@ -405,9 +410,9 @@ Saves PDF on a disk or returns it as base64.
   * See other [native options](https://chromedevtools.github.io/devtools-protocol/tot/Page#method-printToPDF) you can pass
 
 ```ruby
-browser.go_to("https://google.com/")
+page.go_to("https://google.com/")
 # Save to disk as a PDF
-browser.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => true
+page.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => true
 ```
 
 #### mhtml(\*\*options) : `String` | `Integer`
@@ -418,14 +423,14 @@ Saves MHTML on a disk or returns it as a string.
   * :path `String` to save a file on the disk.
 
 ```ruby
-browser.go_to("https://google.com/")
-browser.mhtml(path: "google.mhtml") # => 87742
+page.go_to("https://google.com/")
+page.mhtml(path: "google.mhtml") # => 87742
 ```
 
 
 ## Network
 
-`browser.network`
+`page.network`
 
 #### traffic `Array<Network::Exchange>`
 
@@ -433,8 +438,8 @@ Returns all information about network traffic as `Network::Exchange` instance
 which in general is a wrapper around `request`, `response` and `error`.
 
 ```ruby
-browser.go_to("https://github.com/")
-browser.network.traffic # => [#<Ferrum::Network::Exchange, ...]
+page.go_to("https://github.com/")
+page.network.traffic # => [#<Ferrum::Network::Exchange, ...]
 ```
 
 #### request : `Network::Request`
@@ -442,8 +447,8 @@ browser.network.traffic # => [#<Ferrum::Network::Exchange, ...]
 Page request of the main frame.
 
 ```ruby
-browser.go_to("https://github.com/")
-browser.network.request # => #<Ferrum::Network::Request...
+page.go_to("https://github.com/")
+page.network.request # => #<Ferrum::Network::Request...
 ```
 
 #### response : `Network::Response`
@@ -451,8 +456,8 @@ browser.network.request # => #<Ferrum::Network::Request...
 Page response of the main frame.
 
 ```ruby
-browser.go_to("https://github.com/")
-browser.network.response # => #<Ferrum::Network::Response...
+page.go_to("https://github.com/")
+page.network.response # => #<Ferrum::Network::Response...
 ```
 
 #### status : `Integer`
@@ -461,8 +466,8 @@ Contains the status code of the main page response (e.g., 200 for a
 success). This is just a shortcut for `response.status`.
 
 ```ruby
-browser.go_to("https://github.com/")
-browser.network.status # => 200
+page.go_to("https://github.com/")
+page.network.status # => 200
 ```
 
 #### wait_for_idle(\*\*options)
@@ -478,22 +483,22 @@ Waits for network idle or raises `Ferrum::TimeoutError` error
     by default
 
 ```ruby
-browser.go_to("https://example.com/")
-browser.at_xpath("//a[text() = 'No UI changes button']").click
-browser.network.wait_for_idle
+page.go_to("https://example.com/")
+page.at_xpath("//a[text() = 'No UI changes button']").click
+page.network.wait_for_idle
 ```
 
 #### clear(type)
 
-Clear browser's cache or collected traffic.
+Clear page's cache or collected traffic.
 
 * type `Symbol` it is either `:traffic` or `:cache`
 
 ```ruby
-traffic = browser.network.traffic # => []
-browser.go_to("https://github.com/")
+traffic = page.network.traffic # => []
+page.go_to("https://github.com/")
 traffic.size # => 51
-browser.network.clear(:traffic)
+page.network.clear(:traffic)
 traffic.size # => 0
 ```
 
@@ -509,8 +514,9 @@ continue them.
 
 ```ruby
 browser = Ferrum::Browser.new
-browser.network.intercept
-browser.on(:request) do |request|
+page = browser.create_page
+page.network.intercept
+page.on(:request) do |request|
   if request.match?(/bla-bla/)
     request.abort
   elsif request.match?(/lorem/)
@@ -519,7 +525,7 @@ browser.on(:request) do |request|
     request.continue
   end
 end
-browser.go_to("https://google.com")
+page.go_to("https://google.com")
 ```
 
 #### authorize(\*\*options, &block)
@@ -534,10 +540,10 @@ If site or proxy uses authorization you can provide credentials using this metho
 care about unwanted requests just call `request.continue`.
 
 ```ruby
-browser.network.authorize(user: "login", password: "pass") { |req| req.continue }
-browser.go_to("http://example.com/authenticated")
-puts browser.network.status # => 200
-puts browser.body # => Welcome, authenticated client
+page.network.authorize(user: "login", password: "pass") { |req| req.continue }
+page.go_to("http://example.com/authenticated")
+puts page.network.status # => 200
+puts page.body # => Welcome, authenticated client
 ```
 
 Since Chrome implements authorize using request interception you must continue or abort authorized requests. If you
@@ -546,8 +552,9 @@ block, so this is version doesn't pass block and can work just fine:
 
 ```ruby
 browser = Ferrum::Browser.new
-browser.network.intercept
-browser.on(:request) do |request|
+page = browser.create_page
+page.network.intercept
+page.on(:request) do |request|
   if request.resource_type == "Image"
     request.abort
   else
@@ -555,9 +562,9 @@ browser.on(:request) do |request|
   end
 end
 
-browser.network.authorize(user: "login", password: "pass", type: :proxy)
+page.network.authorize(user: "login", password: "pass", type: :proxy)
 
-browser.go_to("https://google.com")
+page.go_to("https://google.com")
 ```
 
 You used to call `authorize` method without block, but since it's implemented using request interception there could be
@@ -580,8 +587,8 @@ Activates emulation of network conditions.
     bluetooth, ethernet, wifi, wimax, other. `nil` by default
 
 ```ruby
-browser.network.emulate_network_conditions(connection_type: "cellular2g")
-browser.go_to("https://github.com/")
+page.network.emulate_network_conditions(connection_type: "cellular2g")
+page.go_to("https://github.com/")
 ```
 
 #### offline_mode
@@ -589,8 +596,8 @@ browser.go_to("https://github.com/")
 Activates offline mode for a page.
 
 ```ruby
-browser.network.offline_mode
-browser.go_to("https://github.com/") # => Ferrum::StatusError (Request to https://github.com/ failed(net::ERR_INTERNET_DISCONNECTED))
+page.network.offline_mode
+page.go_to("https://github.com/") # => Ferrum::StatusError (Request to https://github.com/ failed(net::ERR_INTERNET_DISCONNECTED))
 ```
 
 #### cache(disable: `Boolean`)
@@ -598,21 +605,21 @@ browser.go_to("https://github.com/") # => Ferrum::StatusError (Request to https:
 Toggles ignoring cache for each request. If true, cache will not be used.
 
 ```ruby
-browser.network.cache(disable: true)
+page.network.cache(disable: true)
 ```
 
 
 ## Downloads
 
-`browser.downloads`
+`page.downloads`
 
 #### files `Array<Hash>`
 
 Returns all information about downloaded files as a `Hash`.
 
 ```ruby
-browser.go_to("http://localhost/attachment.pdf")
-browser.downloads.files # => [{"frameId"=>"E3316DF1B5383D38F8ADF7485005FDE3", "guid"=>"11a68745-98ac-4d54-9b57-9f9016c268b3", "url"=>"http://localhost/attachment.pdf", "suggestedFilename"=>"attachment.pdf", "totalBytes"=>4911, "receivedBytes"=>4911, "state"=>"completed"}]
+page.go_to("http://localhost/attachment.pdf")
+page.downloads.files # => [{"frameId"=>"E3316DF1B5383D38F8ADF7485005FDE3", "guid"=>"11a68745-98ac-4d54-9b57-9f9016c268b3", "url"=>"http://localhost/attachment.pdf", "suggestedFilename"=>"attachment.pdf", "totalBytes"=>4911, "receivedBytes"=>4911, "state"=>"completed"}]
 ```
 
 #### wait(timeout)
@@ -620,15 +627,15 @@ browser.downloads.files # => [{"frameId"=>"E3316DF1B5383D38F8ADF7485005FDE3", "g
 Waits until the download is finished.
 
 ```ruby
-browser.go_to("http://localhost/attachment.pdf")
-browser.downloads.wait
+page.go_to("http://localhost/attachment.pdf")
+page.downloads.wait
 ```
 
 or
 
 ```ruby
-browser.go_to("http://localhost/page")
-browser.downloads.wait { browser.at_css("#download").click }
+page.go_to("http://localhost/page")
+page.downloads.wait { page.at_css("#download").click }
 ```
 
 #### set_behavior(\*\*options)
@@ -640,8 +647,8 @@ Sets behavior in case of file to be downloaded.
   * :behavior `Symbol` `deny | allow | allowAndName | default`, `allow` by default
 
 ```ruby
-browser.go_to("https://example.com/")
-browser.downloads.set_behavior(save_path: "/tmp", behavior: :allow)
+page.go_to("https://example.com/")
+page.downloads.set_behavior(save_path: "/tmp", behavior: :allow)
 ```
 
 
@@ -650,13 +657,13 @@ browser.downloads.set_behavior(save_path: "/tmp", behavior: :allow)
 You can set a proxy with a `:proxy` option:
 
 ```ruby
-browser = Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800", user: "user", password: "pa$$" })
+Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800", user: "user", password: "pa$$" })
 ```
 
 `:bypass` can specify semi-colon-separated list of hosts for which proxy shouldn't be used:
 
 ```ruby
-browser = Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800", bypass: "*.google.com;*foo.com" })
+Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800", bypass: "*.google.com;*foo.com" })
 ```
 
 In general passing a proxy option when instantiating a browser results in a browser running with proxy command line
@@ -680,7 +687,7 @@ end
 
 ### Mouse
 
-`browser.mouse`
+`page.mouse`
 
 #### scroll_to(x, y)
 
@@ -692,8 +699,8 @@ Scroll page to a given x, y
   displayed in the upper left
 
 ```ruby
-browser.go_to("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
-browser.mouse.scroll_to(0, 400)
+page.go_to("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
+page.mouse.scroll_to(0, 400)
 ```
 
 #### click(\*\*options) : `Mouse`
@@ -737,7 +744,7 @@ Mouse move to given x and y.
 
 ### Keyboard
 
-browser.keyboard
+`page.keyboard`
 
 #### down(key) : `Keyboard`
 
@@ -767,14 +774,14 @@ Returns bitfield for a given keys
 
 ## Cookies
 
-`browser.cookies`
+`page.cookies`
 
 #### all : `Hash<String, Cookie>`
 
 Returns cookies hash
 
 ```ruby
-browser.cookies.all # => {"NID"=>#<Ferrum::Cookies::Cookie:0x0000558624b37a40 @attributes={"name"=>"NID", "value"=>"...", "domain"=>".google.com", "path"=>"/", "expires"=>1583211046.575681, "size"=>178, "httpOnly"=>true, "secure"=>false, "session"=>false}>}
+page.cookies.all # => {"NID"=>#<Ferrum::Cookies::Cookie:0x0000558624b37a40 @attributes={"name"=>"NID", "value"=>"...", "domain"=>".google.com", "path"=>"/", "expires"=>1583211046.575681, "size"=>178, "httpOnly"=>true, "secure"=>false, "session"=>false}>}
 ```
 
 #### [](value) : `Cookie`
@@ -784,7 +791,7 @@ Returns cookie
 * value `String`
 
 ```ruby
-browser.cookies["NID"] # => <Ferrum::Cookies::Cookie:0x0000558624b67a88 @attributes={"name"=>"NID", "value"=>"...", "domain"=>".google.com", "path"=>"/", "expires"=>1583211046.575681, "size"=>178, "httpOnly"=>true, "secure"=>false, "session"=>false}>
+page.cookies["NID"] # => <Ferrum::Cookies::Cookie:0x0000558624b67a88 @attributes={"name"=>"NID", "value"=>"...", "domain"=>".google.com", "path"=>"/", "expires"=>1583211046.575681, "size"=>178, "httpOnly"=>true, "secure"=>false, "session"=>false}>
 ```
 
 #### set(value) : `Boolean`
@@ -800,14 +807,14 @@ Sets a cookie
   * :httponly `Boolean`
 
 ```ruby
-browser.cookies.set(name: "stealth", value: "omg", domain: "google.com") # => true
+page.cookies.set(name: "stealth", value: "omg", domain: "google.com") # => true
 ```
 
 * value `Cookie`
 
 ```ruby
-nid_cookie = browser.cookies["NID"] # => <Ferrum::Cookies::Cookie:0x0000558624b67a88>
-browser.cookies.set(nid_cookie) # => true
+nid_cookie = page.cookies["NID"] # => <Ferrum::Cookies::Cookie:0x0000558624b67a88>
+page.cookies.set(nid_cookie) # => true
 ```
 
 #### remove(\*\*options) : `Boolean`
@@ -820,7 +827,7 @@ Removes given cookie
   * :url `String`
 
 ```ruby
-browser.cookies.remove(name: "stealth", domain: "google.com") # => true
+page.cookies.remove(name: "stealth", domain: "google.com") # => true
 ```
 
 #### clear : `Boolean`
@@ -828,12 +835,12 @@ browser.cookies.remove(name: "stealth", domain: "google.com") # => true
 Removes all cookies for current page
 
 ```ruby
-browser.cookies.clear # => true
+page.cookies.clear # => true
 ```
 
 ## Headers
 
-`browser.headers`
+`page.headers`
 
 #### get : `Hash`
 
@@ -867,7 +874,7 @@ Evaluate and return result for given JS expression
 simple value.
 
 ```ruby
-browser.evaluate("[window.scrollX, window.scrollY]")
+page.evaluate("[window.scrollX, window.scrollY]")
 ```
 
 #### evaluate_async(expression, wait_time, \*args)
@@ -880,7 +887,7 @@ Evaluate asynchronous expression and return result
 simple value.
 
 ```ruby
-browser.evaluate_async(%(arguments[0]({foo: "bar"})), 5) # => { "foo" => "bar" }
+page.evaluate_async(%(arguments[0]({foo: "bar"})), 5) # => { "foo" => "bar" }
 ```
 
 #### execute(expression, \*args)
@@ -892,7 +899,7 @@ Execute expression. Doesn't return the result
 simple value.
 
 ```ruby
-browser.execute(%(1 + 1)) # => true
+page.execute(%(1 + 1)) # => true
 ```
 
 #### evaluate_on_new_document(expression)
@@ -918,7 +925,7 @@ JS
   * :type `String` - `text/javascript` by default
 
 ```ruby
-browser.add_script_tag(url: "http://example.com/stylesheet.css") # => true
+page.add_script_tag(url: "http://example.com/stylesheet.css") # => true
 ```
 
 #### add_style_tag(\*\*options) : `Boolean`
@@ -929,7 +936,7 @@ browser.add_script_tag(url: "http://example.com/stylesheet.css") # => true
   * :content `String`
 
 ```ruby
-browser.add_style_tag(content: "h1 { font-size: 40px; }") # => true
+page.add_style_tag(content: "h1 { font-size: 40px; }") # => true
 
 ```
 #### bypass_csp(\*\*options) : `Boolean`
@@ -938,11 +945,11 @@ browser.add_style_tag(content: "h1 { font-size: 40px; }") # => true
   * :enabled `Boolean`, `true` by default
 
 ```ruby
-browser.bypass_csp # => true
-browser.go_to("https://github.com/ruby-concurrency/concurrent-ruby/blob/master/docs-source/promises.in.md")
-browser.refresh
-browser.add_script_tag(content: "window.__injected = 42")
-browser.evaluate("window.__injected") # => 42
+page.bypass_csp # => true
+page.go_to("https://github.com/ruby-concurrency/concurrent-ruby/blob/master/docs-source/promises.in.md")
+page.refresh
+page.add_script_tag(content: "window.__injected = 42")
+page.evaluate("window.__injected") # => 42
 ```
 
 
@@ -955,7 +962,7 @@ You can still evaluate JavaScript with `evaluate` or `execute`.
 Returns nothing.
 
 ```ruby
-browser.disable_javascript
+page.disable_javascript
 ```
 
 
@@ -970,7 +977,7 @@ Overrides device screen dimensions and emulates viewport.
   * :mobile `Boolean`, whether to emulate mobile device. `false` by default
 
 ```ruby
-browser.set_viewport(width: 1000, height: 600, scale_factor: 3)
+page.set_viewport(width: 1000, height: 600, scale_factor: 3)
 ```
 
 
@@ -981,8 +988,8 @@ browser.set_viewport(width: 1000, height: 600, scale_factor: 3)
 Returns all the frames current page have.
 
 ```ruby
-browser.go_to("https://www.w3schools.com/tags/tag_frame.asp")
-browser.frames # =>
+page.go_to("https://www.w3schools.com/tags/tag_frame.asp")
+page.frames # =>
 # [
 #   #<Ferrum::Frame @id="C6D104CE454A025FBCF22B98DE612B12" @parent_id=nil @name=nil @state=:stopped_loading @execution_id=1>,
 #   #<Ferrum::Frame @id="C09C4E4404314AAEAE85928EAC109A93" @parent_id="C6D104CE454A025FBCF22B98DE612B12" @state=:stopped_loading @execution_id=2>,
@@ -1004,7 +1011,7 @@ Find frame by given options.
   * :name `String` - Frame's name if there's one
 
 ```ruby
-browser.frame_by(id: "C6D104CE454A025FBCF22B98DE612B12")
+page.frame_by(id: "C6D104CE454A025FBCF22B98DE612B12")
 ```
 
 
@@ -1040,8 +1047,8 @@ One of the states frame's in:
 Returns current frame's location href.
 
 ```ruby
-browser.go_to("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
-frame = browser.frames[1]
+page.go_to("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
+frame = page.frames[1]
 frame.url # => https://interactive-examples.mdn.mozilla.net/pages/tabbed/iframe.html
 ```
 
@@ -1050,8 +1057,8 @@ frame.url # => https://interactive-examples.mdn.mozilla.net/pages/tabbed/iframe.
 Returns current frame's title.
 
 ```ruby
-browser.go_to("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
-frame = browser.frames[1]
+page.go_to("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
+frame = page.frames[1]
 frame.title # => HTML Demo: <iframe>
 ```
 
@@ -1060,8 +1067,8 @@ frame.title # => HTML Demo: <iframe>
 If current frame is the main frame of the page (top of the tree).
 
 ```ruby
-browser.go_to("https://www.w3schools.com/tags/tag_frame.asp")
-frame = browser.frame_by(id: "C09C4E4404314AAEAE85928EAC109A93")
+page.go_to("https://www.w3schools.com/tags/tag_frame.asp")
+frame = page.frame_by(id: "C09C4E4404314AAEAE85928EAC109A93")
 frame.main? # => false
 ```
 
@@ -1070,8 +1077,8 @@ frame.main? # => false
 Returns current frame's top window location href.
 
 ```ruby
-browser.go_to("https://www.w3schools.com/tags/tag_frame.asp")
-frame = browser.frame_by(id: "C09C4E4404314AAEAE85928EAC109A93")
+page.go_to("https://www.w3schools.com/tags/tag_frame.asp")
+frame = page.frame_by(id: "C09C4E4404314AAEAE85928EAC109A93")
 frame.current_url # => "https://www.w3schools.com/tags/tag_frame.asp"
 ```
 
@@ -1080,8 +1087,8 @@ frame.current_url # => "https://www.w3schools.com/tags/tag_frame.asp"
 Returns current frame's top window title.
 
 ```ruby
-browser.go_to("https://www.w3schools.com/tags/tag_frame.asp")
-frame = browser.frame_by(id: "C09C4E4404314AAEAE85928EAC109A93")
+page.go_to("https://www.w3schools.com/tags/tag_frame.asp")
+frame = page.frame_by(id: "C09C4E4404314AAEAE85928EAC109A93")
 frame.current_title # => "HTML frame tag"
 ```
 
@@ -1090,8 +1097,8 @@ frame.current_title # => "HTML frame tag"
 Returns current frame's html.
 
 ```ruby
-browser.go_to("https://www.w3schools.com/tags/tag_frame.asp")
-frame = browser.frame_by(id: "C09C4E4404314AAEAE85928EAC109A93")
+page.go_to("https://www.w3schools.com/tags/tag_frame.asp")
+frame = page.frame_by(id: "C09C4E4404314AAEAE85928EAC109A93")
 frame.body # => "<html><head></head><body></body></html>"
 ```
 
@@ -1100,8 +1107,8 @@ frame.body # => "<html><head></head><body></body></html>"
 Returns current frame's doctype.
 
 ```ruby
-browser.go_to("https://www.w3schools.com/tags/tag_frame.asp")
-browser.main_frame.doctype # => "<!DOCTYPE html>"
+page.go_to("https://www.w3schools.com/tags/tag_frame.asp")
+page.main_frame.doctype # => "<!DOCTYPE html>"
 ```
 
 #### content = html
@@ -1111,8 +1118,8 @@ Sets a content of a given frame.
   * html `String`
 
 ```ruby
-browser.go_to("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
-frame = browser.frames[1]
+page.go_to("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
+frame = page.frames[1]
 frame.body # <html lang="en"><head><style>body {transition: opacity ease-in 0.2s; }...
 frame.content = "<html><head></head><body><p>lol</p></body></html>"
 frame.body # => <html><head></head><body><p>lol</p></body></html>
@@ -1132,15 +1139,14 @@ Accept dialog with given text or default prompt if applicable
 Dismiss dialog
 
 ```ruby
-browser = Ferrum::Browser.new
-browser.on(:dialog) do |dialog|
+page.on(:dialog) do |dialog|
   if dialog.match?(/bla-bla/)
     dialog.accept
   else
     dialog.dismiss
   end
 end
-browser.go_to("https://google.com")
+page.go_to("https://google.com")
 ```
 
 
@@ -1160,10 +1166,9 @@ Sets playback rate of CSS animations
   * value `Integer`
 
 ```ruby
-browser = Ferrum::Browser.new
-browser.playback_rate = 2000
-browser.go_to("https://google.com")
-browser.playback_rate # => 2000
+page.playback_rate = 2000
+page.go_to("https://google.com")
+page.playback_rate # => 2000
 ```
 
 
@@ -1177,7 +1182,7 @@ Returns [Frame](https://github.com/rubycdp/ferrum#frame) object for current node
 [Finders](https://github.com/rubycdp/ferrum#Finders) for that object:
 
 ```ruby
-frame =  browser.at_xpath("//iframe").frame # => Frame
+frame =  page.at_xpath("//iframe").frame # => Frame
 frame.at_css("//a[text() = 'Log in']") # => Node
 ```
 
@@ -1208,15 +1213,15 @@ frame.at_css("//a[text() = 'Log in']") # => Node
 (chainable) Selects options by passed attribute.
 
 ```ruby
-browser.at_xpath("//*[select]").select(["1"]) # => Node (select)
-browser.at_xpath("//*[select]").select(["text"], by: :text) # => Node (select)
+page.at_xpath("//*[select]").select(["1"]) # => Node (select)
+page.at_xpath("//*[select]").select(["text"], by: :text) # => Node (select)
 ```
 
 Accept string, array or strings:
 ```ruby
-browser.at_xpath("//*[select]").select("1")
-browser.at_xpath("//*[select]").select("1", "2")
-browser.at_xpath("//*[select]").select(["1", "2"])
+page.at_xpath("//*[select]").select("1")
+page.at_xpath("//*[select]").select("1", "2")
+page.at_xpath("//*[select]").select(["1", "2"])
 ```
 
 

@@ -26,7 +26,7 @@ module Ferrum
       raise Error, "supply absolute path for `:save_path` option" unless Pathname.new(save_path.to_s).absolute?
 
       @page.command("Browser.setDownloadBehavior",
-                    browserContextId: @page.context.id,
+                    browserContextId: @page.context_id,
                     downloadPath: save_path,
                     behavior: behavior,
                     eventsEnabled: true)
