@@ -3,7 +3,6 @@
 module Ferrum
   class Browser
     class Options
-      HEADLESS = true
       BROWSER_PORT = "0"
       BROWSER_HOST = "127.0.0.1"
       WINDOW_SIZE = [1024, 768].freeze
@@ -21,31 +20,32 @@ module Ferrum
 
       def initialize(options = nil)
         @options = Hash(options&.dup)
+
         @port = @options.fetch(:port, BROWSER_PORT)
         @host = @options.fetch(:host, BROWSER_HOST)
         @timeout = @options.fetch(:timeout, DEFAULT_TIMEOUT)
         @window_size = @options.fetch(:window_size, WINDOW_SIZE)
         @js_errors = @options.fetch(:js_errors, false)
-        @headless = @options.fetch(:headless, HEADLESS)
+        @headless = @options.fetch(:headless, true)
         @pending_connection_errors = @options.fetch(:pending_connection_errors, true)
         @process_timeout = @options.fetch(:process_timeout, PROCESS_TIMEOUT)
-        @browser_options = @options.fetch(:browser_options, {})
         @slowmo = @options[:slowmo].to_f
 
-        @ws_max_receive_size, @env, @browser_name, @browser_path,
-          @save_path, @ignore_default_browser_options, @xvfb = @options.values_at(
-            :ws_max_receive_size, :env, :browser_name, :browser_path, :save_path,
-            :ignore_default_browser_options, :xvfb
-          )
+        @env = @options[:env]
+        @xvfb = @options[:xvfb]
+        @save_path = @options[:save_path]
+        @browser_name = @options[:browser_name]
+        @browser_path = @options[:browser_path]
+        @ws_max_receive_size = @options[:ws_max_receive_size]
+        @ignore_default_browser_options = @options[:ignore_default_browser_options]
 
-        @options[:window_size] = @window_size
         @proxy = validate_proxy(@options[:proxy])
         @logger = parse_logger(@options[:logger])
         @base_url = parse_base_url(@options[:base_url]) if @options[:base_url]
         @url = @options[:url].to_s if @options[:url]
 
-        @options.freeze
-        @browser_options.freeze
+        @options = @options.merge(window_size: @window_size).freeze
+        @browser_options = @options.fetch(:browser_options, {}).freeze
       end
 
       def base_url=(value)
