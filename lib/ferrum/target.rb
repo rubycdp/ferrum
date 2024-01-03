@@ -8,9 +8,9 @@ module Ferrum
     # where we enhance page class and build page ourselves.
     attr_writer :page
 
-    def initialize(browser, params = nil)
+    def initialize(client, params = nil)
       @page = nil
-      @browser = browser
+      @client = client
       @params = params
     end
 
@@ -28,7 +28,7 @@ module Ferrum
 
     def build_page(**options)
       maybe_sleep_if_new_window
-      Page.new(id, @browser, **options)
+      Page.new(@client, context_id: context_id, target_id: id, **options)
     end
 
     def id

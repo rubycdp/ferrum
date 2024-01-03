@@ -63,19 +63,19 @@ module Ferrum
       #   Sets the background color.
       #
       # @example
-      #   browser.go_to("https://google.com/")
+      #   page.go_to("https://google.com/")
       #
       # @example Save on the disk in PNG:
-      #   browser.screenshot(path: "google.png") # => 134660
+      #   page.screenshot(path: "google.png") # => 134660
       #
       # @example Save on the disk in JPG:
-      #   browser.screenshot(path: "google.jpg") # => 30902
+      #   page.screenshot(path: "google.jpg") # => 30902
       #
       # @example Save to Base64 the whole page not only viewport and reduce quality:
-      #   browser.screenshot(full: true, quality: 60) # "iVBORw0KGgoAAAANS...
+      #   page.screenshot(full: true, quality: 60) # "iVBORw0KGgoAAAANS...
       #
       # @example Save with specific background color:
-      #   browser.screenshot(background_color: Ferrum::RGBA.new(0, 0, 0, 0.0))
+      #   page.screenshot(background_color: Ferrum::RGBA.new(0, 0, 0, 0.0))
       #
       def screenshot(**opts)
         path, encoding = common_options(**opts)
@@ -119,9 +119,9 @@ module Ferrum
       #   can pass.
       #
       # @example
-      #   browser.go_to("https://google.com/")
+      #   page.go_to("https://google.com/")
       #   # Save to disk as a PDF
-      #   browser.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => true
+      #   page.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => true
       #
       def pdf(**opts)
         path, encoding = common_options(**opts)
@@ -137,8 +137,8 @@ module Ferrum
       #   The path to save a file on the disk.
       #
       # @example
-      #   browser.go_to("https://google.com/")
-      #   browser.mhtml(path: "google.mhtml") # => 87742
+      #   page.go_to("https://google.com/")
+      #   page.mhtml(path: "google.mhtml") # => 87742
       #
       def mhtml(path: nil)
         data = command("Page.captureSnapshot", format: :mhtml).fetch("data")

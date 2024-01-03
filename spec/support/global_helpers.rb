@@ -39,6 +39,14 @@ RSpec.shared_context "Global helpers" do
     @page = nil
   end
 
+  def with_timeout(new_timeout)
+    old_timeout = browser.timeout
+    browser.timeout = new_timeout
+    yield
+  ensure
+    browser.timeout = old_timeout
+  end
+
   def with_external_browser(host: "127.0.0.1", port: 32_001)
     options = Ferrum::Browser::Options.new(host: host, port: port, window_size: [1400, 1400], headless: true)
     process = Ferrum::Browser::Process.new(options)

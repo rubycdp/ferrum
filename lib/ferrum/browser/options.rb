@@ -12,11 +12,12 @@ module Ferrum
       PROCESS_TIMEOUT = ENV.fetch("FERRUM_PROCESS_TIMEOUT", 10).to_i
       DEBUG_MODE = !ENV.fetch("FERRUM_DEBUG", nil).nil?
 
-      attr_reader :window_size, :timeout, :logger, :ws_max_receive_size,
+      attr_reader :window_size, :logger, :ws_max_receive_size,
                   :js_errors, :base_url, :slowmo, :pending_connection_errors,
                   :url, :env, :process_timeout, :browser_name, :browser_path,
                   :save_path, :extensions, :proxy, :port, :host, :headless,
                   :ignore_default_browser_options, :browser_options, :xvfb
+      attr_accessor :timeout, :ws_url, :default_user_agent
 
       def initialize(options = nil)
         @options = Hash(options&.dup)
@@ -32,35 +33,29 @@ module Ferrum
         @slowmo = @options[:slowmo].to_f
 
         @ws_max_receive_size, @env, @browser_name, @browser_path,
-          @save_path, @extensions, @ignore_default_browser_options, @xvfb = @options.values_at(
-            :ws_max_receive_size, :env, :browser_name, :browser_path, :save_path, :extensions,
+          @save_path, @ignore_default_browser_options, @xvfb = @options.values_at(
+            :ws_max_receive_size, :env, :browser_name, :browser_path, :save_path,
             :ignore_default_browser_options, :xvfb
           )
 
         @options[:window_size] = @window_size
-        @proxy = parse_proxy(@options[:proxy])
+        @proxy = validate_proxy(@options[:proxy])
         @logger = parse_logger(@options[:logger])
         @base_url = parse_base_url(@options[:base_url]) if @options[:base_url]
         @url = @options[:url].to_s if @options[:url]
+        @extensions = Array(@options[:extensions]).map do |extension|
+          (extension.is_a?(Hash) && extension[:source]) || File.read(extension)
+        end
 
         @options.freeze
         @browser_options.freeze
       end
 
-      def to_h
-        @options
+      def base_url=(value)
+        @base_url = parse_base_url(value)
       end
 
-      def parse_base_url(value)
-        parsed = Addressable::URI.parse(value)
-        unless BASE_URL_SCHEMA.include?(parsed&.normalized_scheme)
-          raise ArgumentError, "`base_url` should be absolute and include schema: #{BASE_URL_SCHEMA.join(' | ')}"
-        end
-
-        parsed
-      end
-
-      def parse_proxy(options)
+      def validate_proxy(options)
         return unless options
 
         raise ArgumentError, "proxy options must be a Hash" unless options.is_a?(Hash)
@@ -72,12 +67,25 @@ module Ferrum
         options
       end
 
+      def to_h
+        @options
+      end
+
       private
 
       def parse_logger(logger)
         return logger if logger
 
         !logger && DEBUG_MODE ? $stdout.tap { |s| s.sync = true } : logger
+      end
+
+      def parse_base_url(value)
+        parsed = Addressable::URI.parse(value)
+        unless BASE_URL_SCHEMA.include?(parsed&.normalized_scheme)
+          raise ArgumentError, "`base_url` should be absolute and include schema: #{BASE_URL_SCHEMA.join(' | ')}"
+        end
+
+        parsed
       end
     end
   end
