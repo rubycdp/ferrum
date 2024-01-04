@@ -27,21 +27,7 @@ module Ferrum
         @driver.on(:message, &method(:on_message))
         @driver.on(:close,   &method(:on_close))
 
-        @thread = Thread.new do
-          Thread.current.abort_on_exception = true
-          Thread.current.report_on_exception = true if Thread.current.respond_to?(:report_on_exception=)
-
-          begin
-            loop do
-              data = @sock.readpartial(512)
-              break unless data
-
-              @driver.parse(data)
-            end
-          rescue EOFError, Errno::ECONNRESET, Errno::EPIPE
-            @messages.close
-          end
-        end
+        start
 
         @driver.start
       end
@@ -85,6 +71,21 @@ module Ferrum
 
       def close
         @driver.close
+      end
+
+      private
+
+      def start
+        @thread = Utils::Thread.spawn do
+          loop do
+            data = @sock.readpartial(512)
+            break unless data
+
+            @driver.parse(data)
+          end
+        rescue EOFError, Errno::ECONNRESET, Errno::EPIPE
+          @messages.close
+        end
       end
     end
   end

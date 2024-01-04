@@ -64,7 +64,7 @@ module Ferrum
     end
 
     def update_target(target_id, params)
-      @targets[target_id].update(params)
+      @targets[target_id]&.update(params)
     end
 
     def delete_target(target_id)

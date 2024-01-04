@@ -134,7 +134,7 @@ module Ferrum
           end
 
           frame = @frames[params["frameId"]]
-          frame.state = :stopped_loading
+          frame&.state = :stopped_loading
 
           @event.set if idling?
         end
