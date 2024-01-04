@@ -45,9 +45,14 @@ module Ferrum
 
     def dispose(context_id)
       context = @contexts[context_id]
+      context.close_targets_connection
       @client.command("Target.disposeBrowserContext", browserContextId: context.id)
       @contexts.delete(context_id)
       true
+    end
+
+    def close_connections
+      @contexts.each_value(&:close_targets_connection)
     end
 
     def reset

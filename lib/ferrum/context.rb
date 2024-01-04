@@ -71,6 +71,14 @@ module Ferrum
       @targets.delete(target_id)
     end
 
+    def close_targets_connection
+      @targets.each_value do |target|
+        next unless target.attached?
+
+        target.page.close_connection
+      end
+    end
+
     def dispose
       @contexts.dispose(@id)
     end

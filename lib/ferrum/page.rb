@@ -120,7 +120,13 @@ module Ferrum
     def close
       @headers.clear
       client(browser: true).command("Target.closeTarget", targetId: @target_id)
-      @page_client.close
+      close_connection
+
+      true
+    end
+
+    def close_connection
+      @page_client&.close
     end
 
     #

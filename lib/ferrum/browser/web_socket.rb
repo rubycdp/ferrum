@@ -52,6 +52,7 @@ module Ferrum
 
       def on_close(_event)
         @messages.close
+        @sock.close
         @thread.kill
       end
 
@@ -65,7 +66,7 @@ module Ferrum
 
       def write(data)
         @sock.write(data)
-      rescue EOFError, Errno::ECONNRESET, Errno::EPIPE
+      rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, IOError # rubocop:disable Lint/ShadowedException
         @messages.close
       end
 
@@ -83,7 +84,7 @@ module Ferrum
 
             @driver.parse(data)
           end
-        rescue EOFError, Errno::ECONNRESET, Errno::EPIPE
+        rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, IOError # rubocop:disable Lint/ShadowedException
           @messages.close
         end
       end
