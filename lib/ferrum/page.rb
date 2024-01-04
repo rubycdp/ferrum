@@ -156,10 +156,10 @@ module Ferrum
     def resize(width: nil, height: nil, fullscreen: false)
       if fullscreen
         width, height = document_size
-        set_window_bounds(windowState: "fullscreen")
+        self.window_bounds = { window_state: "fullscreen" }
       else
-        set_window_bounds(windowState: "normal")
-        set_window_bounds(width: width, height: height)
+        self.window_bounds = { window_state: "normal" }
+        self.window_bounds = { width: width, height: height }
       end
 
       set_viewport(width: width, height: height)
@@ -184,9 +184,7 @@ module Ferrum
     #   page.position # => [10, 20]
     #
     def position
-      client(browser: true)
-        .command("Browser.getWindowBounds", windowId: window_id)
-        .fetch("bounds").values_at("left", "top")
+      window_bounds.values_at("left", "top")
     end
 
     #
@@ -204,9 +202,61 @@ module Ferrum
     #   page.position = { left: 10, top: 20 }
     #
     def position=(options)
-      client(browser: true).command("Browser.setWindowBounds",
-                                    windowId: window_id,
-                                    bounds: { left: options[:left], top: options[:top] })
+      self.window_bounds = { left: options[:left], top: options[:top] }
+    end
+
+    # Sets the position of the window.
+    #
+    # @param [Hash{Symbol => Object}] bounds
+    #
+    # @option options [Integer] :left
+    #   The number of pixels from the left-hand side of the screen.
+    #
+    # @option options [Integer] :top
+    #   The number of pixels from the top of the screen.
+    #
+    # @option options [Integer] :width
+    #   The window width in pixels.
+    #
+    # @option options [Integer] :height
+    #   The window height in pixels.
+    #
+    # @option options [String] :window_state
+    #   The window state. Default to normal. Allowed Values: normal, minimized, maximized, fullscreen
+    #
+    # @example
+    #   page.window_bounds = { left: 10, top: 20, width: 1024, height: 768, window_state: "normal" }
+    #
+    def window_bounds=(bounds)
+      options = bounds.dup
+      window_state = options.delete(:window_state)
+      bounds = { windowState: window_state, **options }.compact
+
+      client.command("Browser.setWindowBounds", windowId: window_id, bounds: bounds)
+    end
+
+    #
+    # Current window bounds.
+    #
+    # @return [Hash{String => (Integer, String)}]
+    #
+    # @example
+    #   page.window_bounds # => { "left": 0, "top": 1286, "width": 10, "height": 10, "windowState": "normal" }
+    #
+    def window_bounds
+      client.command("Browser.getWindowBounds", windowId: window_id).fetch("bounds")
+    end
+
+    #
+    # Current window id.
+    #
+    # @return [Integer]
+    #
+    # @example
+    #   page.window_id # => 1
+    #
+    def window_id
+      client.command("Browser.getWindowForTarget", targetId: target_id)["windowId"]
     end
 
     #
@@ -280,14 +330,6 @@ module Ferrum
     def bypass_csp(enabled: true)
       command("Page.setBypassCSP", enabled: enabled)
       enabled
-    end
-
-    def window_id
-      client(browser: true).command("Browser.getWindowForTarget", targetId: @target_id)["windowId"]
-    end
-
-    def set_window_bounds(bounds = {})
-      client(browser: true).command("Browser.setWindowBounds", windowId: window_id, bounds: bounds)
     end
 
     def command(method, wait: 0, slowmoable: false, **params)

@@ -16,6 +16,7 @@
 instead of passing browser and making cyclic dependency on the browser instance, we pass now a thin client [#431]
 - Bump `websocket-driver` to `~> 0.7` [#432]
 - Got rid of `Concurrent::Async` in `Ferrum::Browser::Subscriber` [#432]
+- `Ferrum::Page#set_window_bounds` is renamed to `Ferrum::Page#window_bounds=`
 
 ### Fixed
 

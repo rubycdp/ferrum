@@ -268,6 +268,37 @@ Get the position for the browser window
 browser.position # => [10, 20]
 ```
 
+#### window_bounds = \*\*options
+
+Set window bounds
+
+* options `Hash`
+  * :left `Integer`
+  * :top `Integer`
+  * :width `Integer`
+  * :height `Integer`
+  * :window_state `String`
+
+```ruby
+browser.window_bounds = { left: 10, top: 20, width: 1024, height: 768, window_state: "normal" }
+```
+
+#### window_bounds : `Hash<String, Integer | String>`
+
+Get window bounds
+
+```ruby
+browser.window_bounds # => { "left": 0, "top": 1286, "width": 10, "height": 10, "windowState": "normal" }
+```
+
+#### window_id : `Integer`
+
+Current window id
+
+```ruby
+browser.window_id # => 1
+```
+
 ## Finders
 
 #### at_css(selector, \*\*options) : `Node` | `nil`
