@@ -3,15 +3,22 @@
 module Ferrum
   class Browser
     class Subscriber
-      include Concurrent::Async
-
-      def self.build(size)
-        (0..size).map { new }
-      end
+      INTERRUPTIONS = %w[Fetch.requestPaused Fetch.authRequired].freeze
 
       def initialize
-        super
+        @regular = Queue.new
+        @priority = Queue.new
         @on = Concurrent::Hash.new { |h, k| h[k] = Concurrent::Array.new }
+
+        start
+      end
+
+      def <<(message)
+        if INTERRUPTIONS.include?(message["method"])
+          @priority.push(message)
+        else
+          @regular.push(message)
+        end
       end
 
       def on(event, &block)
@@ -21,6 +28,33 @@ module Ferrum
 
       def subscribed?(event)
         @on.key?(event)
+      end
+
+      def close
+        @regular_thread&.kill
+        @priority_thread&.kill
+      end
+
+      private
+
+      def start
+        @regular_thread = Utils::Thread.spawn(abort_on_exception: false) do
+          loop do
+            message = @regular.pop
+            break unless message
+
+            call(message)
+          end
+        end
+
+        @priority_thread = Utils::Thread.spawn(abort_on_exception: false) do
+          loop do
+            message = @priority.pop
+            break unless message
+
+            call(message)
+          end
+        end
       end
 
       def call(message)

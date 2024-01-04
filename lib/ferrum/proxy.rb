@@ -52,7 +52,7 @@ module Ferrum
     end
 
     def stop
-      @file&.unlink
+      @file&.close(true)
       @server.shutdown
     end
 

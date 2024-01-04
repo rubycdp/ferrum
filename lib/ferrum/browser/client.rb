@@ -7,8 +7,6 @@ require "ferrum/browser/web_socket"
 module Ferrum
   class Browser
     class Client
-      INTERRUPTIONS = %w[Fetch.requestPaused Fetch.authRequired].freeze
-
       extend Forwardable
       delegate %i[timeout timeout=] => :options
 
@@ -19,25 +17,9 @@ module Ferrum
         @options = options
         @pendings = Concurrent::Hash.new
         @ws = WebSocket.new(ws_url, options.ws_max_receive_size, options.logger)
-        @subscriber, @interrupter = Subscriber.build(2)
+        @subscriber = Subscriber.new
 
-        @thread = Thread.new do
-          Thread.current.abort_on_exception = true
-          Thread.current.report_on_exception = true if Thread.current.respond_to?(:report_on_exception=)
-
-          loop do
-            message = @ws.messages.pop
-            break unless message
-
-            if INTERRUPTIONS.include?(message["method"])
-              @interrupter.async.call(message)
-            elsif message.key?("method")
-              @subscriber.async.call(message)
-            else
-              @pendings[message["id"]]&.set(message)
-            end
-          end
-        end
+        start
       end
 
       def command(method, params = {})
@@ -57,16 +39,11 @@ module Ferrum
       end
 
       def on(event, &block)
-        case event
-        when *INTERRUPTIONS
-          @interrupter.on(event, &block)
-        else
-          @subscriber.on(event, &block)
-        end
+        @subscriber.on(event, &block)
       end
 
       def subscribed?(event)
-        [@interrupter, @subscriber].any? { |s| s.subscribed?(event) }
+        @subscriber.subscribed?(event)
       end
 
       def close
@@ -74,6 +51,7 @@ module Ferrum
         # Give a thread some time to handle a tail of messages
         @pendings.clear
         @thread.kill unless @thread.join(1)
+        @subscriber.close
       end
 
       def inspect
@@ -84,6 +62,21 @@ module Ferrum
       end
 
       private
+
+      def start
+        @thread = Utils::Thread.spawn do
+          loop do
+            message = @ws.messages.pop
+            break unless message
+
+            if message.key?("method")
+              @subscriber << message
+            else
+              @pendings[message["id"]]&.set(message)
+            end
+          end
+        end
+      end
 
       def build_message(method, params)
         { method: method, params: params }.merge(id: next_command_id)

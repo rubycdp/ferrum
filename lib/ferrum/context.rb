@@ -64,11 +64,19 @@ module Ferrum
     end
 
     def update_target(target_id, params)
-      @targets[target_id].update(params)
+      @targets[target_id]&.update(params)
     end
 
     def delete_target(target_id)
       @targets.delete(target_id)
+    end
+
+    def close_targets_connection
+      @targets.each_value do |target|
+        next unless target.attached?
+
+        target.page.close_connection
+      end
     end
 
     def dispose

@@ -12,10 +12,14 @@
 - `Ferrum::Page#screeshot` accepts :area option [#410]
 - Resizing page on creation is gone and moved to Cuprite [#427]
 - Min Ruby version is 2.7
-- Refactored internal API of `Browser`, `Page`, `Context`, `Contexts`, `Target` instead of passing browser and making
-cyclic dependency on the browser instance, we pass now a simple client [#431]
+- Refactored internal API of `Ferrum::Browser`, `Ferrum::Page`, `Ferrum::Context`, `Ferrum::Contexts`, `Ferrum::Target`
+instead of passing browser and making cyclic dependency on the browser instance, we pass now a thin client [#431]
+- Bump `websocket-driver` to `~> 0.7` [#432]
+- Got rid of `Concurrent::Async` in `Ferrum::Browser::Subscriber` [#432]
 
 ### Fixed
+
+- Exceptions within `.on()` were swallowed by a thread pool of `Concurrent::Async` [#432]
 
 ### Removed
 

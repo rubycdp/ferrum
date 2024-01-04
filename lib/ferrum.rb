@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "ferrum/utils/thread"
 require "ferrum/utils/platform"
 require "ferrum/utils/elapsed_time"
 require "ferrum/utils/attempt"
