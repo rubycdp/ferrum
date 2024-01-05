@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Ferrum
-  class Browser
+  class Client
     class Subscriber
       INTERRUPTIONS = %w[Fetch.requestPaused Fetch.authRequired].freeze
 

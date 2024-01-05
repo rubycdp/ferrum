@@ -10,9 +10,9 @@ module Ferrum
 
       attr_accessor :request_id, :frame_id, :resource_type, :network_id, :status
 
-      def initialize(page, params)
+      def initialize(client, params)
         @status = nil
-        @page = page
+        @client = client
         @params = params
         @request_id = params["requestId"]
         @frame_id = params["frameId"]
@@ -43,18 +43,18 @@ module Ferrum
         options = options.merge(body: Base64.strict_encode64(options.fetch(:body, ""))) if has_body
 
         @status = :responded
-        @page.command("Fetch.fulfillRequest", **options)
+        @client.command("Fetch.fulfillRequest", **options)
       end
 
       def continue(**options)
         options = options.merge(requestId: request_id)
         @status = :continued
-        @page.command("Fetch.continueRequest", **options)
+        @client.command("Fetch.continueRequest", **options)
       end
 
       def abort
         @status = :aborted
-        @page.command("Fetch.failRequest", requestId: request_id, errorReason: "BlockedByClient")
+        @client.command("Fetch.failRequest", requestId: request_id, errorReason: "BlockedByClient")
       end
 
       def initial_priority

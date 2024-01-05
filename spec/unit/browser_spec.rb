@@ -23,6 +23,7 @@ describe Ferrum::Browser do
     expect(file_log).to include("<html><head></head><body></body></html>")
   ensure
     FileUtils.rm_f(file_path)
+    browser.quit
   end
 
   it "logs requests and responses" do
@@ -33,6 +34,8 @@ describe Ferrum::Browser do
 
     expect(logger.string).to include("return document.documentElement.outerHTML")
     expect(logger.string).to include("<html><head></head><body></body></html>")
+  ensure
+    browser.quit
   end
 
   it "shows command line options passed" do
@@ -41,5 +44,7 @@ describe Ferrum::Browser do
     arguments = browser.command("Browser.getBrowserCommandLine")["arguments"]
 
     expect(arguments).to include("--blink-settings=imagesEnabled=false")
+  ensure
+    browser.quit
   end
 end

@@ -4,11 +4,11 @@ require "base64"
 require "forwardable"
 require "ferrum/page"
 require "ferrum/proxy"
+require "ferrum/client"
 require "ferrum/contexts"
 require "ferrum/browser/xvfb"
 require "ferrum/browser/options"
 require "ferrum/browser/process"
-require "ferrum/browser/client"
 require "ferrum/browser/binary"
 require "ferrum/browser/version_info"
 
@@ -209,6 +209,7 @@ module Ferrum
       return unless @client
 
       contexts.close_connections
+
       @client.close
       @process.stop
       @client = @process = @contexts = nil

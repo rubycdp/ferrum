@@ -28,7 +28,7 @@ module Ferrum
 
     def build_page(**options)
       maybe_sleep_if_new_window
-      Page.new(@client, context_id: context_id, target_id: id, **options)
+      Page.new(build_client, context_id: context_id, target_id: id, **options)
     end
 
     def id
@@ -62,6 +62,14 @@ module Ferrum
     def maybe_sleep_if_new_window
       # Dirty hack because new window doesn't have events at all
       sleep(NEW_WINDOW_WAIT) if window?
+    end
+
+    private
+
+    def build_client
+      options = @client.options
+      ws_url = options.ws_url.merge(path: "/devtools/page/#{id}").to_s
+      Client.new(ws_url, options)
     end
   end
 end
