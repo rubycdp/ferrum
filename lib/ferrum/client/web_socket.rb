@@ -5,7 +5,7 @@ require "socket"
 require "websocket/driver"
 
 module Ferrum
-  class Browser
+  class Client
     class WebSocket
       WEBSOCKET_BUG_SLEEP = 0.05
       SKIP_LOGGING_SCREENSHOTS = !ENV["FERRUM_LOGGING_SCREENSHOTS"]

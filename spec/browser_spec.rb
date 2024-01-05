@@ -280,7 +280,7 @@ describe Ferrum::Browser do
         allow(Ferrum::Browser::Process).to receive(:new).and_return(process)
 
         error = StandardError.new
-        allow(Ferrum::Browser::Client).to receive(:new).and_raise(error)
+        allow(Ferrum::Client).to receive(:new).and_raise(error)
 
         expect { Ferrum::Browser.new }.to raise_error(error)
         expect(process.pid).to be(nil)

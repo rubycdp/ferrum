@@ -69,7 +69,7 @@ module Ferrum
     def build_client
       options = @client.options
       ws_url = options.ws_url.merge(path: "/devtools/page/#{id}").to_s
-      Browser::Client.new(ws_url, options)
+      Client.new(ws_url, options)
     end
   end
 end

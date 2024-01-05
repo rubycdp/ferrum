@@ -19,7 +19,8 @@ instead of passing browser and making cyclic dependency on the browser instance,
 - Got rid of `Concurrent::Async` in `Ferrum::Browser::Subscriber` [#432]
 - `Ferrum::Page#set_window_bounds` is renamed to `Ferrum::Page#window_bounds=`
 - `Ferrum::Page` get right client from the Target and passes it down everywhere [#433]
-- `Ferrum::Network::InterceptedRequest` accepts `Browser::Client` instead of `Ferrum::Page` [#433]
+- `Ferrum::Network::InterceptedRequest` accepts `Ferrum::Browser::Client` instead of `Ferrum::Page` [#433]
+- `Ferrum::Browser::Client` -> `Ferrum::Client` [#433]
 
 ### Fixed
 
