@@ -54,10 +54,11 @@ module Ferrum
     end
 
     def add_target(params)
-      target = Target.new(@client, params)
-      @targets.put_if_absent(target.id, target)
-
+      new_target = Target.new(@client, params)
+      target = @targets.put_if_absent(new_target.id, new_target)
+      target ||= new_target # `put_if_absent` returns nil if added a new value or existing if there was one already
       @pendings.put(target, @client.timeout) if @pendings.empty?
+      target
     end
 
     def update_target(target_id, params)

@@ -14,6 +14,8 @@ describe Ferrum::Frame::Runtime do
     context "with javascript errors" do
       let(:browser) { Ferrum::Browser.new(base_url: base_url, js_errors: true) }
 
+      after { browser.quit }
+
       it "propagates a Javascript error to a ruby exception" do
         expect do
           browser.execute(%(throw new Error("zomg")))

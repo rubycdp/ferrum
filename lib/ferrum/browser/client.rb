@@ -22,20 +22,26 @@ module Ferrum
         start
       end
 
-      def command(method, params = {})
-        pending = Concurrent::IVar.new
+      def command(method, async: false, **params)
         message = build_message(method, params)
-        @pendings[message[:id]] = pending
-        @ws.send_message(message)
-        data = pending.value!(timeout)
-        @pendings.delete(message[:id])
 
-        raise DeadBrowserError if data.nil? && @ws.messages.closed?
-        raise TimeoutError unless data
+        if async
+          @ws.send_message(message)
+          true
+        else
+          pending = Concurrent::IVar.new
+          @pendings[message[:id]] = pending
+          @ws.send_message(message)
+          data = pending.value!(timeout)
+          @pendings.delete(message[:id])
 
-        error, response = data.values_at("error", "result")
-        raise_browser_error(error) if error
-        response
+          raise DeadBrowserError if data.nil? && @ws.messages.closed?
+          raise TimeoutError unless data
+
+          error, response = data.values_at("error", "result")
+          raise_browser_error(error) if error
+          response
+        end
       end
 
       def on(event, &block)

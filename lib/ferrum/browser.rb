@@ -209,6 +209,7 @@ module Ferrum
       return unless @client
 
       contexts.close_connections
+
       @client.close
       @process.stop
       @client = @process = @contexts = nil

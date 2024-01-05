@@ -238,6 +238,8 @@ describe Ferrum::Browser do
         )
       end
 
+      after { browser.quit }
+
       context "with absolute path" do
         let(:save_path) { "/tmp/ferrum" }
 
@@ -330,6 +332,8 @@ describe Ferrum::Browser do
     it "stops silently before go_to call" do
       browser = Ferrum::Browser.new
       expect { browser.quit }.not_to raise_error
+    ensure
+      browser&.quit
     end
 
     it "supports stopping the session", skip: Ferrum::Utils::Platform.windows? do
@@ -519,6 +523,21 @@ describe Ferrum::Browser do
 
         context.create_page
         expect(context.targets.size).to eq(2)
+        context.dispose
+        expect(browser.contexts.size).to eq(0)
+      end
+
+      it "closes page successfully" do
+        expect(browser.contexts.size).to eq(0)
+
+        page = browser.create_page(new_context: true)
+        context = browser.contexts[page.context_id]
+        page.go_to("/ferrum/simple")
+        page.close
+
+        expect(browser.contexts.size).to eq(1)
+        expect(context.targets.size).to be_between(0, 1) # needs some time to close target
+
         context.dispose
         expect(browser.contexts.size).to eq(0)
       end

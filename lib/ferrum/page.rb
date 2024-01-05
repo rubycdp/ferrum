@@ -34,6 +34,11 @@ module Ferrum
     attr_accessor :referrer
     attr_reader :context_id, :target_id, :event, :tracing
 
+    # Client connection.
+    #
+    # @return [Client]
+    attr_reader :client
+
     # Mouse object.
     #
     # @return [Mouse]
@@ -65,10 +70,10 @@ module Ferrum
     attr_reader :downloads
 
     def initialize(client, context_id:, target_id:, proxy: nil)
+      @client = client
       @context_id = context_id
       @target_id = target_id
       @options = client.options
-      self.client = client
 
       @frames = Concurrent::Map.new
       @main_frame = Frame.new(nil, self)
@@ -118,14 +123,14 @@ module Ferrum
 
     def close
       @headers.clear
-      client(browser: true).command("Target.closeTarget", targetId: @target_id)
+      client.command("Target.closeTarget", async: true, targetId: @target_id)
       close_connection
 
       true
     end
 
     def close_connection
-      @page_client&.close
+      client&.close
     end
 
     #
@@ -334,7 +339,7 @@ module Ferrum
     def command(method, wait: 0, slowmoable: false, **params)
       iteration = @event.reset if wait.positive?
       sleep(@options.slowmo) if slowmoable && @options.slowmo.positive?
-      result = client.command(method, params)
+      result = client.command(method, **params)
 
       if wait.positive?
         # Wait a bit after command and check if iteration has
@@ -358,7 +363,7 @@ module Ferrum
         end
       when :request
         client.on("Fetch.requestPaused") do |params, index, total|
-          request = Network::InterceptedRequest.new(self, params)
+          request = Network::InterceptedRequest.new(client, params)
           exchange = network.select(request.network_id).last
           exchange ||= network.build_exchange(request.network_id)
           exchange.intercepted_request = request
@@ -501,16 +506,6 @@ module Ferrum
       @proxy_port = options&.[](:port) || @options.proxy&.[](:port)
       @proxy_user = options&.[](:user) || @options.proxy&.[](:user)
       @proxy_password = options&.[](:password) || @options.proxy&.[](:password)
-    end
-
-    def client=(browser_client)
-      @browser_client = browser_client
-      ws_url = @options.ws_url.merge(path: "/devtools/page/#{@target_id}").to_s
-      @page_client = Browser::Client.new(ws_url, @options)
-    end
-
-    def client(browser: false)
-      browser ? @browser_client : @page_client
     end
   end
 end
