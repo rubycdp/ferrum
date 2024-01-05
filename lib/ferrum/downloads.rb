@@ -6,7 +6,7 @@ module Ferrum
 
     def initialize(page)
       @page = page
-      @event = Event.new.tap(&:set)
+      @event = Utils::Event.new.tap(&:set)
       @files = {}
     end
 

@@ -2,7 +2,6 @@
 
 require "forwardable"
 require "pathname"
-require "ferrum/event"
 require "ferrum/mouse"
 require "ferrum/keyboard"
 require "ferrum/headers"
@@ -73,7 +72,7 @@ module Ferrum
 
       @frames = Concurrent::Map.new
       @main_frame = Frame.new(nil, self)
-      @event = Event.new.tap(&:set)
+      @event = Utils::Event.new.tap(&:set)
       self.proxy = proxy
 
       @mouse = Mouse.new(self)

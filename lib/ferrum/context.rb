@@ -50,17 +50,14 @@ module Ferrum
       target = @pendings.take(@client.timeout)
       raise NoSuchTargetError unless target.is_a?(Target)
 
-      @targets.put_if_absent(target.id, target)
       target
     end
 
     def add_target(params)
       target = Target.new(@client, params)
-      if target.window?
-        @targets.put_if_absent(target.id, target)
-      else
-        @pendings.put(target, @client.timeout)
-      end
+      @targets.put_if_absent(target.id, target)
+
+      @pendings.put(target, @client.timeout) if @pendings.empty?
     end
 
     def update_target(target_id, params)
