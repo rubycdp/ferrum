@@ -7,6 +7,7 @@
   - `#files` information about downloaded files
   - `#wait` wait for file download to be completed
   - `#set_behavior` where and whether to store file
+- `Browser::Client#command` accepts :async parameter [#433]
 
 ### Changed
 - `Ferrum::Page#screeshot` accepts :area option [#410]
@@ -17,10 +18,14 @@ instead of passing browser and making cyclic dependency on the browser instance,
 - Bump `websocket-driver` to `~> 0.7` [#432]
 - Got rid of `Concurrent::Async` in `Ferrum::Browser::Subscriber` [#432]
 - `Ferrum::Page#set_window_bounds` is renamed to `Ferrum::Page#window_bounds=`
+- `Ferrum::Page` get right client from the Target and passes it down everywhere [#433]
+- `Ferrum::Network::InterceptedRequest` accepts `Browser::Client` instead of `Ferrum::Page` [#433]
 
 ### Fixed
 
 - Exceptions within `.on()` were swallowed by a thread pool of `Concurrent::Async` [#432]
+- `Ferrum::Context#add_target` puts wrong target to pendings sometimes [#433]
+- Leaking connection descriptors in tests and after browser quit [#433]
 
 ### Removed
 
