@@ -326,6 +326,12 @@ module Ferrum
       params["remaining_path"]
     end
 
+    post "/ferrum/ping" do
+      # Sleeping to simulate a server that does not send a response to PING requests
+      sleep 5
+      halt 204
+    end
+
     protected
 
     def render_view(view)

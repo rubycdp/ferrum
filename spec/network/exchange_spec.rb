@@ -109,6 +109,22 @@ describe Ferrum::Network::Exchange do
 
       expect(last_exchange.finished?).to be true
     end
+
+    it "returns true if an error occurred" do
+      exchange = Ferrum::Network::Exchange.new(page, "1")
+
+      expect(exchange.finished?).to be false
+      exchange.error = Ferrum::Network::Error.new
+      expect(exchange.finished?).to be true
+    end
+
+    it "returns true for ping requests" do
+      exchange = Ferrum::Network::Exchange.new(page, "1")
+      expect(exchange.finished?).to be false
+
+      exchange.request = Ferrum::Network::Request.new({"type" => "Ping"})
+      expect(exchange.finished?).to be true
+    end
   end
 
   describe "#redirect?" do
@@ -116,6 +132,16 @@ describe Ferrum::Network::Exchange do
       page.go_to("/redirect_again")
 
       expect(first_exchange.response.redirect?).to be
+    end
+  end
+
+  describe "#response_expected?" do
+    it "determines if exchange expects a response" do
+      exchange = Ferrum::Network::Exchange.new(page, "1")
+      expect(exchange.response_expected?).to be true
+
+      exchange.request = Ferrum::Network::Request.new({"type" => "Ping"})
+      expect(exchange.response_expected?).to be false
     end
   end
 
