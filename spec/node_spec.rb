@@ -13,7 +13,7 @@ describe Ferrum::Node do
     it "fires a ping request for anchor elements" do
       browser.go_to("/ferrum/link_with_ping")
 
-      expect(browser.network.traffic.length).to eq(1) 
+      expect(browser.network.traffic.length).to eq(1)
       browser.at_css("a").click
 
       # 1 for first load, 1 for load of new url, 1 for ping = 3 total
