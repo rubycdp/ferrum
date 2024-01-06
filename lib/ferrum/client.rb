@@ -23,7 +23,10 @@ module Ferrum
 
     def command(method, async: false, **params)
       message = build_message(method, params)
+      send_message(message, async: async)
+    end
 
+    def send_message(message, async:)
       if async
         @ws.send_message(message)
         true
@@ -66,6 +69,10 @@ module Ferrum
         "@ws=#{@ws.inspect}>"
     end
 
+    def build_message(method, params)
+      { method: method, params: params }.merge(id: next_command_id)
+    end
+
     private
 
     def start
@@ -81,10 +88,6 @@ module Ferrum
           end
         end
       end
-    end
-
-    def build_message(method, params)
-      { method: method, params: params }.merge(id: next_command_id)
     end
 
     def next_command_id
