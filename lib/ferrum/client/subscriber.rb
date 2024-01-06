@@ -35,6 +35,10 @@ module Ferrum
         @priority_thread&.kill
       end
 
+      def clear(session_id:)
+        @on.delete_if { |k, _| k.match?(session_id) }
+      end
+
       private
 
       def start
@@ -58,9 +62,11 @@ module Ferrum
       end
 
       def call(message)
-        method, params = message.values_at("method", "params")
-        total = @on[method].size
-        @on[method].each_with_index do |block, index|
+        method, session_id, params = message.values_at("method", "sessionId", "params")
+        event = SessionClient.event_name(method, session_id)
+
+        total = @on[event].size
+        @on[event].each_with_index do |block, index|
           # In case of multiple callbacks we provide current index and total
           block.call(params, index, total)
         end
