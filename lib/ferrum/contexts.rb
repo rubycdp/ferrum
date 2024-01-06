@@ -12,6 +12,7 @@ module Ferrum
       @contexts = Concurrent::Map.new
       @client = client
       subscribe
+      auto_attach
       discover
     end
 
@@ -67,12 +68,23 @@ module Ferrum
     private
 
     def subscribe
+      @client.on("Target.attachedToTarget") do |params|
+        info, session_id = params.values_at("targetInfo", "sessionId")
+        next unless info["type"] == "page"
+
+        context_id = info["browserContextId"]
+        @contexts[context_id]&.add_target(session_id: session_id, params: info)
+        if params["waitingForDebugger"]
+          @client.session(session_id).command("Runtime.runIfWaitingForDebugger", async: true)
+        end
+      end
+
       @client.on("Target.targetCreated") do |params|
         info = params["targetInfo"]
         next unless info["type"] == "page"
 
         context_id = info["browserContextId"]
-        @contexts[context_id]&.add_target(info)
+        @contexts[context_id]&.add_target(params: info)
       end
 
       @client.on("Target.targetInfoChanged") do |params|
@@ -96,6 +108,12 @@ module Ferrum
 
     def discover
       @client.command("Target.setDiscoverTargets", discover: true)
+    end
+
+    def auto_attach
+      return unless @client.options.flatten
+
+      @client.command("Target.setAutoAttach", autoAttach: true, waitForDebuggerOnStart: true, flatten: true)
     end
   end
 end

@@ -53,8 +53,8 @@ module Ferrum
       target
     end
 
-    def add_target(params)
-      new_target = Target.new(@client, params)
+    def add_target(params:, session_id: nil)
+      new_target = Target.new(@client, session_id, params)
       target = @targets.put_if_absent(new_target.id, new_target)
       target ||= new_target # `put_if_absent` returns nil if added a new value or existing if there was one already
       @pendings.put(target, @client.timeout) if @pendings.empty?
@@ -71,7 +71,7 @@ module Ferrum
 
     def close_targets_connection
       @targets.each_value do |target|
-        next unless target.attached?
+        next unless target.connected?
 
         target.page.close_connection
       end

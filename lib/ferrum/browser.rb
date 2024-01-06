@@ -47,6 +47,9 @@ module Ferrum
     # @option options [Boolean] :xvfb (false)
     #   Run browser in a virtual framebuffer.
     #
+    # @option options [Boolean] :flatten (true)
+    #   Use one websocket connection to the browser and all the pages in flatten mode.
+    #
     # @option options [(Integer, Integer)] :window_size ([1024, 768])
     #   The dimensions of the browser window in which to test, expressed as a
     #   2-element array, e.g. `[1024, 768]`.

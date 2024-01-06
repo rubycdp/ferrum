@@ -8,6 +8,7 @@
   - `#wait` wait for file download to be completed
   - `#set_behavior` where and whether to store file
 - `Browser::Client#command` accepts :async parameter [#433]
+- `Ferrum::Browser` introduce `:flatten` mode with one connection and sessions [#434]
 
 ### Changed
 - `Ferrum::Page#screeshot` accepts :area option [#410]
@@ -533,9 +534,8 @@ to `Ferrum::Browser#default_context`
 ### Fixed
 
 ### Removed
-- `Ferrum::EmptyTargetsError`
-- the `hack` to handle `new window` which doesn't have events at all by `Ferrum::Page#session_id` with
-`Target.attachToTarget` and `Target.detachFromTarget` usage
+- `Ferrum::EmptyTargetsError` the hack to handle `new window` which doesn't have events at all by
+`Ferrum::Page#session_id` with `Target.attachToTarget` and `Target.detachFromTarget` usage
 - `Ferrum::Page#close_connection` - the logic is moved to `Ferrum::Page#close` directly
 - the third argument (`new_window = false`) for `Ferrum::Page` initializer
 - `Ferrum::Targets` class with the delegations to `Ferrum::Targets` instance in `Ferrum::Browser` instance:

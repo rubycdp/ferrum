@@ -5,11 +5,59 @@ require "ferrum/client/subscriber"
 require "ferrum/client/web_socket"
 
 module Ferrum
+  class SessionClient
+    attr_reader :client, :session_id
+
+    def self.event_name(event, session_id)
+      [event, session_id].compact.join("_")
+    end
+
+    def initialize(client, session_id)
+      @client = client
+      @session_id = session_id
+    end
+
+    def command(method, async: false, **params)
+      message = build_message(method, params)
+      @client.send_message(message, async: async)
+    end
+
+    def on(event, &block)
+      @client.on(event_name(event), &block)
+    end
+
+    def subscribed?(event)
+      @client.subscribed?(event_name(event))
+    end
+
+    def respond_to_missing?(name, include_private)
+      @client.respond_to?(name, include_private)
+    end
+
+    def method_missing(name, ...)
+      @client.send(name, ...)
+    end
+
+    def close
+      @client.subscriber.clear(session_id: session_id)
+    end
+
+    private
+
+    def build_message(method, params)
+      @client.build_message(method, params).merge(sessionId: session_id)
+    end
+
+    def event_name(event)
+      self.class.event_name(event, session_id)
+    end
+  end
+
   class Client
     extend Forwardable
     delegate %i[timeout timeout=] => :options
 
-    attr_reader :options
+    attr_reader :options, :subscriber
 
     def initialize(ws_url, options)
       @command_id = 0
@@ -52,6 +100,10 @@ module Ferrum
 
     def subscribed?(event)
       @subscriber.subscribed?(event)
+    end
+
+    def session(session_id)
+      SessionClient.new(self, session_id)
     end
 
     def close

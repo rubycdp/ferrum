@@ -8,17 +8,20 @@ module Ferrum
     # where we enhance page class and build page ourselves.
     attr_writer :page
 
-    def initialize(client, params = nil)
+    attr_reader :session_id
+
+    def initialize(client, session_id = nil, params = nil)
       @page = nil
       @client = client
+      @session_id = session_id
       @params = params
     end
 
     def update(params)
-      @params = params
+      @params.merge!(params)
     end
 
-    def attached?
+    def connected?
       !!@page
     end
 
@@ -68,6 +71,8 @@ module Ferrum
 
     def build_client
       options = @client.options
+      return @client.session(session_id) if options.flatten
+
       ws_url = options.ws_url.merge(path: "/devtools/page/#{id}").to_s
       Client.new(ws_url, options)
     end
