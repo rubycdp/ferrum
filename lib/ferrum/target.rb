@@ -8,13 +8,14 @@ module Ferrum
     # where we enhance page class and build page ourselves.
     attr_writer :page
 
-    attr_reader :session_id
+    attr_reader :session_id, :options
 
-    def initialize(client, session_id = nil, params = nil)
+    def initialize(browser_client, session_id = nil, params = nil)
       @page = nil
-      @client = client
       @session_id = session_id
       @params = params
+      @browser_client = browser_client
+      @options = browser_client.options
     end
 
     def update(params)
@@ -29,9 +30,13 @@ module Ferrum
       @page ||= build_page
     end
 
+    def client
+      @client ||= build_client
+    end
+
     def build_page(**options)
       maybe_sleep_if_new_window
-      Page.new(build_client, context_id: context_id, target_id: id, **options)
+      Page.new(client, context_id: context_id, target_id: id, **options)
     end
 
     def id
@@ -70,11 +75,13 @@ module Ferrum
     private
 
     def build_client
-      options = @client.options
-      return @client.session(session_id) if options.flatten
+      return @browser_client.session(session_id) if options.flatten
 
-      ws_url = options.ws_url.merge(path: "/devtools/page/#{id}").to_s
       Client.new(ws_url, options)
+    end
+
+    def ws_url
+      options.ws_url.merge(path: "/devtools/page/#{id}").to_s
     end
   end
 end
