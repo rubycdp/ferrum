@@ -122,7 +122,7 @@ describe Ferrum::Network::Exchange do
       exchange = Ferrum::Network::Exchange.new(page, "1")
       expect(exchange.finished?).to be false
 
-      exchange.request = Ferrum::Network::Request.new({"type" => "Ping"})
+      exchange.request = Ferrum::Network::Request.new({ "type" => "Ping" })
       expect(exchange.finished?).to be true
     end
   end
@@ -135,13 +135,13 @@ describe Ferrum::Network::Exchange do
     end
   end
 
-  describe "#response_expected?" do
-    it "determines if exchange expects a response" do
+  describe "#ping?" do
+    it "determines if exchange is ping type" do
       exchange = Ferrum::Network::Exchange.new(page, "1")
-      expect(exchange.response_expected?).to be true
+      expect(exchange.ping?).to be false
 
-      exchange.request = Ferrum::Network::Request.new({"type" => "Ping"})
-      expect(exchange.response_expected?).to be false
+      exchange.request = Ferrum::Network::Request.new({ "type" => "Ping" })
+      expect(exchange.ping?).to be true
     end
   end
 

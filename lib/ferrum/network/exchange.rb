@@ -79,7 +79,7 @@ module Ferrum
       # @return [Boolean]
       #
       def finished?
-        blocked? || response&.loaded? || !error.nil? || !response_expected?
+        blocked? || response&.loaded? || !error.nil? || ping?
       end
 
       #
@@ -119,14 +119,12 @@ module Ferrum
       end
 
       #
-      # Determines if the exchange expects a response
+      # Determines if the exchange is ping.
       #
       # @return [Boolean]
       #
-      def response_expected?
-        return true if request.nil?
-
-        !!request.response_expected?
+      def ping?
+        !!request&.ping?
       end
 
       #

@@ -81,12 +81,12 @@ module Ferrum
       end
 
       #
-      # Determines if a response is expected.
+      # Determines if a request is of type ping.
       #
       # @return [Boolean]
       #
-      def response_expected?
-        !type?("ping")
+      def ping?
+        type?("ping")
       end
 
       #
