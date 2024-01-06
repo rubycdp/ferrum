@@ -74,11 +74,11 @@ module Ferrum
     end
 
     def total_connections
-      @traffic.size
+      exchange_connections.count
     end
 
     def finished_connections
-      @traffic.count(&:finished?)
+      exchange_connections.count(&:finished?)
     end
 
     def pending_connections
@@ -378,7 +378,21 @@ module Ferrum
 
         exchange.request = request
 
-        @exchange = exchange if exchange.navigation_request?(@page.main_frame.id)
+        if exchange.navigation_request?(@page.main_frame.id)
+          @exchange = exchange
+          mark_pending_exchanges_as_unknown(exchange)
+        end
+      end
+    end
+
+    # When the main frame navigates Chrome doesn't send `Network.loadingFailed`
+    # for pending async requests. Therefore, we mark pending connections as unknown since
+    # they are not relevant to the current navigation.
+    def mark_pending_exchanges_as_unknown(navigation_exchange)
+      @traffic.each do |exchange|
+        break if exchange.id == navigation_exchange.id
+
+        exchange.unknown = true if exchange.pending?
       end
     end
 
@@ -395,7 +409,10 @@ module Ferrum
 
     def subscribe_loading_finished
       @page.on("Network.loadingFinished") do |params|
-        response = select(params["requestId"]).last&.response
+        exchange = select(params["requestId"]).last
+        exchange.unknown = false
+
+        response = exchange&.response
 
         if response
           response.loaded = true
@@ -476,6 +493,17 @@ module Ferrum
 
     def whitelist?
       Array(@whitelist).any?
+    end
+
+    def exchange_connections
+      @traffic.select { |exchange| exchange_connection?(exchange) }
+    end
+
+    def exchange_connection?(exchange)
+      return false unless @page.frames.any? { |f| f.id == exchange.request&.frame_id }
+
+      return false unless exchange.request&.frame_id == @exchange.request&.frame_id
+      return exchange.request&.loader_id == @exchange.request&.loader_id
     end
   end
 end
