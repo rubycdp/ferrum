@@ -156,6 +156,7 @@ Ferrum::Browser.new(options)
   * `:headless` (String | Boolean) - Set browser as headless or not, `true` by default. You can set `"new"` to support
       [new headless mode](https://developer.chrome.com/articles/new-headless/).
   * `:xvfb` (Boolean) - Run browser in a virtual framebuffer, `false` by default.
+  * `:flatten` (Boolean) - Use one websocket connection to the browser and all the pages in flatten mode.
   * `:window_size` (Array) - The dimensions of the browser window in which to
       test, expressed as a 2-element array, e.g. [1024, 768]. Default: [1024, 768]
   * `:extensions` (Array[String | Hash]) - An array of paths to files or JS

@@ -8,7 +8,7 @@
   - `#wait` wait for file download to be completed
   - `#set_behavior` where and whether to store file
 - `Browser::Client#command` accepts :async parameter [#433]
-- `Ferrum::Browser` introduce `:flatten` mode with one connection and sessions
+- `Ferrum::Browser` introduce `:flatten` mode with one connection and sessions [#434]
 
 ### Changed
 - `Ferrum::Page#screeshot` accepts :area option [#410]
