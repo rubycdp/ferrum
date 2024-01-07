@@ -10,6 +10,7 @@
 - `Browser::Client#command` accepts :async parameter [#433]
 - `Ferrum::Browser` introduce `:flatten` mode with one connection and sessions [#434]
 - Support for ping requests [#417]
+- `Ferrum::Browser` introduce `:ws_url` option to set external websocket for a browser [#435]
 
 ### Changed
 - `Ferrum::Page#screeshot` accepts :area option [#410]
