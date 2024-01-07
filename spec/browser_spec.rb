@@ -119,10 +119,29 @@ describe Ferrum::Browser do
     end
 
     it "supports :url argument" do
-      with_external_browser do |url|
+      with_external_browser do |url, process|
         browser = Ferrum::Browser.new(url: url)
         browser.go_to(base_url)
         expect(browser.body).to include("Hello world!")
+        expect(process.v8_version).not_to be_nil
+        expect(process.browser_version).not_to be_nil
+        expect(process.webkit_version).not_to be_nil
+        expect(process.default_user_agent).not_to be_nil
+        expect(process.protocol_version).not_to be_nil
+      ensure
+        browser&.quit
+      end
+    end
+
+    it "supports :ws_url argument" do
+      with_external_browser do |url, process|
+        uri = Addressable::URI.parse(url)
+        browser = Ferrum::Browser.new(ws_url: "ws://#{uri.host}:#{uri.port}")
+        expect(process.v8_version).not_to be_nil
+        expect(process.browser_version).not_to be_nil
+        expect(process.webkit_version).not_to be_nil
+        expect(process.default_user_agent).not_to be_nil
+        expect(process.protocol_version).not_to be_nil
       ensure
         browser&.quit
       end

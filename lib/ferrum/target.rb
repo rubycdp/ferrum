@@ -81,7 +81,7 @@ module Ferrum
     end
 
     def ws_url
-      options.ws_url.merge(path: "/devtools/page/#{id}").to_s
+      @browser_client.ws_url.merge(path: "/devtools/page/#{id}")
     end
   end
 end

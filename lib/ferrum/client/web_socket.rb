@@ -8,15 +8,27 @@ module Ferrum
   class Client
     class WebSocket
       WEBSOCKET_BUG_SLEEP = 0.05
+      DEFAULT_PORTS = { "ws" => 80, "wss" => 443 }.freeze
       SKIP_LOGGING_SCREENSHOTS = !ENV["FERRUM_LOGGING_SCREENSHOTS"]
 
       attr_reader :url, :messages
 
       def initialize(url, max_receive_size, logger)
-        @url      = url
-        @logger   = logger
-        uri       = URI.parse(@url)
-        @sock     = TCPSocket.new(uri.host, uri.port)
+        @url    = url
+        @logger = logger
+        uri     = URI.parse(@url)
+        port    = uri.port || DEFAULT_PORTS[uri.scheme]
+
+        if port == 443
+          tcp = TCPSocket.new(uri.host, port)
+          ssl_context = OpenSSL::SSL::SSLContext.new
+          @sock = OpenSSL::SSL::SSLSocket.new(tcp, ssl_context)
+          @sock.sync_close = true
+          @sock.connect
+        else
+          @sock = TCPSocket.new(uri.host, port)
+        end
+
         max_receive_size ||= ::WebSocket::Driver::MAX_LENGTH
         @driver   = ::WebSocket::Driver.client(self, max_length: max_receive_size)
         @messages = Queue.new

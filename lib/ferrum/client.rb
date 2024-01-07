@@ -57,10 +57,11 @@ module Ferrum
     extend Forwardable
     delegate %i[timeout timeout=] => :options
 
-    attr_reader :options, :subscriber
+    attr_reader :ws_url, :options, :subscriber
 
     def initialize(ws_url, options)
       @command_id = 0
+      @ws_url = ws_url
       @options = options
       @pendings = Concurrent::Hash.new
       @ws = WebSocket.new(ws_url, options.ws_max_receive_size, options.logger)
