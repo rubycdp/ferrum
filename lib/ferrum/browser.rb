@@ -245,7 +245,6 @@ module Ferrum
 
       begin
         @process.start
-        @options.ws_url = @process.ws_url&.merge(path: "/")
         @options.default_user_agent = @process.default_user_agent
 
         @client = Client.new(@process.ws_url, options)

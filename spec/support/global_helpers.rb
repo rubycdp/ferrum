@@ -53,7 +53,7 @@ RSpec.shared_context "Global helpers" do
 
     begin
       process.start
-      yield "http://#{host}:#{port}"
+      yield "http://#{host}:#{port}", process
     ensure
       process.stop
     end

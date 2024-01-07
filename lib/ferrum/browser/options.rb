@@ -13,10 +13,10 @@ module Ferrum
 
       attr_reader :window_size, :logger, :ws_max_receive_size,
                   :js_errors, :base_url, :slowmo, :pending_connection_errors,
-                  :url, :env, :process_timeout, :browser_name, :browser_path,
+                  :url, :ws_url, :env, :process_timeout, :browser_name, :browser_path,
                   :save_path, :proxy, :port, :host, :headless, :browser_options,
                   :ignore_default_browser_options, :xvfb, :flatten
-      attr_accessor :timeout, :ws_url, :default_user_agent
+      attr_accessor :timeout, :default_user_agent
 
       def initialize(options = nil)
         @options = Hash(options&.dup)
@@ -44,6 +44,7 @@ module Ferrum
         @logger = parse_logger(@options[:logger])
         @base_url = parse_base_url(@options[:base_url]) if @options[:base_url]
         @url = @options[:url].to_s if @options[:url]
+        @ws_url = @options[:ws_url].to_s if @options[:ws_url]
 
         @options = @options.merge(window_size: @window_size).freeze
         @browser_options = @options.fetch(:browser_options, {}).freeze

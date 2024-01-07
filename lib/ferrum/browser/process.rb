@@ -62,11 +62,15 @@ module Ferrum
       def initialize(options)
         @pid = @xvfb = @user_data_dir = nil
 
+        if options.ws_url
+          response = parse_json_version(options.ws_url)
+          self.ws_url = response&.[]("webSocketDebuggerUrl") || options.ws_url
+          return
+        end
+
         if options.url
-          url = URI.join(options.url, "/json/version")
-          response = JSON.parse(::Net::HTTP.get(url))
-          self.ws_url = response["webSocketDebuggerUrl"]
-          parse_browser_versions
+          response = parse_json_version(options.url)
+          self.ws_url = response&.[]("webSocketDebuggerUrl")
           return
         end
 
@@ -100,7 +104,7 @@ module Ferrum
           ObjectSpace.define_finalizer(self, self.class.process_killer(@pid))
 
           parse_ws_url(read_io, @process_timeout)
-          parse_browser_versions
+          parse_json_version(ws_url)
         ensure
           close_io(read_io, write_io)
         end
@@ -174,25 +178,37 @@ module Ferrum
         @port = @ws_url.port
       end
 
-      def parse_browser_versions
-        return unless ws_url.is_a?(Addressable::URI)
-
-        version_url = URI.parse(ws_url.merge(scheme: "http", path: "/json/version"))
-        response = JSON.parse(::Net::HTTP.get(version_url))
-
-        @v8_version = response["V8-Version"]
-        @browser_version = response["Browser"]
-        @webkit_version = response["WebKit-Version"]
-        @default_user_agent = response["User-Agent"]
-        @protocol_version = response["Protocol-Version"]
-      end
-
       def close_io(*ios)
         ios.each do |io|
           io.close unless io.closed?
         rescue IOError
           raise unless RUBY_ENGINE == "jruby"
         end
+      end
+
+      def parse_json_version(url)
+        url = URI.join(url, "/json/version")
+
+        if %w[wss ws].include?(url.scheme)
+          url.scheme = case url.scheme
+                       when "ws"
+                         "http"
+                       when "wss"
+                         "https"
+                       end
+        end
+
+        response = JSON.parse(::Net::HTTP.get(URI(url.to_s)))
+
+        @v8_version = response["V8-Version"]
+        @browser_version = response["Browser"]
+        @webkit_version = response["WebKit-Version"]
+        @default_user_agent = response["User-Agent"]
+        @protocol_version = response["Protocol-Version"]
+
+        response
+      rescue StandardError
+        # nop
       end
     end
   end
