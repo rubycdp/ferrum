@@ -6,7 +6,6 @@ module Ferrum
       class Chrome < Base
         DEFAULT_OPTIONS = {
           "headless" => nil,
-          "disable-gpu" => nil,
           "hide-scrollbars" => nil,
           "mute-audio" => nil,
           "enable-automation" => nil,
@@ -43,7 +42,18 @@ module Ferrum
           # NOTE: --no-sandbox is not needed if you properly setup a user in the container.
           # https://github.com/ebidel/lighthouse-ci/blob/master/builder/Dockerfile#L35-L40
           # "no-sandbox" => nil,
-        }.freeze
+        }
+        # On Windows, the --disable-gpu flag is a temporary work around for a few bugs.
+        # See crbug.com/737678 for more information.
+        if Utils::Platform.windows?
+          DEFAULT_OPTIONS.merge!("disable-gpu" => nil)
+        end
+        # Use Metal on Apple Silicon
+        # https://github.com/google/angle#platform-support-via-backing-renderers
+        if Utils::Platform.mac_arm?
+          DEFAULT_OPTIONS.merge!("use-angle" => "metal")
+        end
+        DEFAULT_OPTIONS.freeze
 
         MAC_BIN_PATH = [
           "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
