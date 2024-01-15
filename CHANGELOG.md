@@ -7,11 +7,29 @@
   - `#files` information about downloaded files
   - `#wait` wait for file download to be completed
   - `#set_behavior` where and whether to store file
+- `Browser::Client#command` accepts :async parameter [#433]
+- `Ferrum::Browser` introduce `:flatten` mode with one connection and sessions [#434]
+- Support for ping requests [#417]
+- `Ferrum::Browser` introduce `:ws_url` option to set external websocket for a browser [#435]
 
 ### Changed
 - `Ferrum::Page#screeshot` accepts :area option [#410]
+- Resizing page on creation is gone and moved to Cuprite [#427]
+- Min Ruby version is 2.7
+- Refactored internal API of `Ferrum::Browser`, `Ferrum::Page`, `Ferrum::Context`, `Ferrum::Contexts`, `Ferrum::Target`
+instead of passing browser and making cyclic dependency on the browser instance, we pass now a thin client [#431]
+- Bump `websocket-driver` to `~> 0.7` [#432]
+- Got rid of `Concurrent::Async` in `Ferrum::Browser::Subscriber` [#432]
+- `Ferrum::Page#set_window_bounds` is renamed to `Ferrum::Page#window_bounds=`
+- `Ferrum::Page` get right client from the Target and passes it down everywhere [#433]
+- `Ferrum::Network::InterceptedRequest` accepts `Ferrum::Browser::Client` instead of `Ferrum::Page` [#433]
+- `Ferrum::Browser::Client` -> `Ferrum::Client` [#433]
 
 ### Fixed
+
+- Exceptions within `.on()` were swallowed by a thread pool of `Concurrent::Async` [#432]
+- `Ferrum::Context#add_target` puts wrong target to pendings sometimes [#433]
+- Leaking connection descriptors in tests and after browser quit [#433]
 
 ### Removed
 
@@ -518,9 +536,8 @@ to `Ferrum::Browser#default_context`
 ### Fixed
 
 ### Removed
-- `Ferrum::EmptyTargetsError`
-- the `hack` to handle `new window` which doesn't have events at all by `Ferrum::Page#session_id` with
-`Target.attachToTarget` and `Target.detachFromTarget` usage
+- `Ferrum::EmptyTargetsError` the hack to handle `new window` which doesn't have events at all by
+`Ferrum::Page#session_id` with `Target.attachToTarget` and `Target.detachFromTarget` usage
 - `Ferrum::Page#close_connection` - the logic is moved to `Ferrum::Page#close` directly
 - the third argument (`new_window = false`) for `Ferrum::Page` initializer
 - `Ferrum::Targets` class with the delegations to `Ferrum::Targets` instance in `Ferrum::Browser` instance:

@@ -8,17 +8,21 @@ module Ferrum
     # where we enhance page class and build page ourselves.
     attr_writer :page
 
-    def initialize(browser, params = nil)
+    attr_reader :session_id, :options
+
+    def initialize(browser_client, session_id = nil, params = nil)
       @page = nil
-      @browser = browser
+      @session_id = session_id
       @params = params
+      @browser_client = browser_client
+      @options = browser_client.options
     end
 
     def update(params)
-      @params = params
+      @params.merge!(params)
     end
 
-    def attached?
+    def connected?
       !!@page
     end
 
@@ -26,9 +30,13 @@ module Ferrum
       @page ||= build_page
     end
 
+    def client
+      @client ||= build_client
+    end
+
     def build_page(**options)
       maybe_sleep_if_new_window
-      Page.new(id, @browser, **options)
+      Page.new(client, context_id: context_id, target_id: id, **options)
     end
 
     def id
@@ -62,6 +70,18 @@ module Ferrum
     def maybe_sleep_if_new_window
       # Dirty hack because new window doesn't have events at all
       sleep(NEW_WINDOW_WAIT) if window?
+    end
+
+    private
+
+    def build_client
+      return @browser_client.session(session_id) if options.flatten
+
+      Client.new(ws_url, options)
+    end
+
+    def ws_url
+      @browser_client.ws_url.merge(path: "/devtools/page/#{id}")
     end
   end
 end

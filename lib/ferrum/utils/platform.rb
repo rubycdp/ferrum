@@ -20,6 +20,10 @@ module Ferrum
         RbConfig::CONFIG["host_os"] =~ /darwin/
       end
 
+      def mac_arm?
+        mac? && RbConfig::CONFIG["host_cpu"] =~ /arm/
+      end
+
       def mri?
         defined?(RUBY_ENGINE) && RUBY_ENGINE == "ruby"
       end

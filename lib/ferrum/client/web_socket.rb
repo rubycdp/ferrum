@@ -5,18 +5,30 @@ require "socket"
 require "websocket/driver"
 
 module Ferrum
-  class Browser
+  class Client
     class WebSocket
       WEBSOCKET_BUG_SLEEP = 0.05
+      DEFAULT_PORTS = { "ws" => 80, "wss" => 443 }.freeze
       SKIP_LOGGING_SCREENSHOTS = !ENV["FERRUM_LOGGING_SCREENSHOTS"]
 
       attr_reader :url, :messages
 
       def initialize(url, max_receive_size, logger)
-        @url      = url
-        @logger   = logger
-        uri       = URI.parse(@url)
-        @sock     = TCPSocket.new(uri.host, uri.port)
+        @url    = url
+        @logger = logger
+        uri     = URI.parse(@url)
+        port    = uri.port || DEFAULT_PORTS[uri.scheme]
+
+        if port == 443
+          tcp = TCPSocket.new(uri.host, port)
+          ssl_context = OpenSSL::SSL::SSLContext.new
+          @sock = OpenSSL::SSL::SSLSocket.new(tcp, ssl_context)
+          @sock.sync_close = true
+          @sock.connect
+        else
+          @sock = TCPSocket.new(uri.host, port)
+        end
+
         max_receive_size ||= ::WebSocket::Driver::MAX_LENGTH
         @driver   = ::WebSocket::Driver.client(self, max_length: max_receive_size)
         @messages = Queue.new
@@ -27,21 +39,7 @@ module Ferrum
         @driver.on(:message, &method(:on_message))
         @driver.on(:close,   &method(:on_close))
 
-        @thread = Thread.new do
-          Thread.current.abort_on_exception = true
-          Thread.current.report_on_exception = true if Thread.current.respond_to?(:report_on_exception=)
-
-          begin
-            loop do
-              data = @sock.readpartial(512)
-              break unless data
-
-              @driver.parse(data)
-            end
-          rescue EOFError, Errno::ECONNRESET, Errno::EPIPE
-            @messages.close
-          end
-        end
+        start
 
         @driver.start
       end
@@ -66,6 +64,7 @@ module Ferrum
 
       def on_close(_event)
         @messages.close
+        @sock.close
         @thread.kill
       end
 
@@ -79,12 +78,27 @@ module Ferrum
 
       def write(data)
         @sock.write(data)
-      rescue EOFError, Errno::ECONNRESET, Errno::EPIPE
+      rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, IOError # rubocop:disable Lint/ShadowedException
         @messages.close
       end
 
       def close
         @driver.close
+      end
+
+      private
+
+      def start
+        @thread = Utils::Thread.spawn do
+          loop do
+            data = @sock.readpartial(512)
+            break unless data
+
+            @driver.parse(data)
+          end
+        rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, IOError # rubocop:disable Lint/ShadowedException
+          @messages.close
+        end
       end
     end
   end

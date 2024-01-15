@@ -81,6 +81,15 @@ module Ferrum
       end
 
       #
+      # Determines if a request is of type ping.
+      #
+      # @return [Boolean]
+      #
+      def ping?
+        type?("ping")
+      end
+
+      #
       # Converts the request to a Hash.
       #
       # @return [Hash{String => Object}]

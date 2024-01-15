@@ -6,7 +6,7 @@ module Ferrum
 
     def initialize(page)
       @page = page
-      @event = Event.new.tap(&:set)
+      @event = Utils::Event.new.tap(&:set)
       @files = {}
     end
 
@@ -26,7 +26,7 @@ module Ferrum
       raise Error, "supply absolute path for `:save_path` option" unless Pathname.new(save_path.to_s).absolute?
 
       @page.command("Browser.setDownloadBehavior",
-                    browserContextId: @page.context.id,
+                    browserContextId: @page.context_id,
                     downloadPath: save_path,
                     behavior: behavior,
                     eventsEnabled: true)

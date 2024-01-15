@@ -2,7 +2,6 @@
 
 require "forwardable"
 require "pathname"
-require "ferrum/event"
 require "ferrum/mouse"
 require "ferrum/keyboard"
 require "ferrum/headers"
@@ -15,7 +14,6 @@ require "ferrum/page/screenshot"
 require "ferrum/page/animation"
 require "ferrum/page/tracing"
 require "ferrum/page/stream"
-require "ferrum/browser/client"
 
 module Ferrum
   class Page
@@ -26,14 +24,20 @@ module Ferrum
                 current_url current_title url title body doctype content=
                 execution_id execution_id! evaluate evaluate_on evaluate_async execute evaluate_func
                 add_script_tag add_style_tag] => :main_frame
+    delegate %i[base_url default_user_agent timeout timeout=] => :@options
 
     include Animation
     include Screenshot
     include Frames
     include Stream
 
-    attr_accessor :referrer, :timeout
-    attr_reader :target_id, :browser, :event, :tracing
+    attr_accessor :referrer
+    attr_reader :context_id, :target_id, :event, :tracing
+
+    # Client connection.
+    #
+    # @return [Client]
+    attr_reader :client
 
     # Mouse object.
     #
@@ -65,19 +69,16 @@ module Ferrum
     # @return [Downloads]
     attr_reader :downloads
 
-    def initialize(target_id, browser, proxy: nil)
+    def initialize(client, context_id:, target_id:, proxy: nil)
+      @client = client
+      @context_id = context_id
+      @target_id = target_id
+      @options = client.options
+
       @frames = Concurrent::Map.new
       @main_frame = Frame.new(nil, self)
-      @browser = browser
-      @target_id = target_id
-      @timeout = @browser.timeout
-      @event = Event.new.tap(&:set)
+      @event = Utils::Event.new.tap(&:set)
       self.proxy = proxy
-
-      @client = Browser::Client.new(ws_url, self,
-                                    logger: @browser.options.logger,
-                                    ws_max_receive_size: @browser.options.ws_max_receive_size,
-                                    id_starts_with: 1000)
 
       @mouse = Mouse.new(self)
       @keyboard = Keyboard.new(self)
@@ -91,19 +92,15 @@ module Ferrum
       prepare_page
     end
 
-    def context
-      @browser.contexts.find_by(target_id: target_id)
-    end
-
     #
     # Navigates the page to a URL.
     #
     # @param [String, nil] url
     #   The URL to navigate to. The url should include scheme unless you set
-    #   `{Browser#base_url = url}` when configuring driver.
+    #   `{Browser#base_url = url}` when configuring.
     #
     # @example
-    #   browser.go_to("https://github.com/")
+    #   page.go_to("https://github.com/")
     #
     def go_to(url = nil)
       options = { url: combine_url!(url) }
@@ -116,7 +113,7 @@ module Ferrum
 
       response["frameId"]
     rescue TimeoutError
-      if @browser.options.pending_connection_errors
+      if @options.pending_connection_errors
         pendings = network.traffic.select(&:pending?).map(&:url).compact
         raise PendingConnectionsError.new(options[:url], pendings) unless pendings.empty?
       end
@@ -126,8 +123,14 @@ module Ferrum
 
     def close
       @headers.clear
-      @browser.command("Target.closeTarget", targetId: @target_id)
-      @client.close
+      client.command("Target.closeTarget", async: true, targetId: @target_id)
+      close_connection
+
+      true
+    end
+
+    def close_connection
+      client&.close
     end
 
     #
@@ -157,10 +160,10 @@ module Ferrum
     def resize(width: nil, height: nil, fullscreen: false)
       if fullscreen
         width, height = document_size
-        set_window_bounds(windowState: "fullscreen")
+        self.window_bounds = { window_state: "fullscreen" }
       else
-        set_window_bounds(windowState: "normal")
-        set_window_bounds(width: width, height: height)
+        self.window_bounds = { window_state: "normal" }
+        self.window_bounds = { width: width, height: height }
       end
 
       set_viewport(width: width, height: height)
@@ -176,20 +179,20 @@ module Ferrum
     end
 
     #
-    # The current position of the browser window.
+    # The current position of the window.
     #
     # @return [(Integer, Integer)]
-    #   The left, top coordinates of the browser window.
+    #   The left, top coordinates of the window.
     #
     # @example
-    #   browser.position # => [10, 20]
+    #   page.position # => [10, 20]
     #
     def position
-      @browser.command("Browser.getWindowBounds", windowId: window_id).fetch("bounds").values_at("left", "top")
+      window_bounds.values_at("left", "top")
     end
 
     #
-    # Sets the position of the browser window.
+    # Sets the position of the window.
     #
     # @param [Hash{Symbol => Object}] options
     #
@@ -200,20 +203,72 @@ module Ferrum
     #   The number of pixels from the top of the screen.
     #
     # @example
-    #   browser.position = { left: 10, top: 20 }
+    #   page.position = { left: 10, top: 20 }
     #
     def position=(options)
-      @browser.command("Browser.setWindowBounds",
-                       windowId: window_id,
-                       bounds: { left: options[:left], top: options[:top] })
+      self.window_bounds = { left: options[:left], top: options[:top] }
+    end
+
+    # Sets the position of the window.
+    #
+    # @param [Hash{Symbol => Object}] bounds
+    #
+    # @option options [Integer] :left
+    #   The number of pixels from the left-hand side of the screen.
+    #
+    # @option options [Integer] :top
+    #   The number of pixels from the top of the screen.
+    #
+    # @option options [Integer] :width
+    #   The window width in pixels.
+    #
+    # @option options [Integer] :height
+    #   The window height in pixels.
+    #
+    # @option options [String] :window_state
+    #   The window state. Default to normal. Allowed Values: normal, minimized, maximized, fullscreen
+    #
+    # @example
+    #   page.window_bounds = { left: 10, top: 20, width: 1024, height: 768, window_state: "normal" }
+    #
+    def window_bounds=(bounds)
+      options = bounds.dup
+      window_state = options.delete(:window_state)
+      bounds = { windowState: window_state, **options }.compact
+
+      client.command("Browser.setWindowBounds", windowId: window_id, bounds: bounds)
+    end
+
+    #
+    # Current window bounds.
+    #
+    # @return [Hash{String => (Integer, String)}]
+    #
+    # @example
+    #   page.window_bounds # => { "left": 0, "top": 1286, "width": 10, "height": 10, "windowState": "normal" }
+    #
+    def window_bounds
+      client.command("Browser.getWindowBounds", windowId: window_id).fetch("bounds")
+    end
+
+    #
+    # Current window id.
+    #
+    # @return [Integer]
+    #
+    # @example
+    #   page.window_id # => 1
+    #
+    def window_id
+      client.command("Browser.getWindowForTarget", targetId: target_id)["windowId"]
     end
 
     #
     # Reloads the current page.
     #
     # @example
-    #   browser.go_to("https://github.com/")
-    #   browser.refresh
+    #   page.go_to("https://github.com/")
+    #   page.refresh
     #
     def refresh
       command("Page.reload", wait: timeout, slowmoable: true)
@@ -224,33 +279,33 @@ module Ferrum
     # Stop all navigations and loading pending resources on the page.
     #
     # @example
-    #   browser.go_to("https://github.com/")
-    #   browser.stop
+    #   page.go_to("https://github.com/")
+    #   page.stop
     #
     def stop
       command("Page.stopLoading", slowmoable: true)
     end
 
     #
-    # Navigates to the previous URL in the browser's history.
+    # Navigates to the previous URL in the history.
     #
     # @example
-    #   browser.go_to("https://github.com/")
-    #   browser.at_xpath("//a").click
-    #   browser.back
+    #   page.go_to("https://github.com/")
+    #   page.at_xpath("//a").click
+    #   page.back
     #
     def back
       history_navigate(delta: -1)
     end
 
     #
-    # Navigates to the next URL in the browser's history.
+    # Navigates to the next URL in the history.
     #
     # @example
-    #   browser.go_to("https://github.com/")
-    #   browser.at_xpath("//a").click
-    #   browser.back
-    #   browser.forward
+    #   page.go_to("https://github.com/")
+    #   page.at_xpath("//a").click
+    #   page.back
+    #   page.forward
     #
     def forward
       history_navigate(delta: 1)
@@ -270,29 +325,21 @@ module Ferrum
     # @return [Boolean]
     #
     # @example
-    #   browser.bypass_csp # => true
-    #   browser.go_to("https://github.com/ruby-concurrency/concurrent-ruby/blob/master/docs-source/promises.in.md")
-    #   browser.refresh
-    #   browser.add_script_tag(content: "window.__injected = 42")
-    #   browser.evaluate("window.__injected") # => 42
+    #   page.bypass_csp # => true
+    #   page.go_to("https://github.com/ruby-concurrency/concurrent-ruby/blob/master/docs-source/promises.in.md")
+    #   page.refresh
+    #   page.add_script_tag(content: "window.__injected = 42")
+    #   page.evaluate("window.__injected") # => 42
     #
     def bypass_csp(enabled: true)
       command("Page.setBypassCSP", enabled: enabled)
       enabled
     end
 
-    def window_id
-      @browser.command("Browser.getWindowForTarget", targetId: @target_id)["windowId"]
-    end
-
-    def set_window_bounds(bounds = {})
-      @browser.command("Browser.setWindowBounds", windowId: window_id, bounds: bounds)
-    end
-
     def command(method, wait: 0, slowmoable: false, **params)
       iteration = @event.reset if wait.positive?
-      sleep(@browser.options.slowmo) if slowmoable && @browser.options.slowmo.positive?
-      result = @client.command(method, params)
+      sleep(@options.slowmo) if slowmoable && @options.slowmo.positive?
+      result = client.command(method, **params)
 
       if wait.positive?
         # Wait a bit after command and check if iteration has
@@ -310,30 +357,30 @@ module Ferrum
     def on(name, &block)
       case name
       when :dialog
-        @client.on("Page.javascriptDialogOpening") do |params, index, total|
+        client.on("Page.javascriptDialogOpening") do |params, index, total|
           dialog = Dialog.new(self, params)
           block.call(dialog, index, total)
         end
       when :request
-        @client.on("Fetch.requestPaused") do |params, index, total|
-          request = Network::InterceptedRequest.new(self, params)
+        client.on("Fetch.requestPaused") do |params, index, total|
+          request = Network::InterceptedRequest.new(client, params)
           exchange = network.select(request.network_id).last
           exchange ||= network.build_exchange(request.network_id)
           exchange.intercepted_request = request
           block.call(request, index, total)
         end
       when :auth
-        @client.on("Fetch.authRequired") do |params, index, total|
+        client.on("Fetch.authRequired") do |params, index, total|
           request = Network::AuthRequest.new(self, params)
           block.call(request, index, total)
         end
       else
-        @client.on(name, &block)
+        client.on(name, &block)
       end
     end
 
     def subscribed?(event)
-      @client.subscribed?(event)
+      client.subscribed?(event)
     end
 
     def use_proxy?
@@ -355,13 +402,13 @@ module Ferrum
       network.subscribe
       downloads.subscribe
 
-      if @browser.options.logger
+      if @options.logger
         on("Runtime.consoleAPICalled") do |params|
-          params["args"].each { |r| @browser.options.logger.puts(r["value"]) }
+          params["args"].each { |r| @options.logger.puts(r["value"]) }
         end
       end
 
-      if @browser.options.js_errors
+      if @options.js_errors
         on("Runtime.exceptionThrown") do |params|
           # FIXME: https://jvns.ca/blog/2015/11/27/why-rubys-timeout-is-dangerous-and-thread-dot-raise-is-terrifying/
           Thread.main.raise JavaScriptError.new(
@@ -396,16 +443,13 @@ module Ferrum
         end
       end
 
-      downloads.set_behavior(save_path: @browser.options.save_path) if @browser.options.save_path
+      downloads.set_behavior(save_path: @options.save_path) if @options.save_path
 
-      @browser.extensions.each do |extension|
+      @options.extensions.each do |extension|
         command("Page.addScriptToEvaluateOnNewDocument", source: extension)
       end
 
       inject_extensions
-
-      width, height = @browser.window_size
-      resize(width: width, height: height)
 
       response = command("Page.getNavigationHistory")
       transition_type = response.dig("entries", 0, "transitionType")
@@ -420,7 +464,7 @@ module Ferrum
     end
 
     def inject_extensions
-      @browser.extensions.each do |extension|
+      @options.extensions.each do |extension|
         # https://github.com/GoogleChrome/puppeteer/issues/1443
         # https://github.com/ChromeDevTools/devtools-protocol/issues/77
         # https://github.com/cyrus-and/chrome-remote-interface/issues/319
@@ -450,22 +494,18 @@ module Ferrum
       url = Addressable::URI.parse(url_or_path)
       nil_or_relative = url.nil? || url.relative?
 
-      if nil_or_relative && !@browser.base_url
+      if nil_or_relative && !@options.base_url
         raise "Set :base_url browser's option or use absolute url in `go_to`, you passed: #{url_or_path}"
       end
 
-      (nil_or_relative ? @browser.base_url.join(url.to_s) : url).to_s
-    end
-
-    def ws_url
-      "ws://#{@browser.process.host}:#{@browser.process.port}/devtools/page/#{@target_id}"
+      (nil_or_relative ? @options.base_url.join(url.to_s) : url).to_s
     end
 
     def proxy=(options)
-      @proxy_host = options&.[](:host) || @browser.options.proxy&.[](:host)
-      @proxy_port = options&.[](:port) || @browser.options.proxy&.[](:port)
-      @proxy_user = options&.[](:user) || @browser.options.proxy&.[](:user)
-      @proxy_password = options&.[](:password) || @browser.options.proxy&.[](:password)
+      @proxy_host = options&.[](:host) || @options.proxy&.[](:host)
+      @proxy_port = options&.[](:port) || @options.proxy&.[](:port)
+      @proxy_user = options&.[](:user) || @options.proxy&.[](:user)
+      @proxy_password = options&.[](:password) || @options.proxy&.[](:password)
     end
   end
 end

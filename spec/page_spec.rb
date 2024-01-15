@@ -24,30 +24,21 @@ describe Ferrum::Page do
       end
 
       it "reports pending connection for image" do
-        old_timeout = browser.timeout
-        browser.timeout = 2
-        expect do
-          browser.go_to("/ferrum/visit_timeout")
-        end.to raise_error(
-          Ferrum::PendingConnectionsError,
-          %r{Request to http://.*/ferrum/visit_timeout reached server, but there are still pending connections: http://.*/ferrum/really_slow}
-        )
-      ensure
-        browser.timeout = old_timeout
+        with_timeout(2) do
+          expect { browser.go_to("/ferrum/visit_timeout") }.to raise_error(
+            Ferrum::PendingConnectionsError,
+            %r{Request to http://.*/ferrum/visit_timeout reached server, but there are still pending connections: http://.*/ferrum/really_slow}
+          )
+        end
       end
 
       it "reports pending connection for main frame" do
-        prev_timeout = browser.timeout
-        browser.timeout = 0.5
-
-        expect do
-          browser.go_to("/ferrum/really_slow")
-        end.to raise_error(
-          Ferrum::PendingConnectionsError,
-          %r{Request to http://.*/ferrum/really_slow reached server, but there are still pending connections: http://.*/ferrum/really_slow}
-        )
-      ensure
-        browser.timeout = prev_timeout
+        with_timeout(0.5) do
+          expect { browser.go_to("/ferrum/really_slow") }.to raise_error(
+            Ferrum::PendingConnectionsError,
+            %r{Request to http://.*/ferrum/really_slow reached server, but there are still pending connections: http://.*/ferrum/really_slow}
+          )
+        end
       end
     end
   end

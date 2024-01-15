@@ -8,9 +8,9 @@ module Ferrum
 
     attr_reader :id, :targets
 
-    def initialize(browser, contexts, id)
+    def initialize(client, contexts, id)
       @id = id
-      @browser = browser
+      @client = client
       @contexts = contexts
       @targets = Concurrent::Map.new
       @pendings = Concurrent::MVar.new
@@ -46,31 +46,35 @@ module Ferrum
     end
 
     def create_target
-      @browser.command("Target.createTarget",
-                       browserContextId: @id,
-                       url: "about:blank")
-      target = @pendings.take(@browser.timeout)
+      @client.command("Target.createTarget", browserContextId: @id, url: "about:blank")
+      target = @pendings.take(@client.timeout)
       raise NoSuchTargetError unless target.is_a?(Target)
 
-      @targets.put_if_absent(target.id, target)
       target
     end
 
-    def add_target(params)
-      target = Target.new(@browser, params)
-      if target.window?
-        @targets.put_if_absent(target.id, target)
-      else
-        @pendings.put(target, @browser.timeout)
-      end
+    def add_target(params:, session_id: nil)
+      new_target = Target.new(@client, session_id, params)
+      target = @targets.put_if_absent(new_target.id, new_target)
+      target ||= new_target # `put_if_absent` returns nil if added a new value or existing if there was one already
+      @pendings.put(target, @client.timeout) if @pendings.empty?
+      target
     end
 
     def update_target(target_id, params)
-      @targets[target_id].update(params)
+      @targets[target_id]&.update(params)
     end
 
     def delete_target(target_id)
       @targets.delete(target_id)
+    end
+
+    def close_targets_connection
+      @targets.each_value do |target|
+        next unless target.connected?
+
+        target.page.close_connection
+      end
     end
 
     def dispose

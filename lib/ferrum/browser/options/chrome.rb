@@ -6,7 +6,6 @@ module Ferrum
       class Chrome < Base
         DEFAULT_OPTIONS = {
           "headless" => nil,
-          "disable-gpu" => nil,
           "hide-scrollbars" => nil,
           "mute-audio" => nil,
           "enable-automation" => nil,
@@ -38,7 +37,8 @@ module Ferrum
           "metrics-recording-only" => nil,
           "safebrowsing-disable-auto-update" => nil,
           "password-store" => "basic",
-          "no-startup-window" => nil
+          "no-startup-window" => nil,
+          "remote-allow-origins" => "*"
           # NOTE: --no-sandbox is not needed if you properly setup a user in the container.
           # https://github.com/ebidel/lighthouse-ci/blob/master/builder/Dockerfile#L35-L40
           # "no-sandbox" => nil,
@@ -63,7 +63,6 @@ module Ferrum
         def merge_required(flags, options, user_data_dir)
           flags = flags.merge("remote-debugging-port" => options.port,
                               "remote-debugging-address" => options.host,
-                              # Doesn't work on MacOS, so we need to set it by CDP
                               "window-size" => options.window_size&.join(","),
                               "user-data-dir" => user_data_dir)
 
@@ -84,6 +83,12 @@ module Ferrum
                      end
 
           defaults ||= DEFAULT_OPTIONS
+          # On Windows, the --disable-gpu flag is a temporary work around for a few bugs.
+          # See https://bugs.chromium.org/p/chromium/issues/detail?id=737678 for more information.
+          defaults = defaults.merge("disable-gpu" => nil) if Utils::Platform.windows?
+          # Use Metal on Apple Silicon
+          # https://github.com/google/angle#platform-support-via-backing-renderers
+          defaults = defaults.merge("use-angle" => "metal") if Utils::Platform.mac_arm?
           defaults.merge(flags)
         end
       end

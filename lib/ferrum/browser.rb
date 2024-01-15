@@ -4,12 +4,12 @@ require "base64"
 require "forwardable"
 require "ferrum/page"
 require "ferrum/proxy"
+require "ferrum/client"
 require "ferrum/contexts"
 require "ferrum/browser/xvfb"
 require "ferrum/browser/options"
 require "ferrum/browser/process"
 require "ferrum/browser/jruby_process"
-require "ferrum/browser/client"
 require "ferrum/browser/binary"
 require "ferrum/browser/version_info"
 
@@ -29,11 +29,12 @@ module Ferrum
                 add_script_tag add_style_tag bypass_csp
                 on position position=
                 playback_rate playback_rate=
-                disable_javascript set_viewport] => :page
-    delegate %i[default_user_agent] => :process
+                disable_javascript set_viewport resize] => :page
 
-    attr_reader :client, :process, :contexts, :options, :window_size, :base_url
-    attr_accessor :timeout
+    attr_reader :client, :process, :contexts, :options
+
+    delegate %i[timeout timeout= base_url base_url= default_user_agent default_user_agent= extensions] => :options
+    delegate %i[command] => :client
 
     #
     # Initializes the browser.
@@ -46,6 +47,9 @@ module Ferrum
     #
     # @option options [Boolean] :xvfb (false)
     #   Run browser in a virtual framebuffer.
+    #
+    # @option options [Boolean] :flatten (true)
+    #   Use one websocket connection to the browser and all the pages in flatten mode.
     #
     # @option options [(Integer, Integer)] :window_size ([1024, 768])
     #   The dimensions of the browser window in which to test, expressed as a
@@ -126,26 +130,7 @@ module Ferrum
       @options = Options.new(options)
       @client = @process = @contexts = nil
 
-      @timeout = @options.timeout
-      @window_size = @options.window_size
-      @base_url = @options.base_url if @options.base_url
-
       start
-    end
-
-    #
-    # Sets the base URL.
-    #
-    # @param [String] value
-    #   The new base URL value.
-    #
-    # @raise [ArgumentError] when path is not absolute or doesn't include schema
-    #
-    # @return [Addressable::URI]
-    #   The parsed base URI value.
-    #
-    def base_url=(value)
-      @base_url = options.parse_base_url(value)
     end
 
     #
@@ -165,7 +150,7 @@ module Ferrum
                params = {}
 
                if proxy
-                 options.parse_proxy(proxy)
+                 options.validate_proxy(proxy)
                  params.merge!(proxyServer: "#{proxy[:host]}:#{proxy[:port]}")
                  params.merge!(proxyBypassList: proxy[:bypass]) if proxy[:bypass]
                end
@@ -181,12 +166,6 @@ module Ferrum
       if block_given?
         page&.close
         context.dispose if new_context
-      end
-    end
-
-    def extensions
-      @extensions ||= Array(options.extensions).map do |ext|
-        (ext.is_a?(Hash) && ext[:source]) || File.read(ext)
       end
     end
 
@@ -207,13 +186,6 @@ module Ferrum
       extensions << expression
     end
 
-    def command(*args)
-      @client.command(*args)
-    rescue DeadBrowserError
-      restart
-      raise
-    end
-
     #
     # Closes browser tabs opened by the `Browser` instance.
     #
@@ -229,7 +201,6 @@ module Ferrum
     #   browser.quit
     #
     def reset
-      @window_size = options.window_size
       contexts.reset
     end
 
@@ -241,14 +212,11 @@ module Ferrum
     def quit
       return unless @client
 
+      contexts.close_connections
+
       @client.close
       @process.stop
       @client = @process = @contexts = nil
-    end
-
-    def resize(**options)
-      @window_size = [options[:width], options[:height]]
-      page.resize(**options)
     end
 
     def crash
@@ -279,12 +247,10 @@ module Ferrum
 
       begin
         @process.start
-        @client = Client.new(
-          @process.ws_url, self,
-          logger: options.logger,
-          ws_max_receive_size: options.ws_max_receive_size
-        )
-        @contexts = Contexts.new(self)
+        @options.default_user_agent = @process.default_user_agent
+
+        @client = Client.new(@process.ws_url, options)
+        @contexts = Contexts.new(@client)
       rescue StandardError
         @process.stop
         raise

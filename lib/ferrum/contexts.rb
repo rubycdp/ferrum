@@ -4,17 +4,30 @@ require "ferrum/context"
 
 module Ferrum
   class Contexts
+    include Enumerable
+
     attr_reader :contexts
 
-    def initialize(browser)
+    def initialize(client)
       @contexts = Concurrent::Map.new
-      @browser = browser
+      @client = client
       subscribe
+      auto_attach
       discover
     end
 
     def default_context
       @default_context ||= create
+    end
+
+    def each(&block)
+      return enum_for(__method__) unless block_given?
+
+      @contexts.each(&block)
+    end
+
+    def [](id)
+      @contexts[id]
     end
 
     def find_by(target_id:)
@@ -24,19 +37,23 @@ module Ferrum
     end
 
     def create(**options)
-      response = @browser.command("Target.createBrowserContext", **options)
+      response = @client.command("Target.createBrowserContext", **options)
       context_id = response["browserContextId"]
-      context = Context.new(@browser, self, context_id)
+      context = Context.new(@client, self, context_id)
       @contexts[context_id] = context
       context
     end
 
     def dispose(context_id)
       context = @contexts[context_id]
-      @browser.command("Target.disposeBrowserContext",
-                       browserContextId: context.id)
+      context.close_targets_connection
+      @client.command("Target.disposeBrowserContext", browserContextId: context.id)
       @contexts.delete(context_id)
       true
+    end
+
+    def close_connections
+      @contexts.each_value(&:close_targets_connection)
     end
 
     def reset
@@ -51,15 +68,26 @@ module Ferrum
     private
 
     def subscribe
-      @browser.client.on("Target.targetCreated") do |params|
+      @client.on("Target.attachedToTarget") do |params|
+        info, session_id = params.values_at("targetInfo", "sessionId")
+        next unless info["type"] == "page"
+
+        context_id = info["browserContextId"]
+        @contexts[context_id]&.add_target(session_id: session_id, params: info)
+        if params["waitingForDebugger"]
+          @client.session(session_id).command("Runtime.runIfWaitingForDebugger", async: true)
+        end
+      end
+
+      @client.on("Target.targetCreated") do |params|
         info = params["targetInfo"]
         next unless info["type"] == "page"
 
         context_id = info["browserContextId"]
-        @contexts[context_id]&.add_target(info)
+        @contexts[context_id]&.add_target(params: info)
       end
 
-      @browser.client.on("Target.targetInfoChanged") do |params|
+      @client.on("Target.targetInfoChanged") do |params|
         info = params["targetInfo"]
         next unless info["type"] == "page"
 
@@ -67,19 +95,25 @@ module Ferrum
         @contexts[context_id]&.update_target(target_id, info)
       end
 
-      @browser.client.on("Target.targetDestroyed") do |params|
+      @client.on("Target.targetDestroyed") do |params|
         context = find_by(target_id: params["targetId"])
         context&.delete_target(params["targetId"])
       end
 
-      @browser.client.on("Target.targetCrashed") do |params|
+      @client.on("Target.targetCrashed") do |params|
         context = find_by(target_id: params["targetId"])
         context&.delete_target(params["targetId"])
       end
     end
 
     def discover
-      @browser.command("Target.setDiscoverTargets", discover: true)
+      @client.command("Target.setDiscoverTargets", discover: true)
+    end
+
+    def auto_attach
+      return unless @client.options.flatten
+
+      @client.command("Target.setAutoAttach", autoAttach: true, waitForDebuggerOnStart: true, flatten: true)
     end
   end
 end

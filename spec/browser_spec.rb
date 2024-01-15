@@ -119,10 +119,29 @@ describe Ferrum::Browser do
     end
 
     it "supports :url argument" do
-      with_external_browser do |url|
+      with_external_browser do |url, process|
         browser = Ferrum::Browser.new(url: url)
         browser.go_to(base_url)
         expect(browser.body).to include("Hello world!")
+        expect(process.v8_version).not_to be_nil
+        expect(process.browser_version).not_to be_nil
+        expect(process.webkit_version).not_to be_nil
+        expect(process.default_user_agent).not_to be_nil
+        expect(process.protocol_version).not_to be_nil
+      ensure
+        browser&.quit
+      end
+    end
+
+    it "supports :ws_url argument" do
+      with_external_browser do |url, process|
+        uri = Addressable::URI.parse(url)
+        browser = Ferrum::Browser.new(ws_url: "ws://#{uri.host}:#{uri.port}")
+        expect(process.v8_version).not_to be_nil
+        expect(process.browser_version).not_to be_nil
+        expect(process.webkit_version).not_to be_nil
+        expect(process.default_user_agent).not_to be_nil
+        expect(process.protocol_version).not_to be_nil
       ensure
         browser&.quit
       end
@@ -238,6 +257,8 @@ describe Ferrum::Browser do
         )
       end
 
+      after { browser.quit }
+
       context "with absolute path" do
         let(:save_path) { "/tmp/ferrum" }
 
@@ -278,7 +299,7 @@ describe Ferrum::Browser do
         allow(Ferrum::Browser::Process).to receive(:new).and_return(process)
 
         error = StandardError.new
-        allow(Ferrum::Browser::Client).to receive(:new).and_raise(error)
+        allow(Ferrum::Client).to receive(:new).and_raise(error)
 
         expect { Ferrum::Browser.new }.to raise_error(error)
         expect(process.pid).to be(nil)
@@ -298,13 +319,10 @@ describe Ferrum::Browser do
   end
 
   describe "#crash" do
-    it "raises an error" do
-      expect { browser.crash }.to raise_error(Ferrum::DeadBrowserError)
-    end
-
-    it "restarts the client" do
+    it "works after crash with explicit restart" do
       expect { browser.crash }.to raise_error(Ferrum::DeadBrowserError)
 
+      browser.restart
       browser.go_to
 
       expect(browser.body).to include("Hello world")
@@ -333,6 +351,8 @@ describe Ferrum::Browser do
     it "stops silently before go_to call" do
       browser = Ferrum::Browser.new
       expect { browser.quit }.not_to raise_error
+    ensure
+      browser&.quit
     end
 
     it "supports stopping the session", skip: Ferrum::Utils::Platform.windows? do
@@ -351,13 +371,6 @@ describe Ferrum::Browser do
       browser.go_to
       browser.resize(width: 200, height: 400)
       expect(browser.viewport_size).to eq([200, 400])
-    end
-
-    it "inherits size for a new window" do
-      browser.go_to
-      browser.resize(width: 1200, height: 800)
-      page = browser.create_page
-      expect(page.viewport_size).to eq [1200, 800]
     end
 
     it "resizes windows" do
@@ -523,12 +536,28 @@ describe Ferrum::Browser do
         page = browser.create_page(new_context: true)
         page.go_to("/ferrum/simple")
 
+        context = browser.contexts[page.context_id]
         expect(browser.contexts.size).to eq(1)
-        expect(page.context.targets.size).to eq(1)
+        expect(context.targets.size).to eq(1)
 
-        page.context.create_page
-        expect(page.context.targets.size).to eq(2)
-        page.context.dispose
+        context.create_page
+        expect(context.targets.size).to eq(2)
+        context.dispose
+        expect(browser.contexts.size).to eq(0)
+      end
+
+      it "closes page successfully" do
+        expect(browser.contexts.size).to eq(0)
+
+        page = browser.create_page(new_context: true)
+        context = browser.contexts[page.context_id]
+        page.go_to("/ferrum/simple")
+        page.close
+
+        expect(browser.contexts.size).to eq(1)
+        expect(context.targets.size).to be_between(0, 1) # needs some time to close target
+
+        context.dispose
         expect(browser.contexts.size).to eq(0)
       end
 
@@ -557,13 +586,13 @@ describe Ferrum::Browser do
           page.go_to("https://example.com")
 
           expect(browser.contexts.size).to eq(1)
-          expect(page.context.targets.size).to eq(1)
+          expect(browser.contexts[page.context_id].targets.size).to eq(1)
           expect(page.network.status).to eq(200)
           expect(page.body).to include("Example Domain")
 
           page = browser.create_page(proxy: { host: proxy.host, port: proxy.port })
           expect(browser.contexts.size).to eq(2)
-          page.context.dispose
+          browser.contexts[page.context_id].dispose
           expect(browser.contexts.size).to eq(1)
         end
       end

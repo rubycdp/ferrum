@@ -59,7 +59,7 @@ module Ferrum
     #   browser.at_xpath("//a[text() = 'No UI changes button']").click
     #   browser.network.wait_for_idle
     #
-    def wait_for_idle(connections: 0, duration: 0.05, timeout: @page.browser.timeout)
+    def wait_for_idle(connections: 0, duration: 0.05, timeout: @page.timeout)
       start = Utils::ElapsedTime.monotonic_time
 
       until idle?(connections)

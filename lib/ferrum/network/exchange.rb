@@ -79,7 +79,7 @@ module Ferrum
       # @return [Boolean]
       #
       def finished?
-        blocked? || response&.loaded? || !error.nil?
+        blocked? || response&.loaded? || !error.nil? || ping?
       end
 
       #
@@ -116,6 +116,15 @@ module Ferrum
       #
       def redirect?
         response&.redirect?
+      end
+
+      #
+      # Determines if the exchange is ping.
+      #
+      # @return [Boolean]
+      #
+      def ping?
+        !!request&.ping?
       end
 
       #
