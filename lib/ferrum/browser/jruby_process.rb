@@ -12,15 +12,10 @@ module Ferrum
         begin
           process_builder = java.lang.ProcessBuilder.new(*@command.to_a)
           # unless user directory is on a Windows UNC path
-          unless @user_data_dir =~ %r{\A//}
-            process_builder.directory(java.io.File.new(@user_data_dir))
-          end
+          process_builder.directory(java.io.File.new(@user_data_dir)) unless @user_data_dir =~ %r{\A//}
           process_builder.redirectErrorStream(true)
           output_file = File.expand_path("chrome_output.log", @user_data_dir)
           process_builder.redirectOutput(java.lang.ProcessBuilder::Redirect.appendTo(java.io.File.new(output_file)))
-
-          # TODO: Handle new process group creation
-          # process_options[:pgroup] = true unless Ferrum::Utils::Platform.windows?
 
           environment = process_builder.environment
           # Clear the environment to avoid setting e.g. RUBYOPT from the initial environment
@@ -36,19 +31,19 @@ module Ferrum
           @pid = @process.pid
 
           parse_ws_url(output_file, @process_timeout)
-          parse_browser_versions
+          parse_json_version(ws_url)
         end
       end
 
       private
 
       def parse_ws_url(output_file, timeout)
-        output = ''
+        output = ""
         start = Utils::ElapsedTime.monotonic_time
         max_time = start + timeout
         regexp = %r{DevTools listening on (ws://.*)}
         while Utils::ElapsedTime.monotonic_time < max_time
-          File.open(output_file, 'r+') do |file|
+          File.open(output_file, "r+") do |file|
             file.each_line { |line| output += line }
             file.rewind
             file.truncate(0)
