@@ -33,6 +33,8 @@ module Ferrum
           parse_ws_url(output_file, @process_timeout)
           parse_json_version(ws_url)
         end
+      rescue IOError
+        # nop
       end
 
       private
@@ -45,8 +47,8 @@ module Ferrum
         while Utils::ElapsedTime.monotonic_time < max_time
           File.open(output_file, "r+") do |file|
             file.each_line { |line| output += line }
-            file.rewind
             file.truncate(0)
+            file.rewind
 
             if output.match(regexp)
               self.ws_url = output.match(regexp)[1].strip

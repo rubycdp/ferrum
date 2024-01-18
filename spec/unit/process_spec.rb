@@ -3,7 +3,7 @@
 describe Ferrum::Browser::Process do
   subject { Ferrum::Browser.new(port: 6000, host: "127.0.0.1") }
 
-  unless Ferrum::Utils::Platform.windows?
+  unless Ferrum::Utils::Platform.windows? || Ferrum::Utils::Platform.jruby?
     it "forcibly kills the child if it does not respond to SIGTERM" do
       allow(Process).to receive(:spawn).and_return(5678)
       allow(Process).to receive(:wait).and_return(nil)
