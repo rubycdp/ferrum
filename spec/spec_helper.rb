@@ -47,8 +47,6 @@ RSpec.configure do |config|
 
   config.after(:all) do
     @browser.quit
-  # rescue IOError
-  #   raise unless Ferrum::Utils::Platform.jruby?
   end
 
   config.before(:each) do
