@@ -14,45 +14,36 @@ module Ferrum
           # unless user directory is on a Windows UNC path
           process_builder.directory(java.io.File.new(@user_data_dir)) unless @user_data_dir =~ %r{\A//}
           process_builder.redirectErrorStream(true)
-          output_file = File.expand_path("chrome_output.log", @user_data_dir)
-          process_builder.redirectOutput(java.lang.ProcessBuilder::Redirect.appendTo(java.io.File.new(output_file)))
-
-          environment = process_builder.environment
-          # Clear the environment to avoid setting e.g. RUBYOPT from the initial environment
-          environment.clear
 
           if @command.xvfb?
             @xvfb = Xvfb.start(@command.options)
             ObjectSpace.define_finalizer(self, self.class.process_killer(@xvfb.pid))
-            environment.merge! Hash(@xvfb&.to_env)
+            process_builder.environment.merge! Hash(@xvfb&.to_env)
           end
 
-          @process = process_builder.start
-          @pid = @process.pid
+          process = process_builder.start()
+          @pid = process.pid
 
-          parse_ws_url(output_file, @process_timeout)
+          @input_reader = java.io.BufferedReader.new(java.io.InputStreamReader.new(process.getInputStream()))
+          parse_ws_url(@input_reader, @process_timeout)
           parse_json_version(ws_url)
         end
-      rescue IOError
-        # nop
       end
 
       private
 
-      def parse_ws_url(output_file, timeout)
+      def parse_ws_url(read_io, timeout)
         output = ""
         start = Utils::ElapsedTime.monotonic_time
         max_time = start + timeout
-        regexp = %r{DevTools listening on (ws://.*)}
-        while Utils::ElapsedTime.monotonic_time < max_time
-          File.open(output_file, "r+") do |file|
-            file.each_line { |line| output += line }
-            file.truncate(0)
-            file.rewind
-
+        regexp = %r{DevTools listening on (ws://.*[a-zA-Z0-9-]{36})}
+        while (now = Utils::ElapsedTime.monotonic_time) < max_time
+          begin
             if output.match(regexp)
               self.ws_url = output.match(regexp)[1].strip
               break
+            elsif rl = read_io.read_line
+              output += rl
             end
           end
         end
