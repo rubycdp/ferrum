@@ -78,7 +78,7 @@ module Ferrum
 
       def write(data)
         @sock.write(data)
-      rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, Errno::EBADF, IOError # rubocop:disable Lint/ShadowedException
+      rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, IOError # rubocop:disable Lint/ShadowedException
         @messages.close
       end
 
@@ -96,7 +96,7 @@ module Ferrum
 
             @driver.parse(data)
           end
-        rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, Errno::EBADF, IOError # rubocop:disable Lint/ShadowedException
+        rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, IOError # rubocop:disable Lint/ShadowedException
           @messages.close
         end
       end
