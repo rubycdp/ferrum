@@ -385,19 +385,19 @@ module Ferrum
     def subscribe_response_received
       @page.on("Network.responseReceived") do |params|
         exchange = select(params["requestId"]).last
+        next unless exchange
 
-        if exchange
-          response = Network::Response.new(@page, params)
-          exchange.response = response
-        end
+        response = Network::Response.new(@page, params)
+        exchange.response = response
       end
     end
 
     def subscribe_loading_finished
       @page.on("Network.loadingFinished") do |params|
-        response = select(params["requestId"]).last&.response
+        exchange = select(params["requestId"]).last
+        next unless exchange
 
-        if response
+        if (response = exchange.response)
           response.loaded = true
           response.body_size = params["encodedDataLength"]
         end
@@ -407,8 +407,9 @@ module Ferrum
     def subscribe_loading_failed
       @page.on("Network.loadingFailed") do |params|
         exchange = select(params["requestId"]).last
-        exchange.error ||= Network::Error.new
+        next unless exchange
 
+        exchange.error ||= Network::Error.new
         exchange.error.id = params["requestId"]
         exchange.error.type = params["type"]
         exchange.error.error_text = params["errorText"]
@@ -422,8 +423,9 @@ module Ferrum
         entry = params["entry"] || {}
         if entry["source"] == "network" && entry["level"] == "error"
           exchange = select(entry["networkRequestId"]).last
-          exchange.error ||= Network::Error.new
+          next unless exchange
 
+          exchange.error ||= Network::Error.new
           exchange.error.id = entry["networkRequestId"]
           exchange.error.url = entry["url"]
           exchange.error.description = entry["text"]
