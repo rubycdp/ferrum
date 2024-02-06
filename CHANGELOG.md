@@ -30,6 +30,7 @@ instead of passing browser and making cyclic dependency on the browser instance,
 - Exceptions within `.on()` were swallowed by a thread pool of `Concurrent::Async` [#432]
 - `Ferrum::Context#add_target` puts wrong target to pendings sometimes [#433]
 - Leaking connection descriptors in tests and after browser quit [#433]
+- Check if network exchange exists before manipulating it [#442]
 
 ### Removed
 
