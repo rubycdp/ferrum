@@ -21,10 +21,10 @@ module Ferrum
             process_builder.environment.merge! Hash(@xvfb&.to_env)
           end
 
-          process = process_builder.start()
+          process = process_builder.start
           @pid = process.pid
 
-          @input_reader = java.io.BufferedReader.new(java.io.InputStreamReader.new(process.getInputStream()))
+          @input_reader = java.io.BufferedReader.new(java.io.InputStreamReader.new(process.getInputStream))
           parse_ws_url(@input_reader, @process_timeout)
           parse_json_version(ws_url)
         end
@@ -37,14 +37,12 @@ module Ferrum
         start = Utils::ElapsedTime.monotonic_time
         max_time = start + timeout
         regexp = %r{DevTools listening on (ws://.*[a-zA-Z0-9-]{36})}
-        while (now = Utils::ElapsedTime.monotonic_time) < max_time
-          begin
-            if output.match(regexp)
-              self.ws_url = output.match(regexp)[1].strip
-              break
-            elsif rl = read_io.read_line
-              output += rl
-            end
+        while Utils::ElapsedTime.monotonic_time < max_time
+          if output.match(regexp)
+            self.ws_url = output.match(regexp)[1].strip
+            break
+          elsif (rl = read_io.read_line)
+            output += rl
           end
         end
 
