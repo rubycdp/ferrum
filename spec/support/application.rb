@@ -241,7 +241,7 @@ module Ferrum
         return if authorized?(login, password)
 
         headers["WWW-Authenticate"] = %(Basic realm="Restricted Area")
-        halt 401, "Not authorized\n"
+        halt(401, "Not authorized\n")
       end
 
       def authorized?(login, password)
@@ -271,7 +271,11 @@ module Ferrum
     end
 
     get "/ferrum/unexist.png" do
-      halt 404
+      halt(404)
+    end
+
+    get "/ferrum/server_error" do
+      halt(500)
     end
 
     get "/ferrum/status/:status" do
@@ -329,7 +333,7 @@ module Ferrum
     post "/ferrum/ping" do
       # Sleeping to simulate a server that does not send a response to PING requests
       sleep 5
-      halt 204
+      halt(204)
     end
 
     protected
