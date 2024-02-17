@@ -1,9 +1,20 @@
-## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.14...main) ##
+## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.15...main) ##
 
 ### Added
-- `Ferrum::Page#disable_javascript` disables the JavaScript from the HTML source
-- `Ferrum::Page#set_viewport` emulates the viewport
-- `Ferrum::Downloads`
+
+### Changed
+
+### Fixed
+
+### Removed
+
+
+## [0.15](https://github.com/rubycdp/ferrum/compare/v0.14...v0.15) ##
+
+### Added
+- `Ferrum::Page#disable_javascript` disables the JavaScript from the HTML source [#407]
+- `Ferrum::Page#set_viewport` emulates the viewport [#406]
+- `Ferrum::Downloads` [#416]
   - `#files` information about downloaded files
   - `#wait` wait for file download to be completed
   - `#set_behavior` where and whether to store file
