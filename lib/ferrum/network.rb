@@ -41,7 +41,7 @@ module Ferrum
     end
 
     #
-    # Waits for network idle or raises {Ferrum::TimeoutError} error.
+    # Waits for network idle.
     #
     # @param [Integer] connections
     #   how many connections are allowed for network to be idling,
@@ -52,21 +52,33 @@ module Ferrum
     # @param [Float] timeout
     #   During what time we try to check idle.
     #
-    # @raise [Ferrum::TimeoutError]
+    # @return [Boolean]
     #
     # @example
     #   browser.go_to("https://example.com/")
     #   browser.at_xpath("//a[text() = 'No UI changes button']").click
-    #   browser.network.wait_for_idle
+    #   browser.network.wait_for_idle # => false
     #
     def wait_for_idle(connections: 0, duration: 0.05, timeout: @page.timeout)
       start = Utils::ElapsedTime.monotonic_time
 
       until idle?(connections)
-        raise TimeoutError if Utils::ElapsedTime.timeout?(start, timeout)
+        return false if Utils::ElapsedTime.timeout?(start, timeout)
 
         sleep(duration)
       end
+
+      true
+    end
+
+    #
+    # Waits for network idle or raises {Ferrum::TimeoutError} error.
+    # Accepts same arguments as `wait_for_idle`.
+    #
+    # @raise [Ferrum::TimeoutError]
+    def wait_for_idle!(...)
+      result = wait_for_idle(...)
+      raise TimeoutError unless result
     end
 
     def idle?(connections = 0)

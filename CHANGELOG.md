@@ -2,7 +2,11 @@
 
 ### Added
 
+- `Ferrum::Network#wait_for_idle!` raises an error if timeout reached.
+
 ### Changed
+
+- `Ferrum::Network#wait_for_idle` now returns true or false. Doesn't raise an error [BREAKING CHANGE].
 
 ### Fixed
 

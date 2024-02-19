@@ -36,15 +36,46 @@ describe Ferrum::Network do
     end
   end
 
-  it "#wait_for_idle" do
-    page.go_to("/show_cookies")
-    expect(page.body).not_to include("test_cookie")
+  describe "#wait_for_idle" do
+    it "returns true" do
+      page.go_to("/show_cookies")
+      expect(page.body).not_to include("test_cookie")
 
-    page.at_xpath("//button[text() = 'Set cookie slow']").click
-    network.wait_for_idle
-    page.refresh
+      page.at_xpath("//button[text() = 'Set cookie slow']").click
+      result = network.wait_for_idle
+      page.refresh
 
-    expect(page.body).to include("test_cookie")
+      expect(result).to eq(true)
+      expect(page.body).to include("test_cookie")
+    end
+
+    it "returns false" do
+      page.go_to("/show_cookies")
+      expect(page.body).not_to include("test_cookie")
+
+      page.at_xpath("//button[text() = 'Set cookie slow']").click
+      result = network.wait_for_idle(timeout: 0.2)
+
+      expect(result).to eq(false)
+    end
+  end
+
+  describe "#wait_for_idle!" do
+    it "raises an error" do
+      page.go_to("/show_cookies")
+      expect(page.body).not_to include("test_cookie")
+
+      page.at_xpath("//button[text() = 'Set cookie slow']").click
+      expect { network.wait_for_idle!(timeout: 0.2) }.to raise_error(Ferrum::TimeoutError)
+    end
+
+    it "raises no error" do
+      page.go_to("/show_cookies")
+      expect(page.body).not_to include("test_cookie")
+
+      page.at_xpath("//button[text() = 'Set cookie slow']").click
+      expect { network.wait_for_idle! }.not_to raise_error
+    end
   end
 
   describe "#idle?" do
