@@ -504,9 +504,9 @@ page.go_to("https://github.com/")
 page.network.status # => 200
 ```
 
-#### wait_for_idle(\*\*options)
+#### wait_for_idle(\*\*options) : `Boolean`
 
-Waits for network idle or raises `Ferrum::TimeoutError` error
+Waits for network idle, returns `true` in case of success and `false` if there are still connections.
 
 * options `Hash`
   * :connections `Integer` how many connections are allowed for network to be
@@ -519,7 +519,17 @@ Waits for network idle or raises `Ferrum::TimeoutError` error
 ```ruby
 page.go_to("https://example.com/")
 page.at_xpath("//a[text() = 'No UI changes button']").click
-page.network.wait_for_idle
+page.network.wait_for_idle # => true
+```
+
+#### wait_for_idle!(\*\*options)
+
+Waits for network idle or raises `Ferrum::TimeoutError` error. Accepts same arguments as `wait_for_idle`.
+
+```ruby
+page.go_to("https://example.com/")
+page.at_xpath("//a[text() = 'No UI changes button']").click
+page.network.wait_for_idle! # might raise an error
 ```
 
 #### clear(type)
