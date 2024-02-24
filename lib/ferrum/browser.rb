@@ -211,8 +211,11 @@ module Ferrum
     def quit
       return unless @client
 
-      
-      command('Browser.close')
+      begin
+        command('Browser.close')
+      rescue
+      end
+
       contexts.close_connections
 
       @client.close
