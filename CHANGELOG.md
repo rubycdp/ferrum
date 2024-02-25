@@ -3,6 +3,7 @@
 ### Added
 
 - `Ferrum::Network#wait_for_idle!` raises an error if timeout reached.
+- `Ferrum::Browser#close` closes browser gracefully issuing a CDP command, doesn't clean up ruby resources.
 
 ### Changed
 
