@@ -211,11 +211,6 @@ module Ferrum
     def quit
       return unless @client
 
-      begin
-        command('Browser.close')
-      rescue
-      end
-
       contexts.close_connections
 
       @client.close
@@ -223,8 +218,20 @@ module Ferrum
       @client = @process = @contexts = nil
     end
 
+    #
+    # Crashes browser.
+    #
     def crash
       command("Browser.crash")
+    end
+
+    #
+    # Close browser gracefully.
+    #
+    # You should clean up resources/connections in ruby world manually, it's only a CDP command.
+    #
+    def close
+      command("Browser.close")
     end
 
     #
