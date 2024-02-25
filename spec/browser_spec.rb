@@ -329,6 +329,21 @@ describe Ferrum::Browser do
     end
   end
 
+  describe "#close" do
+    it "works after crash with explicit restart" do
+      browser.go_to
+
+      expect { browser.close }.not_to raise_error
+      sleep 2
+      expect { browser.go_to }.to raise_error(Ferrum::DeadBrowserError)
+
+      browser.restart
+      browser.go_to
+
+      expect(browser.body).to include("Hello world")
+    end
+  end
+
   describe "#version" do
     it "returns browser version information" do
       version_info = browser.version
