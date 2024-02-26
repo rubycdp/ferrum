@@ -62,13 +62,11 @@ module Ferrum
       def initialize(options)
         @pid = @xvfb = @user_data_dir = nil
 
-        if options.ws_url
-          response = parse_json_version(options.ws_url)
-          self.ws_url = options.ws_url
-          return
-        elsif options.url
-          response = parse_json_version(options.url)
-          self.ws_url = response&.[]("webSocketDebuggerUrl")
+        if options.ws_url || options.url
+          # `:ws_url` option is higher priority than `:url`, parse versions
+          # and use it as a ws_url, otherwise use what has been parsed.
+          response = parse_json_version(options.ws_url || options.url)
+          self.ws_url = options.ws_url || response&.[]("webSocketDebuggerUrl")
           return
         end
 
@@ -185,11 +183,10 @@ module Ferrum
       end
 
       def parse_json_version(url)
-        uri = Addressable::URI.parse(url)
-        uri.path = "/json/version"
+        url = URI.join(url, "/json/version")
 
-        if %w[wss ws].include?(uri.scheme)
-          uri.scheme = case uri.scheme
+        if %w[wss ws].include?(url.scheme)
+          url.scheme = case url.scheme
                        when "ws"
                          "http"
                        when "wss"
@@ -197,7 +194,7 @@ module Ferrum
                        end
         end
 
-        response = JSON.parse(::Net::HTTP.get(URI(uri.to_s)))
+        response = JSON.parse(::Net::HTTP.get(URI(url.to_s)))
 
         @v8_version = response["V8-Version"]
         @browser_version = response["Browser"]
@@ -206,7 +203,7 @@ module Ferrum
         @protocol_version = response["Protocol-Version"]
 
         response
-      rescue StandardError
+      rescue JSON::ParserError
         # nop
       end
     end

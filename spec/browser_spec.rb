@@ -135,8 +135,7 @@ describe Ferrum::Browser do
 
     it "supports :ws_url argument" do
       with_external_browser do |url, process|
-        uri = Addressable::URI.parse(url)
-        browser = Ferrum::Browser.new(ws_url: "ws://#{uri.host}:#{uri.port}")
+        browser = Ferrum::Browser.new(ws_url: web_socket_debugger_url(url))
         expect(process.v8_version).not_to be_nil
         expect(process.browser_version).not_to be_nil
         expect(process.webkit_version).not_to be_nil

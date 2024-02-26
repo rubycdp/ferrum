@@ -58,4 +58,12 @@ RSpec.shared_context "Global helpers" do
       process.stop
     end
   end
+
+  def web_socket_debugger_url(url)
+    uri = Addressable::URI.parse(url)
+    url = uri.join("/json/version").to_s
+    JSON.parse(Net::HTTP.get(URI(url)))["webSocketDebuggerUrl"]
+  rescue JSON::ParserError
+    # nop
+  end
 end
