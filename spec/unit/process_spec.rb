@@ -10,6 +10,7 @@ describe Ferrum::Browser::Process do
       allow(Ferrum::Client).to receive(:new).and_return(double.as_null_object)
 
       allow_any_instance_of(Ferrum::Browser::Process).to receive(:parse_ws_url)
+      allow_any_instance_of(Ferrum::Browser::Process).to receive(:parse_json_version)
 
       subject.send(:start)
 
@@ -30,6 +31,7 @@ describe Ferrum::Browser::Process do
       allow(Process).to receive(:spawn).with({ "LD_PRELOAD" => "some.so" }, any_args).and_return(123_456_789)
 
       allow_any_instance_of(Ferrum::Browser::Process).to receive(:parse_ws_url)
+      allow_any_instance_of(Ferrum::Browser::Process).to receive(:parse_json_version)
 
       subject.send(:start)
       subject.quit

@@ -11,6 +11,8 @@
 
 ### Fixed
 
+- `:ws_url` option is now used without modifications WYSIWYG.
+
 ### Removed
 
 
