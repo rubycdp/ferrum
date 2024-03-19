@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <p>
+      <span id="valid"></span>
+    </p>
+    <p>
+      <span id="invalid"></span>
+    </p>
+    <p>
+      <span id="curly"></span>
+    </p>
+    <script>
+      document.getElementById('invalid').innerHTML = "Havregrynskake med marengs og n\u00f8tter \ud83d"
+      document.getElementById('valid').innerHTML = "Havregrynskake med marengs og nøtter \ud83d\ude0d såå god!"
+      document.getElementById('curly').innerHTML = "\u{1F600} and \u{2600}"
+    </script>
+  </body>
+</html>
