@@ -396,6 +396,27 @@ describe Ferrum::Node do
       expect(el.text).to eq("FooBar")
     end
 
+    it "works with valid utf8" do
+      browser.go_to("/unicode")
+      el = browser.at_css("#valid")
+
+      expect(el.text).to eq("Havregrynskake med marengs og nøtter 😍 såå god!")
+    end
+
+    it "works with invalid utf8" do
+      browser.go_to("/unicode")
+      el = browser.at_css("#invalid")
+
+      expect(el.text).to eq("Havregrynskake med marengs og nøtter ???")
+    end
+
+    it "works with curly utf8" do
+      browser.go_to("/unicode")
+      el = browser.at_css("#curly")
+
+      expect(el.text).to eq("😀 and ☀")
+    end
+
     context "SVG tests" do
       before do
         browser.go_to("/ferrum/svg_test")

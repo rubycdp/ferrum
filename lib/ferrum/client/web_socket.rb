@@ -50,7 +50,14 @@ module Ferrum
       end
 
       def on_message(event)
-        data = JSON.parse(event.data)
+        data = begin
+          JSON.parse(event.data)
+        rescue JSON::ParserError
+          unescaped = unescape_unicode(event.data)
+                      .encode("UTF-8", "UTF-8", undef: :replace, invalid: :replace, replace: "?")
+          JSON.parse(unescaped)
+        end
+
         @messages.push(data)
 
         output = event.data
@@ -99,6 +106,10 @@ module Ferrum
         rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, IOError # rubocop:disable Lint/ShadowedException
           @messages.close
         end
+      end
+
+      def unescape_unicode(value)
+        value.gsub(/\\u([\da-fA-F]{4})/) { |_| [::Regexp.last_match(1)].pack("H*").unpack("n*").pack("U*") }
       end
     end
   end

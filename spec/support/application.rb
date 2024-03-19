@@ -188,6 +188,10 @@ module Ferrum
       send_file("attachment.pdf")
     end
 
+    get "/unicode" do
+      File.read("#{FERRUM_VIEWS}/unicode.html")
+    end
+
     get "/:view" do |view|
       erb view.to_sym, locals: { referrer: request.referrer }
     end
