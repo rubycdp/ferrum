@@ -34,8 +34,8 @@ module Ferrum
       @client.respond_to?(name, include_private)
     end
 
-    def method_missing(name, ...)
-      @client.send(name, ...)
+    def method_missing(name, *args, **opts, &block)
+      @client.send(name, *args, **opts, &block)
     end
 
     def close
