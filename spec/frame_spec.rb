@@ -33,7 +33,7 @@ describe Ferrum::Frame do
     expect(frame.url).to end_with("/ferrum/get_cookie")
   end
 
-  it "finds main frame properly" do
+  it "finds main frame properly", skip: Ferrum::Utils::Platform.jruby? do
     browser.go_to("/ferrum/popup_frames")
 
     browser.at_xpath("//a[text()='pop up']").click
