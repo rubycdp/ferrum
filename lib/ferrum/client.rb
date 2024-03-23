@@ -26,6 +26,10 @@ module Ferrum
       @client.on(event_name(event), &block)
     end
 
+    def off(event, id)
+      @client.off(event_name(event), id)
+    end
+
     def subscribed?(event)
       @client.subscribed?(event_name(event))
     end
@@ -97,6 +101,10 @@ module Ferrum
 
     def on(event, &block)
       @subscriber.on(event, &block)
+    end
+
+    def off(event, id)
+      @subscriber.off(event, id)
     end
 
     def subscribed?(event)
