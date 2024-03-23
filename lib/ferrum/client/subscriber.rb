@@ -23,6 +23,11 @@ module Ferrum
 
       def on(event, &block)
         @on[event] << block
+        @on[event].index(block)
+      end
+
+      def off(event, id)
+        @on[event].delete_at(id)
         true
       end
 
