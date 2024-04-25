@@ -4,6 +4,8 @@
 
 - `Ferrum::Network#wait_for_idle!` raises an error if timeout reached.
 - `Ferrum::Browser#close` closes browser gracefully issuing a CDP command, doesn't clean up ruby resources.
+- `Ferrum::Node#remove` removes node from DOM tree.
+- `Ferrum::Node#exists?` check whether the node in ruby world still exists in the DOM tree.
 
 ### Changed
 

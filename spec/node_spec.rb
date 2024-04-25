@@ -345,6 +345,42 @@ describe Ferrum::Node do
     end
   end
 
+  describe "#remove" do
+    it "removes node" do
+      browser.go_to("/ferrum/simple")
+      node = browser.at_css("#break")
+
+      node.remove
+
+      expect { node.text }.to raise_error(Ferrum::NodeNotFoundError)
+    end
+
+    it "raises an error if node is already gone" do
+      browser.go_to("/ferrum/simple")
+      node = browser.at_css("#break")
+      node.evaluate("this.remove()")
+
+      expect { node.remove }.to raise_error(Ferrum::NodeNotFoundError)
+    end
+  end
+
+  describe "#exists?" do
+    it "returns true" do
+      browser.go_to("/ferrum/simple")
+      node = browser.at_css("#break")
+
+      expect(node.exists?).to be_truthy
+    end
+
+    it "returns false" do
+      browser.go_to("/ferrum/simple")
+      node = browser.at_css("#break")
+      node.remove
+
+      expect(node.exists?).to be_falsey
+    end
+  end
+
   context "whitespace stripping tests", skip: true do
     before do
       browser.go_to("/ferrum/filter_text_test")
@@ -391,30 +427,30 @@ describe Ferrum::Node do
   describe "#text" do
     it "skips BR" do
       browser.go_to("/ferrum/simple")
-      el = browser.at_css("#break")
+      node = browser.at_css("#break")
 
-      expect(el.text).to eq("FooBar")
+      expect(node.text).to eq("FooBar")
     end
 
     it "works with valid utf8" do
       browser.go_to("/unicode")
-      el = browser.at_css("#valid")
+      node = browser.at_css("#valid")
 
-      expect(el.text).to eq("Havregrynskake med marengs og nøtter 😍 såå god!")
+      expect(node.text).to eq("Havregrynskake med marengs og nøtter 😍 såå god!")
     end
 
     it "works with invalid utf8" do
       browser.go_to("/unicode")
-      el = browser.at_css("#invalid")
+      node = browser.at_css("#invalid")
 
-      expect(el.text).to eq("Havregrynskake med marengs og nøtter ???")
+      expect(node.text).to eq("Havregrynskake med marengs og nøtter ???")
     end
 
     it "works with curly utf8" do
       browser.go_to("/unicode")
-      el = browser.at_css("#curly")
+      node = browser.at_css("#curly")
 
-      expect(el.text).to eq("😀 and ☀")
+      expect(node.text).to eq("😀 and ☀")
     end
 
     context "SVG tests" do
