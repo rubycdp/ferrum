@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
+require "concurrent-ruby"
 require "forwardable"
 require "ferrum/client/subscriber"
 require "ferrum/client/web_socket"
+require "ferrum/utils/thread"
 
 module Ferrum
   class SessionClient

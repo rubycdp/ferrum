@@ -9,6 +9,8 @@ require "ferrum/browser/options/base"
 require "ferrum/browser/options/chrome"
 require "ferrum/browser/options/firefox"
 require "ferrum/browser/command"
+require "ferrum/utils/elapsed_time"
+require "ferrum/utils/platform"
 
 module Ferrum
   class Browser
