@@ -100,7 +100,8 @@ module Ferrum
       private
 
       def call(expression:, arguments: [], on: nil, wait: 0, handle: true, **options)
-        errors = [NodeNotFoundError, NoExecutionContextError]
+        # do not rescue -> retry if we operate on an existing node
+        errors = on ? [] : [NodeNotFoundError, NoExecutionContextError]
 
         Utils::Attempt.with_retry(errors: errors, max: INTERMITTENT_ATTEMPTS, wait: INTERMITTENT_SLEEP) do
           params = options.dup
