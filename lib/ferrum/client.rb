@@ -141,7 +141,7 @@ module Ferrum
           else
             @pendings[message["id"]]&.set(message)
           end
-        rescue => e
+        rescue StandardError => e
           @logger&.puts("Ferrum::Client thread raised an exception #{e.class.name}: #{e.message}")
         end
       end

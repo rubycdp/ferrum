@@ -12,8 +12,8 @@ module Ferrum
         begin
           process_builder_args = @command.to_a
           # Sometimes subprocesses are launched with the wrong architecture on Apple Silicon.
-          if ENV_JAVA['os.name'] == 'Mac OS X' && ENV_JAVA['os.arch'] == 'aarch64'
-            process_builder_args.unshift('/usr/bin/arch', '-arm64')
+          if ENV_JAVA["os.name"] == "Mac OS X" && ENV_JAVA["os.arch"] == "aarch64"
+            process_builder_args.unshift("/usr/bin/arch", "-arm64")
           end
           process_builder = java.lang.ProcessBuilder.new(*process_builder_args)
           # unless user directory is on a Windows UNC path
@@ -67,22 +67,22 @@ module Ferrum
         raise ProcessTimeoutError.new(timeout, output)
       end
 
-      def destroy_java_process(options = {})
-        if java_process
-          java_process.destroy
-          retry_times = 6
-          while java_process.isAlive && retry_times > 0
-            sleep 1
-            retry_times -= 1
-          end
-          if java_process.isAlive
-            @logger&.puts("Ferrum::Browser::JrubyProcess is still alive, killing it forcibly")
-            java_process.destroyForcibly
-          else
-            @logger&.puts("Ferrum::Browser::JrubyProcess is stopped")
-          end
-          @java_process = nil
+      def destroy_java_process
+        return unless java_process
+
+        java_process.destroy
+        retry_times = 6
+        while java_process.isAlive && retry_times.positive?
+          sleep 1
+          retry_times -= 1
         end
+        if java_process.isAlive
+          @logger&.puts("Ferrum::Browser::JrubyProcess is still alive, killing it forcibly")
+          java_process.destroyForcibly
+        else
+          @logger&.puts("Ferrum::Browser::JrubyProcess is stopped")
+        end
+        @java_process = nil
       end
     end
   end
