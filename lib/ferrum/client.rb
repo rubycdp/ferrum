@@ -62,7 +62,7 @@ module Ferrum
     attr_reader :ws_url, :options, :subscriber
 
     def initialize(ws_url, options)
-      @command_id = 0
+      @command_id = Concurrent::AtomicFixnum.new(0)
       @ws_url = ws_url
       @options = options
       @pendings = Concurrent::Hash.new
@@ -141,12 +141,14 @@ module Ferrum
           else
             @pendings[message["id"]]&.set(message)
           end
+        rescue => e
+          @logger&.puts("Ferrum::Client thread raised an exception #{e.class.name}: #{e.message}")
         end
       end
     end
 
     def next_command_id
-      @command_id += 1
+      @command_id.increment
     end
 
     def raise_browser_error(error)
