@@ -369,14 +369,28 @@ describe Ferrum::Browser do
       browser&.quit
     end
 
-    it "supports stopping the session", skip: Ferrum::Utils::Platform.windows? do
-      browser = Ferrum::Browser.new
-      pid = browser.process.pid
+    context "for MRI Ruby", skip: Ferrum::Utils::Platform.windows? || Ferrum::Utils::Platform.jruby? do
+      it "supports stopping the session" do
+        browser = Ferrum::Browser.new
+        pid = browser.process.pid
 
-      expect(Process.kill(0, pid)).to eq(1)
-      browser.quit
+        expect(Process.kill(0, pid)).to eq(1)
+        browser.quit
 
-      expect { Process.kill(0, pid) }.to raise_error(Errno::ESRCH)
+        expect { Process.kill(0, pid) }.to raise_error(Errno::ESRCH)
+      end
+    end
+
+    context "for JRuby", skip: Ferrum::Utils::Platform.windows? || Ferrum::Utils::Platform.mri? do
+      it "supports stopping the session" do
+        browser = Ferrum::Browser.new
+        pid = browser.process.java_process.pid
+
+        expect(Process.kill(0, pid)).to eq(1)
+        browser.quit
+
+        expect { Process.kill(0, pid) }.to raise_error(Errno::ESRCH)
+      end
     end
   end
 
