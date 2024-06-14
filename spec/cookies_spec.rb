@@ -7,8 +7,7 @@ describe Ferrum::Cookies do
         browser.go_to("/set_cookie")
 
         yielded_cookies = []
-
-        browser.cookies.each do |cookie|
+        browser.cookies.each do |cookie| # rubocop:disable Style/MapIntoArray
           yielded_cookies << cookie
         end
 

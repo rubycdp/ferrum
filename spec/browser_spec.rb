@@ -135,8 +135,7 @@ describe Ferrum::Browser do
 
     it "supports :ws_url argument" do
       with_external_browser do |url, process|
-        uri = Addressable::URI.parse(url)
-        browser = Ferrum::Browser.new(ws_url: "ws://#{uri.host}:#{uri.port}")
+        browser = Ferrum::Browser.new(ws_url: web_socket_debugger_url(url))
         expect(process.v8_version).not_to be_nil
         expect(process.browser_version).not_to be_nil
         expect(process.webkit_version).not_to be_nil
@@ -321,6 +320,21 @@ describe Ferrum::Browser do
   describe "#crash" do
     it "works after crash with explicit restart" do
       expect { browser.crash }.to raise_error(Ferrum::DeadBrowserError)
+
+      browser.restart
+      browser.go_to
+
+      expect(browser.body).to include("Hello world")
+    end
+  end
+
+  describe "#close" do
+    it "works after crash with explicit restart" do
+      browser.go_to
+
+      expect { browser.close }.not_to raise_error
+      sleep 2
+      expect { browser.go_to }.to raise_error(Ferrum::DeadBrowserError)
 
       browser.restart
       browser.go_to

@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
+require "concurrent-ruby"
 require "forwardable"
 require "ferrum/client/subscriber"
 require "ferrum/client/web_socket"
+require "ferrum/utils/thread"
 
 module Ferrum
   class SessionClient
@@ -34,8 +36,8 @@ module Ferrum
       @client.respond_to?(name, include_private)
     end
 
-    def method_missing(name, ...)
-      @client.send(name, ...)
+    def method_missing(name, *args, **opts, &block)
+      @client.send(name, *args, **opts, &block)
     end
 
     def close

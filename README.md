@@ -188,7 +188,7 @@ Ferrum::Browser.new(options)
   * `:url` (String) - URL for a running instance of Chrome. If this is set, a
       browser process will not be spawned.
   * `:ws_url` (String) - Websocket url for a running instance of Chrome. If this is set, a
-      browser process will not be spawned.
+    browser process will not be spawned. It's higher priority than `:url`, setting both doesn't make sense.
   * `:process_timeout` (Integer) - How long to wait for the Chrome process to
       respond on startup.
   * `:ws_max_receive_size` (Integer) - How big messages to accept from Chrome
@@ -504,9 +504,9 @@ page.go_to("https://github.com/")
 page.network.status # => 200
 ```
 
-#### wait_for_idle(\*\*options)
+#### wait_for_idle(\*\*options) : `Boolean`
 
-Waits for network idle or raises `Ferrum::TimeoutError` error
+Waits for network idle, returns `true` in case of success and `false` if there are still connections.
 
 * options `Hash`
   * :connections `Integer` how many connections are allowed for network to be
@@ -519,7 +519,17 @@ Waits for network idle or raises `Ferrum::TimeoutError` error
 ```ruby
 page.go_to("https://example.com/")
 page.at_xpath("//a[text() = 'No UI changes button']").click
-page.network.wait_for_idle
+page.network.wait_for_idle # => true
+```
+
+#### wait_for_idle!(\*\*options)
+
+Waits for network idle or raises `Ferrum::TimeoutError` error. Accepts same arguments as `wait_for_idle`.
+
+```ruby
+page.go_to("https://example.com/")
+page.at_xpath("//a[text() = 'No UI changes button']").click
+page.network.wait_for_idle! # might raise an error
 ```
 
 #### clear(type)
@@ -1243,6 +1253,8 @@ frame.at_css("//a[text() = 'Log in']") # => Node
 #### select
 #### scroll_into_view
 #### in_viewport?(of: `Node | nil`) : `Boolean`
+#### remove
+#### exists?
 
 (chainable) Selects options by passed attribute.
 

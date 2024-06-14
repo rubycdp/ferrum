@@ -41,7 +41,7 @@ module Ferrum
     end
 
     #
-    # Waits for network idle or raises {Ferrum::TimeoutError} error.
+    # Waits for network idle.
     #
     # @param [Integer] connections
     #   how many connections are allowed for network to be idling,
@@ -52,21 +52,33 @@ module Ferrum
     # @param [Float] timeout
     #   During what time we try to check idle.
     #
-    # @raise [Ferrum::TimeoutError]
+    # @return [Boolean]
     #
     # @example
     #   browser.go_to("https://example.com/")
     #   browser.at_xpath("//a[text() = 'No UI changes button']").click
-    #   browser.network.wait_for_idle
+    #   browser.network.wait_for_idle # => false
     #
     def wait_for_idle(connections: 0, duration: 0.05, timeout: @page.timeout)
       start = Utils::ElapsedTime.monotonic_time
 
       until idle?(connections)
-        raise TimeoutError if Utils::ElapsedTime.timeout?(start, timeout)
+        return false if Utils::ElapsedTime.timeout?(start, timeout)
 
         sleep(duration)
       end
+
+      true
+    end
+
+    #
+    # Waits for network idle or raises {Ferrum::TimeoutError} error.
+    # Accepts same arguments as `wait_for_idle`.
+    #
+    # @raise [Ferrum::TimeoutError]
+    def wait_for_idle!(...)
+      result = wait_for_idle(...)
+      raise TimeoutError unless result
     end
 
     def idle?(connections = 0)
@@ -385,19 +397,19 @@ module Ferrum
     def subscribe_response_received
       @page.on("Network.responseReceived") do |params|
         exchange = select(params["requestId"]).last
+        next unless exchange
 
-        if exchange
-          response = Network::Response.new(@page, params)
-          exchange.response = response
-        end
+        response = Network::Response.new(@page, params)
+        exchange.response = response
       end
     end
 
     def subscribe_loading_finished
       @page.on("Network.loadingFinished") do |params|
-        response = select(params["requestId"]).last&.response
+        exchange = select(params["requestId"]).last
+        next unless exchange
 
-        if response
+        if (response = exchange.response)
           response.loaded = true
           response.body_size = params["encodedDataLength"]
         end
@@ -407,8 +419,9 @@ module Ferrum
     def subscribe_loading_failed
       @page.on("Network.loadingFailed") do |params|
         exchange = select(params["requestId"]).last
-        exchange.error ||= Network::Error.new
+        next unless exchange
 
+        exchange.error ||= Network::Error.new
         exchange.error.id = params["requestId"]
         exchange.error.type = params["type"]
         exchange.error.error_text = params["errorText"]
@@ -422,8 +435,9 @@ module Ferrum
         entry = params["entry"] || {}
         if entry["source"] == "network" && entry["level"] == "error"
           exchange = select(entry["networkRequestId"]).last
-          exchange.error ||= Network::Error.new
+          next unless exchange
 
+          exchange.error ||= Network::Error.new
           exchange.error.id = entry["networkRequestId"]
           exchange.error.url = entry["url"]
           exchange.error.description = entry["text"]

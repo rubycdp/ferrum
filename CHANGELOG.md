@@ -1,9 +1,29 @@
-## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.14...main) ##
+## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.15...main) ##
 
 ### Added
-- `Ferrum::Page#disable_javascript` disables the JavaScript from the HTML source
-- `Ferrum::Page#set_viewport` emulates the viewport
-- `Ferrum::Downloads`
+
+- `Ferrum::Network#wait_for_idle!` raises an error if timeout reached.
+- `Ferrum::Browser#close` closes browser gracefully issuing a CDP command, doesn't clean up ruby resources.
+- `Ferrum::Node#remove` removes node from DOM tree.
+- `Ferrum::Node#exists?` check whether the node in ruby world still exists in the DOM tree.
+
+### Changed
+
+- `Ferrum::Network#wait_for_idle` now returns true or false. Doesn't raise an error [BREAKING CHANGE].
+
+### Fixed
+
+- `:ws_url` option is now used without modifications WYSIWYG.
+
+### Removed
+
+
+## [0.15](https://github.com/rubycdp/ferrum/compare/v0.14...v0.15) ##
+
+### Added
+- `Ferrum::Page#disable_javascript` disables the JavaScript from the HTML source [#407]
+- `Ferrum::Page#set_viewport` emulates the viewport [#406]
+- `Ferrum::Downloads` [#416]
   - `#files` information about downloaded files
   - `#wait` wait for file download to be completed
   - `#set_behavior` where and whether to store file
@@ -30,6 +50,7 @@ instead of passing browser and making cyclic dependency on the browser instance,
 - Exceptions within `.on()` were swallowed by a thread pool of `Concurrent::Async` [#432]
 - `Ferrum::Context#add_target` puts wrong target to pendings sometimes [#433]
 - Leaking connection descriptors in tests and after browser quit [#433]
+- Check if network exchange exists before manipulating it [#442]
 
 ### Removed
 

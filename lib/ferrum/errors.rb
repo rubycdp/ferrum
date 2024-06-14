@@ -6,7 +6,8 @@ module Ferrum
   class NoSuchTargetError   < Error; end
   class NotImplementedError < Error; end
   class BinaryNotFoundError < Error; end
-  class EmptyPathError < Error; end
+  class EmptyPathError      < Error; end
+  class ServerError         < Error; end
 
   class StatusError < Error
     def initialize(url, message = nil)

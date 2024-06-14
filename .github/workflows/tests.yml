@@ -40,5 +40,5 @@ jobs:
         uses: actions/upload-artifact@v4
         if: ${{ failure() }}
         with:
-          name: footprints
+          name: artifacts-ruby-v${{ matrix.ruby }}
           path: /tmp/ferrum/

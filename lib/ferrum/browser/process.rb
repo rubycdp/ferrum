@@ -9,6 +9,8 @@ require "ferrum/browser/options/base"
 require "ferrum/browser/options/chrome"
 require "ferrum/browser/options/firefox"
 require "ferrum/browser/command"
+require "ferrum/utils/elapsed_time"
+require "ferrum/utils/platform"
 
 module Ferrum
   class Browser
@@ -62,15 +64,11 @@ module Ferrum
       def initialize(options)
         @pid = @xvfb = @user_data_dir = nil
 
-        if options.ws_url
-          response = parse_json_version(options.ws_url)
-          self.ws_url = response&.[]("webSocketDebuggerUrl") || options.ws_url
-          return
-        end
-
-        if options.url
-          response = parse_json_version(options.url)
-          self.ws_url = response&.[]("webSocketDebuggerUrl")
+        if options.ws_url || options.url
+          # `:ws_url` option is higher priority than `:url`, parse versions
+          # and use it as a ws_url, otherwise use what has been parsed.
+          response = parse_json_version(options.ws_url || options.url)
+          self.ws_url = options.ws_url || response&.[]("webSocketDebuggerUrl")
           return
         end
 
@@ -207,7 +205,7 @@ module Ferrum
         @protocol_version = response["Protocol-Version"]
 
         response
-      rescue StandardError
+      rescue JSON::ParserError
         # nop
       end
     end

@@ -217,6 +217,17 @@ module Ferrum
         .each_with_object({}) { |style, memo| memo.merge!(style["name"] => style["value"]) }
     end
 
+    def remove
+      page.command("DOM.removeNode", nodeId: node_id)
+    end
+
+    def exists?
+      page.command("DOM.resolveNode", nodeId: node_id)
+      true
+    rescue Ferrum::NodeNotFoundError
+      false
+    end
+
     private
 
     def bounding_rect_coordinates

@@ -40,6 +40,14 @@ describe Ferrum::Page do
           )
         end
       end
+
+      it "handles server error" do
+        expect { page.go_to("/ferrum/server_error") }.not_to raise_error
+
+        expect(page.network.status).to eq(500)
+        expect(page.network.traffic.last.error.description)
+          .to eq("Failed to load resource: the server responded with a status of 500 (Internal Server Error)")
+      end
     end
   end
 

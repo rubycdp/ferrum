@@ -36,6 +36,17 @@ describe Ferrum::Network::Exchange do
       expect(last_exchange.intercepted_request).to be
       expect(last_exchange.intercepted_request).to be_a(Ferrum::Network::InterceptedRequest)
     end
+
+    it "modifies request" do
+      network.intercept
+      page.on(:request) { |r, _, _| r.continue(url: base_url("/foo")) }
+
+      page.go_to
+
+      expect(page.body).to include("Another World")
+      expect(last_exchange.intercepted_request).to be
+      expect(last_exchange.intercepted_request).to be_a(Ferrum::Network::InterceptedRequest)
+    end
   end
 
   describe "#request" do

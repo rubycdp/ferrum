@@ -36,7 +36,7 @@ module Ferrum
       end
 
       #
-      # Find frame by given options.
+      # Find a frame by given params.
       #
       # @param [String] id
       #   Unique frame's id that page provides.
@@ -60,8 +60,6 @@ module Ferrum
           frames.find { |f| f.name == name }
         elsif execution_id
           frames.find { |f| f.execution_id == execution_id }
-        else
-          raise ArgumentError
         end
       end
 
