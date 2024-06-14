@@ -9,6 +9,7 @@ require "ferrum/contexts"
 require "ferrum/browser/xvfb"
 require "ferrum/browser/options"
 require "ferrum/browser/process"
+require "ferrum/browser/jruby_process"
 require "ferrum/browser/binary"
 require "ferrum/browser/version_info"
 
@@ -253,7 +254,8 @@ module Ferrum
 
     def start
       Utils::ElapsedTime.start
-      @process = Process.new(options)
+      process_class = Utils::Platform.jruby? ? JrubyProcess : Process
+      @process = process_class.new(options)
 
       begin
         @process.start

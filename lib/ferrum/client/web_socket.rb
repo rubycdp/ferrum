@@ -96,14 +96,14 @@ module Ferrum
       private
 
       def start
-        @thread = Utils::Thread.spawn do
+        @thread = Utils::Thread.spawn(abort_on_exception: !Utils::Platform.jruby?) do
           loop do
             data = @sock.readpartial(512)
             break unless data
 
             @driver.parse(data)
           end
-        rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, IOError # rubocop:disable Lint/ShadowedException
+        rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, Errno::EBADF, IOError # rubocop:disable Lint/ShadowedException
           @messages.close
         end
       end
