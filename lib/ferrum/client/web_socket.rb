@@ -63,7 +63,7 @@ module Ferrum
         output = event.data
         if SKIP_LOGGING_SCREENSHOTS && @screenshot_commands[data["id"]]
           @screenshot_commands.delete(data["id"])
-          output.sub!(/{"data":"(.*)"}/, %("Set FERRUM_LOGGING_SCREENSHOTS=true to see screenshots in Base64"))
+          output.sub!(/{"data":"[^"]*"}/, %("Set FERRUM_LOGGING_SCREENSHOTS=true to see screenshots in Base64"))
         end
 
         @logger&.puts("    ◀ #{Utils::ElapsedTime.elapsed_time} #{output}\n")
