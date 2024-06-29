@@ -262,4 +262,33 @@ describe Ferrum::Cookies do
       expect(browser.body).to_not include("test_cookie")
     end
   end
+
+  describe "#store" do
+    it "stores cookies" do
+      page.go_to("/set_cookie")
+
+      page.cookies.store("test.yml")
+
+      cookies = YAML.load_file("test.yml")
+      expect(cookies.size).to eq(1)
+      expect(cookies[0]["name"]).to eq("stealth")
+      expect(cookies[0]["value"]).to eq("test_cookie")
+      expect(cookies[0]["domain"]).to eq("127.0.0.1")
+    ensure
+      File.delete("test.yml")
+    end
+  end
+
+  describe "#load" do
+    it "stores cookies" do
+      cookie = { "name" => "stealth", "value" => "hello world", "domain" => "127.0.0.1", "path" => "/" }
+      File.write("test.yml", [cookie].to_yaml)
+      page.cookies.load("test.yml")
+
+      page.go_to("/get_cookie")
+      expect(page.body).to include("hello world")
+    ensure
+      File.delete("test.yml")
+    end
+  end
 end

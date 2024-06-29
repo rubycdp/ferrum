@@ -882,6 +882,25 @@ Removes all cookies for current page
 page.cookies.clear # => true
 ```
 
+#### store(path) : `Boolean`
+
+Stores all cookies of current page in a file.
+
+```ruby
+# Cookies are saved into cookies.yml
+page.cookies.store # => 15657
+```
+
+#### load(path) : `Boolean`
+
+Loads all cookies from the file and sets them for current page.
+
+```ruby
+# Cookies are loaded from cookies.yml
+page.cookies.load # => true
+```
+
+
 ## Headers
 
 `page.headers`
