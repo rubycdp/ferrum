@@ -24,7 +24,7 @@ module Ferrum
     def create_default_context
       default_context_id = compute_default_context_id
       # Targets created in this context will not be created with a browserContextId
-      @contexts[default_context_id] = ::Ferrum::Context.new(@client, self, nil)
+      @contexts[default_context_id] = Context.new(@client, self, nil)
     end
 
     # Compute the default context ID by looking for contexts not returned by Target.getBrowserContexts
