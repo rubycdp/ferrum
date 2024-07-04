@@ -11,6 +11,7 @@ module Ferrum
     def initialize(client)
       @contexts = Concurrent::Map.new
       @client = client
+      @default_context = create_default_context
       subscribe
       auto_attach
       discover
@@ -18,6 +19,20 @@ module Ferrum
 
     def default_context
       @default_context ||= create
+    end
+
+    def create_default_context
+      default_context_id = compute_default_context_id
+      # Targets created in this context will not be created with a browserContextId
+      @contexts[default_context_id] = ::Ferrum::Context.new(@client, self, nil)
+    end
+
+    # Compute the default context ID by looking for contexts not returned by Target.getBrowserContexts
+    def compute_default_context_id
+      created_contexts = Set.new(@client.command("Target.getBrowserContexts")["browserContextIds"])
+      targets = @client.command("Target.getTargets")["targetInfos"]
+      all_contexts = Set.new(targets.map { |target| target["browserContextId"] })
+      (all_contexts - created_contexts).first
     end
 
     def each(&block)
