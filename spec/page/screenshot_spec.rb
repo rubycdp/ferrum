@@ -152,6 +152,17 @@ describe Ferrum::Page::Screenshot do
       FileUtils.rm_f(file)
     end
 
+    it "supports screenshotting the page to webp file" do
+      file = "#{PROJECT_ROOT}/spec/tmp/screenshot.webp"
+      browser.go_to
+
+      browser.screenshot(path: file, format: "webp")
+
+      expect(File.exist?(file)).to be true
+    ensure
+      FileUtils.rm_f(file)
+    end
+
     it "supports screenshotting the page with different quality settings" do
       file2 = "#{PROJECT_ROOT}/spec/tmp/screenshot2.jpeg"
       file3 = "#{PROJECT_ROOT}/spec/tmp/screenshot3.jpeg"
