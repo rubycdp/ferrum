@@ -11,7 +11,7 @@ module Ferrum
     def initialize(client)
       @contexts = Concurrent::Map.new
       @client = client
-      @default_context = create_default_context
+      @default_context = create_default_context if @client.options.use_default_context
       subscribe
       auto_attach
       discover

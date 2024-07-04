@@ -15,7 +15,7 @@ module Ferrum
                   :js_errors, :base_url, :slowmo, :pending_connection_errors,
                   :url, :ws_url, :env, :process_timeout, :browser_name, :browser_path,
                   :save_path, :proxy, :port, :host, :headless, :browser_options,
-                  :ignore_default_browser_options, :xvfb, :flatten
+                  :ignore_default_browser_options, :xvfb, :flatten, :use_default_context
       attr_accessor :timeout, :default_user_agent
 
       def initialize(options = nil)
@@ -45,6 +45,7 @@ module Ferrum
         @base_url = parse_base_url(@options[:base_url]) if @options[:base_url]
         @url = @options[:url].to_s if @options[:url]
         @ws_url = @options[:ws_url].to_s if @options[:ws_url]
+        @use_default_context = @options.fetch(:use_default_context, false)
 
         @options = @options.merge(window_size: @window_size).freeze
         @browser_options = @options.fetch(:browser_options, {}).freeze

@@ -125,6 +125,9 @@ module Ferrum
     # @option options [Hash] :env
     #   Environment variables you'd like to pass through to the process.
     #
+    # @option options [Boolean] :use_default_context
+    #   When true, allows using the default browser context that has access to the browser's persistent state.
+    #
     def initialize(options = nil)
       @options = Options.new(options)
       @client = @process = @contexts = nil
