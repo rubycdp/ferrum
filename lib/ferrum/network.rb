@@ -368,6 +368,16 @@ module Ferrum
       @page.on("Network.requestWillBeSent") do |params|
         request = Network::Request.new(params)
 
+        # On redirects Chrome doesn't change `requestId` and there's no
+        # `Network.responseReceived` event for such request. If there's already
+        # exchange object with this id then we got redirected and params has
+        # `redirectResponse` key which contains the response.
+        if params["redirectResponse"] && (previous_exchange = select(request.id).last)
+          response = Network::Response.new(@page, params)
+          response.loaded = true
+          previous_exchange.response = response
+        end
+
         # We can build exchange in two places, here on the event or when request
         # is interrupted. So we have to be careful when to create new one. We
         # create new exchange only if there's no with such id or there's but
@@ -376,18 +386,6 @@ module Ferrum
         # exchange and build new exchange to assign this request to it.
         exchange = select(request.id).last
         exchange = build_exchange(request.id) unless exchange&.blank?
-
-        # On redirects Chrome doesn't change `requestId` and there's no
-        # `Network.responseReceived` event for such request. If there's already
-        # exchange object with this id then we got redirected and params has
-        # `redirectResponse` key which contains the response.
-        if params["redirectResponse"]
-          previous_exchange = select(request.id)[-2]
-          response = Network::Response.new(@page, params)
-          response.loaded = true
-          previous_exchange.response = response
-        end
-
         exchange.request = request
 
         @exchange = exchange if exchange.navigation_request?(@page.main_frame.id)

@@ -16,6 +16,7 @@
 ### Fixed
 
 - `:ws_url` option is now used without modifications WYSIWYG.
+- `Network.requestWillBeSent` callback didn't handle params in a type-safe way
 
 ### Removed
 
