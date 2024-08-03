@@ -391,7 +391,9 @@ module Ferrum
       use_proxy? && @proxy_user && @proxy_password
     end
 
-    def document_node_id
+    def document_node_id(async: false)
+      return client.command("DOM.getDocument", async: true, depth: 0) if async
+
       command("DOM.getDocument", depth: 0).dig("root", "nodeId")
     end
 

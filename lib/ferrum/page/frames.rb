@@ -128,7 +128,7 @@ module Ferrum
           # node will change the id and all subsequent nodes have to change id too.
           if @main_frame.id == params["frameId"]
             @event.set if idling?
-            document_node_id
+            document_node_id(async: true)
           end
 
           frame = @frames[params["frameId"]]
