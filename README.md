@@ -398,7 +398,7 @@ Saves screenshot on a disk or returns it as base64.
     `:binary` automatically
   * :encoding `Symbol` `:base64` | `:binary` you can set it to return image as
     Base64
-  * :format `String` "jpeg" | "png"
+  * :format `String` "jpeg" ("jpg") | "png" | "webp"
   * :quality `Integer` 0-100 works for jpeg only
   * :full `Boolean` whether you need full page screenshot or a viewport
   * :selector `String` css selector for given element, optional
