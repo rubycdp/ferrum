@@ -46,7 +46,7 @@ module Ferrum
     end
 
     def create_target
-      target_params = {browserContextId: @id, url: "about:blank"}.compact
+      target_params = { browserContextId: @id, url: "about:blank" }.compact
       @client.command("Target.createTarget", **target_params)
       target = @pendings.take(@client.timeout)
       raise NoSuchTargetError unless target.is_a?(Target)
