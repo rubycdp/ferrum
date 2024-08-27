@@ -16,7 +16,6 @@ module Ferrum
   class Browser
     class Process
       KILL_TIMEOUT = 2
-      WAIT_KILLED = 0.05
 
       attr_reader :host, :port, :ws_url, :pid, :command,
                   :default_user_agent, :browser_version, :protocol_version,
@@ -38,7 +37,7 @@ module Ferrum
             ::Process.kill("USR1", pid)
             start = Utils::ElapsedTime.monotonic_time
             while ::Process.wait(pid, ::Process::WNOHANG).nil?
-              sleep(WAIT_KILLED)
+              ::Thread.pass
               next unless Utils::ElapsedTime.timeout?(start, KILL_TIMEOUT)
 
               ::Process.kill("KILL", pid)

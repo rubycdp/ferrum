@@ -14,6 +14,12 @@ module Ferrum
           @iteration
         end
       end
+
+      def wait(timeout)
+        return ::Thread.pass if timeout <= 0.1
+
+        super
+      end
     end
   end
 end

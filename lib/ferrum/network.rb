@@ -46,9 +46,6 @@ module Ferrum
     # @param [Integer] connections
     #   how many connections are allowed for network to be idling,
     #
-    # @param [Float] duration
-    #   Sleep for given amount of time and check again.
-    #
     # @param [Float] timeout
     #   During what time we try to check idle.
     #
@@ -59,13 +56,13 @@ module Ferrum
     #   browser.at_xpath("//a[text() = 'No UI changes button']").click
     #   browser.network.wait_for_idle # => false
     #
-    def wait_for_idle(connections: 0, duration: 0.05, timeout: @page.timeout)
+    def wait_for_idle(connections: 0, timeout: @page.timeout)
       start = Utils::ElapsedTime.monotonic_time
 
       until idle?(connections)
         return false if Utils::ElapsedTime.timeout?(start, timeout)
 
-        sleep(duration)
+        ::Thread.pass
       end
 
       true
