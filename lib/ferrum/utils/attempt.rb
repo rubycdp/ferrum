@@ -12,9 +12,9 @@ module Ferrum
         raise if attempts >= max
 
         attempts += 1
-        ::Thread.pass
         sleep(wait)
 
+        ::Thread.pass
         retry
       end
     end

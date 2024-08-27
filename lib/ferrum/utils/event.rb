@@ -16,8 +16,17 @@ module Ferrum
       end
 
       def wait(timeout)
-        ::Thread.pass
-        super
+        synchronize do
+          unless @set
+            iteration = @iteration
+            ns_wait_until(timeout) do
+              iteration < @iteration || @set
+              ::Thread.pass
+            end
+          else
+            true
+          end
+        end
       end
     end
   end
