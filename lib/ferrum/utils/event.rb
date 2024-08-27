@@ -17,8 +17,6 @@ module Ferrum
 
       def wait(timeout)
         ::Thread.pass
-        return if timeout <= 0.1
-
         super
       end
     end

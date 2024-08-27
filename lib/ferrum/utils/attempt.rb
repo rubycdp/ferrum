@@ -13,7 +13,7 @@ module Ferrum
 
         attempts += 1
         ::Thread.pass
-        sleep(wait) if wait <= 0.1
+        sleep(wait)
 
         retry
       end
