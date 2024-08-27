@@ -27,6 +27,8 @@ RSpec.configure do |config|
   config.include_context "Global helpers"
 
   config.before(:suite) do
+    FileUtils.rm_rf("/tmp/ferrum")
+    FileUtils.mkdir_p("/tmp/ferrum")
     @server = Ferrum::Server.boot
   end
 

@@ -32,9 +32,7 @@ jobs:
           chrome-version: stable
 
       - name: Run tests
-        run: |
-          mkdir -p /tmp/ferrum
-          bundle exec rake
+        run: bundle exec rake
 
       - name: Archive artifacts
         uses: actions/upload-artifact@v4
