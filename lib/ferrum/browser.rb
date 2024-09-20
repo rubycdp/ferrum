@@ -23,6 +23,7 @@ module Ferrum
                 headers cookies network downloads
                 mouse keyboard
                 screenshot pdf mhtml viewport_size device_pixel_ratio
+                start_screencast stop_screencast
                 frames frame_by main_frame
                 evaluate evaluate_on evaluate_async execute evaluate_func
                 add_script_tag add_style_tag bypass_csp
