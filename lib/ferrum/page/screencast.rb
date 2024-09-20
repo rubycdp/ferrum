@@ -12,16 +12,66 @@ module Ferrum
       #   The format the image should be returned in.
       #
       # @option opts [Integer] :quality
-      #   The image quality. **Note:** 0-100 works for jpeg only.
+      #   The image quality. **Note:** 0-100 works for JPEG only.
       #
       # @option opts [Integer] :max_width
-      #   Maximum screenshot width.
+      #   Maximum screencast frame width.
       #
       # @option opts [Integer] :max_height
-      #   Maximum screenshot height.
+      #   Maximum screencast frame height.
       #
       # @option opts [Integer] :every_nth_frame
       #   Send every n-th frame.
+      #
+      # @yield [data, metadata, session_id]
+      #   The given block receives the screencast frame along with metadata
+      #   about the frame and the screencast session ID.
+      #
+      # @yieldparam data [String]
+      #   Base64-encoded compressed image.
+      #
+      # @yieldparam metadata [Hash{String => Object}]
+      #   Screencast frame metadata.
+      #
+      # @option metadata [Integer] 'offsetTop'
+      #   Top offset in DIP.
+      #
+      # @option metadata [Integer] 'pageScaleFactor'
+      #   Page scale factor.
+      #
+      # @option metadata [Integer] 'deviceWidth'
+      #   Device screen width in DIP.
+      #
+      # @option metadata [Integer] 'deviceHeight'
+      #   Device screen height in DIP.
+      #
+      # @option metadata [Integer] 'scrollOffsetX'
+      #   Position of horizontal scroll in CSS pixels.
+      #
+      # @option metadata [Integer] 'scrollOffsetY'
+      #   Position of vertical scroll in CSS pixels.
+      #
+      # @option metadata [Float] 'timestamp'
+      #   (optional) Frame swap timestamp in seconds since Unix epoch.
+      #
+      # @yieldparam session_id [Integer]
+      #   Frame number.
+      #
+      # @example
+      #   require 'base64'
+      #
+      #   page.go_to("https://apple.com/ipad")
+      #
+      #   page.start_screencast(format: :jpeg, quality: 75) do |data, metadata|
+      #     timestamp_ms = metadata['timestamp'] * 1000
+      #     File.open("image_#{timestamp_ms.to_i}.jpg", 'wb') do
+      #       _1.write(Base64.decode64 data)
+      #     end
+      #   end
+      #
+      #   sleep 10
+      #
+      #   page.stop_screencast
       #
       def start_screencast(**opts)
 
