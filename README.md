@@ -493,9 +493,7 @@ page.go_to("https://apple.com/ipad")
 
 page.start_screencast(format: :jpeg, quality: 75) do |data, metadata|
   timestamp_ms = metadata['timestamp'] * 1000
-  File.open("image_#{timestamp_ms.to_i}.jpg", 'wb') do
-    _1.write(Base64.decode64 data)
-  end
+  File.binwrite("image_#{timestamp_ms.to_i}.jpg", Base64.decode64(data))
 end
 
 sleep 10
