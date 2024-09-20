@@ -3,7 +3,6 @@
 module Ferrum
   class Page
     module Screencast
-
       # Starts yielding each frame to the given block.
       #
       # @param [Hash{Symbol => Object}] opts
@@ -64,9 +63,7 @@ module Ferrum
       #
       #   page.start_screencast(format: :jpeg, quality: 75) do |data, metadata|
       #     timestamp_ms = metadata['timestamp'] * 1000
-      #     File.open("image_#{timestamp_ms.to_i}.jpg", 'wb') do
-      #       _1.write(Base64.decode64 data)
-      #     end
+      #     File.binwrite("image_#{timestamp_ms.to_i}.jpg", Base64.decode64(data))
       #   end
       #
       #   sleep 10
@@ -74,18 +71,17 @@ module Ferrum
       #   page.stop_screencast
       #
       def start_screencast(**opts)
-
         options = opts.transform_keys { START_SCREENCAST_KEY_CONV.fetch(_1, _1) }
-        response = command('Page.startScreencast', **options)
+        response = command("Page.startScreencast", **options)
 
-        if error_text = response["errorText"] # https://cs.chromium.org/chromium/src/net/base/net_error_list.h
+        if (error_text = response["errorText"]) # https://cs.chromium.org/chromium/src/net/base/net_error_list.h
           raise "Starting screencast failed (#{error_text})"
         end
 
-        on('Page.screencastFrame') do |params|
-          data, metadata, session_id = params.values_at('data', 'metadata', 'sessionId')
+        on("Page.screencastFrame") do |params|
+          data, metadata, session_id = params.values_at("data", "metadata", "sessionId")
 
-          command('Page.screencastFrameAck', sessionId: session_id)
+          command("Page.screencastFrameAck", sessionId: session_id)
 
           yield data, metadata, session_id
         end
@@ -93,15 +89,13 @@ module Ferrum
 
       # Stops sending each frame.
       def stop_screencast
-        command('Page.stopScreencast')
+        command("Page.stopScreencast")
       end
 
-    private
-
       START_SCREENCAST_KEY_CONV = {
-        max_width:       :maxWidth,
-        max_height:      :maxHeight,
-        every_nth_frame: :everyNthFrame,
+        max_width: :maxWidth,
+        max_height: :maxHeight,
+        every_nth_frame: :everyNthFrame
       }.freeze
     end
   end

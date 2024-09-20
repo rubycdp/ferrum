@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'base64'
+require "base64"
 require "image_size"
 require "pdf/reader"
 require "chunky_png"
@@ -13,18 +13,17 @@ describe Ferrum::Page::Screencast do
     Dir.glob("#{PROJECT_ROOT}/spec/tmp/screencast_frame*") { File.delete _1 }
   end
 
-  describe '#start_screencast' do
-    context 'when the page has no changing content' do
-      it 'should continue screencasting frames' do
-        browser.go_to '/ferrum/long_page'
+  describe "#start_screencast" do
+    context "when the page has no changing content" do
+      it "should continue screencasting frames" do
+        browser.go_to "/ferrum/long_page"
 
         format = :jpeg
         count = 0
-        browser.start_screencast(format: format) do |data, metadata, session_id|
+        browser.start_screencast(format: format) do |data, _metadata, _session_id|
           count += 1
-          File.open("#{PROJECT_ROOT}/spec/tmp/screencast_frame_#{'%05d' % count}.#{format}", 'wb') do
-            _1.write(Base64.decode64 data)
-          end
+          path = "#{PROJECT_ROOT}/spec/tmp/screencast_frame_#{format('%05d', count)}.#{format}"
+          File.binwrite(path, Base64.decode64(data))
         end
 
         sleep 5
@@ -35,17 +34,16 @@ describe Ferrum::Page::Screencast do
       end
     end
 
-    context 'when the page content continually changes' do
-      it 'should stop screencasting frames when the page has finished rendering' do
-        browser.go_to '/ferrum/animation'
+    context "when the page content continually changes" do
+      it "should stop screencasting frames when the page has finished rendering" do
+        browser.go_to "/ferrum/animation"
 
         format = :jpeg
         count = 0
-        browser.start_screencast(format: format) do |data, metadata, session_id|
+        browser.start_screencast(format: format) do |data, _metadata, _session_id|
           count += 1
-          File.open("#{PROJECT_ROOT}/spec/tmp/screencast_frame_#{'%05d' % count}.#{format}", 'wb') do
-            _1.write(Base64.decode64 data)
-          end
+          path = "#{PROJECT_ROOT}/spec/tmp/screencast_frame_#{format('%05d', count)}.#{format}"
+          File.binwrite(path, Base64.decode64(data))
         end
 
         sleep 5
@@ -57,18 +55,17 @@ describe Ferrum::Page::Screencast do
     end
   end
 
-  describe '#stop_screencast' do
-    context 'when the page content continually changes' do
-      it 'should stop screencasting frames when the page has finished rendering' do
-        browser.go_to '/ferrum/animation'
+  describe "#stop_screencast" do
+    context "when the page content continually changes" do
+      it "should stop screencasting frames when the page has finished rendering" do
+        browser.go_to "/ferrum/animation"
 
         format = :jpeg
         count = 0
-        browser.start_screencast(format: format) do |data, metadata, session_id|
+        browser.start_screencast(format: format) do |data, _metadata, _session_id|
           count += 1
-          File.open("#{PROJECT_ROOT}/spec/tmp/screencast_frame_#{'%05d' % count}.#{format}", 'wb') do
-            _1.write(Base64.decode64 data)
-          end
+          path = "#{PROJECT_ROOT}/spec/tmp/screencast_frame_#{format('%05d', count)}.#{format}"
+          File.binwrite(path, Base64.decode64(data))
         end
 
         sleep 5
@@ -79,9 +76,9 @@ describe Ferrum::Page::Screencast do
 
         sleep 2
 
-        no_more_frames_after_stop = number_of_frames_after_stop == Dir.glob("#{PROJECT_ROOT}/spec/tmp/screencast_frame_*").count
+        number_of_frames_after_delay = Dir.glob("#{PROJECT_ROOT}/spec/tmp/screencast_frame_*").count
 
-        expect(no_more_frames_after_stop).to be_truthy
+        expect(number_of_frames_after_stop).to eq number_of_frames_after_delay
       end
     end
   end
