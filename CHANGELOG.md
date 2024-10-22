@@ -18,6 +18,7 @@
 - `:ws_url` option is now used without modifications WYSIWYG.
 - `Network.requestWillBeSent` callback didn't handle params in a type-safe way
 - `Page.frameStoppedLoading` callback shouldn't wait for document_node_id response
+- `JSON::NestingError` is raised when browser returns very deeply nested JSON and crashes the thread [#498]
 
 ### Removed
 
