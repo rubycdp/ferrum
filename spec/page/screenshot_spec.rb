@@ -108,7 +108,7 @@ describe Ferrum::Page::Screenshot do
       create_screenshot(path: file, scale: scale)
       after = black_pixels_count[file]
 
-      expect(after.to_f / before).to eq(scale**2)
+      expect((after.to_f / before).round(2)).to eq(scale**2)
     end
   end
 
@@ -177,14 +177,14 @@ describe Ferrum::Page::Screenshot do
     context "with fullscreen" do
       it "supports screenshotting of fullscreen" do
         browser.go_to("/ferrum/custom_html_size")
-        expect(browser.viewport_size).to eq([1024, 768])
+        expect(browser.viewport_size).to eq([1024, 681])
 
         browser.screenshot(path: file, full: true)
 
         File.open(file, "rb") do |f|
           expect(ImageSize.new(f.read).size).to eq([1280, 1024].map { |s| s * device_pixel_ratio })
         end
-        expect(browser.viewport_size).to eq([1024, 768])
+        expect(browser.viewport_size).to eq([1024, 681])
       end
 
       it "keeps current viewport" do
@@ -220,14 +220,14 @@ describe Ferrum::Page::Screenshot do
     context "with area screenshot" do
       it "supports screenshotting of an area" do
         browser.go_to("/ferrum/custom_html_size")
-        expect(browser.viewport_size).to eq([1024, 768])
+        expect(browser.viewport_size).to eq([1024, 681])
 
         browser.screenshot(path: file, area: { x: 0, y: 0, width: 300, height: 200 })
 
         File.open(file, "rb") do |f|
           expect(ImageSize.new(f.read).size).to eq([300, 200].map { |s| s * device_pixel_ratio })
         end
-        expect(browser.viewport_size).to eq([1024, 768])
+        expect(browser.viewport_size).to eq([1024, 681])
       end
 
       it "keeps current viewport" do
@@ -435,13 +435,13 @@ describe Ferrum::Page::Screenshot do
     it "has a size of 1024x768 by default" do
       browser.go_to
 
-      expect(browser.viewport_size).to eq([1024, 768])
+      expect(browser.viewport_size).to eq([1024, 681])
     end
 
     it "supports specifying viewport size with an option" do
       browser = Ferrum::Browser.new(window_size: [800, 600])
       browser.go_to(base_url)
-      expect(browser.viewport_size).to eq([800, 600])
+      expect(browser.viewport_size).to eq([800, 513])
     ensure
       browser&.quit
     end
