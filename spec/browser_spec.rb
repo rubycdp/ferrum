@@ -199,15 +199,10 @@ describe Ferrum::Browser do
             proxy: { host: proxy.host, port: proxy.port, user: "u1", password: "p1" }
           )
 
-          if browser.headless_new?
-            expect { browser.go_to("https://example.com") }.to raise_error(
-              Ferrum::StatusError,
-              "Request to https://example.com failed (net::ERR_HTTP_RESPONSE_CODE_FAILURE)"
-            )
-          else
-            browser.go_to("https://example.com")
-          end
-
+          expect { browser.go_to("https://example.com") }.to raise_error(
+            Ferrum::StatusError,
+            "Request to https://example.com failed (net::ERR_HTTP_RESPONSE_CODE_FAILURE)"
+          )
           expect(browser.network.status).to eq(407)
         ensure
           browser&.quit
@@ -263,7 +258,7 @@ describe Ferrum::Browser do
 
         it "saves an attachment" do
           # Also https://github.com/puppeteer/puppeteer/issues/10161
-          skip "https://bugs.chromium.org/p/chromium/issues/detail?id=1444729" if browser.headless_new?
+          skip "https://bugs.chromium.org/p/chromium/issues/detail?id=1444729"
 
           browser.go_to("/#{filename}")
           browser.downloads.wait
@@ -413,7 +408,7 @@ describe Ferrum::Browser do
     context "fullscreen" do
       shared_examples "resize viewport by fullscreen" do
         it "allows the viewport to be resized by fullscreen" do
-          expect(browser.viewport_size).to eq([1024, 768])
+          expect(browser.viewport_size).to eq([1024, 681])
           browser.go_to(path)
           browser.resize(fullscreen: true)
           expect(browser.viewport_size).to eq(viewport_size)
@@ -618,15 +613,10 @@ describe Ferrum::Browser do
           page = browser.create_page(proxy: { host: proxy.host, port: proxy.port,
                                               user: options[:user], password: "$$" })
 
-          if browser.headless_new?
-            expect { page.go_to("https://example.com") }.to raise_error(
-              Ferrum::StatusError,
-              "Request to https://example.com failed (net::ERR_HTTP_RESPONSE_CODE_FAILURE)"
-            )
-          else
-            page.go_to("https://example.com")
-          end
-
+          expect { page.go_to("https://example.com") }.to raise_error(
+            Ferrum::StatusError,
+            "Request to https://example.com failed (net::ERR_HTTP_RESPONSE_CODE_FAILURE)"
+          )
           expect(page.network.status).to eq(407)
         end
 

@@ -83,6 +83,12 @@ describe Ferrum::Frame::Runtime do
       expect(element).to eq(browser.at_css("#empty_input"))
     end
 
+    it "returns deeply nested node" do
+      browser.go_to("/ferrum/deeply_nested")
+      node = browser.evaluate(%(document.getElementById("text")))
+      expect(node.text).to eq("text")
+    end
+
     it "returns structures with elements" do
       browser.go_to("/ferrum/type")
       result = browser.evaluate <<~JS
