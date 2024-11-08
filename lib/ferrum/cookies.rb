@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "yaml"
 require "ferrum/cookies/cookie"
 
 module Ferrum
@@ -166,6 +167,32 @@ module Ferrum
     #
     def clear
       @page.command("Network.clearBrowserCookies")
+      true
+    end
+
+    #
+    # Stores all cookies of current page in a file.
+    #
+    # @return [Integer]
+    #
+    # @example
+    #   browser.cookies.store # => Integer
+    #
+    def store(path = "cookies.yml")
+      File.write(path, map(&:to_h).to_yaml)
+    end
+
+    #
+    # Loads all cookies from the file and sets them for current page.
+    #
+    # @return [true]
+    #
+    # @example
+    #   browser.cookies.load # => true
+    #
+    def load(path = "cookies.yml")
+      cookies = YAML.load_file(path)
+      cookies.each { |c| set(c) }
       true
     end
 

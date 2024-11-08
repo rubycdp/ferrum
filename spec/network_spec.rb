@@ -441,14 +441,10 @@ describe Ferrum::Network do
     end
 
     it "denies without credentials" do
-      if browser.headless_new?
-        expect { page.go_to("/ferrum/basic_auth") }.to raise_error(
-          Ferrum::StatusError,
-          %r{Request to http://.*/ferrum/basic_auth failed \(net::ERR_INVALID_AUTH_CREDENTIALS\)}
-        )
-      else
-        page.go_to("/ferrum/basic_auth")
-      end
+      expect { page.go_to("/ferrum/basic_auth") }.to raise_error(
+        Ferrum::StatusError,
+        %r{Request to http://.*/ferrum/basic_auth failed \(net::ERR_INVALID_AUTH_CREDENTIALS\)}
+      )
 
       expect(network.status).to eq(401)
       expect(page.body).not_to include("Welcome, authenticated client")

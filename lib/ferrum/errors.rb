@@ -99,8 +99,7 @@ module Ferrum
 
   class NoExecutionContextError < BrowserError
     def initialize(response = nil)
-      response ||= { "message" => "There's no context available" }
-      super
+      super(response || { "message" => "There's no context available" })
     end
   end
 

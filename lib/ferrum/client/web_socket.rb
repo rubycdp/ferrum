@@ -50,20 +50,17 @@ module Ferrum
       end
 
       def on_message(event)
-        data = begin
-          JSON.parse(event.data)
-        rescue JSON::ParserError
-          unescaped = unescape_unicode(event.data)
-                      .encode("UTF-8", "UTF-8", undef: :replace, invalid: :replace, replace: "?")
-          JSON.parse(unescaped)
-        end
-
-        @messages.push(data)
+        data = safely_parse_json(event.data)
+        # If we couldn't parse JSON data for some reason (parse error or deeply nested object) we
+        # don't push response to @messages. Worse that could happen we raise timeout error due to command didn't return
+        # anything or skip the background notification, but at least we don't crash the thread that crashes the main
+        # thread and the application.
+        @messages.push(data) if data
 
         output = event.data
-        if SKIP_LOGGING_SCREENSHOTS && @screenshot_commands[data["id"]]
-          @screenshot_commands.delete(data["id"])
-          output.sub!(/{"data":"(.*)"}/, %("Set FERRUM_LOGGING_SCREENSHOTS=true to see screenshots in Base64"))
+        if SKIP_LOGGING_SCREENSHOTS && @screenshot_commands[data&.dig("id")]
+          @screenshot_commands.delete(data&.dig("id"))
+          output.sub!(/{"data":"[^"]*"}/, %("Set FERRUM_LOGGING_SCREENSHOTS=true to see screenshots in Base64"))
         end
 
         @logger&.puts("    ◀ #{Utils::ElapsedTime.elapsed_time} #{output}\n")
@@ -108,8 +105,21 @@ module Ferrum
         end
       end
 
-      def unescape_unicode(value)
-        value.gsub(/\\u([\da-fA-F]{4})/) { |_| [::Regexp.last_match(1)].pack("H*").unpack("n*").pack("U*") }
+      def safely_parse_json(data)
+        JSON.parse(data, max_nesting: false)
+      rescue JSON::NestingError
+        # nop
+      rescue JSON::ParserError
+        safely_parse_escaped_json(data)
+      end
+
+      def safely_parse_escaped_json(data)
+        unescaped_unicode =
+          data.gsub(/\\u([\da-fA-F]{4})/) { |_| [::Regexp.last_match(1)].pack("H*").unpack("n*").pack("U*") }
+        escaped_data = unescaped_unicode.encode("UTF-8", "UTF-8", undef: :replace, invalid: :replace, replace: "?")
+        JSON.parse(escaped_data, max_nesting: false)
+      rescue JSON::ParserError
+        # nop
       end
     end
   end

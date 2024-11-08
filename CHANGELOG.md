@@ -6,6 +6,8 @@
 - `Ferrum::Browser#close` closes browser gracefully issuing a CDP command, doesn't clean up ruby resources.
 - `Ferrum::Node#remove` removes node from DOM tree.
 - `Ferrum::Node#exists?` check whether the node in ruby world still exists in the DOM tree.
+- `Ferrum::Cookies#store` stores all cookies of current page in a file.
+- `Ferrum::Cookies#load` Loads all cookies from the file and sets them for current page.
 
 ### Changed
 
@@ -14,6 +16,9 @@
 ### Fixed
 
 - `:ws_url` option is now used without modifications WYSIWYG.
+- `Network.requestWillBeSent` callback didn't handle params in a type-safe way
+- `Page.frameStoppedLoading` callback shouldn't wait for document_node_id response
+- `JSON::NestingError` is raised when browser returns very deeply nested JSON and crashes the thread [#498]
 
 ### Removed
 
