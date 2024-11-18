@@ -8,6 +8,9 @@ module Ferrum
       FULL_WARNING = "Ignoring :selector or :area in #screenshot since full: true was given at %s"
       AREA_WARNING = "Ignoring :area in #screenshot since selector: was given at %s"
 
+      DEFAULT_SCREENSHOT_FORMAT = "png"
+      SUPPORTED_SCREENSHOT_FORMAT = %w[png jpeg jpg webp].freeze
+
       DEFAULT_PDF_OPTIONS = {
         landscape: false,
         paper_width: 8.5,
@@ -41,7 +44,7 @@ module Ferrum
       # @option opts [:base64, :binary] :encoding
       #   The encoding the image should be returned in.
       #
-      # @option opts ["jpeg", "png"] :format
+      # @option opts ["jpeg", "jpg", "png", "webp"] :format
       #   The format the image should be returned in.
       #
       # @option opts [Integer] :quality
@@ -71,8 +74,11 @@ module Ferrum
       # @example Save on the disk in JPG:
       #   page.screenshot(path: "google.jpg") # => 30902
       #
+      # @example Save to Base64 in WebP with reduce quality:
+      #   page.screenshot(format: 'webp', quality: 60) # "iVBORw0KGgoAAAANS...
+      #
       # @example Save to Base64 the whole page not only viewport and reduce quality:
-      #   page.screenshot(full: true, quality: 60) # "iVBORw0KGgoAAAANS...
+      #   page.screenshot(full: true, format: 'jpeg', quality: 60) # "iVBORw0KGgoAAAANS...
       #
       # @example Save with specific background color:
       #   page.screenshot(background_color: Ferrum::RGBA.new(0, 0, 0, 0.0))
@@ -210,14 +216,24 @@ module Ferrum
         screenshot_options
       end
 
-      def format_options(format, path, quality)
-        format ||= path ? File.extname(path).delete(".") : "png"
-        format = "jpeg" if format == "jpg"
-        raise "Not supported options `:format` #{format}. jpeg | png" if format !~ /jpeg|png/i
+      def format_options(screenshot_format, path, quality)
+        if !screenshot_format && path # try to infer from path
+          extension = File.extname(path).delete(".")&.downcase
+          screenshot_format = extension if extension && !extension.empty?
+        end
 
-        quality ||= 75 if format == "jpeg"
+        screenshot_format ||= DEFAULT_SCREENSHOT_FORMAT
+        screenshot_format = screenshot_format.to_s
+        unless SUPPORTED_SCREENSHOT_FORMAT.include?(screenshot_format)
+          raise "Not supported options `:format` #{screenshot_format}. #{SUPPORTED_SCREENSHOT_FORMAT.join(' | ')}"
+        end
 
-        [format, quality]
+        screenshot_format = "jpeg" if screenshot_format == "jpg"
+
+        # Chrome supports screenshot qualities for JPEG and WebP
+        quality ||= 75 if screenshot_format != "png"
+
+        [screenshot_format, quality]
       end
 
       def area_options(full, selector, scale, area = nil)
