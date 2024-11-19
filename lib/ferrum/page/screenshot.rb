@@ -224,9 +224,7 @@ module Ferrum
 
         format ||= DEFAULT_SCREENSHOT_FORMAT
         format = format.to_s
-        unless SUPPORTED_SCREENSHOT_FORMAT.include?(format)
-          raise Ferrum::InvalidScreenshotFormatError, format
-        end
+        raise Ferrum::InvalidScreenshotFormatError, format unless SUPPORTED_SCREENSHOT_FORMAT.include?(format)
 
         format = "jpeg" if format == "jpg"
 
