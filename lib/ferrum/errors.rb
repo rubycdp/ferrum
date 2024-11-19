@@ -80,7 +80,8 @@ module Ferrum
 
   class InvalidScreenshotFormatError < Error
     def initialize(format)
-      super("Invalid value #{format} for option `:format` (#{Page::Screenshot::SUPPORTED_SCREENSHOT_FORMAT.join(' | ')})")
+      valid_formats = Page::Screenshot::SUPPORTED_SCREENSHOT_FORMAT.join(" | ")
+      super("Invalid value #{format} for option `:format` (#{valid_formats})")
     end
   end
 

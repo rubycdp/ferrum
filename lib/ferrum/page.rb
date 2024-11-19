@@ -337,7 +337,8 @@ module Ferrum
     end
 
     #
-    # Activates (focuses) the target for the given page. When you have multiple tabs you work with, and you need to switch a given one.
+    # Activates (focuses) the target for the given page.
+    # When you have multiple tabs you work with, and you need to switch a given one.
     #
     # @return [Boolean]
     #
