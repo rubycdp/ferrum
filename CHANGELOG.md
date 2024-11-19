@@ -8,7 +8,8 @@
 - `Ferrum::Node#exists?` check whether the node in ruby world still exists in the DOM tree.
 - `Ferrum::Cookies#store` stores all cookies of current page in a file.
 - `Ferrum::Cookies#load` Loads all cookies from the file and sets them for current page.
-- `Ferrum::Page#screenshot` supports webp image format
+- `Ferrum::Page#screenshot` supports webp image format.
+- `Ferrum::Page#activate` activates the target for the given page.
 
 ### Changed
 

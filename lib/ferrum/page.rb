@@ -336,6 +336,19 @@ module Ferrum
       enabled
     end
 
+    #
+    # Activates (focuses) the target for the given page. When you have multiple tabs you work with, and you need to switch a given one.
+    #
+    # @return [Boolean]
+    #
+    # @example
+    #   page.activate # => true
+    #
+    def activate
+      command("Target.activateTarget", targetId: target_id)
+      true
+    end
+
     def command(method, wait: 0, slowmoable: false, **params)
       iteration = @event.reset if wait.positive?
       sleep(@options.slowmo) if slowmoable && @options.slowmo.positive?
