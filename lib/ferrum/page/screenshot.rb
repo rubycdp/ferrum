@@ -75,10 +75,10 @@ module Ferrum
       #   page.screenshot(path: "google.jpg") # => 30902
       #
       # @example Save to Base64 in WebP with reduce quality:
-      #   page.screenshot(format: 'webp', quality: 60) # "iVBORw0KGgoAAAANS...
+      #   page.screenshot(format: "webp", quality: 60) # "iVBORw0KGgoAAAANS...
       #
       # @example Save to Base64 the whole page not only viewport and reduce quality:
-      #   page.screenshot(full: true, format: 'jpeg', quality: 60) # "iVBORw0KGgoAAAANS...
+      #   page.screenshot(full: true, format: "jpeg", quality: 60) # "iVBORw0KGgoAAAANS...
       #
       # @example Save with specific background color:
       #   page.screenshot(background_color: Ferrum::RGBA.new(0, 0, 0, 0.0))
@@ -216,24 +216,24 @@ module Ferrum
         screenshot_options
       end
 
-      def format_options(screenshot_format, path, quality)
-        if !screenshot_format && path # try to infer from path
-          extension = File.extname(path).delete(".")&.downcase
-          screenshot_format = extension if extension && !extension.empty?
+      def format_options(format, path, quality)
+        if !format && path # try to infer from path
+          extension = File.extname(path).delete(".").downcase
+          format = extension unless extension.empty?
         end
 
-        screenshot_format ||= DEFAULT_SCREENSHOT_FORMAT
-        screenshot_format = screenshot_format.to_s
-        unless SUPPORTED_SCREENSHOT_FORMAT.include?(screenshot_format)
-          raise "Not supported options `:format` #{screenshot_format}. #{SUPPORTED_SCREENSHOT_FORMAT.join(' | ')}"
+        format ||= DEFAULT_SCREENSHOT_FORMAT
+        format = format.to_s
+        unless SUPPORTED_SCREENSHOT_FORMAT.include?(format)
+          raise Ferrum::InvalidScreenshotFormatError, format
         end
 
-        screenshot_format = "jpeg" if screenshot_format == "jpg"
+        format = "jpeg" if format == "jpg"
 
         # Chrome supports screenshot qualities for JPEG and WebP
-        quality ||= 75 if screenshot_format != "png"
+        quality ||= 75 if format != "png"
 
-        [screenshot_format, quality]
+        [format, quality]
       end
 
       def area_options(full, selector, scale, area = nil)

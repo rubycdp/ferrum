@@ -78,6 +78,12 @@ module Ferrum
     end
   end
 
+  class InvalidScreenshotFormatError < Error
+    def initialize(format)
+      super("Invalid value #{format} for option `:format` (#{Page::Screenshot::SUPPORTED_SCREENSHOT_FORMAT.join(' | ')})")
+    end
+  end
+
   class BrowserError < Error
     attr_reader :response
 
