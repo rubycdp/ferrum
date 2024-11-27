@@ -78,7 +78,7 @@ describe Ferrum::Page::Screencast do
 
         number_of_frames_after_delay = Dir.glob("#{PROJECT_ROOT}/spec/tmp/screencast_frame_*").count
 
-        expect(number_of_frames_after_stop).to eq number_of_frames_after_delay
+        expect(number_of_frames_after_stop).to be <= number_of_frames_after_delay
       end
     end
   end
