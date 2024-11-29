@@ -25,7 +25,7 @@
 ### Removed
 
 
-## [0.15](https://github.com/rubycdp/ferrum/compare/v0.14...v0.15) ##
+## [0.15](https://github.com/rubycdp/ferrum/compare/v0.14...v0.15) - (Feb 17, 2024)  ##
 
 ### Added
 - `Ferrum::Page#disable_javascript` disables the JavaScript from the HTML source [#407]
