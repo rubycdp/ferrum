@@ -1,4 +1,15 @@
-## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.15...main) ##
+## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.16...main) ##
+
+### Added
+
+### Changed
+
+### Fixed
+
+### Removed
+
+
+## [0.16](https://github.com/rubycdp/ferrum/compare/v0.15...v0.16) - (Dec 1, 2024) ##
 
 ### Added
 
