@@ -25,4 +25,10 @@ describe Ferrum::Browser::Options::Chrome do
       expect(defaults.merge_default({}, options)).not_to include("use-angle" => "metal")
     end
   end
+
+  describe ".version" do
+    it "returns an executable version" do
+      expect(described_class.version).to match(/(Chromium|Chrome) \d/)
+    end
+  end
 end
