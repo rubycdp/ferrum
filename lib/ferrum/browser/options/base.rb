@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "singleton"
+require "open3"
 
 module Ferrum
   class Browser
@@ -10,6 +11,14 @@ module Ferrum
 
         def self.options
           instance
+        end
+
+        # @return [String, nil]
+        def self.version
+          out, _ = Open3.capture2(detect_path, "--version")
+          out.strip
+        rescue Errno::ENOENT
+          nil
         end
 
         def to_h
