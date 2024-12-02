@@ -15,7 +15,7 @@ module Ferrum
 
         # @return [String, nil]
         def self.version
-          out, _ = Open3.capture2(detect_path, "--version")
+          out, = Open3.capture2(detect_path, "--version")
           out.strip
         rescue Errno::ENOENT
           nil
