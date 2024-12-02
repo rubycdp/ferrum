@@ -47,6 +47,8 @@ RSpec.configure do |config|
 
   config.after(:all) do
     @browser.quit
+  rescue IOError => e
+    puts "#{e.class}: #{e.message}"
   end
 
   config.before(:each) do
