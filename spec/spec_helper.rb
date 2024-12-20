@@ -46,7 +46,7 @@ RSpec.configure do |config|
   end
 
   config.after(:all) do
-    @browser.quit
+    @browser&.quit
   end
 
   config.before(:each) do
