@@ -31,6 +31,11 @@ jobs:
         with:
           chrome-version: stable
 
+      - name: Fix GA Chrome Permissions
+        run: |
+          sudo chown root:root /opt/hostedtoolcache/setup-chrome/chromium/stable/x64/chrome-sandbox
+          sudo chmod 4755 /opt/hostedtoolcache/setup-chrome/chromium/stable/x64/chrome-sandbox
+
       - name: Run tests
         run: |
           mkdir -p /tmp/ferrum

@@ -380,15 +380,23 @@ module Ferrum
 
         # We can build exchange in two places, here on the event or when request
         # is interrupted. So we have to be careful when to create new one. We
-        # create new exchange only if there's no with such id or there's but
+        # create new exchange only if there's no with such id or there's, but
         # it's filled with request which means this one is new but has response
         # for a redirect. So we assign response from the params to previous
         # exchange and build new exchange to assign this request to it.
         exchange = select(request.id).last
-        exchange = build_exchange(request.id) unless exchange&.blank?
+        exchange = build_exchange(request.id) if exchange.nil? || !exchange.blank?
+        request.headers.merge!(Hash(exchange.request_extra_info&.dig("headers")))
         exchange.request = request
 
         @exchange = exchange if exchange.navigation_request?(@page.main_frame.id)
+      end
+
+      @page.on("Network.requestWillBeSentExtraInfo") do |params|
+        exchange = select(params["requestId"]).last
+        exchange ||= build_exchange(params["requestId"])
+        exchange.request_extra_info = params
+        exchange.request&.headers&.merge!(params["headers"])
       end
     end
 
