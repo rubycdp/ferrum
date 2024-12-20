@@ -28,6 +28,9 @@ module Ferrum
       # @return [Error, nil]
       attr_accessor :error
 
+      # @api private
+      attr_accessor :request_extra_info
+
       #
       # Initializes the network exchange.
       #
@@ -40,6 +43,7 @@ module Ferrum
         @page = page
         @intercepted_request = nil
         @request = @response = @error = nil
+        @request_extra_info = nil
       end
 
       #

@@ -2,6 +2,8 @@
 
 ### Added
 
+`Ferrum::Network::Request#headers` are enhanced and supplemented with `Network.requestWillBeSentExtraInfo`
+
 ### Changed
 
 ### Fixed
