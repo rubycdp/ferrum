@@ -72,6 +72,9 @@ module Ferrum
     # @return [Downloads]
     attr_reader :downloads
 
+    # Control Screencasting
+    #
+    # @return [nil]
     attr_reader :screencaster
 
     def initialize(client, context_id:, target_id:, proxy: nil)

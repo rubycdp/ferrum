@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 require "ferrum/screencaster"
 
-
 module Ferrum
   class Page
     module Screencast
