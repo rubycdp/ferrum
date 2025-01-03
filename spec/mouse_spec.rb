@@ -44,20 +44,16 @@ describe Ferrum::Mouse do
   end
 
   describe "#move" do
-    let(:tracking_code) do
-      <<~JS
+    it "splits into steps" do
+      browser.go_to("/ferrum/simple")
+      browser.mouse.move(x: 100, y: 100)
+      browser.evaluate_async(<<~JS, browser.timeout)
         window.result = [];
         document.addEventListener("mousemove", e => {
           window.result.push([e.clientX, e.clientY]);
         });
         arguments[0]();
       JS
-    end
-
-    it "splits into steps" do
-      browser.go_to("/ferrum/simple")
-      browser.mouse.move(x: 100, y: 100)
-      browser.evaluate_async(tracking_code, browser.timeout)
 
       browser.mouse.move(x: 200, y: 300, steps: 5)
 
@@ -67,6 +63,43 @@ describe Ferrum::Mouse do
         [160, 220],
         [180, 260],
         [200, 300]
+      ])
+    end
+
+    it "sets buttons property" do
+      browser.go_to("/ferrum/simple")
+      browser.mouse.move(x: 100, y: 100)
+      browser.evaluate_async(<<~JS, browser.timeout)
+        window.result = [];
+        ["move", "up", "down"].forEach(type =>
+          document.addEventListener(`mouse${type}`, e => {
+            window.result.push([type, e.clientX, e.clientY, e.buttons]);
+          })
+        );
+        arguments[0]();
+      JS
+
+      browser.mouse
+             .move(x: 101, y: 102)
+             .down(button: :left)
+             .move(x: 103, y: 104)
+             .down(button: :right)
+             .move(x: 105, y: 106)
+             .up(button: :left)
+             .move(x: 107, y: 108)
+             .up(button: :right)
+             .move(x: 109, y: 110)
+
+      expect(browser.evaluate("window.result")).to eq([
+        ["move", 101, 102, 0], # none pressed
+        ["down", 101, 102, 1], # left down
+        ["move", 103, 104, 1], # left pressed
+        ["down", 103, 104, 3], # right down, left pressed
+        ["move", 105, 106, 3], # both pressed
+        ["up",   105, 106, 2], # left up, right pressed
+        ["move", 107, 108, 2], # right pressed
+        ["up",   107, 108, 0], # right up
+        ["move", 109, 110, 0] # none pressed
       ])
     end
   end
