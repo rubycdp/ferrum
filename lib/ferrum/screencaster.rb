@@ -14,8 +14,6 @@ module Ferrum
     end
 
     def add_frame(params)
-      warn "frame"
-
       @page.command("Page.screencastFrameAck", sessionId: params["sessionId"])
 
       t = Thread.new { File.binwrite("#{recordings_dir}/frame-#{@frame_number}.jpeg", Base64.decode64(params["data"])) }
@@ -38,9 +36,7 @@ module Ferrum
     end
 
     def stop_screencast
-      warn "joining threads"
       @threads.each(&:join)
-      warn "stopped"
       @page.command("Page.stopScreencast")
     end
   end
