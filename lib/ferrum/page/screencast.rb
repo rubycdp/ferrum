@@ -7,8 +7,8 @@ module Ferrum
     module Screencast
       attr_reader :screencaster
 
-      def start_screencast
-        @screencaster.start_screencast
+      def start_screencast(...)
+        @screencaster.start_screencast(...)
       end
 
       def stop_screencast

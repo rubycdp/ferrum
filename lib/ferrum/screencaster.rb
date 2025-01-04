@@ -27,8 +27,8 @@ module Ferrum
     def recordings_dir
       return @recordings_dir if defined? @recordings_dir
 
-      session_id = @page.client.session_id
-      @recordings_dir = FileUtils.mkdir_p("#{@base_dir}/screencast_recordings/#{session_id}/").first
+      timestamp = (Time.now.to_f * 1000).to_i
+      @recordings_dir = FileUtils.mkdir_p("#{@base_dir}/screencast_recordings/#{timestamp}/").first
       @recordings_dir
     end
 
