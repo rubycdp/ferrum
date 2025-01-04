@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require "ferrum/screencaster"
 
 module Ferrum
@@ -6,7 +7,7 @@ module Ferrum
     module Screencast
       attr_reader :screencaster
 
-      def start_screencast #(options)
+      def start_screencast
         @screencaster.start_screencast
       end
 

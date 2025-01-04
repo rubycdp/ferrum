@@ -454,7 +454,7 @@ module Ferrum
         end
       end
 
-      on(:screencastFrame) do |params, index, total|
+      on(:screencastFrame) do |params, _index, _total|
         @screencaster.add_frame(params)
         warn "DEBUG: frame added in page.rb"
       end
