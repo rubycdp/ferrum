@@ -8,6 +8,8 @@
 
 ### Fixed
 
+- Correctly set mouse events buttons property [#509]
+
 ### Removed
 
 
