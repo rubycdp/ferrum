@@ -3,11 +3,19 @@
 module Ferrum
   class Mouse
     CLICK_WAIT = ENV.fetch("FERRUM_CLICK_WAIT", 0.1).to_f
-    VALID_BUTTONS = %w[none left middle right back forward].freeze
+    BUTTON_MASKS = {
+      "none" => 0,
+      "left" => 1,
+      "right" => 2,
+      "middle" => 4,
+      "back" => 8,
+      "forward" => 16
+    }.freeze
 
     def initialize(page)
       @page = page
       @x = @y = 0
+      @buttons = 0
     end
 
     #
@@ -130,7 +138,8 @@ module Ferrum
                       slowmoable: true,
                       type: "mouseMoved",
                       x: new_x.to_i,
-                      y: new_y.to_i)
+                      y: new_y.to_i,
+                      buttons: @buttons)
       end
 
       self
@@ -140,16 +149,26 @@ module Ferrum
 
     def mouse_event(type:, button: :left, count: 1, modifiers: nil, wait: 0)
       button = validate_button(button)
-      options = { x: @x, y: @y, type: type, button: button, clickCount: count }
+      register_event_button(type, button)
+      options = { x: @x, y: @y, type: type, button: button, buttons: @buttons, clickCount: count }
       options.merge!(modifiers: modifiers) if modifiers
       @page.command("Input.dispatchMouseEvent", wait: wait, slowmoable: true, **options)
     end
 
     def validate_button(button)
       button = button.to_s
-      raise "Invalid button: #{button}" unless VALID_BUTTONS.include?(button)
+      raise "Invalid button: #{button}" unless BUTTON_MASKS.key?(button)
 
       button
+    end
+
+    def register_event_button(type, button)
+      case type
+      when "mousePressed"
+        @buttons |= BUTTON_MASKS[button]
+      when "mouseReleased"
+        @buttons &= ~BUTTON_MASKS[button]
+      end
     end
   end
 end
