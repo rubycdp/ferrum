@@ -2,7 +2,7 @@
 require 'fileutils'
 
 # Combine the resulting frames together into a video with:
-# ffmpeg -y -framerate 30 -i 'frame-%d.jpeg' -c:v libx264 -r 30 -pix_fmt yuv420p try2.mp4
+# ffmpeg -y -framerate 30 -i 'frame-%d.jpeg' -c:v libx264 -r 30 -pix_fmt yuv420p output.mp4
 #
 module Ferrum
   class Screencaster
