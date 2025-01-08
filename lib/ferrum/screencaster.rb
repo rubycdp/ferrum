@@ -10,28 +10,23 @@ module Ferrum
       @page = page
       @frame_number = 0
       @threads = []
-      @base_dir = ""
+      @save_path
     end
 
     def add_frame(params)
       @page.command("Page.screencastFrameAck", sessionId: params["sessionId"])
 
-      t = Thread.new { File.binwrite("#{recordings_dir}/frame-#{@frame_number}.jpeg", Base64.decode64(params["data"])) }
+      t = Thread.new { File.binwrite("#{@save_path}/frame-#{@frame_number}.jpeg", Base64.decode64(params["data"])) }
       @frame_number += 1
       @threads << t
       true
     end
 
-    def recordings_dir
-      return @recordings_dir if defined? @recordings_dir
 
-      timestamp = (Time.now.to_f * 1000).to_i
-      @recordings_dir = FileUtils.mkdir_p("#{@base_dir}/screencast_recordings/#{timestamp}/").first
-      @recordings_dir
-    end
-
-    def start_screencast(base_dir = "")
-      @base_dir = base_dir
+		# save_path: Directory where individual frames from the screencast will be saved
+    def start_screencast(save_path)
+      @save_path = save_path
+      raise "Save path for screen recording does not exist" unless Dir.exist?(@save_path)
       @page.command("Page.startScreencast", format: "jpeg")
     end
 
