@@ -8,7 +8,7 @@ module Ferrum
       def initialize
         @regular = Queue.new
         @priority = Queue.new
-        @on = Concurrent::Hash.new { |h, k| h[k] = Concurrent::Array.new }
+        @on = Concurrent::Hash.new
 
         start
       end
@@ -22,6 +22,7 @@ module Ferrum
       end
 
       def on(event, &block)
+        @on[event] ||= Concurrent::Array.new
         @on[event] << block
         true
       end
@@ -65,8 +66,8 @@ module Ferrum
         method, session_id, params = message.values_at("method", "sessionId", "params")
         event = SessionClient.event_name(method, session_id)
 
-        total = @on[event].size
-        @on[event].each_with_index do |block, index|
+        total = @on[event]&.size.to_i
+        @on[event]&.each_with_index do |block, index|
           # In case of multiple callbacks we provide current index and total
           block.call(params, index, total)
         end

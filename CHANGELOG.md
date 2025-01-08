@@ -9,6 +9,7 @@
 ### Fixed
 
 - Correctly set mouse events buttons property [#509]
+- Prevent 'Hash#[]=': can't add a new key into hash during iteration [#513]
 
 ### Removed
 
