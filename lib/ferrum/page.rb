@@ -393,6 +393,19 @@ module Ferrum
       end
     end
 
+    def off(name, id)
+      case name
+      when :dialog
+        client.off("Page.javascriptDialogOpening", id)
+      when :request
+        client.off("Fetch.requestPaused", id)
+      when :auth
+        client.off("Fetch.authRequired", id)
+      else
+        client.off(name, id)
+      end
+    end
+
     def subscribed?(event)
       client.subscribed?(event)
     end

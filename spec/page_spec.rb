@@ -196,4 +196,42 @@ describe Ferrum::Page do
       expect(page.device_pixel_ratio).to eq(2)
     end
   end
+
+  describe "#on" do
+    it "subscribes to an event" do
+      message = nil
+
+      page.on("Runtime.consoleAPICalled") do |params|
+        message = params.dig("args", 0, "value")
+      end
+
+      page.evaluate("console.log('hello')")
+      expect(message).to eq("hello")
+    end
+  end
+
+  describe "#off" do
+    it "unsubscribes a specific event handler" do
+      message_a = nil
+      message_b = nil
+
+      a = page.on("Runtime.consoleAPICalled") do |params|
+        message_a = params.dig("args", 0, "value")
+      end
+
+      page.on("Runtime.consoleAPICalled") do |params|
+        message_b = params.dig("args", 0, "value")
+      end
+
+      page.evaluate("console.log('hello')")
+      expect(message_a).to eq("hello")
+      expect(message_b).to eq("hello")
+
+      page.off("Runtime.consoleAPICalled", a)
+      page.evaluate("console.log('goodbye')")
+
+      expect(message_a).to eq("hello")
+      expect(message_b).to eq("goodbye")
+    end
+  end
 end
