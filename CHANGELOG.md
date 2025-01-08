@@ -3,6 +3,7 @@
 ### Added
 
 `Ferrum::Network::Request#headers` are enhanced and supplemented with `Network.requestWillBeSentExtraInfo` [#506]
+`Ferrum::Page#off` to unsubscribe from CDP events [#455]
 
 ### Changed
 
