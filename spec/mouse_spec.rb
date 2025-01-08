@@ -32,6 +32,19 @@ describe Ferrum::Mouse do
     end
   end
 
+  describe "#scroll_by" do
+    it "allows the page to be scrolled" do
+      browser.go_to("/ferrum/long_page")
+      browser.resize(width: 10, height: 10)
+      browser.mouse.scroll_by(30, 70)
+      browser.mouse.scroll_by(40, -50)
+      browser.mouse.scroll_by(-60, 0)
+      expect(
+        browser.evaluate("[window.scrollX, window.scrollY]")
+      ).to eq([10, 20])
+    end
+  end
+
   describe "#scroll_to" do
     it "allows the page to be scrolled" do
       browser.go_to("/ferrum/long_page")
