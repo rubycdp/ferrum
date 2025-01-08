@@ -19,6 +19,23 @@ module Ferrum
     end
 
     #
+    # Scroll page by the given amount x, y.
+    #
+    # @param [Integer] x
+    #  The horizontal pixel value that you want to scroll by.
+    #
+    # @param [Integer] y
+    #   The vertical pixel value that you want to scroll by.
+    #
+    # @example
+    #   browser.go_to("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
+    #   browser.mouse.scroll_by(0, 400)
+    #
+    def scroll_by(x, y)
+      tap { @page.execute("window.scrollBy(#{x}, #{y})") }
+    end
+
+    #
     # Scroll page to a given x, y coordinates.
     #
     # @param [Integer] top

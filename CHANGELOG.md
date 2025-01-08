@@ -2,8 +2,9 @@
 
 ### Added
 
-`Ferrum::Network::Request#headers` are enhanced and supplemented with `Network.requestWillBeSentExtraInfo` [#506]
-`Ferrum::Page#off` to unsubscribe from CDP events [#455]
+- `Ferrum::Network::Request#headers` are enhanced and supplemented with `Network.requestWillBeSentExtraInfo` [#506]
+- `Ferrum::Page#off` to unsubscribe from CDP events [#455]
+- `Ferrum::Mouse#scroll_by` to be able to scroll by, as alternative to `scroll_to` [#514]
 
 ### Changed
 
