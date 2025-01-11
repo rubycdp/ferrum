@@ -83,7 +83,7 @@ module Ferrum
       # @return [Boolean]
       #
       def finished?
-        blocked? || response&.loaded? || !error.nil? || ping?
+        blocked? || response&.loaded? || !error.nil? || ping? || !!url&.start_with?("blob:")
       end
 
       #
