@@ -206,6 +206,7 @@ describe Ferrum::Page do
       end
 
       page.evaluate("console.log('hello')")
+      wait_a_bit
       expect(message).to eq("hello")
     end
   end

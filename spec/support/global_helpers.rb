@@ -66,4 +66,8 @@ RSpec.shared_context "Global helpers" do
   rescue JSON::ParserError
     # nop
   end
+
+  def wait_a_bit(duration = 0.2)
+    Thread.pass && sleep(duration)
+  end
 end
