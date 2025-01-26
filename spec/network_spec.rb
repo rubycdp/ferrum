@@ -69,6 +69,19 @@ describe Ferrum::Network do
       expect { network.wait_for_idle!(timeout: 0.2) }.to raise_error(Ferrum::TimeoutError)
     end
 
+    it "raises no error for blobs" do
+      page.go_to("/show_cookies")
+      page.evaluate(<<~JS)
+        (function () {
+          var code = URL.createObjectURL(new Blob(['self.onmessage = function(){}'],{type:"text/javascript"}));
+          _ = new Worker(code);
+          return null;
+        })()
+      JS
+
+      expect { page.network.wait_for_idle!(duration: 1) }.not_to raise_error
+    end
+
     it "raises no error" do
       page.go_to("/show_cookies")
       expect(page.body).not_to include("test_cookie")
