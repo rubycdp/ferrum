@@ -139,6 +139,7 @@ describe Ferrum::Network::Exchange do
 
     it "returns true for blob requests" do
       exchange = Ferrum::Network::Exchange.new(page, "1")
+      expect(exchange.blob?).to be false
       expect(exchange.finished?).to be false
 
       exchange.request = Ferrum::Network::Request.new(
@@ -149,6 +150,7 @@ describe Ferrum::Network::Exchange do
           }
         }
       )
+      expect(exchange.blob?).to be true
       expect(exchange.finished?).to be true
     end
   end

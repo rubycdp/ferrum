@@ -2,6 +2,7 @@
 
 ### Added
 
+- `Ferrum::Network::Exchange#blob?` determines if the exchange is blob [#516]
 - `Ferrum::Network::Request#headers` are enhanced and supplemented with `Network.requestWillBeSentExtraInfo` [#506]
 - `Ferrum::Page#off` to unsubscribe from CDP events [#455]
 - `Ferrum::Mouse#scroll_by` to be able to scroll by, as alternative to `scroll_to` [#514]
@@ -12,6 +13,7 @@
 
 - Correctly set mouse events buttons property [#509]
 - Prevent 'Hash#[]=': can't add a new key into hash during iteration [#513]
+- `Ferrum::Network::Exchange#finished?` and `Ferrum::Network#wait_for_idle` take into account that request can be a blob [#496]
 
 ### Removed
 

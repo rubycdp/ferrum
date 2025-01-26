@@ -83,7 +83,7 @@ module Ferrum
       # @return [Boolean]
       #
       def finished?
-        blocked? || response&.loaded? || !error.nil? || ping? || !!url&.start_with?("blob:")
+        blocked? || response&.loaded? || !error.nil? || ping? || blob?
       end
 
       #
@@ -129,6 +129,15 @@ module Ferrum
       #
       def ping?
         !!request&.ping?
+      end
+
+      #
+      # Determines if the exchange is blob.
+      #
+      # @return [Boolean]
+      #
+      def blob?
+        !!url&.start_with?("blob:")
       end
 
       #
