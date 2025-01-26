@@ -136,6 +136,21 @@ describe Ferrum::Network::Exchange do
       exchange.request = Ferrum::Network::Request.new({ "type" => "Ping" })
       expect(exchange.finished?).to be true
     end
+
+    it "returns true for blob requests" do
+      exchange = Ferrum::Network::Exchange.new(page, "1")
+      expect(exchange.finished?).to be false
+
+      exchange.request = Ferrum::Network::Request.new(
+        {
+          "type" => "Document",
+          "request" => {
+            "url" => "blob:null/75787aaf-a81f-4237-98d7-0d51fe6cfcba"
+          }
+        }
+      )
+      expect(exchange.finished?).to be true
+    end
   end
 
   describe "#redirect?" do
