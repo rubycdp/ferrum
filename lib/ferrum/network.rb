@@ -86,11 +86,11 @@ module Ferrum
     end
 
     def total_connections
-      exchange_connections.count
+      @traffic.size
     end
 
     def finished_connections
-      exchange_connections.count(&:finished?)
+      @traffic.count(&:finished?)
     end
 
     def pending_connections
@@ -100,7 +100,7 @@ module Ferrum
     #
     # Page request of the main frame.
     #
-    # @return [Request]
+    # @return [Request, nil]
     #
     # @example
     #   browser.go_to("https://github.com/")
@@ -391,7 +391,7 @@ module Ferrum
 
         if exchange.navigation_request?(@page.main_frame.id)
           @exchange = exchange
-          mark_pending_exchanges_as_unknown(exchange)
+          classify_pending_exchanges(exchange.loader_id)
         end
       end
 
@@ -400,17 +400,6 @@ module Ferrum
         exchange ||= build_exchange(params["requestId"])
         exchange.request_extra_info = params
         exchange.request&.headers&.merge!(params["headers"])
-      end
-    end
-
-    # When the main frame navigates Chrome doesn't send `Network.loadingFailed`
-    # for pending async requests. Therefore, we mark pending connections as unknown since
-    # they are not relevant to the current navigation.
-    def mark_pending_exchanges_as_unknown(navigation_exchange)
-      @traffic.each do |exchange|
-        break if exchange.id == navigation_exchange.id
-
-        exchange.unknown = true if exchange.pending?
       end
     end
 
@@ -514,15 +503,16 @@ module Ferrum
       Array(@whitelist).any?
     end
 
-    def exchange_connections
-      @traffic.select { |e| exchange_connection?(e) }
-    end
+    # When the main frame navigates Chrome doesn't send `Network.loadingFailed`
+    # for pending async requests. Therefore, we mark pending connections as unknown since
+    # they are not relevant to the current navigation.
+    def classify_pending_exchanges(new_loader_id)
+      @traffic.each do |exchange|
+        break if exchange.loader_id == new_loader_id
+        next unless exchange.pending?
 
-    def exchange_connection?(exchange)
-      return false if !@page.frames.any? { |f| f.id == exchange.request&.frame_id }
-      return false if exchange.request&.frame_id != @exchange.request&.frame_id
-
-      exchange.request&.loader_id == @exchange.request&.loader_id
+        exchange.unknown = true
+      end
     end
   end
 end

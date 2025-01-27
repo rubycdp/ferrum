@@ -6,8 +6,13 @@
 - `Ferrum::Network::Request#headers` are enhanced and supplemented with `Network.requestWillBeSentExtraInfo` [#506]
 - `Ferrum::Page#off` to unsubscribe from CDP events [#455]
 - `Ferrum::Mouse#scroll_by` to be able to scroll by, as alternative to `scroll_to` [#514]
+- `Ferrum::Network::Exchange#unknown` determines if the exchange is in an unknown state, meaning that browser might not return info about it [#426]
+- `Ferrum::Network::Exchange#loader_id` returns loader id [#426]
 
 ### Changed
+
+- `Ferrum::Network::Exchange#finished?` takes into account that exchange might be in an unknown state after loader changed(next `go_to` call) and considers
+  such as finished [#426]
 
 ### Fixed
 

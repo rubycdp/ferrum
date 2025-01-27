@@ -124,7 +124,7 @@ module Ferrum
         on("Page.frameStoppedLoading") do |params|
           # `DOM.performSearch` doesn't work without getting #document node first.
           # It returns node with nodeId 1 and nodeType 9 from which descend the
-          # tree and we save it in a variable because if we call that again root
+          # tree, and we save it in a variable because if we call that again root
           # node will change the id and all subsequent nodes have to change id too.
           if @main_frame.id == params["frameId"]
             @event.set if idling?

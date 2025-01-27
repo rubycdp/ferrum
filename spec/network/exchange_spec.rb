@@ -185,6 +185,22 @@ describe Ferrum::Network::Exchange do
       )
       expect(last_exchange.pending?).to be true
     end
+
+    it "classifies request if loader changes" do
+      page.go_to("/ferrum/with_slow_ajax_connection")
+      xhr = page.network.traffic.find(&:pending?)
+
+      expect(page.body).to include("Slow AJAX")
+      expect(xhr.url).to include("really_slow")
+      expect(xhr.unknown).to be_falsey
+      expect(xhr).to be_pending
+
+      page.go_to("/")
+
+      expect(page.body).to include("Hello world!")
+      expect(xhr.unknown).to be_truthy
+      expect(xhr).not_to be_pending
+    end
   end
 
   describe "#intercepted?" do

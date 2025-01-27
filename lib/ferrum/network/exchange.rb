@@ -66,6 +66,15 @@ module Ferrum
       end
 
       #
+      # The loader ID of the request.
+      #
+      # @return [String, nil]
+      #
+      def loader_id
+        request&.loader_id
+      end
+
+      #
       # Determines if the network exchange has a request.
       #
       # @return [Boolean]
