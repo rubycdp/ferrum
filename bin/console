@@ -8,4 +8,8 @@ require "irb"
 require "irb/completion"
 require "ferrum"
 
+def browser(headless: true, **options)
+  @browser ||= Ferrum::Browser.new(headless: headless, **options)
+end
+
 IRB.start
