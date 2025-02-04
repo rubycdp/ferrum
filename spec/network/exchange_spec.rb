@@ -69,7 +69,7 @@ describe Ferrum::Network::Exchange do
 
   describe "#error" do
     it "captures refused connection errors" do
-      page.go_to("/ferrum/with_ajax_connection_refused")
+      page.go_to("/with_ajax_connection_refused")
       expect(page.at_xpath("//h1[text() = 'Error']")).to be
 
       expect(last_exchange.error).to be
@@ -178,16 +178,16 @@ describe Ferrum::Network::Exchange do
       allow(page).to receive(:timeout) { 2 }
 
       expect do
-        page.go_to("/ferrum/visit_timeout")
+        page.go_to("/visit_timeout")
       end.to raise_error(
         Ferrum::PendingConnectionsError,
-        %r{Request to http://.*/ferrum/visit_timeout reached server, but there are still pending connections: http://.*/ferrum/really_slow}
+        %r{Request to http://.*/visit_timeout reached server, but there are still pending connections: http://.*/really_slow}
       )
       expect(last_exchange.pending?).to be true
     end
 
     it "classifies request if loader changes" do
-      page.go_to("/ferrum/with_slow_ajax_connection")
+      page.go_to("/with_slow_ajax_connection")
       xhr = page.network.traffic.find(&:pending?)
 
       expect(page.body).to include("Slow AJAX")

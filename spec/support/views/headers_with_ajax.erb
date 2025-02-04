@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <link rel="icon" href="data:,">
     <script type="text/javascript">
       window.onload = function() {
         var request = new XMLHttpRequest();
-        request.open("GET", "/ferrum/headers", false);
+        request.open("GET", "/headers", false);
         request.send();
 
         if (request.status === 200) {

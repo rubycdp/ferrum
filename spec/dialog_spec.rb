@@ -3,7 +3,7 @@
 describe Ferrum::Dialog do
   describe "#accept" do
     it "works with nested modals" do
-      browser.go_to("/ferrum/with_js")
+      browser.go_to("/with_js")
       browser.on(:dialog) do |dialog, _index, _total|
         if dialog.match?("Are you sure?")
           dialog.accept
@@ -21,7 +21,7 @@ describe Ferrum::Dialog do
       browser.go_to
 
       browser.execute <<-JS
-        window.open("/ferrum/with_js", "popup")
+        window.open("/with_js", "popup")
       JS
 
       popup, = browser.windows(:last)
@@ -41,7 +41,7 @@ describe Ferrum::Dialog do
       browser.go_to
 
       browser.execute <<-JS
-        window.open("/ferrum/with_js", "popup")
+        window.open("/with_js", "popup")
       JS
 
       popup, = browser.windows(:last)
@@ -58,7 +58,7 @@ describe Ferrum::Dialog do
 
   describe "#match?" do
     it "matches on partial strings" do
-      browser.go_to("/ferrum/with_js")
+      browser.go_to("/with_js")
       browser.on(:dialog) do |dialog, _index, _total|
         if dialog.match?(Regexp.escape("[reg.exp] (chara©+er$)"))
           dialog.accept
@@ -73,7 +73,7 @@ describe Ferrum::Dialog do
     end
 
     it "matches on regular expressions" do
-      browser.go_to("/ferrum/with_js")
+      browser.go_to("/with_js")
       browser.on(:dialog) do |dialog, _index, _total|
         if dialog.match?(/^.t.ext.*\[\w{3}\.\w{3}\]/i)
           dialog.accept

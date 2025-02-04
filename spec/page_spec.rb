@@ -11,7 +11,7 @@ describe Ferrum::Page do
 
       it "reports no open resources when there are none" do
         page.timeout = 4
-        expect { page.go_to("/ferrum/really_slow") }.not_to raise_error
+        expect { page.go_to("/really_slow") }.not_to raise_error
       end
     end
 
@@ -25,26 +25,26 @@ describe Ferrum::Page do
 
       it "reports pending connection for image" do
         with_timeout(2) do
-          expect { browser.go_to("/ferrum/visit_timeout") }.to raise_error(
+          expect { browser.go_to("/visit_timeout") }.to raise_error(
             Ferrum::PendingConnectionsError,
-            %r{Request to http://.*/ferrum/visit_timeout reached server, but there are still pending connections: http://.*/ferrum/really_slow}
+            %r{Request to http://.*/visit_timeout reached server, but there are still pending connections: http://.*/really_slow}
           )
         end
       end
 
       it "reports pending connection for main frame" do
         with_timeout(0.5) do
-          expect { browser.go_to("/ferrum/really_slow") }.to raise_error(
+          expect { browser.go_to("/really_slow") }.to raise_error(
             Ferrum::PendingConnectionsError,
-            %r{Request to http://.*/ferrum/really_slow reached server, but there are still pending connections: http://.*/ferrum/really_slow}
+            %r{Request to http://.*/really_slow reached server, but there are still pending connections: http://.*/really_slow}
           )
         end
       end
 
       it "handles server error" do
-        expect { page.go_to("/ferrum/server_error") }.to raise_error(
+        expect { page.go_to("/server_error") }.to raise_error(
           Ferrum::StatusError,
-          %r{Request to http://.*/ferrum/server_error failed \(net::ERR_HTTP_RESPONSE_CODE_FAILURE\)}
+          %r{Request to http://.*/server_error failed \(net::ERR_HTTP_RESPONSE_CODE_FAILURE\)}
         )
 
         expect(page.network.status).to eq(500)
@@ -67,27 +67,27 @@ describe Ferrum::Page do
 
   describe "#current_url" do
     it "supports whitespace characters" do
-      page.go_to("/ferrum/arbitrary_path/200/foo%20bar%20baz")
+      page.go_to("/arbitrary_path/200/foo%20bar%20baz")
 
-      expect(page.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo%20bar%20baz"))
+      expect(page.current_url).to eq(base_url("/arbitrary_path/200/foo%20bar%20baz"))
     end
 
     it "supports escaped characters" do
-      page.go_to("/ferrum/arbitrary_path/200/foo?a%5Bb%5D=c")
+      page.go_to("/arbitrary_path/200/foo?a%5Bb%5D=c")
 
-      expect(page.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo?a%5Bb%5D=c"))
+      expect(page.current_url).to eq(base_url("/arbitrary_path/200/foo?a%5Bb%5D=c"))
     end
 
     it "supports url in parameter" do
-      page.go_to("/ferrum/arbitrary_path/200/foo%20asd?a=http://example.com/asd%20asd")
+      page.go_to("/arbitrary_path/200/foo%20asd?a=http://example.com/asd%20asd")
 
-      expect(page.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo%20asd?a=http://example.com/asd%20asd"))
+      expect(page.current_url).to eq(base_url("/arbitrary_path/200/foo%20asd?a=http://example.com/asd%20asd"))
     end
 
     it "supports restricted characters ' []:/+&='" do
-      page.go_to("/ferrum/arbitrary_path/200/foo?a=%20%5B%5D%3A%2F%2B%26%3D")
+      page.go_to("/arbitrary_path/200/foo?a=%20%5B%5D%3A%2F%2B%26%3D")
 
-      expect(page.current_url).to eq(base_url("/ferrum/arbitrary_path/200/foo?a=%20%5B%5D%3A%2F%2B%26%3D"))
+      expect(page.current_url).to eq(base_url("/arbitrary_path/200/foo?a=%20%5B%5D%3A%2F%2B%26%3D"))
     end
 
     it "returns about:blank when on about:blank" do
@@ -139,7 +139,7 @@ describe Ferrum::Page do
 
   describe "#wait_for_reload" do
     it "waits for page to be reloaded" do
-      page.go_to("/ferrum/auto_refresh")
+      page.go_to("/auto_refresh")
       expect(page.body).to include("Visited 0 times")
 
       page.wait_for_reload(5)
@@ -165,10 +165,10 @@ describe Ferrum::Page do
   describe "#timeout=" do
     it "supports to change timeout dynamically" do
       page.timeout = 4
-      expect { page.go_to("/ferrum/really_slow") }.not_to raise_error
+      expect { page.go_to("/really_slow") }.not_to raise_error
 
       page.timeout = 2
-      expect { page.go_to("/ferrum/really_slow") }.to raise_error(Ferrum::PendingConnectionsError)
+      expect { page.go_to("/really_slow") }.to raise_error(Ferrum::PendingConnectionsError)
     end
   end
 
@@ -176,7 +176,7 @@ describe Ferrum::Page do
     it "disables javascripts on page" do
       page.disable_javascript
 
-      expect { page.go_to("/ferrum/js_error") }.not_to raise_error
+      expect { page.go_to("/js_error") }.not_to raise_error
     end
 
     it "allows javascript evaluation from Ferrum" do

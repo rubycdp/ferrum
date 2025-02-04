@@ -50,12 +50,12 @@ describe Ferrum::Frame::Runtime do
       end
 
       it "propagates a Javascript error during page load to a ruby exception" do
-        expect { browser.go_to("/ferrum/js_error") }.to raise_error(Ferrum::JavaScriptError)
+        expect { browser.go_to("/js_error") }.to raise_error(Ferrum::JavaScriptError)
       end
 
       it "does not propagate a Javascript error to ruby if error raising disabled" do
         browser = Ferrum::Browser.new(base_url: base_url, js_errors: false)
-        browser.go_to("/ferrum/js_error")
+        browser.go_to("/js_error")
         browser.execute "setTimeout(function() { omg }, 0)"
         sleep 0.1
         expect(browser.body).to include("hello")
@@ -66,7 +66,7 @@ describe Ferrum::Frame::Runtime do
       it "does not propagate a Javascript error to ruby if error raising disabled and client restarted" do
         browser = Ferrum::Browser.new(base_url: base_url, js_errors: false)
         browser.restart
-        browser.go_to("/ferrum/js_error")
+        browser.go_to("/js_error")
         browser.execute "setTimeout(function() { omg }, 0)"
         sleep 0.1
         expect(browser.body).to include("hello")
@@ -78,19 +78,19 @@ describe Ferrum::Frame::Runtime do
 
   describe "#evaluate" do
     it "returns an element" do
-      browser.go_to("/ferrum/type")
+      browser.go_to("/type")
       element = browser.evaluate(%(document.getElementById("empty_input")))
       expect(element).to eq(browser.at_css("#empty_input"))
     end
 
     it "returns deeply nested node" do
-      browser.go_to("/ferrum/deeply_nested")
+      browser.go_to("/deeply_nested")
       node = browser.evaluate(%(document.getElementById("text")))
       expect(node.text).to eq("text")
     end
 
     it "returns structures with elements" do
-      browser.go_to("/ferrum/type")
+      browser.go_to("/type")
       result = browser.evaluate <<~JS
         {
           a: document.getElementById("empty_input"),
@@ -176,7 +176,7 @@ describe Ferrum::Frame::Runtime do
     end
 
     it "evaluates a function on a node" do
-      browser.go_to("/ferrum/index")
+      browser.go_to("/index")
       node = browser.at_xpath(".//a")
 
       function = <<~JS
@@ -211,7 +211,7 @@ describe Ferrum::Frame::Runtime do
         browser.evaluate("$('a').first().text()")
       end.to raise_error(Ferrum::JavaScriptError)
 
-      browser.add_script_tag(url: "/ferrum/jquery.min.js")
+      browser.add_script_tag(url: "/jquery.min.js")
 
       expect(browser.evaluate("$('a').first().text()")).to eq("Relative")
     end
@@ -250,7 +250,7 @@ describe Ferrum::Frame::Runtime do
       browser.go_to
       expect(browser.evaluate(font_size)).to eq("16px")
 
-      browser.add_style_tag(url: "/ferrum/add_style_tag.css")
+      browser.add_style_tag(url: "/add_style_tag.css")
 
       expect(browser.evaluate(font_size)).to eq("50px")
     end

@@ -4,7 +4,7 @@ describe Ferrum::Headers do
   describe "#set" do
     it "allows headers to be set" do
       browser.headers.set("Cookie" => "foo=bar", "YourName" => "your_value")
-      browser.go_to("/ferrum/headers")
+      browser.go_to("/headers")
       expect(browser.body).to include("COOKIE: foo=bar")
       expect(browser.body).to include("YOURNAME: your_value")
     end
@@ -20,7 +20,7 @@ describe Ferrum::Headers do
       browser.go_to
       browser.execute <<-JS
         var request = new XMLHttpRequest();
-        request.open("GET", "/ferrum/headers", false);
+        request.open("GET", "/headers", false);
         request.send();
 
         if (request.status === 200) {
@@ -43,7 +43,7 @@ describe Ferrum::Headers do
     it "adds new headers" do
       browser.headers.set("User-Agent" => "Browser", "YourName" => "your_value")
       browser.headers.add({ "User-Agent" => "Super Browser", "Appended" => "true" })
-      browser.go_to("/ferrum/headers")
+      browser.go_to("/headers")
       expect(browser.body).to include("USER_AGENT: Super Browser")
       expect(browser.body).to include("YOURNAME: your_value")
       expect(browser.body).to include("APPENDED: true")
@@ -51,7 +51,7 @@ describe Ferrum::Headers do
 
     it "sets Accept-Language even if user-agent is not provided" do
       browser.headers.add({ "Accept-Language" => "esperanto" })
-      browser.go_to("/ferrum/headers")
+      browser.go_to("/headers")
       expect(browser.body).to include("USER_AGENT: #{browser.default_user_agent}")
       expect(browser.body).to match(/ACCEPT_LANGUAGE: esperanto/)
     end
@@ -62,7 +62,7 @@ describe Ferrum::Headers do
       browser.headers.add({ "Referer" => "http://google.com" }, permanent: false)
       browser.headers.add({ "TempA" => "a" }, permanent: false) # simply ignored
 
-      browser.go_to("/ferrum/headers_with_ajax")
+      browser.go_to("/headers_with_ajax")
       initial_request = browser.at_css("#initial_request").text
       ajax_request = browser.at_css("#ajax_request").text
 
@@ -79,7 +79,7 @@ describe Ferrum::Headers do
 
     it "keeps added headers on redirects" do
       browser.headers.add({ "X-Custom-Header" => "1" }, permanent: false)
-      browser.go_to("/ferrum/redirect_to_headers")
+      browser.go_to("/redirect_to_headers")
       expect(browser.body).to include("X_CUSTOM_HEADER: 1")
     end
   end
@@ -91,7 +91,7 @@ describe Ferrum::Headers do
         "Host" => "foo.com",
         "User-Agent" => "foo"
       )
-      browser.go_to("/ferrum/popup_headers")
+      browser.go_to("/popup_headers")
       browser.at_xpath("//a[text()='pop up']").click
 
       page, = browser.windows(:last)
@@ -108,13 +108,13 @@ describe Ferrum::Headers do
         "Host" => "foo.com",
         "User-Agent" => "foo"
       )
-      page.goto("/ferrum/headers")
+      page.goto("/headers")
       expect(page.body).to include("USER_AGENT: foo")
       expect(page.body).to include("COOKIE: foo=bar")
       expect(page.body).to include("HOST: foo.com")
 
       browser.switch_to_window browser.windows.last
-      browser.go_to("/ferrum/headers")
+      browser.go_to("/headers")
       expect(browser.body).to include("USER_AGENT: foo")
       expect(browser.body).to include("COOKIE: foo=bar")
       expect(browser.body).to include("HOST: foo.com")
@@ -125,11 +125,11 @@ describe Ferrum::Headers do
       browser.headers.add("X-Custom-Header" => "1", permanent: false)
 
       browser.switch_to_window browser.windows.last
-      browser.go_to("/ferrum/headers")
+      browser.go_to("/headers")
       expect(browser.body).not_to include("X_CUSTOM_HEADER: 1")
 
       browser.switch_to_window browser.windows.first
-      browser.go_to("/ferrum/headers")
+      browser.go_to("/headers")
       expect(browser.body).to include("X_CUSTOM_HEADER: 1")
     end
 
@@ -139,12 +139,12 @@ describe Ferrum::Headers do
       browser.headers.add("Host" => "foo.com")
 
       browser.switch_to_window browser.windows.last
-      browser.go_to("/ferrum/headers")
+      browser.go_to("/headers")
       expect(browser.body).to include("HOST: foo.com")
       expect(browser.body).not_to include("X_CUSTOM_HEADER: 1")
 
       browser.switch_to_window browser.windows.first
-      browser.go_to("/ferrum/headers")
+      browser.go_to("/headers")
       expect(browser.body).to include("HOST: foo.com")
       expect(browser.body).to include("X_CUSTOM_HEADER: 1")
     end
@@ -155,11 +155,11 @@ describe Ferrum::Headers do
       browser.create_page
 
       browser.switch_to_window browser.windows.last
-      browser.go_to("/ferrum/headers")
+      browser.go_to("/headers")
       expect(browser.body).not_to include("X_CUSTOM_HEADER: 1")
 
       browser.switch_to_window browser.windows.first
-      browser.go_to("/ferrum/headers")
+      browser.go_to("/headers")
       expect(browser.body).to include("X_CUSTOM_HEADER: 1")
     end
   end

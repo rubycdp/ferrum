@@ -1,3 +1,11 @@
-<% for header in request.env.select {|k,v| k.match("^HTTP.*")} %>
-  <%=header[0].split("_",2)[1]%>: <%=header[1]%>
-<% end %>
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="icon" href="data:,">
+  </head>
+  <body>
+    <% for header in request.env.select {|k,v| k.match("^HTTP.*")} %>
+      <%=header[0].split("_",2)[1]%>: <%=header[1]%>
+    <% end %>
+  </body>
+</html>

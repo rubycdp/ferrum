@@ -3,13 +3,13 @@
 describe Ferrum::Mouse do
   describe "#click" do
     it "supports clicking precise coordinates" do
-      browser.go_to("/ferrum/click_coordinates")
+      browser.go_to("/click_coordinates")
       browser.mouse.click(x: 100, y: 150)
       expect(browser.body).to include("x: 100, y: 150")
     end
 
     it "has no trouble clicking elements when the size of a document changes", skip: true do
-      browser.go_to("/ferrum/long_page")
+      browser.go_to("/long_page")
       browser.at_css("#penultimate").click
       browser.execute <<~JS
         el = document.getElementById("penultimate")
@@ -20,13 +20,13 @@ describe Ferrum::Mouse do
     end
 
     it "handles click when the target is in the view, but the document is smaller than the viewport" do
-      browser.go_to("/ferrum/simple")
+      browser.go_to("/simple")
       browser.at_xpath("//a[text() = 'Link']").click
       expect(browser.body).to include("Hello world")
     end
 
     it "handles clicks where a parent element has a border" do
-      browser.go_to("/ferrum/table")
+      browser.go_to("/table")
       browser.at_xpath("//a[text() = 'Link']").click
       expect(browser.body).to include("Hello world")
     end
@@ -34,7 +34,7 @@ describe Ferrum::Mouse do
 
   describe "#scroll_by" do
     it "allows the page to be scrolled" do
-      browser.go_to("/ferrum/long_page")
+      browser.go_to("/long_page")
       browser.resize(width: 10, height: 10)
       browser.mouse.scroll_by(30, 70)
       browser.mouse.scroll_by(40, -50)
@@ -47,7 +47,7 @@ describe Ferrum::Mouse do
 
   describe "#scroll_to" do
     it "allows the page to be scrolled" do
-      browser.go_to("/ferrum/long_page")
+      browser.go_to("/long_page")
       browser.resize(width: 10, height: 10)
       browser.mouse.scroll_to(200, 100)
       expect(
@@ -58,7 +58,7 @@ describe Ferrum::Mouse do
 
   describe "#move" do
     it "splits into steps" do
-      browser.go_to("/ferrum/simple")
+      browser.go_to("/simple")
       browser.mouse.move(x: 100, y: 100)
       browser.evaluate_async(<<~JS, browser.timeout)
         window.result = [];
@@ -80,7 +80,7 @@ describe Ferrum::Mouse do
     end
 
     it "sets buttons property" do
-      browser.go_to("/ferrum/simple")
+      browser.go_to("/simple")
       browser.mouse.move(x: 100, y: 100)
       browser.evaluate_async(<<~JS, browser.timeout)
         window.result = [];
@@ -119,7 +119,7 @@ describe Ferrum::Mouse do
 
   context "mouse support", skip: true do
     before do
-      browser.go_to("/ferrum/click_test")
+      browser.go_to("/click_test")
     end
 
     after do
@@ -140,7 +140,7 @@ describe Ferrum::Mouse do
     end
 
     it "fixes some weird layout issue that we are not entirely sure about the reason for" do
-      browser.go_to("/ferrum/datepicker")
+      browser.go_to("/datepicker")
       browser.at_css("#datepicker").set("2012-05-11")
       browser.at_xpath("//a[text() = 'some link']").click
     end
@@ -208,7 +208,7 @@ describe Ferrum::Mouse do
     end
 
     context "with image maps", skip: true do
-      before { browser.go_to("/ferrum/image_map") }
+      before { browser.go_to("/image_map") }
 
       it "can click" do
         browser.at_css("map[name=testmap] area[shape=circle]").click
@@ -229,7 +229,7 @@ describe Ferrum::Mouse do
 
     context "double click tests" do
       before do
-        browser.go_to("/ferrum/double_click_test")
+        browser.go_to("/double_click_test")
       end
 
       it "double clicks properly" do

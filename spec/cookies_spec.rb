@@ -106,7 +106,7 @@ describe Ferrum::Cookies do
       browser.cookies.set(
         name: "stealth",
         value: "omg",
-        path: "/ferrum",
+        path: "/custom",
         httponly: true,
         samesite: "Strict"
       )
@@ -114,10 +114,10 @@ describe Ferrum::Cookies do
       browser.go_to("/get_cookie")
       expect(browser.body).to_not include("omg")
 
-      browser.go_to("/ferrum/get_cookie")
+      browser.go_to("/custom/get_cookie")
       expect(browser.body).to include("omg")
 
-      expect(browser.cookies["stealth"].path).to eq("/ferrum")
+      expect(browser.cookies["stealth"].path).to eq("/custom")
       expect(browser.cookies["stealth"].httponly?).to be_truthy
       expect(browser.cookies["stealth"].samesite).to eq("Strict")
     end
@@ -213,10 +213,10 @@ describe Ferrum::Cookies do
       browser.cookies.set(name: "stealth", value: "127.0.0.1")
       browser.cookies.set(name: "stealth", value: "localhost", domain: "localhost")
 
-      browser.go_to("http://localhost:#{port}/ferrum/get_cookie")
+      browser.go_to("http://localhost:#{port}/get_cookie")
       expect(browser.body).to include("localhost")
 
-      browser.go_to("http://127.0.0.1:#{port}/ferrum/get_cookie")
+      browser.go_to("http://127.0.0.1:#{port}/get_cookie")
       expect(browser.body).to include("127.0.0.1")
     end
 
@@ -225,10 +225,10 @@ describe Ferrum::Cookies do
       browser.cookies.set(name: "stealth", value: "123456", domain: "localhost")
 
       port = server.port
-      browser.go_to("http://localhost:#{port}/ferrum/get_cookie")
+      browser.go_to("http://localhost:#{port}/get_cookie")
       expect(browser.body).to include("123456")
 
-      browser.go_to("http://127.0.0.1:#{port}/ferrum/get_cookie")
+      browser.go_to("http://127.0.0.1:#{port}/get_cookie")
       expect(browser.body).not_to include("123456")
     ensure
       browser&.quit

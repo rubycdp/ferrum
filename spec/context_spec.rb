@@ -6,7 +6,7 @@ describe Ferrum::Context do
       browser.go_to
 
       browser.execute <<-JS
-        window.open("/ferrum/slow", "popup")
+        window.open("/slow", "popup")
       JS
 
       popup, = browser.windows(:last)
@@ -18,7 +18,7 @@ describe Ferrum::Context do
       browser.go_to
 
       browser.execute <<-JS
-        window.open("/ferrum/simple", "popup")
+        window.open("/simple", "popup")
       JS
 
       popup, = browser.windows(:last)
@@ -28,7 +28,7 @@ describe Ferrum::Context do
       sleep 0.5 # https://github.com/ChromeDevTools/devtools-protocol/issues/145
 
       browser.execute <<-JS
-        window.open("/ferrum/simple", "popup")
+        window.open("/simple", "popup")
       JS
 
       sleep 0.5 # https://github.com/ChromeDevTools/devtools-protocol/issues/145

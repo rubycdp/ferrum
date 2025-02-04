@@ -20,10 +20,7 @@ RSpec.shared_context "Global helpers" do
   end
 
   def traffic
-    network.traffic.reject do |e|
-      e.url&.match?("favicon.ico") ||
-        e.request&.to_h&.fetch("documentURL") == "chrome-error://chromewebdata/"
-    end
+    network.traffic.reject { |e| e.request&.to_h&.fetch("documentURL") == "chrome-error://chromewebdata/" }
   end
 
   def first_exchange

@@ -3,7 +3,7 @@
 describe Ferrum::Node do
   describe "#click" do
     it "hovers an element before clicking it" do
-      browser.go_to("/ferrum/with_js")
+      browser.go_to("/with_js")
 
       browser.at_xpath("//a[span[text() = 'Hidden link']]").click
 
@@ -11,7 +11,7 @@ describe Ferrum::Node do
     end
 
     it "fires a ping request for anchor elements" do
-      browser.go_to("/ferrum/link_with_ping")
+      browser.go_to("/link_with_ping")
 
       expect(browser.network.traffic.length).to eq(1)
       browser.at_css("a").click
@@ -21,7 +21,7 @@ describe Ferrum::Node do
     end
 
     it "does not run into content quads error" do
-      browser.go_to("/ferrum/index")
+      browser.go_to("/index")
 
       allow_any_instance_of(Ferrum::Node).to receive(:content_quads)
         .and_raise(Ferrum::CoordinatesNotFoundError, "Could not compute content quads")
@@ -31,14 +31,14 @@ describe Ferrum::Node do
     end
 
     it "synchronizes page loads properly" do
-      browser.go_to("/ferrum/index")
+      browser.go_to("/index")
       browser.at_xpath("//a[text() = 'JS redirect']").click
       sleep 0.1
       expect(browser.body).to include("Hello world")
     end
 
     it "raises an error if the element has been removed from the DOM" do
-      browser.go_to("/ferrum/with_js")
+      browser.go_to("/with_js")
       node = browser.at_css("#remove_me")
       expect(node.text).to eq("Remove me")
 
@@ -48,7 +48,7 @@ describe Ferrum::Node do
     end
 
     it "raises an error if the element is not visible" do
-      browser.go_to("/ferrum/index")
+      browser.go_to("/index")
 
       browser.execute <<~JS
         document.querySelector("a[href=js_redirect]").style.display = "none"
@@ -66,7 +66,7 @@ describe Ferrum::Node do
 
     context "when the element is not in the viewport" do
       before do
-        browser.go_to("/ferrum/with_js")
+        browser.go_to("/with_js")
       end
 
       it "raises a MouseEventFailed error", skip: "needs fix" do
@@ -83,12 +83,12 @@ describe Ferrum::Node do
     end
 
     context "when the element is not in the viewport of parent element" do
-      before { page.go_to("/ferrum/scroll") }
+      before { page.go_to("/scroll") }
 
       it "scrolls into view if element outside viewport" do
         link = page.at_xpath("//a[text() = 'Link outside viewport']")
         link.click
-        expect(page.current_url).to eq(base_url("/ferrum/scroll"))
+        expect(page.current_url).to eq(base_url("/scroll"))
 
         expect(link.in_viewport?).to eq(true)
         box = page.at_xpath("//div[@id='overflow-box']")
@@ -115,7 +115,7 @@ describe Ferrum::Node do
 
   describe "#at_xpath" do
     it "searches relatively current node" do
-      browser.go_to("/ferrum/with_js")
+      browser.go_to("/with_js")
 
       p = browser.at_xpath("//p[@id='with_content']")
 
@@ -126,7 +126,7 @@ describe Ferrum::Node do
 
   describe "#xpath" do
     it "searches relatively current node" do
-      browser.go_to("/ferrum/with_js")
+      browser.go_to("/with_js")
 
       p = browser.at_xpath("//p[@id='with_content']")
       links = p.xpath("a")
@@ -138,7 +138,7 @@ describe Ferrum::Node do
 
   describe "#at_css" do
     it "searches relatively current node" do
-      browser.go_to("/ferrum/with_js")
+      browser.go_to("/with_js")
 
       p = browser.at_css("p#with_content")
 
@@ -148,7 +148,7 @@ describe Ferrum::Node do
 
   describe "#css" do
     it "searches relatively current node" do
-      browser.go_to("/ferrum/with_js")
+      browser.go_to("/with_js")
 
       p = browser.at_xpath("//p[@id='with_content']")
       links = p.css("a")
@@ -160,7 +160,7 @@ describe Ferrum::Node do
 
   describe "#selected" do
     before do
-      browser.goto("/ferrum/form")
+      browser.goto("/form")
     end
 
     it "returns texts of selected options" do
@@ -195,7 +195,7 @@ describe Ferrum::Node do
 
   describe "#select" do
     before do
-      browser.goto("/ferrum/form")
+      browser.goto("/form")
     end
 
     it "picks option in select by match string argument" do
@@ -283,12 +283,12 @@ describe Ferrum::Node do
 
   describe "#[]" do
     before do
-      browser.go_to("/ferrum/attributes_properties")
+      browser.go_to("/attributes_properties")
     end
 
     it "gets normalized href" do
       expect(browser.at_xpath("//a[text() = 'Loop']").attribute("href"))
-        .to eq("/ferrum/attributes_properties")
+        .to eq("/attributes_properties")
     end
 
     it "gets innerHTML" do
@@ -309,9 +309,9 @@ describe Ferrum::Node do
 
   describe "#==" do
     it "does not equal a node from another page" do
-      browser.go_to("/ferrum/simple")
+      browser.go_to("/simple")
       el1 = browser.at_css("#nav")
-      browser.go_to("/ferrum/set")
+      browser.go_to("/set")
       el2 = browser.at_css("#filled_div")
       expect(el2 == el1).to be_falsey
       expect(el1 == el2).to be_falsey
@@ -320,7 +320,7 @@ describe Ferrum::Node do
 
   describe "#focusable?" do
     before do
-      browser.go_to("/ferrum/form")
+      browser.go_to("/form")
     end
 
     context "with hidden input" do
@@ -334,7 +334,7 @@ describe Ferrum::Node do
 
   describe "#computed_style" do
     before do
-      browser.go_to("/ferrum/computed_style")
+      browser.go_to("/computed_style")
     end
 
     it "returns the computed styles for the node" do
@@ -347,7 +347,7 @@ describe Ferrum::Node do
 
   describe "#remove" do
     it "removes node" do
-      browser.go_to("/ferrum/simple")
+      browser.go_to("/simple")
       node = browser.at_css("#break")
 
       node.remove
@@ -356,7 +356,7 @@ describe Ferrum::Node do
     end
 
     it "raises an error if node is already gone" do
-      browser.go_to("/ferrum/simple")
+      browser.go_to("/simple")
       node = browser.at_css("#break")
       node.evaluate("this.remove()")
 
@@ -366,14 +366,14 @@ describe Ferrum::Node do
 
   describe "#exists?" do
     it "returns true" do
-      browser.go_to("/ferrum/simple")
+      browser.go_to("/simple")
       node = browser.at_css("#break")
 
       expect(node.exists?).to be_truthy
     end
 
     it "returns false" do
-      browser.go_to("/ferrum/simple")
+      browser.go_to("/simple")
       node = browser.at_css("#break")
       node.remove
 
@@ -383,7 +383,7 @@ describe Ferrum::Node do
 
   context "whitespace stripping tests", skip: true do
     before do
-      browser.go_to("/ferrum/filter_text_test")
+      browser.go_to("/filter_text_test")
     end
 
     it "gets text" do
@@ -405,7 +405,7 @@ describe Ferrum::Node do
 
   describe "#property" do
     before do
-      browser.go_to("/ferrum/attributes_properties")
+      browser.go_to("/attributes_properties")
     end
 
     it "gets property innerHTML" do
@@ -426,7 +426,7 @@ describe Ferrum::Node do
 
   describe "#text" do
     it "skips BR" do
-      browser.go_to("/ferrum/simple")
+      browser.go_to("/simple")
       node = browser.at_css("#break")
 
       expect(node.text).to eq("FooBar")
@@ -455,7 +455,7 @@ describe Ferrum::Node do
 
     context "SVG tests" do
       before do
-        browser.go_to("/ferrum/svg_test")
+        browser.go_to("/svg_test")
       end
 
       it "gets text from tspan node" do
@@ -466,7 +466,7 @@ describe Ferrum::Node do
 
   describe "#inner_text" do
     it "returns BR as new line" do
-      browser.go_to("/ferrum/simple")
+      browser.go_to("/simple")
       el = browser.at_css("#break")
 
       expect(el.inner_text).to eq("Foo\nBar")
@@ -477,7 +477,7 @@ describe Ferrum::Node do
     let(:empty_input) { browser.at_css("#empty_input") }
 
     context "with mixed input" do
-      before { browser.go_to("/ferrum/type") }
+      before { browser.go_to("/type") }
 
       it "sends keys to empty input" do
         empty_input.focus.type("Input")
@@ -572,7 +572,7 @@ describe Ferrum::Node do
       end
 
       it "sets a date fields" do
-        browser.go_to("/ferrum/date_fields")
+        browser.go_to("/date_fields")
         input = browser.at_css("#date_field")
 
         input.focus.type("02-02-2016")
@@ -581,7 +581,7 @@ describe Ferrum::Node do
       end
 
       it "accepts numbers in a maxlength field" do
-        browser.go_to("/ferrum/with_js")
+        browser.go_to("/with_js")
         element = browser.at_css("#change_me_maxlength")
 
         element.focus.type("100")
@@ -590,7 +590,7 @@ describe Ferrum::Node do
       end
 
       it "accepts negatives in a number field" do
-        browser.go_to("/ferrum/with_js")
+        browser.go_to("/with_js")
         element = browser.at_css("#change_me_number")
 
         element.focus.type("-100")
@@ -602,7 +602,7 @@ describe Ferrum::Node do
     context "with contenteditable" do
       let(:delete_all) { [[(Ferrum::Utils::Platform.mac? ? :alt : :ctrl), :shift, :right], :backspace] }
 
-      before { browser.go_to("/ferrum/type") }
+      before { browser.go_to("/type") }
 
       it "sends keys to empty div" do
         input = browser.at_css("#empty_div")
@@ -651,7 +651,7 @@ describe Ferrum::Node do
     context "with correct key codes" do
       let(:events_output) { browser.at_css("#key-events-output") }
 
-      before { browser.go_to("/ferrum/type") }
+      before { browser.go_to("/type") }
 
       it "generates correct events with key codes for modified punctuation" do
         empty_input.focus.type([:shift, "."], [:shift, "t"])
@@ -688,7 +688,7 @@ describe Ferrum::Node do
       let(:change_me) { browser.at_css("#change_me") }
 
       before do
-        browser.go_to("/ferrum/with_js")
+        browser.go_to("/with_js")
         change_me.focus.type("Hello!")
       end
 
@@ -748,7 +748,7 @@ describe Ferrum::Node do
       let(:input) { browser.at_css("#input") }
       let(:output) { browser.at_css("#output") }
 
-      before { browser.go_to("/ferrum/input_events") }
+      before { browser.go_to("/input_events") }
 
       it "calls event handlers in the correct order" do
         input.focus.type("a").blur
@@ -788,7 +788,7 @@ describe Ferrum::Node do
 
   describe "#attach_file", skip: true do
     it "handles obsolete node" do
-      browser.go_to("/ferrum/attach_file")
+      browser.go_to("/attach_file")
       browser.attach_file "file", __FILE__
     end
 
@@ -805,7 +805,7 @@ describe Ferrum::Node do
   end
 
   describe "#drag_to", skip: true do
-    before { browser.go_to("/ferrum/drag") }
+    before { browser.go_to("/drag") }
 
     it "supports drag_to" do
       draggable = browser.at_css("#drag_to #draggable")
@@ -833,7 +833,7 @@ describe Ferrum::Node do
 
   context "with disappearing node" do
     it "raises an error if the element was on a previous page" do
-      browser.go_to("/ferrum/index")
+      browser.go_to("/index")
       node = browser.at_xpath(".//a")
 
       browser.execute "window.location = 'about:blank'"
