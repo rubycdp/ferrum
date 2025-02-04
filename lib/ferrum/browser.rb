@@ -245,10 +245,6 @@ module Ferrum
       VersionInfo.new(command("Browser.getVersion"))
     end
 
-    def headless_new?
-      process&.command&.headless_new?
-    end
-
     private
 
     def start

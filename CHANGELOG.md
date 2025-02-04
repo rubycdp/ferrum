@@ -13,6 +13,7 @@
 
 - `Ferrum::Network::Exchange#finished?` takes into account that exchange might be in an unknown state after loader changed(next `go_to` call) and considers
   such as finished [#426]
+- `headless: "new"` mode is removed as it's now default in modern Chrome, just use `headless: true` instead [#518]
 
 ### Fixed
 
