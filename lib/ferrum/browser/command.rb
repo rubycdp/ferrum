@@ -39,10 +39,6 @@ module Ferrum
         !!options.xvfb
       end
 
-      def headless_new?
-        @flags["headless"] == "new"
-      end
-
       def to_a
         [path] + @flags.map { |k, v| v.nil? ? "--#{k}" : "--#{k}=#{v}" }
       end

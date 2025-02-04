@@ -76,13 +76,7 @@ module Ferrum
         end
 
         def merge_default(flags, options)
-          defaults = case options.headless
-                     when false
-                       except("headless", "disable-gpu")
-                     when "new"
-                       except("headless").merge("headless" => "new")
-                     end
-
+          defaults = except("headless", "disable-gpu") if options.headless == false
           defaults ||= DEFAULT_OPTIONS
           # On Windows, the --disable-gpu flag is a temporary work around for a few bugs.
           # See https://bugs.chromium.org/p/chromium/issues/detail?id=737678 for more information.

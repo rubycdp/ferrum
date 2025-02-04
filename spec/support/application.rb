@@ -49,7 +49,7 @@ module Ferrum
 
     get "/" do
       response.set_cookie("cookie", value: "root cookie", domain: request.host, path: request.path)
-      %(Hello world! <a href="with_html">Relative</a>)
+      %(<link rel="icon" href="data:,">Hello world! <a href="with_html">Relative</a>)
     end
 
     get "/set_cookie" do
