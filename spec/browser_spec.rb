@@ -43,7 +43,7 @@ describe Ferrum::Browser do
 
     it "supports :logger argument" do
       browser = Ferrum::Browser.new(logger: logger)
-      browser.go_to(base_url("/ferrum/console_log"))
+      browser.go_to(base_url("/console_log"))
       expect(logger.string).to include("Hello world")
     ensure
       browser&.quit
@@ -52,7 +52,7 @@ describe Ferrum::Browser do
     it "supports :ignore_default_browser_options argument" do
       defaults = Ferrum::Browser::Options::Chrome.options.except("disable-web-security")
       browser = Ferrum::Browser.new(ignore_default_browser_options: true, browser_options: defaults)
-      browser.go_to(base_url("/ferrum/console_log"))
+      browser.go_to(base_url("/console_log"))
     ensure
       browser&.quit
     end
@@ -73,7 +73,7 @@ describe Ferrum::Browser do
         browser = Ferrum::Browser.new(base_url: base_url,
                                       extensions: [File.expand_path("support/geolocation.js", __dir__)])
 
-        browser.go_to("/ferrum/requiring_custom_extension")
+        browser.go_to("/requiring_custom_extension")
 
         expect(
           browser.body
@@ -94,7 +94,7 @@ describe Ferrum::Browser do
         browser = Ferrum::Browser.new(base_url: base_url,
                                       extensions: [{ source: "window.secret = 'top'" }])
 
-        browser.go_to("/ferrum/requiring_custom_extension")
+        browser.go_to("/requiring_custom_extension")
 
         expect(browser.evaluate(%(window.secret))).to eq("top")
       ensure
@@ -237,7 +237,7 @@ describe Ferrum::Browser do
     it "supports :pending_connection_errors argument" do
       browser = Ferrum::Browser.new(base_url: base_url, pending_connection_errors: false, timeout: 0.5)
 
-      expect { browser.go_to("/ferrum/really_slow") }.not_to raise_error
+      expect { browser.go_to("/really_slow") }.not_to raise_error
     ensure
       browser&.quit
     end
@@ -388,13 +388,13 @@ describe Ferrum::Browser do
       expect(browser.targets.size).to eq(1)
 
       browser.execute <<-JS
-        window.open("/ferrum/simple", "popup1")
+        window.open("/simple", "popup1")
       JS
 
       sleep 0.1
 
       browser.execute <<-JS
-        window.open("/ferrum/simple", "popup2")
+        window.open("/simple", "popup2")
       JS
 
       popup1, popup2 = browser.windows(:last, 2)
@@ -416,12 +416,12 @@ describe Ferrum::Browser do
       end
 
       include_examples "resize viewport by fullscreen" do
-        let(:path) { "/ferrum/custom_html_size" }
+        let(:path) { "/custom_html_size" }
         let(:viewport_size) { [1280, 1024] }
       end
 
       include_examples "resize viewport by fullscreen" do
-        let(:path) { "/ferrum/custom_html_size_100%" }
+        let(:path) { "/custom_html_size_100%" }
         let(:viewport_size) { [1272, 1008] }
       end
 
@@ -444,7 +444,7 @@ describe Ferrum::Browser do
         });
       JS
 
-      browser.go_to("/ferrum/with_user_js")
+      browser.go_to("/with_user_js")
       language = browser.at_xpath("//*[@id='browser-languages']/text()").text
       expect(language).to eq("tlh")
     ensure
@@ -457,7 +457,7 @@ describe Ferrum::Browser do
       browser.go_to
 
       browser.execute <<~JS
-        window.open("/ferrum/simple", "popup")
+        window.open("/simple", "popup")
       JS
 
       sleep 0.1
@@ -465,7 +465,7 @@ describe Ferrum::Browser do
       expect(browser.targets.size).to eq(2)
 
       browser.execute <<~JS
-        window.open("/ferrum/simple", "popup2")
+        window.open("/simple", "popup2")
       JS
 
       sleep 0.1
@@ -519,7 +519,7 @@ describe Ferrum::Browser do
       expect(browser.targets.size).to eq(0)
 
       page = browser.create_page
-      page.go_to("/ferrum/simple")
+      page.go_to("/simple")
 
       expect(browser.contexts.size).to eq(1)
       expect(browser.targets.size).to eq(1)
@@ -530,7 +530,7 @@ describe Ferrum::Browser do
       expect(browser.targets.size).to eq(0)
 
       browser.create_page do |page|
-        page.go_to("/ferrum/simple")
+        page.go_to("/simple")
       end
 
       sleep 1 # It may take longer to close the target
@@ -543,7 +543,7 @@ describe Ferrum::Browser do
         expect(browser.contexts.size).to eq(0)
 
         page = browser.create_page(new_context: true)
-        page.go_to("/ferrum/simple")
+        page.go_to("/simple")
 
         context = browser.contexts[page.context_id]
         expect(browser.contexts.size).to eq(1)
@@ -560,7 +560,7 @@ describe Ferrum::Browser do
 
         page = browser.create_page(new_context: true)
         context = browser.contexts[page.context_id]
-        page.go_to("/ferrum/simple")
+        page.go_to("/simple")
         page.close
 
         expect(browser.contexts.size).to eq(1)
@@ -574,7 +574,7 @@ describe Ferrum::Browser do
         expect(browser.contexts.size).to eq(0)
 
         browser.create_page(new_context: true) do |page|
-          page.go_to("/ferrum/simple")
+          page.go_to("/simple")
         end
 
         expect(browser.contexts.size).to eq(0)

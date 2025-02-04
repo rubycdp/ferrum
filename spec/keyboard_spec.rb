@@ -2,7 +2,7 @@
 
 describe Ferrum::Keyboard do
   describe "#down" do
-    before { browser.go_to("/ferrum/set") }
+    before { browser.go_to("/set") }
 
     it "sends down events from keyboard" do
       expect { browser.keyboard.down("") }.to raise_error(ArgumentError, "empty keys passed")
@@ -14,7 +14,7 @@ describe Ferrum::Keyboard do
   end
 
   describe "#up" do
-    before { browser.go_to("/ferrum/set") }
+    before { browser.go_to("/set") }
 
     it "sends up events from keyboard" do
       expect { browser.keyboard.up("") }.to raise_error(ArgumentError, "empty keys passed")

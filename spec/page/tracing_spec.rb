@@ -101,7 +101,7 @@ describe Ferrum::Page::Tracing do
 
     context "with screenshots enabled" do
       it "fills file with screenshot data" do
-        page.tracing.record(path: file_path, screenshots: true) { page.go_to("/ferrum/grid") }
+        page.tracing.record(path: file_path, screenshots: true) { page.go_to("/grid") }
 
         expect(File.exist?(file_path)).to be(true)
         expect(trace_config["included_categories"]).to include("disabled-by-default-devtools.screenshot")
@@ -109,7 +109,7 @@ describe Ferrum::Page::Tracing do
       end
 
       it "returns a buffer with screenshot data" do
-        trace = page.tracing.record(screenshots: true) { page.go_to("/ferrum/grid") }
+        trace = page.tracing.record(screenshots: true) { page.go_to("/grid") }
 
         expect(File.exist?(file_path)).to be(false)
         content = JSON.parse(trace)

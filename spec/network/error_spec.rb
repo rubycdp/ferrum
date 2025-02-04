@@ -2,7 +2,7 @@
 
 describe Ferrum::Network::Error do
   it "#canceled?" do
-    page.go_to("/ferrum/with_ajax_connection_canceled")
+    page.go_to("/with_ajax_connection_canceled")
 
     expect(network.idle?).to be_falsey
 

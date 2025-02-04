@@ -8,7 +8,7 @@ require "ferrum/rgba"
 describe Ferrum::Page::Screenshot do
   shared_examples "screenshot screen" do
     it "supports screenshotting the whole of a page that goes outside the viewport" do
-      browser.go_to("/ferrum/long_page")
+      browser.go_to("/long_page")
 
       create_screenshot(path: file)
 
@@ -25,7 +25,7 @@ describe Ferrum::Page::Screenshot do
     end
 
     it "supports screenshotting the entire window when documentElement has no height" do
-      browser.go_to("/ferrum/fixed_positioning")
+      browser.go_to("/fixed_positioning")
 
       create_screenshot(path: file, full: true)
 
@@ -35,7 +35,7 @@ describe Ferrum::Page::Screenshot do
     end
 
     it "supports screenshotting just the selected element" do
-      browser.go_to("/ferrum/long_page")
+      browser.go_to("/long_page")
 
       create_screenshot(path: file, selector: "#penultimate")
 
@@ -52,7 +52,7 @@ describe Ferrum::Page::Screenshot do
     end
 
     it "ignores :selector and :area in #save_screenshot if full: true" do
-      browser.go_to("/ferrum/long_page")
+      browser.go_to("/long_page")
       expect(browser.page).to receive(:warn).with(/Ignoring :selector or :area/)
 
       create_screenshot(path: file, full: true, selector: "#penultimate")
@@ -64,7 +64,7 @@ describe Ferrum::Page::Screenshot do
     end
 
     it "ignores :area in #save_screenshot if selector is set" do
-      browser.go_to("/ferrum/long_page")
+      browser.go_to("/long_page")
       expect(browser.page).to receive(:warn).with(/Ignoring :area/)
 
       create_screenshot(path: file, selector: "#penultimate", area: { x: 0, y: 0, width: 200, height: 100 })
@@ -82,7 +82,7 @@ describe Ferrum::Page::Screenshot do
     end
 
     it "resets element positions after" do
-      browser.go_to("ferrum/long_page")
+      browser.go_to("/long_page")
       el = browser.at_css("#middleish")
       # make the page scroll an element into view
       el.click
@@ -95,7 +95,7 @@ describe Ferrum::Page::Screenshot do
 
   shared_examples "when scale is set" do
     it "changes image dimensions" do
-      browser.go_to("/ferrum/zoom_test")
+      browser.go_to("/zoom_test")
 
       black_pixels_count = lambda { |file|
         img = ChunkyPNG::Image.from_file(file)
@@ -187,7 +187,7 @@ describe Ferrum::Page::Screenshot do
 
     context "with fullscreen" do
       it "supports screenshotting of fullscreen" do
-        browser.go_to("/ferrum/custom_html_size")
+        browser.go_to("/custom_html_size")
         expect(browser.viewport_size).to eq([1024, 681])
 
         browser.screenshot(path: file, full: true)
@@ -209,7 +209,7 @@ describe Ferrum::Page::Screenshot do
       end
 
       it "resets to previous viewport when exception is raised" do
-        browser.go_to("/ferrum/custom_html_size")
+        browser.go_to("/custom_html_size")
         browser.resize(width: 100, height: 100)
 
         allow(browser.page).to receive(:command).and_call_original
@@ -230,7 +230,7 @@ describe Ferrum::Page::Screenshot do
 
     context "with area screenshot" do
       it "supports screenshotting of an area" do
-        browser.go_to("/ferrum/custom_html_size")
+        browser.go_to("/custom_html_size")
         expect(browser.viewport_size).to eq([1024, 681])
 
         browser.screenshot(path: file, area: { x: 0, y: 0, width: 300, height: 200 })
@@ -333,7 +333,7 @@ describe Ferrum::Page::Screenshot do
 
     context "when :paper_width and :paper_height are set" do
       it "changes pdf size" do
-        browser.go_to("/ferrum/long_page")
+        browser.go_to("/long_page")
 
         browser.pdf(path: file, paper_width: 1.0, paper_height: 1.0)
 
@@ -348,7 +348,7 @@ describe Ferrum::Page::Screenshot do
 
     context "when format is passed" do
       it "changes pdf size to A0" do
-        browser.go_to("/ferrum/long_page")
+        browser.go_to("/long_page")
 
         browser.pdf(path: file, format: :A0)
 
@@ -361,7 +361,7 @@ describe Ferrum::Page::Screenshot do
       end
 
       it "specifying format and paperWidth will cause exception" do
-        browser.go_to("/ferrum/long_page")
+        browser.go_to("/long_page")
 
         expect do
           browser.pdf(path: file, format: :A0, paper_width: 1.0)
@@ -369,7 +369,7 @@ describe Ferrum::Page::Screenshot do
       end
 
       it "convert case correct" do
-        browser.go_to("/ferrum/long_page")
+        browser.go_to("/long_page")
 
         allow(browser.page).to receive(:command).with("Page.printToPDF", hash_including(
                                                                            displayHeaderFooter: false,
@@ -419,23 +419,23 @@ describe Ferrum::Page::Screenshot do
     end
 
     it "returns data" do
-      browser.go_to("/ferrum/simple")
+      browser.go_to("/simple")
 
       data = browser.mhtml
 
-      expect(data).to match(%r{/ferrum/simple})
+      expect(data).to match(%r{/simple})
       expect(data).to match(/mhtml.blink/)
       expect(data).to match(/<!DOCTYPE html>/)
       expect(data).to match(/Foo<br>Bar/)
     end
 
     it "saves a file" do
-      browser.go_to("/ferrum/simple")
+      browser.go_to("/simple")
 
       browser.mhtml(path: file)
 
       content = File.read(file)
-      expect(content).to match(%r{/ferrum/simple})
+      expect(content).to match(%r{/simple})
       expect(content).to match(/mhtml.blink/)
       expect(content).to match(/<!DOCTYPE html>/)
       expect(content).to match(/Foo<br>Bar/)

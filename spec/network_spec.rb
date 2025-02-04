@@ -3,36 +3,32 @@
 describe Ferrum::Network do
   describe "#traffic" do
     it "keeps track of network traffic" do
-      page.go_to("/ferrum/with_js")
+      page.go_to("/with_js")
       urls = traffic.map { |e| e.request.url }
 
       expect(urls.size).to eq(4)
-      expect(urls.grep(%r{/ferrum/with_js$}).size).to eq(1)
-      expect(urls.grep(%r{/ferrum/jquery.min.js$}).size).to eq(1)
-      expect(urls.grep(%r{/ferrum/jquery-ui.min.js$}).size).to eq(1)
-      expect(urls.grep(%r{/ferrum/test.js$}).size).to eq(1)
+      expect(urls.grep(%r{/with_js$}).size).to eq(1)
+      expect(urls.grep(%r{/jquery.min.js$}).size).to eq(1)
+      expect(urls.grep(%r{/jquery-ui.min.js$}).size).to eq(1)
+      expect(urls.grep(%r{/test.js$}).size).to eq(1)
     end
 
     it "keeps a running list between multiple web page views" do
-      page.go_to("/ferrum/with_js")
+      page.go_to("/with_js")
       expect(traffic.length).to eq(4)
 
-      page.go_to("/ferrum/with_js")
+      page.go_to("/with_js")
       expect(traffic.length).to eq(8)
     end
 
     it "gets cleared on restart" do
-      browser.go_to("/ferrum/with_js")
-      # Due to async nature of browser and the timing of favicon.ico request unpredictability
-      # we might get from x to y requests including favicon.ico
-      expect(browser.network.traffic.length).to be_between(4, 5)
+      browser.go_to("/with_js")
+      expect(browser.network.traffic.length).to eq(4)
 
       browser.restart
 
-      browser.go_to("/ferrum/with_js")
-      # Due to async nature of browser and the timing of favicon.ico request unpredictability
-      # we might get from x to y requests including favicon.ico
-      expect(browser.network.traffic.length).to be_between(4, 5)
+      browser.go_to("/with_js")
+      expect(browser.network.traffic.length).to eq(4)
     end
   end
 
@@ -93,7 +89,7 @@ describe Ferrum::Network do
 
   describe "#idle?" do
     it "waits for network to be idle" do
-      page.go_to("/ferrum/with_slow_ajax_connection")
+      page.go_to("/with_slow_ajax_connection")
       expect(page.at_xpath("//h1[text() = 'Slow AJAX']")).to be
 
       expect(network.idle?).to be_falsey
@@ -102,7 +98,7 @@ describe Ferrum::Network do
     end
 
     it "does not wait for responses to PING requests" do
-      page.go_to("/ferrum/link_with_ping")
+      page.go_to("/link_with_ping")
       page.at_css("a").click
 
       network.wait_for_idle
@@ -113,32 +109,26 @@ describe Ferrum::Network do
   it "#total_connections" do
     expect(network.total_connections).to eq(0)
 
-    page.go_to("/ferrum/with_ajax_connection_refused")
+    page.go_to("/with_ajax_connection_refused")
     network.wait_for_idle
 
-    # Due to async nature of browser and the timing of favicon.ico request unpredictability
-    # we might get from x to y requests including favicon.ico
-    expect(network.total_connections).to be_between(3, 4)
+    expect(network.total_connections).to eq(3)
   end
 
   it "#finished_connections" do
     expect(network.finished_connections).to eq(0)
 
-    page.go_to("/ferrum/with_ajax_connection_refused")
+    page.go_to("/with_ajax_connection_refused")
     network.wait_for_idle
 
-    # Due to async nature of browser and the timing of favicon.ico request unpredictability
-    # we might get from x to y requests including favicon.ico
-    expect(network.finished_connections).to be_between(3, 4)
+    expect(network.finished_connections).to eq(3)
   end
 
   it "#pending_connections" do
     expect(network.pending_connections).to eq(0)
 
-    page.go_to("/ferrum/with_slow_ajax_connection")
-    # Due to async nature of browser and the timing of favicon.ico request unpredictability
-    # we might get from x to y requests including favicon.ico
-    expect(network.pending_connections).to be_between(1, 2)
+    page.go_to("/with_slow_ajax_connection")
+    expect(network.pending_connections).to eq(1)
 
     network.wait_for_idle
     expect(network.pending_connections).to eq(0)
@@ -158,7 +148,7 @@ describe Ferrum::Network do
 
   describe "#clear" do
     it "raises error when type is not in the list" do
-      page.go_to("/ferrum/with_js")
+      page.go_to("/with_js")
       expect(traffic.length).to eq(4)
 
       expect { network.clear(:something) }.to raise_error(ArgumentError, ":type should be in [:traffic, :cache]")
@@ -167,7 +157,7 @@ describe Ferrum::Network do
     end
 
     it "clears all the traffic" do
-      page.go_to("/ferrum/with_js")
+      page.go_to("/with_js")
       expect(traffic.length).to eq(4)
 
       page.network.clear(:traffic)
@@ -178,7 +168,7 @@ describe Ferrum::Network do
     it "clears memory cache" do
       page.network.clear(:cache)
 
-      page.go_to("/ferrum/cacheable")
+      page.go_to("/cacheable")
       expect(traffic.length).to eq(1)
       expect(network.status).to eq(200)
       expect(last_exchange.response.params.dig("response", "fromDiskCache")).to be_falsey
@@ -202,7 +192,7 @@ describe Ferrum::Network do
     it "allows all requests when blacklist is not set" do
       network.blacklist = nil
 
-      page.go_to("/ferrum/url_blacklist")
+      page.go_to("/url_blacklist")
 
       expect(blocked_urls).to be_empty
       expect(page.body).not_to include("Disappearing header")
@@ -211,7 +201,7 @@ describe Ferrum::Network do
     it "blocks with single pattern" do
       network.blacklist = /jquery/
 
-      page.go_to("/ferrum/url_blacklist")
+      page.go_to("/url_blacklist")
 
       expect(blocked_urls.size).to eq(1)
       expect(blocked_urls).not_to include(/unwanted/)
@@ -222,7 +212,7 @@ describe Ferrum::Network do
     it "blocks with array of patterns" do
       network.blacklist = [/unwanted/, /jquery/]
 
-      page.go_to("/ferrum/url_blacklist")
+      page.go_to("/url_blacklist")
 
       expect(blocked_urls.size).to eq(4)
       expect(blocked_urls).to include(/unwanted/)
@@ -232,7 +222,7 @@ describe Ferrum::Network do
 
     it "supports wildcards" do
       network.blacklist = /.*wanted/
-      page.go_to("/ferrum/url_whitelist")
+      page.go_to("/url_whitelist")
 
       expect(network.status).to eq(200)
       expect(page.body).to include("We are loading some wanted action here")
@@ -246,7 +236,7 @@ describe Ferrum::Network do
 
     it "blocks unwanted iframes" do
       network.blacklist = /unwanted/
-      page.go_to("/ferrum/url_blacklist")
+      page.go_to("/url_blacklist")
 
       expect(network.status).to eq(200)
       expect(page.body).to include("We are loading some unwanted action here")
@@ -256,12 +246,12 @@ describe Ferrum::Network do
 
     it "works if set after page is loaded" do
       network.blacklist = nil
-      page.go_to("/ferrum/url_blacklist")
+      page.go_to("/url_blacklist")
       expect(page.body).not_to include("Disappearing header")
 
       network.blacklist = /jquery/
       network.clear(:traffic)
-      page.go_to("/ferrum/url_blacklist")
+      page.go_to("/url_blacklist")
 
       expect(blocked_urls.size).to eq(1)
       expect(blocked_urls).to include(/jquery/)
@@ -277,15 +267,15 @@ describe Ferrum::Network do
 
       network.blacklist = /jquery/
 
-      page.go_to("/ferrum/url_blacklist")
+      page.go_to("/url_blacklist")
 
       expect(@intercepted_request).to be
-      expect(@intercepted_request.url).to include("/ferrum/url_blacklist")
+      expect(@intercepted_request.url).to include("/url_blacklist")
     end
 
     it "gets cleared along with network traffic" do
       network.blacklist = /unwanted/
-      page.go_to("/ferrum/url_blacklist")
+      page.go_to("/url_blacklist")
       expect(traffic.select(&:blocked?).length).to eq(3)
 
       network.clear(:traffic)
@@ -300,8 +290,8 @@ describe Ferrum::Network do
       page_two = browser.create_page
       page_two.network.blacklist = /jquery/
 
-      page_two.go_to("/ferrum/url_blacklist")
-      page_one.go_to("/ferrum/url_blacklist")
+      page_two.go_to("/url_blacklist")
+      page_one.go_to("/url_blacklist")
 
       blocked_two = page_two.network.traffic.select(&:blocked?).map { |e| e.request.url }
       expect(blocked_two.size).to eq(1)
@@ -323,7 +313,7 @@ describe Ferrum::Network do
     it "allows all requests when blacklist is not set" do
       network.whitelist = nil
 
-      page.go_to("/ferrum/url_whitelist")
+      page.go_to("/url_whitelist")
 
       expect(blocked_urls).to be_empty
       expect(page.body).not_to include("Disappearing header")
@@ -332,7 +322,7 @@ describe Ferrum::Network do
     it "blocks with single pattern" do
       network.whitelist = /url_whitelist|jquery/
 
-      page.go_to("/ferrum/url_whitelist")
+      page.go_to("/url_whitelist")
 
       expect(blocked_urls.size).to eq(4)
       expect(blocked_urls).to include(/unwanted/)
@@ -343,7 +333,7 @@ describe Ferrum::Network do
     it "blocks with array of patterns" do
       network.whitelist = [/url_whitelist/, /unwanted/, /jquery/]
 
-      page.go_to("/ferrum/url_whitelist")
+      page.go_to("/url_whitelist")
 
       expect(blocked_urls.size).to eq(3)
       expect(blocked_urls).not_to include(/unwanted/)
@@ -353,7 +343,7 @@ describe Ferrum::Network do
 
     it "supports wildcards and frames" do
       network.whitelist = %r{url_whitelist|/.*wanted}
-      page.go_to("/ferrum/url_whitelist")
+      page.go_to("/url_whitelist")
 
       expect(network.status).to eq(200)
       expect(page.body).to include("We are loading some wanted action here")
@@ -368,12 +358,12 @@ describe Ferrum::Network do
 
   describe "#intercept" do
     it "supports :pattern argument" do
-      network.intercept(pattern: "*/ferrum/frame_child")
+      network.intercept(pattern: "*/frame_child")
       page.on(:request) do |request|
         request.respond(body: "<h1>hello</h1>")
       end
 
-      page.go_to("/ferrum/frame_parent")
+      page.go_to("/frame_parent")
 
       expect(network.status).to eq(200)
       frame = page.at_xpath("//iframe").frame
@@ -391,7 +381,7 @@ describe Ferrum::Network do
           request.respond(body: "<h1>hello</h1>")
         end
 
-        page.go_to("/ferrum/non_existing")
+        page.go_to("/non_existing")
 
         expect(network.status).to eq(200)
         expect(page.body).to include("hello")
@@ -409,7 +399,7 @@ describe Ferrum::Network do
           request.respond(body: "<h1>hello</h1>")
         end
 
-        page.go_to("/ferrum/index")
+        page.go_to("/index")
 
         expect(network.status).to eq(200)
         expect(page.body).to include("hello")
@@ -422,7 +412,7 @@ describe Ferrum::Network do
         request.respond(body: "<h1>custom content that is more than 45 characters</h1>")
       end
 
-      page.go_to("/ferrum/non_existing")
+      page.go_to("/non_existing")
 
       expect(network.status).to eq(200)
       expect(page.body).to include("custom content that is more than 45 characters")
@@ -454,9 +444,9 @@ describe Ferrum::Network do
     end
 
     it "denies without credentials" do
-      expect { page.go_to("/ferrum/basic_auth") }.to raise_error(
+      expect { page.go_to("/basic_auth") }.to raise_error(
         Ferrum::StatusError,
-        %r{Request to http://.*/ferrum/basic_auth failed \(net::ERR_INVALID_AUTH_CREDENTIALS\)}
+        %r{Request to http://.*/basic_auth failed \(net::ERR_INVALID_AUTH_CREDENTIALS\)}
       )
 
       expect(network.status).to eq(401)
@@ -468,7 +458,7 @@ describe Ferrum::Network do
         request.continue
       end
 
-      page.go_to("/ferrum/basic_auth")
+      page.go_to("/basic_auth")
 
       expect(network.status).to eq(200)
       expect(page.body).to include("Welcome, authenticated client")
@@ -480,7 +470,7 @@ describe Ferrum::Network do
       end
       page.headers.set("Cuprite" => "true")
 
-      page.go_to("/ferrum/basic_auth")
+      page.go_to("/basic_auth")
 
       expect(network.status).to eq(200)
       expect(page.body).to include("Welcome, authenticated client")
@@ -491,7 +481,7 @@ describe Ferrum::Network do
         request.continue
       end
 
-      page.go_to("/ferrum/basic_auth")
+      page.go_to("/basic_auth")
 
       expect(network.status).to eq(401)
       expect(page.body).not_to include("Welcome, authenticated client")
@@ -502,7 +492,7 @@ describe Ferrum::Network do
         request.continue
       end
 
-      page.go_to("/ferrum/basic_auth")
+      page.go_to("/basic_auth")
       page.at_css(%([type="submit"])).click
 
       expect(network.status).to eq(200)
@@ -514,7 +504,7 @@ describe Ferrum::Network do
     page.network.emulate_network_conditions(latency: 500)
 
     start = Ferrum::Utils::ElapsedTime.monotonic_time
-    page.go_to("/ferrum/with_js")
+    page.go_to("/with_js")
 
     expect(Ferrum::Utils::ElapsedTime.elapsed_time(start)).to eq(2000)
   end
@@ -522,9 +512,9 @@ describe Ferrum::Network do
   it "#offline_mode" do
     page.network.offline_mode
 
-    expect { page.go_to("/ferrum/with_js") }.to raise_error(
+    expect { page.go_to("/with_js") }.to raise_error(
       Ferrum::StatusError,
-      %r{Request to http://.*/ferrum/with_js failed \(net::ERR_INTERNET_DISCONNECTED\)}
+      %r{Request to http://.*/with_js failed \(net::ERR_INTERNET_DISCONNECTED\)}
     )
 
     expect(page.at_css("body").text).to match("No internet") if browser.headless_new?

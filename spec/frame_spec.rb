@@ -3,38 +3,38 @@
 describe Ferrum::Frame do
   describe "#at_xpath" do
     it "works correctly when JSON is overwritten" do
-      page.go_to("/ferrum/index")
+      page.go_to("/index")
       page.execute("JSON = {};")
       expect { page.at_xpath("//a[text() = 'JS redirect']") }.not_to raise_error
     end
   end
 
   it "supports selection by index" do
-    page.go_to("/ferrum/frames")
+    page.go_to("/frames")
     frame = page.at_xpath("//iframe").frame
-    expect(frame.url).to end_with("/ferrum/slow")
+    expect(frame.url).to end_with("/slow")
   end
 
   it "supports selection by element" do
-    page.go_to("/ferrum/frames")
+    page.go_to("/frames")
     frame = page.at_css("iframe[name]").frame
-    expect(frame.url).to end_with("/ferrum/slow")
+    expect(frame.url).to end_with("/slow")
   end
 
   it "supports selection by element without name or id" do
-    page.go_to("/ferrum/frames")
+    page.go_to("/frames")
     frame = page.at_css("iframe:not([name]):not([id])").frame
-    expect(frame.url).to end_with("/ferrum/headers")
+    expect(frame.url).to end_with("/headers")
   end
 
   it "supports selection by element with id but no name" do
-    page.go_to("/ferrum/frames")
+    page.go_to("/frames")
     frame = page.at_css("iframe[id]:not([name])").frame
-    expect(frame.url).to end_with("/ferrum/get_cookie")
+    expect(frame.url).to end_with("/get_cookie")
   end
 
   it "finds main frame properly" do
-    browser.go_to("/ferrum/popup_frames")
+    browser.go_to("/popup_frames")
 
     browser.at_xpath("//a[text()='pop up']").click
 
@@ -46,25 +46,25 @@ describe Ferrum::Frame do
   it "waits for the frame to load" do
     page.go_to
     page.execute <<-JS
-      document.body.innerHTML += "<iframe src='/ferrum/slow' name='frame'>"
+      document.body.innerHTML += "<iframe src='/slow' name='frame'>"
     JS
 
     frame = page.at_xpath("//iframe[@name='frame']").frame
-    expect(frame.url).to end_with("/ferrum/slow")
+    expect(frame.url).to end_with("/slow")
     expect(frame.body).to include("slow page")
 
     expect(page.main_frame.url).to end_with("/")
   end
 
   it "waits for the cross-domain frame to load" do
-    page.go_to("/ferrum/frames")
-    expect(page.current_url).to eq(base_url("/ferrum/frames"))
+    page.go_to("/frames")
+    expect(page.current_url).to eq(base_url("/frames"))
     frame = page.at_xpath("//iframe[@name='frame']").frame
 
-    expect(frame.url).to end_with("/ferrum/slow")
+    expect(frame.url).to end_with("/slow")
     expect(frame.body).to include("slow page")
 
-    expect(page.current_url).to end_with("/ferrum/frames")
+    expect(page.current_url).to end_with("/frames")
   end
 
   context "with src == about:blank" do
@@ -122,7 +122,7 @@ describe Ferrum::Frame do
   it "supports clicking in a frame", skip: true do
     page.go_to
     page.execute <<-JS
-      document.body.innerHTML += "<iframe src='/ferrum/click_test' name='frame'>"
+      document.body.innerHTML += "<iframe src='/click_test' name='frame'>"
     JS
     sleep 0.5
     frame = page.at_xpath("//iframe[@name = 'frame']").frame
@@ -135,7 +135,7 @@ describe Ferrum::Frame do
   it "supports clicking in a frame with padding", skip: true do
     page.go_to
     page.execute <<-JS
-      document.body.innerHTML += "<iframe src='/ferrum/click_test' name='padded_frame' style='padding:100px;'>"
+      document.body.innerHTML += "<iframe src='/click_test' name='padded_frame' style='padding:100px;'>"
     JS
     frame = page.at_xpath("//iframe[@name = 'padded_frame']").frame
 
@@ -153,7 +153,7 @@ describe Ferrum::Frame do
     # calculated twice, but the click still works because both frames had
     # the same offset.
     page.execute <<-JS
-      document.body.innerHTML += "<iframe src='/ferrum/nested_frame_test' name='outer_frame' style='padding:200px'>"
+      document.body.innerHTML += "<iframe src='/nested_frame_test' name='outer_frame' style='padding:200px'>"
     JS
 
     sleep 0.5
@@ -173,11 +173,11 @@ describe Ferrum::Frame do
   end
 
   it "can get the frames url" do
-    page.go_to("/ferrum/frames")
+    page.go_to("/frames")
 
     frame = page.at_xpath("//iframe").frame
-    expect(frame.url).to end_with("/ferrum/slow")
-    expect(page.current_url).to end_with("/ferrum/frames")
+    expect(frame.url).to end_with("/slow")
+    expect(page.current_url).to end_with("/frames")
   end
 
   it "can set page content" do
@@ -188,7 +188,7 @@ describe Ferrum::Frame do
   end
 
   it "gets page doctype" do
-    page.go_to("/ferrum/frames")
+    page.go_to("/frames")
     expect(page.doctype).to eq("<!DOCTYPE html>")
 
     doctype40 = %(<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">)
@@ -201,14 +201,14 @@ describe Ferrum::Frame do
 
   context "#xpath" do
     it "returns given nodes" do
-      page.go_to("/ferrum/with_js")
+      page.go_to("/with_js")
       p = page.xpath("//p[@id='remove_me']")
 
       expect(p.size).to eq(1)
     end
 
     it "supports within" do
-      page.go_to("/ferrum/with_js")
+      page.go_to("/with_js")
       p = page.xpath("//p[@id='with_content']").first
 
       links = page.xpath("./a", within: p)
@@ -218,7 +218,7 @@ describe Ferrum::Frame do
     end
 
     it "throws an error on a wrong xpath" do
-      page.go_to("/ferrum/with_js")
+      page.go_to("/with_js")
 
       expect do
         page.xpath("#remove_me")
@@ -226,9 +226,9 @@ describe Ferrum::Frame do
     end
 
     it "supports inside a given frame" do
-      page.go_to("/ferrum/frames")
+      page.go_to("/frames")
       page.execute <<-JS
-        document.body.innerHTML += "<iframe src='/ferrum/buttons' id='buttons_frame'>"
+        document.body.innerHTML += "<iframe src='/buttons' id='buttons_frame'>"
       JS
       page.network.wait_for_idle
 
@@ -239,14 +239,14 @@ describe Ferrum::Frame do
 
   context "#at_xpath" do
     it "returns given nodes" do
-      page.go_to("/ferrum/with_js")
+      page.go_to("/with_js")
       p = page.at_xpath("//p[@id='remove_me']")
 
       expect(p).not_to be_nil
     end
 
     it "supports within" do
-      page.go_to("/ferrum/with_js")
+      page.go_to("/with_js")
       p = page.at_xpath("//p[@id='with_content']")
 
       link = page.at_xpath("./a", within: p)
@@ -256,7 +256,7 @@ describe Ferrum::Frame do
     end
 
     it "throws an error on a wrong xpath" do
-      page.go_to("/ferrum/with_js")
+      page.go_to("/with_js")
 
       expect do
         page.at_xpath("#remove_me")
@@ -264,9 +264,9 @@ describe Ferrum::Frame do
     end
 
     it "supports inside a given frame" do
-      page.go_to("/ferrum/frames")
+      page.go_to("/frames")
       page.execute <<-JS
-        document.body.innerHTML += "<iframe src='/ferrum/buttons' id='buttons_frame'>"
+        document.body.innerHTML += "<iframe src='/buttons' id='buttons_frame'>"
       JS
       page.network.wait_for_idle
 
@@ -277,14 +277,14 @@ describe Ferrum::Frame do
 
   context "#css" do
     it "returns given nodes" do
-      page.go_to("/ferrum/with_js")
+      page.go_to("/with_js")
       p = page.css("p#remove_me")
 
       expect(p.size).to eq(1)
     end
 
     it "supports within" do
-      page.go_to("/ferrum/with_js")
+      page.go_to("/with_js")
       p = page.css("p#with_content").first
 
       links = page.css("a", within: p)
@@ -294,7 +294,7 @@ describe Ferrum::Frame do
     end
 
     it "throws an error on an invalid selector" do
-      page.go_to("/ferrum/table")
+      page.go_to("/table")
 
       expect do
         page.css("table tr:last")
@@ -302,9 +302,9 @@ describe Ferrum::Frame do
     end
 
     it "supports inside a given frame" do
-      page.go_to("/ferrum/frames")
+      page.go_to("/frames")
       page.execute <<-JS
-        document.body.innerHTML += "<iframe src='/ferrum/buttons' id='buttons_frame'>"
+        document.body.innerHTML += "<iframe src='/buttons' id='buttons_frame'>"
       JS
       page.network.wait_for_idle
 
@@ -315,14 +315,14 @@ describe Ferrum::Frame do
 
   context "#at_css" do
     it "returns given nodes" do
-      page.go_to("/ferrum/with_js")
+      page.go_to("/with_js")
       p = page.at_css("p#remove_me")
 
       expect(p).not_to be_nil
     end
 
     it "supports within" do
-      page.go_to("/ferrum/with_js")
+      page.go_to("/with_js")
       p = page.at_css("p#with_content")
 
       link = page.at_css("a", within: p)
@@ -332,7 +332,7 @@ describe Ferrum::Frame do
     end
 
     it "throws an error on an invalid selector" do
-      page.go_to("/ferrum/table")
+      page.go_to("/table")
 
       expect do
         page.at_css("table tr:last")
@@ -340,9 +340,9 @@ describe Ferrum::Frame do
     end
 
     it "supports inside a given frame" do
-      page.go_to("/ferrum/frames")
+      page.go_to("/frames")
       page.execute <<-JS
-        document.body.innerHTML += "<iframe src='/ferrum/buttons' id='buttons_frame'>"
+        document.body.innerHTML += "<iframe src='/buttons' id='buttons_frame'>"
       JS
       page.network.wait_for_idle
 
