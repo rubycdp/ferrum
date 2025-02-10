@@ -8,7 +8,7 @@
 - `Ferrum::Mouse#scroll_by` to be able to scroll by, as alternative to `scroll_to` [#514]
 - `Ferrum::Network::Exchange#unknown` determines if the exchange is in an unknown state, meaning that browser might not return info about it [#426]
 - `Ferrum::Network::Exchange#loader_id` returns loader id [#426]
-- `Ferrum::Browser#debug` opens headless session in the browser devtools frontend
+- `Ferrum::Browser#debug` opens headless session in the browser devtools frontend [#519]
 
 ### Changed
 
