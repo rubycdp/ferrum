@@ -8,7 +8,8 @@ module Ferrum
     # where we enhance page class and build page ourselves.
     attr_writer :page
 
-    attr_reader :session_id, :options
+    attr_reader :options
+    attr_accessor :session_id
 
     def initialize(browser_client, session_id = nil, params = nil)
       @page = nil
@@ -67,9 +68,17 @@ module Ferrum
       !!opener_id
     end
 
+    def iframe?
+      type == "iframe"
+    end
+
     def maybe_sleep_if_new_window
       # Dirty hack because new window doesn't have events at all
       sleep(NEW_WINDOW_WAIT) if window?
+    end
+
+    def command(...)
+      client.command(...)
     end
 
     private

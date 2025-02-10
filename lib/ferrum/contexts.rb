@@ -70,7 +70,7 @@ module Ferrum
     def subscribe
       @client.on("Target.attachedToTarget") do |params|
         info, session_id = params.values_at("targetInfo", "sessionId")
-        next unless info["type"] == "page"
+        next unless %w[page iframe].include?(info["type"])
 
         context_id = info["browserContextId"]
         @contexts[context_id]&.add_target(session_id: session_id, params: info)
@@ -81,15 +81,21 @@ module Ferrum
 
       @client.on("Target.targetCreated") do |params|
         info = params["targetInfo"]
-        next unless info["type"] == "page"
+        next unless %w[page iframe].include?(info["type"])
 
         context_id = info["browserContextId"]
-        @contexts[context_id]&.add_target(params: info)
+
+        if info["type"] == "iframe" &&
+           (target = @contexts[context_id].find_target { |t| t.connected? && t.page.frame_by(id: info["targetId"]) })
+          @contexts[context_id]&.add_target(session_id: target.page.client.session_id, params: info)
+        else
+          @contexts[context_id]&.add_target(params: info)
+        end
       end
 
       @client.on("Target.targetInfoChanged") do |params|
         info = params["targetInfo"]
-        next unless info["type"] == "page"
+        next unless %w[page iframe].include?(info["type"])
 
         context_id, target_id = info.values_at("browserContextId", "targetId")
         @contexts[context_id]&.update_target(target_id, info)

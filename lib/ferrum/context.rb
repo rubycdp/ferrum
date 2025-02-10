@@ -13,7 +13,7 @@ module Ferrum
       @client = client
       @contexts = contexts
       @targets = Concurrent::Map.new
-      @pendings = Concurrent::MVar.new
+      @pendings = Concurrent::Map.new
     end
 
     def default_target
@@ -29,7 +29,7 @@ module Ferrum
     end
 
     # When we call `page` method on target it triggers ruby to connect to given
-    # page by WebSocket, if there are many opened windows but we need only one
+    # page by WebSocket, if there are many opened windows, but we need only one
     # it makes more sense to get and connect to the needed one only which
     # usually is the last one.
     def windows(pos = nil, size = 1)
@@ -46,19 +46,26 @@ module Ferrum
     end
 
     def create_target
-      @client.command("Target.createTarget", browserContextId: @id, url: "about:blank")
-      target = @pendings.take(@client.timeout)
-      raise NoSuchTargetError unless target.is_a?(Target)
+      target_id = @client.command("Target.createTarget", browserContextId: @id, url: "about:blank")["targetId"]
 
-      target
+      new_pending = Concurrent::IVar.new
+      pending = @pendings.put_if_absent(target_id, new_pending) || new_pending
+      resolved = pending.value(@client.timeout)
+      raise NoSuchTargetError unless resolved
+
+      @pendings.delete(target_id)
+      @targets[target_id]
     end
 
     def add_target(params:, session_id: nil)
       new_target = Target.new(@client, session_id, params)
-      target = @targets.put_if_absent(new_target.id, new_target)
-      target ||= new_target # `put_if_absent` returns nil if added a new value or existing if there was one already
-      @pendings.put(target, @client.timeout) if @pendings.empty?
-      target
+      # `put_if_absent` returns nil if added a new value or existing if there was one already
+      target = @targets.put_if_absent(new_target.id, new_target) || new_target
+
+      new_pending = Concurrent::IVar.new
+      pending = @pendings.put_if_absent(target.id, new_pending) || new_pending
+      pending.try_set(true)
+      true
     end
 
     def update_target(target_id, params)
@@ -67,6 +74,21 @@ module Ferrum
 
     def delete_target(target_id)
       @targets.delete(target_id)
+    end
+
+    def attach_target(target_id)
+      target = @targets[target_id]
+      raise NoSuchTargetError unless target
+
+      session = @client.command("Target.attachToTarget", targetId: target_id, flatten: true)
+      target.session_id = session["sessionId"]
+      true
+    end
+
+    def find_target
+      @targets.each_value { |t| return t if yield(t) }
+
+      nil
     end
 
     def close_targets_connection
