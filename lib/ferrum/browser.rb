@@ -245,6 +245,24 @@ module Ferrum
       VersionInfo.new(command("Browser.getVersion"))
     end
 
+    #
+    # Opens headless session in the browser devtools frontend.
+    #
+    # @return [void]
+    #
+    # @since 0.16
+    #
+    def debug(bind = nil)
+      ::Process.spawn(process.path, debug_url)
+
+      bind ||= binding
+      if bind.respond_to?(:pry)
+        Pry.start(bind)
+      else
+        bind.irb
+      end
+    end
+
     private
 
     def start
@@ -261,6 +279,19 @@ module Ferrum
         @process.stop
         raise
       end
+    end
+
+    def debug_url
+      response = JSON.parse(Net::HTTP.get(URI(build_remote_debug_url(path: "/json"))))
+
+      devtools_frontend_path = response[0]&.[]("devtoolsFrontendUrl")
+      raise "Could not generate debug url for remote debugging session" unless devtools_frontend_path
+
+      build_remote_debug_url(path: devtools_frontend_path)
+    end
+
+    def build_remote_debug_url(path:)
+      "http://#{process.host}:#{process.port}#{path}"
     end
   end
 end
