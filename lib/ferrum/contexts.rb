@@ -67,6 +67,7 @@ module Ferrum
 
     private
 
+    # rubocop:disable Metrics/PerceivedComplexity
     def subscribe
       @client.on("Target.attachedToTarget") do |params|
         info, session_id = params.values_at("targetInfo", "sessionId")
@@ -111,6 +112,7 @@ module Ferrum
         context&.delete_target(params["targetId"])
       end
     end
+    # rubocop:enable Metrics/PerceivedComplexity
 
     def discover
       @client.command("Target.setDiscoverTargets", discover: true)

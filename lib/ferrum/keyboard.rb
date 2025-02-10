@@ -93,7 +93,6 @@ module Ferrum
 
     private
 
-    # TODO: Refactor it, and try to simplify complexity
     # rubocop:disable Metrics/PerceivedComplexity
     # rubocop:disable Metrics/CyclomaticComplexity
     def normalize_keys(keys, pressed_keys = [], memo = [])
