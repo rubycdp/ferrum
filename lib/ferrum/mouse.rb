@@ -132,9 +132,9 @@ module Ferrum
     #
     # Mouse move to given x and y.
     #
-    # @param [Integer] x
+    # @param [Number] x
     #
-    # @param [Integer] y
+    # @param [Number] y
     #
     # @param [Integer] steps
     #   Sends intermediate mousemove events.
@@ -154,8 +154,8 @@ module Ferrum
         @page.command("Input.dispatchMouseEvent",
                       slowmoable: true,
                       type: "mouseMoved",
-                      x: new_x.to_i,
-                      y: new_y.to_i,
+                      x: new_x,
+                      y: new_y,
                       buttons: @buttons)
       end
 
