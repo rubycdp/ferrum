@@ -9,6 +9,10 @@ module Ferrum
         @start ||= monotonic_time
       end
 
+      def reset
+        @start = monotonic_time
+      end
+
       def elapsed_time(start = nil)
         monotonic_time - (start || @start)
       end
