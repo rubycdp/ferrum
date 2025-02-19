@@ -19,7 +19,7 @@ describe Ferrum::Browser do
     browser = Ferrum::Browser.new(logger: logger)
     browser.body
     file_log = File.read(file_path)
-    expect(file_log).to include("return document.documentElement.outerHTML")
+    expect(file_log).to include("return document.documentElement?.outerHTML")
     expect(file_log).to include("<html><head></head><body></body></html>")
   ensure
     FileUtils.rm_f(file_path)
@@ -32,7 +32,7 @@ describe Ferrum::Browser do
 
     browser.body
 
-    expect(logger.string).to include("return document.documentElement.outerHTML")
+    expect(logger.string).to include("return document.documentElement?.outerHTML")
     expect(logger.string).to include("<html><head></head><body></body></html>")
   ensure
     browser.quit
