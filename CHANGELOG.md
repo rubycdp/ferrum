@@ -21,6 +21,7 @@
 - Correctly set mouse events buttons property [#509]
 - Prevent 'Hash#[]=': can't add a new key into hash during iteration [#513]
 - `Ferrum::Network::Exchange#finished?` and `Ferrum::Network#wait_for_idle` take into account that request can be a blob [#496]
+- Safe call _body_ method (DOM) when page is empty and no html [#522]
 
 ### Removed
 
