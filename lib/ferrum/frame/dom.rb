@@ -92,7 +92,7 @@ module Ferrum
       #   browser.body # => '<html itemscope="" itemtype="http://schema.org/WebPage" lang="ru"><head>...
       #
       def body
-        evaluate("document.documentElement.outerHTML")
+        evaluate("document.documentElement?.outerHTML") || ""
       end
 
       #
