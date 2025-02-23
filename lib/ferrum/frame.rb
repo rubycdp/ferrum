@@ -95,6 +95,23 @@ module Ferrum
     end
 
     #
+    # Returns the parent frame if this frame is nested in another one.
+    #
+    # @return [Frame, nil]
+    #
+    # @example
+    #   browser.go_to("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
+    #   frame = browser.frames.last
+    #   frame.url # => "https://www.openstreetmap.org/export/embed.html?bbox=-0.004017949104309083%2C51.47612752641776%2C0.00030577182769775396%2C51.478569861898606&layer=mapnik"
+    #   frame.parent.main? # => false
+    #   frame.parent.parent.main? # => false
+    #   frame.parent.parent.parent.main? # => true
+    #
+    def parent
+      @page.frame_by(id: @parent_id) if @parent_id
+    end
+
+    #
     # Sets a content of a given frame.
     #
     # @param [String] html

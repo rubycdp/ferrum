@@ -43,6 +43,12 @@ describe Ferrum::Frame do
     expect(opened_page.main_frame.url).to end_with("/frames")
   end
 
+  it "finds parent frame properly" do
+    page.go_to("/frames")
+    parent_frame = page.at_xpath("//iframe").frame.parent
+    expect(parent_frame.url).to end_with("/frames")
+  end
+
   it "waits for the frame to load" do
     page.go_to
     page.execute <<-JS
