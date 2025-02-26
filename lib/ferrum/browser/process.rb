@@ -178,7 +178,7 @@ module Ferrum
 
       def close_io(*ios)
         ios.each do |io|
-          io.close unless io.closed?
+          io.close if io && !io.closed?
         rescue IOError
           raise unless RUBY_ENGINE == "jruby"
         end
