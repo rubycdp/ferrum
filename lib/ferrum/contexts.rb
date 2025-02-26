@@ -4,6 +4,8 @@ require "ferrum/context"
 
 module Ferrum
   class Contexts
+    ALLOWED_TARGET_TYPES = %w[page iframe].freeze
+
     include Enumerable
 
     attr_reader :contexts
@@ -71,7 +73,7 @@ module Ferrum
     def subscribe
       @client.on("Target.attachedToTarget") do |params|
         info, session_id = params.values_at("targetInfo", "sessionId")
-        next unless %w[page iframe].include?(info["type"])
+        next unless ALLOWED_TARGET_TYPES.include?(info["type"])
 
         context_id = info["browserContextId"]
         @contexts[context_id]&.add_target(session_id: session_id, params: info)
@@ -82,7 +84,7 @@ module Ferrum
 
       @client.on("Target.targetCreated") do |params|
         info = params["targetInfo"]
-        next unless %w[page iframe].include?(info["type"])
+        next unless ALLOWED_TARGET_TYPES.include?(info["type"])
 
         context_id = info["browserContextId"]
 
@@ -96,7 +98,7 @@ module Ferrum
 
       @client.on("Target.targetInfoChanged") do |params|
         info = params["targetInfo"]
-        next unless %w[page iframe].include?(info["type"])
+        next unless ALLOWED_TARGET_TYPES.include?(info["type"])
 
         context_id, target_id = info.values_at("browserContextId", "targetId")
         @contexts[context_id]&.update_target(target_id, info)

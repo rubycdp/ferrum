@@ -25,7 +25,7 @@ module Ferrum
     end
 
     def pages
-      @targets.values.map(&:page)
+      @targets.values.reject(&:iframe?).map(&:page)
     end
 
     # When we call `page` method on target it triggers ruby to connect to given
