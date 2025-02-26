@@ -96,6 +96,22 @@ module Ferrum
       end
 
       #
+      # Returns the element in which the window is embedded.
+      #
+      # @return [Node, nil]
+      #   The node in which the window is embedded.
+      #
+      # @example
+      #   browser.go_to("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
+      #   frame = browser.frames.last
+      #   frame.node # => [Node]
+      #   frame.parent.parent.parent.node # => nil
+      #
+      def node
+        evaluate("window.frameElement")
+      end
+
+      #
       # Finds nodes by using a XPath selector.
       #
       # @param [String] selector
