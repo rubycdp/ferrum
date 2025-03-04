@@ -216,7 +216,7 @@ describe Ferrum::Page do
       message_a = nil
       message_b = nil
 
-      a = page.on("Runtime.consoleAPICalled") do |params|
+      handler = page.on("Runtime.consoleAPICalled") do |params|
         message_a = params.dig("args", 0, "value")
       end
 
@@ -225,14 +225,14 @@ describe Ferrum::Page do
       end
 
       page.evaluate("console.log('hello')")
-      expect(message_a).to eq("hello")
-      expect(message_b).to eq("hello")
+      wait_for { message_a }.to eq("hello")
+      wait_for { message_b }.to eq("hello")
 
-      page.off("Runtime.consoleAPICalled", a)
+      page.off("Runtime.consoleAPICalled", handler)
       page.evaluate("console.log('goodbye')")
 
       expect(message_a).to eq("hello")
-      expect(message_b).to eq("goodbye")
+      wait_for { message_b }.to eq("goodbye")
     end
   end
 end

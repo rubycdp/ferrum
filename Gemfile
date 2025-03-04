@@ -11,6 +11,7 @@ gem "puma", ">= 5.6.7"
 gem "rake", "~> 13.0"
 gem "redcarpet", require: false, platform: :mri
 gem "rspec", "~> 3.8"
+gem "rspec-wait", "~> 1.0"
 gem "rubocop", "~> 1.22"
 gem "rubocop-rake", require: false
 gem "sinatra", "~> 3.2"

@@ -2,6 +2,7 @@
 
 require "bundler/setup"
 require "rspec"
+require "rspec/wait"
 require "pathname"
 
 PROJECT_ROOT = File.expand_path("..", __dir__)
@@ -23,6 +24,10 @@ puts `#{Shellwords.escape(command.path)} --version`
 puts ""
 
 RSpec.configure do |config|
+  config.wait_timeout = 1
+  config.wait_delay = 0.2
+  config.clone_wait_matcher = true
+
   ferrum_logger = nil
   config.include_context "Global helpers"
 
