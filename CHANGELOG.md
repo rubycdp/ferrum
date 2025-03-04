@@ -9,6 +9,7 @@
 - `Ferrum::Network::Exchange#unknown` determines if the exchange is in an unknown state, meaning that browser might not return info about it [#426]
 - `Ferrum::Network::Exchange#loader_id` returns loader id [#426]
 - `Ferrum::Browser#debug` opens headless session in the browser devtools frontend [#519]
+- `Ferrum::Frame#parent` returns the parent frame if this frame is nested [#523]
 
 ### Changed
 

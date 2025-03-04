@@ -1084,6 +1084,10 @@ Frame's unique id.
 
 Parent frame id if this one is nested in another one.
 
+#### parent : `Frame | nil`
+
+Parent frame if this one is nested in another one.
+
 #### execution_id : `Integer`
 
 Execution context id which is used by JS, each frame has it's own context in
