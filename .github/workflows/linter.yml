@@ -11,7 +11,7 @@ jobs:
      strategy:
        fail-fast: false
        matrix:
-         ruby: [ 2.7, "3.0" ]
+         ruby: [ "2.7", "3.0" ]
      runs-on: ubuntu-latest
      steps:
        - name: Checkout code
