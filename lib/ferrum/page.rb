@@ -10,6 +10,7 @@ require "ferrum/dialog"
 require "ferrum/network"
 require "ferrum/downloads"
 require "ferrum/page/frames"
+require "ferrum/page/screencast"
 require "ferrum/page/screenshot"
 require "ferrum/page/animation"
 require "ferrum/page/tracing"
@@ -27,6 +28,7 @@ module Ferrum
     delegate %i[base_url default_user_agent timeout timeout=] => :@options
 
     include Animation
+    include Screencast
     include Screenshot
     include Frames
     include Stream
