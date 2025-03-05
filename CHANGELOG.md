@@ -10,6 +10,7 @@
 - `Ferrum::Network::Exchange#loader_id` returns loader id [#426]
 - `Ferrum::Browser#debug` opens headless session in the browser devtools frontend [#519]
 - `Ferrum::Frame#parent` returns the parent frame if this frame is nested [#523]
+- `Ferrum::Frame#frame_element` returns the element in which the window is embedded [#524]
 
 ### Changed
 

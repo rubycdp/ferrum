@@ -1088,6 +1088,10 @@ Parent frame id if this one is nested in another one.
 
 Parent frame if this one is nested in another one.
 
+#### frame_element : `Node | nil`
+
+Returns the element in which the window is embedded.
+
 #### execution_id : `Integer`
 
 Execution context id which is used by JS, each frame has it's own context in
