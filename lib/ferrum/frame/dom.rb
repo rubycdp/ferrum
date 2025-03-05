@@ -14,7 +14,7 @@
 # any updates, for example, the node may be destroyed without any notification.
 # This is a way to keep a reference to the Node, when you don't necessarily want
 # to keep track of it. One example would be linking to the node from performance
-# data (e.g. relayout root node). BackendNodeId may be either resolved to
+# data (e.g. re-layout root node). BackendNodeId may be either resolved to
 # inspected node (DOM.pushNodesByBackendIdsToFrontend) or described in more
 # details (DOM.describeNode).
 module Ferrum

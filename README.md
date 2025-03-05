@@ -34,6 +34,7 @@ based on Ferrum and Mechanize.
 * [Navigation](https://github.com/rubycdp/ferrum#navigation)
 * [Finders](https://github.com/rubycdp/ferrum#finders)
 * [Screenshots](https://github.com/rubycdp/ferrum#screenshots)
+* [Screencast](https://github.com/rubycdp/ferrum#screencast)
 * [Network](https://github.com/rubycdp/ferrum#network)
 * [Downloads](https://github.com/rubycdp/ferrum#downloads)
 * [Proxy](https://github.com/rubycdp/ferrum#proxy)
@@ -136,7 +137,7 @@ browser.quit
 In docker as root you must pass the no-sandbox browser option:
 
 ```ruby
-Ferrum::Browser.new(browser_options: { 'no-sandbox': nil })
+Ferrum::Browser.new(browser_options: { "no-sandbox": nil })
 ```
 
 It has also been reported that the Chrome process repeatedly crashes when running inside a Docker container on an M1 Mac preventing Ferrum from working. Ferrum should work as expected when deployed to a Docker container on a non-M1 Mac.
@@ -415,7 +416,7 @@ page.screenshot(path: "google.jpg") # => 30902
 # Save to Base64 the whole page not only viewport and reduce quality
 page.screenshot(full: true, quality: 60, encoding: :base64) # "iVBORw0KGgoAAAANSUhEUgAABAAAAAMACAYAAAC6uhUNAAAAAXNSR0IArs4c6Q...
 # Save on the disk with the selected element in PNG
-page.screenshot(path: "google.png", selector: 'textarea') # => 11340
+page.screenshot(path: "google.png", selector: "textarea") # => 11340
 # Save to Base64 with an area of the page in PNG
 page.screenshot(path: "google.png", area: { x: 0, y: 0, width: 400, height: 300 }) # => 54239
 # Save with specific background color
@@ -459,9 +460,9 @@ page.mhtml(path: "google.mhtml") # => 87742
 
 ## Screencast
 
-#### start_screencast(\*\*options) {|data, metadata, session_id| block }
+#### start_screencast(\*\*options) { |data, metadata, session_id| ... }
 
-Starts sending each frame to the given block.
+Starts sending frames to record screencast to the given block.
 
 * options `Hash`
   * :format `Symbol` `:jpeg` | `:png` The format the image should be returned in.
@@ -473,23 +474,23 @@ Starts sending each frame to the given block.
 * Block inputs:
   * data `String` Base64-encoded compressed image.
   * metadata `Hash` Screencast frame metadata.
-    * 'offsetTop' `Integer` Top offset in DIP.
-    * 'pageScaleFactor' `Integer` Page scale factor.
-    * 'deviceWidth' `Integer` Device screen width in DIP.
-    * 'deviceHeight' `Integer` Device screen height in DIP.
-    * 'scrollOffsetX' `Integer` Position of horizontal scroll in CSS pixels.
-    * 'scrollOffsetY' `Integer` Position of vertical scroll in CSS pixels.
-    * 'timestamp' `Float` (optional) Frame swap timestamp in seconds since Unix epoch.
+    * "offsetTop" `Integer` Top offset in DIP.
+    * "pageScaleFactor" `Integer` Page scale factor.
+    * "deviceWidth" `Integer` Device screen width in DIP.
+    * "deviceHeight" `Integer` Device screen height in DIP.
+    * "scrollOffsetX" `Integer` Position of horizontal scroll in CSS pixels.
+    * "scrollOffsetY" `Integer` Position of vertical scroll in CSS pixels.
+    * "timestamp" `Float` (optional) Frame swap timestamp in seconds since Unix epoch.
   * session_id `Integer` Frame number.
 
 ```ruby
-require 'base64'
+require "base64"
 
 page.go_to("https://apple.com/ipad")
 
 page.start_screencast(format: :jpeg, quality: 75) do |data, metadata|
-  timestamp_ms = metadata['timestamp'] * 1000
-  File.binwrite("image_#{timestamp_ms.to_i}.jpg", Base64.decode64(data))
+  timestamp = (metadata["timestamp"] * 1000).to_i
+  File.binwrite("image_#{timestamp}.jpg", Base64.decode64(data))
 end
 
 sleep 10
@@ -498,13 +499,17 @@ page.stop_screencast
 ```
 
 > ### 📝 NOTE
-> 
+>
 > Chrome only sends new frames while page content is changing. For example, if
 > there is an animation or a video on the page, Chrome sends frames at the rate
 > requested. On the other hand, if the page is nothing but a wall of static text,
 > Chrome sends frames while the page renders. Once Chrome has finished rendering
 > the page, it sends no more frames until something changes (e.g., navigating to
 > another location).
+
+#### stop_screencast
+
+Stops sending frames.
 
 ## Network
 
@@ -1142,7 +1147,7 @@ Returns the element in which the window is embedded.
 
 #### execution_id : `Integer`
 
-Execution context id which is used by JS, each frame has it's own context in
+Execution context id which is used by JS, each frame has its own context in
 which JS evaluates.
 
 #### name : `String | nil`
@@ -1377,7 +1382,7 @@ Closes browser tabs opened by the `Browser` instance.
 
 ```ruby
 # connect to a long-running Chrome process
-browser = Ferrum::Browser.new(url: 'http://localhost:9222')
+browser = Ferrum::Browser.new(url: "http://localhost:9222")
 
 browser.go_to("https://github.com/")
 

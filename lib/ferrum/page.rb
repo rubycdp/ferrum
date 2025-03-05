@@ -490,7 +490,7 @@ module Ferrum
       # opens a new window for which `frameStoppedLoading` event never
       # occurs and thus search for nodes cannot be completed. Here we check
       # the history and if the transitionType for example `link` then
-      # content is already loaded and we can try to get the document.
+      # content is already loaded, and we can try to get the document.
       document_node_id
     end
 

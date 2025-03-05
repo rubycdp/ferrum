@@ -3,7 +3,7 @@
 module Ferrum
   class Page
     module Screencast
-      # Starts yielding each frame to the given block.
+      # Starts sending frames to record screencast to the given block.
       #
       # @param [Hash{Symbol => Object}] opts
       #
@@ -57,13 +57,13 @@ module Ferrum
       #   Frame number.
       #
       # @example
-      #   require 'base64'
+      #   require "base64"
       #
       #   page.go_to("https://apple.com/ipad")
       #
       #   page.start_screencast(format: :jpeg, quality: 75) do |data, metadata|
-      #     timestamp_ms = metadata['timestamp'] * 1000
-      #     File.binwrite("image_#{timestamp_ms.to_i}.jpg", Base64.decode64(data))
+      #     timestamp = (metadata['timestamp'] * 1000).to_i
+      #     File.binwrite("image_#{timestamp}.jpg", Base64.decode64(data))
       #   end
       #
       #   sleep 10
@@ -87,7 +87,7 @@ module Ferrum
         end
       end
 
-      # Stops sending each frame.
+      # Stops sending frames.
       def stop_screencast
         command("Page.stopScreencast")
       end
