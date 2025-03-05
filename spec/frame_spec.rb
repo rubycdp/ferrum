@@ -205,6 +205,43 @@ describe Ferrum::Frame do
     expect(page.doctype).to be_nil
   end
 
+  context "#frame_element" do
+    it "gets the frame element" do
+      page.go_to("/frames")
+
+      frame_element = page.at_xpath("//iframe")
+      frame = frame_element.frame
+      expect(frame.frame_element).to eq(frame_element)
+      expect(frame.frame_element.frame_id).to eq frame.id
+      expect(frame.frame_element.attribute(:src)).to end_with("/slow")
+    end
+
+    it "returns nil if main frame" do
+      page.go_to("/frames")
+
+      parent_frame = page.at_xpath("//iframe").frame.parent
+      expect(parent_frame).to be_main
+      expect(parent_frame.frame_element).to be_nil
+    end
+
+    it "supports nested frames" do
+      page.go_to("/frames")
+      page.execute <<-JS
+        document.body.innerHTML += "<iframe src='/nested_frame_test' name='outer_frame' style='padding:200px'>"
+      JS
+      page.network.wait_for_idle
+
+      outer_frame_element = page.at_xpath("//iframe[@name='outer_frame']")
+      outer_frame = outer_frame_element.frame
+
+      inner_frame_element = outer_frame.at_xpath("//iframe")
+      inner_frame = inner_frame_element.frame
+
+      expect(outer_frame.frame_element).to eq(outer_frame_element)
+      expect(inner_frame.frame_element).to eq(inner_frame_element)
+    end
+  end
+
   context "#xpath" do
     it "returns given nodes" do
       page.go_to("/with_js")
