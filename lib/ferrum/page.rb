@@ -157,9 +157,22 @@ module Ferrum
         deviceScaleFactor: scale_factor,
         mobile: mobile
       )
+
+      options = if mobile
+                  {
+                    enabled: true,
+                    maxTouchPoints: 1
+                  }
+                else
+                  {
+                    enabled: false
+                  }
+                end
+
+      command("Emulation.setTouchEmulationEnabled", **options)
     end
 
-    def resize(width: nil, height: nil, fullscreen: false)
+    def resize(width: nil, height: nil, fullscreen: false, mobile: false)
       if fullscreen
         width, height = document_size
         self.window_bounds = { window_state: "fullscreen" }
@@ -168,7 +181,7 @@ module Ferrum
         self.window_bounds = { width: width, height: height }
       end
 
-      set_viewport(width: width, height: height)
+      set_viewport(width: width, height: height, mobile: mobile)
     end
 
     #
