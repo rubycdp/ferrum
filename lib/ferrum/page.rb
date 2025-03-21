@@ -136,7 +136,11 @@ module Ferrum
     end
 
     #
-    # Overrides device screen dimensions and emulates viewport according to parameters
+    # Overrides device screen dimensions and emulates viewport according to parameters.
+    #
+    # Note that passing mobile: true will cause set_viewport to ignore the passed
+    # height and width values, and instead use 390 x 844, which is the viewport size
+    # of an iPhone 14.
     #
     # Read more [here](https://chromedevtools.github.io/devtools-protocol/tot/Emulation/#method-setDeviceMetricsOverride).
     #
@@ -149,27 +153,36 @@ module Ferrum
     # @param [Boolean] mobile whether to emulate mobile device
     #
     def set_viewport(width:, height:, scale_factor: 0, mobile: false)
-      command(
-        "Emulation.setDeviceMetricsOverride",
-        slowmoable: true,
-        width: width,
-        height: height,
-        deviceScaleFactor: scale_factor,
-        mobile: mobile
-      )
+      if mobile
+        command(
+          "Emulation.setTouchEmulationEnabled",
+          enabled: true,
+          maxTouchPoints: 1
+        )
 
-      options = if mobile
-                  {
-                    enabled: true,
-                    maxTouchPoints: 1
-                  }
-                else
-                  {
-                    enabled: false
-                  }
-                end
+        command(
+          "Emulation.setDeviceMetricsOverride",
+          deviceScaleFactor: 3.0,
+          height: 844,
+          mobile: true,
+          slowmoable: true,
+          width: 390
+        )
+      else
+        command(
+          "Emulation.setTouchEmulationEnabled",
+          enabled: false
+        )
 
-      command("Emulation.setTouchEmulationEnabled", **options)
+        command(
+          "Emulation.setDeviceMetricsOverride",
+          deviceScaleFactor: scale_factor,
+          height: height,
+          mobile: false,
+          slowmoable: true,
+          width: width
+        )
+      end
     end
 
     def resize(width: nil, height: nil, fullscreen: false, mobile: false)
