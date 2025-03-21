@@ -195,7 +195,7 @@ Ferrum::Browser.new(options)
   * `:proxy` (Hash) - Specify proxy settings, [read more](https://github.com/rubycdp/ferrum#proxy)
   * `:save_path` (String) - Path to save attachments with [Content-Disposition](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition) header.
   * `:env` (Hash) - Environment variables you'd like to pass through to the process
-
+  * `:mobile` (Boolean) - Specify whether to enable mobile emulation and touch UI.
 
 ## Navigation
 
@@ -1088,6 +1088,13 @@ Overrides device screen dimensions and emulates viewport.
   * :height `Integer`, viewport height. `0` by default
   * :scale_factor `Float`, device scale factor. `0` by default
   * :mobile `Boolean`, whether to emulate mobile device. `false` by default
+
+Values of `0` for either `:width` or `:height` will be ignored; i.e., no viewport resize will take place.
+
+If `:mobile` is `true`:
+
+1. `:height` and `:width` will be ignored, and instead the viewport size of an iPhone 14 will be used (390 x 844).
+2. Touch emulation will be enabled, with a maximum of 1 touch point.
 
 ```ruby
 page.set_viewport(width: 1000, height: 600, scale_factor: 3)
