@@ -260,13 +260,13 @@ describe Ferrum::Page do
 
     context "given a zero height" do
       it "does not change the height" do
-        expect { page.resize(width: 2000, height: 0) }.not_to change { body_size[:height] }
+        expect { page.resize(width: 2000, height: 0) }.not_to(change { body_size[:height] })
       end
     end
 
     context "given a zero width" do
       it "does not change the width" do
-        expect { page.resize(width: 0, height: 1000) }.not_to change { body_size[:width] }
+        expect { page.resize(width: 0, height: 1000) }.not_to(change { body_size[:width] })
       end
     end
 
