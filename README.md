@@ -1097,7 +1097,7 @@ If `:mobile` is `true`:
 2. Touch emulation will be enabled, with a maximum of 1 touch point.
 
 ```ruby
-page.set_viewport(width: 1000, height: 600, scale_factor: 3)
+page.set_viewport(width: 1000, height: 600, scale_factor: 3, mobile: true)
 ```
 
 
