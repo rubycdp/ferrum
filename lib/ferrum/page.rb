@@ -138,10 +138,6 @@ module Ferrum
     #
     # Overrides device screen dimensions and emulates viewport according to parameters.
     #
-    # Note that passing mobile: true will cause set_viewport to ignore the passed
-    # height and width values, and instead use 390 x 844, which is the viewport size
-    # of an iPhone 14.
-    #
     # Read more [here](https://chromedevtools.github.io/devtools-protocol/tot/Emulation/#method-setDeviceMetricsOverride).
     #
     # @param [Integer] width width value in pixels. 0 disables the override
@@ -159,30 +155,21 @@ module Ferrum
           enabled: true,
           maxTouchPoints: 1
         )
-
-        command(
-          "Emulation.setDeviceMetricsOverride",
-          deviceScaleFactor: 3.0,
-          height: 844,
-          mobile: true,
-          slowmoable: true,
-          width: 390
-        )
       else
         command(
           "Emulation.setTouchEmulationEnabled",
           enabled: false
         )
-
-        command(
-          "Emulation.setDeviceMetricsOverride",
-          deviceScaleFactor: scale_factor,
-          height: height,
-          mobile: false,
-          slowmoable: true,
-          width: width
-        )
       end
+
+      command(
+        "Emulation.setDeviceMetricsOverride",
+        deviceScaleFactor: scale_factor,
+        height: height,
+        mobile: mobile,
+        slowmoable: true,
+        width: width
+      )
     end
 
     def resize(width: nil, height: nil, fullscreen: false, mobile: false)

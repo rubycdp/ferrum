@@ -277,13 +277,6 @@ describe Ferrum::Page do
           page.reload
         end.to change { is_mobile? }.to(true)
       end
-
-      it "resizes to the size of an iPhone 14 viewport, taking into account scale factor" do
-        expect do
-          page.resize(width: 0, height: 0, mobile: true)
-          page.reload
-        end.to change { body_size }.to(width: 980, height: 2120)
-      end
     end
   end
 end
