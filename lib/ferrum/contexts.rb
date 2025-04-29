@@ -76,6 +76,14 @@ module Ferrum
         next unless ALLOWED_TARGET_TYPES.include?(info["type"])
 
         context_id = info["browserContextId"]
+
+        # no-startup-window off
+        unless @contexts[context_id]
+          context = Context.new(@client, self, context_id)
+          @contexts[context_id] = context
+          @default_context ||= context
+        end
+
         @contexts[context_id]&.add_target(session_id: session_id, params: info)
         if params["waitingForDebugger"]
           @client.session(session_id).command("Runtime.runIfWaitingForDebugger", async: true)

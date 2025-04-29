@@ -37,7 +37,7 @@ module Ferrum
           "metrics-recording-only" => nil,
           "safebrowsing-disable-auto-update" => nil,
           "password-store" => "basic",
-          "no-startup-window" => nil,
+          # "no-startup-window" => nil,
           "remote-allow-origins" => "*",
           "disable-blink-features" => "AutomationControlled"
           # NOTE: --no-sandbox is not needed if you properly set up a user in the container.
