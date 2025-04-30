@@ -69,13 +69,19 @@ module Ferrum
 
     private
 
-    # rubocop:disable Metrics/PerceivedComplexity
+    # rubocop:disable Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
     def subscribe
       @client.on("Target.attachedToTarget") do |params|
         info, session_id = params.values_at("targetInfo", "sessionId")
         next unless ALLOWED_TARGET_TYPES.include?(info["type"])
 
         context_id = info["browserContextId"]
+        unless @contexts[context_id]
+          context = Context.new(@client, self, context_id)
+          @contexts[context_id] = context
+          @default_context ||= context
+        end
+
         @contexts[context_id]&.add_target(session_id: session_id, params: info)
         if params["waitingForDebugger"]
           @client.session(session_id).command("Runtime.runIfWaitingForDebugger", async: true)
@@ -114,7 +120,7 @@ module Ferrum
         context&.delete_target(params["targetId"])
       end
     end
-    # rubocop:enable Metrics/PerceivedComplexity
+    # rubocop:enable Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
 
     def discover
       @client.command("Target.setDiscoverTargets", discover: true)

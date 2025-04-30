@@ -61,6 +61,7 @@ module Ferrum
       new_target = Target.new(@client, session_id, params)
       # `put_if_absent` returns nil if added a new value or existing if there was one already
       target = @targets.put_if_absent(new_target.id, new_target) || new_target
+      @default_target ||= target
 
       new_pending = Concurrent::IVar.new
       pending = @pendings.put_if_absent(target.id, new_pending) || new_pending
