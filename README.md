@@ -151,7 +151,8 @@ Ferrum::Browser.new(options)
 ```
 
 * options `Hash`
-  * `:headless` (String | Boolean) - Set browser as headless or not, `true` by default.
+  * `:headless` (Boolean) - Set browser as headless or not, `true` by default.
+  * `:incognito` (Boolean) - Create an incognito profile for the browser startup window, `true` by default.
   * `:xvfb` (Boolean) - Run browser in a virtual framebuffer, `false` by default.
   * `:flatten` (Boolean) - Use one websocket connection to the browser and all the pages in flatten mode.
   * `:window_size` (Array) - The dimensions of the browser window in which to

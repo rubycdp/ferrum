@@ -37,7 +37,7 @@ module Ferrum
           "metrics-recording-only" => nil,
           "safebrowsing-disable-auto-update" => nil,
           "password-store" => "basic",
-          # "no-startup-window" => nil,
+          "no-startup-window" => nil,
           "remote-allow-origins" => "*",
           "disable-blink-features" => "AutomationControlled"
           # NOTE: --no-sandbox is not needed if you properly set up a user in the container.
@@ -78,6 +78,7 @@ module Ferrum
         def merge_default(flags, options)
           defaults = except("headless", "disable-gpu") if options.headless == false
           defaults ||= DEFAULT_OPTIONS
+          defaults.delete("no-startup-window") if options.incognito == false
           # On Windows, the --disable-gpu flag is a temporary workaround for a few bugs.
           # See https://bugs.chromium.org/p/chromium/issues/detail?id=737678 for more information.
           defaults = defaults.merge("disable-gpu" => nil) if Utils::Platform.windows?

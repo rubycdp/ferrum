@@ -45,6 +45,9 @@ module Ferrum
     # @option options [Boolean] :headless (true)
     #   Set browser as headless or not.
     #
+    # @option options [Boolean] :incognito (true)
+    #   Create an incognito profile for the browser startup window.
+    #
     # @option options [Boolean] :xvfb (false)
     #   Run browser in a virtual framebuffer.
     #
