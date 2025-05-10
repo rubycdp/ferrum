@@ -76,6 +76,7 @@ module Ferrum
       when :double
         page.mouse.move(x: x, y: y)
         page.mouse.down(modifiers: modifiers, count: 2)
+        sleep(delay)
         page.mouse.up(modifiers: modifiers, count: 2)
       when :left
         page.mouse.click(x: x, y: y, modifiers: modifiers, delay: delay)

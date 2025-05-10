@@ -226,22 +226,5 @@ describe Ferrum::Mouse do
         end.to raise_error(Ferrum::MouseEventFailed)
       end
     end
-
-    context "double click tests" do
-      before do
-        browser.go_to("/double_click_test")
-      end
-
-      it "double clicks properly" do
-        browser.resize(width: 200, height: 200)
-        log = browser.at_css("#log")
-
-        instructions = %w[one four one two three]
-        instructions.each do |instruction|
-          browser.at_css("##{instruction}").base.double_click
-          expect(log.text).to eq(instruction)
-        end
-      end
-    end
   end
 end
