@@ -266,11 +266,11 @@ module Ferrum
       def bounding_rect(selector)
         rect = evaluate_async(%(
           const rect = document
-                         .querySelector('#{selector}')
+                         .querySelector(arguments[0])
                          .getBoundingClientRect();
           const {x, y, width, height} = rect;
-          arguments[0]([x, y, width, height])
-        ), timeout)
+          arguments[1]([x, y, width, height])
+        ), timeout, selector)
 
         { x: rect[0], y: rect[1], width: rect[2], height: rect[3] }
       end
