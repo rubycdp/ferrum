@@ -111,6 +111,20 @@ describe Ferrum::Node do
         expect(page.current_url).to eq(base_url("/"))
       end
     end
+
+    context "can double click" do
+      before { page.go_to("/double_click_test") }
+
+      it "double clicks properly" do
+        log = browser.at_css("#log")
+
+        instructions = %w[one four one two three]
+        instructions.each do |instruction|
+          browser.at_css("##{instruction}").click(mode: :double, delay: 0.05)
+          expect(log.text).to eq(instruction)
+        end
+      end
+    end
   end
 
   describe "#at_xpath" do

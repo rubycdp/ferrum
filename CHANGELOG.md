@@ -13,7 +13,7 @@
 - `Ferrum::Frame#frame_element` returns the element in which the window is embedded [#524]
 - `Ferrum::Page#start_screencast` starts sending frames to record screencast [#494]
 - `Ferrum::Page#stop_screencast` stops sending frames [#494]
-- `Ferrum::Browser#new(incognito: false)` wether to create an incognito profile for the browser startup window, `true` by default.
+- `Ferrum::Browser#new(incognito: false)` whether to create an incognito profile for the browser startup window, `true` by default.
 
 ### Changed
 

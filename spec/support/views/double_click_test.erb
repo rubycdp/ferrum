@@ -27,23 +27,16 @@
       }
     </style>
     <script type="text/javascript">
-      window.onload = function() {
-        var log = document.querySelector("#log")
-        var boxes = document.querySelectorAll(".box")
-        for (var i = 0; i < boxes.length; i++) {
-          var el = boxes[i]
-          el.ondblclick = function() {
-            log.textContent = this.id
-          }
-        }
+      window.onDblClick = function(id) {
+        document.querySelector("#log").textContent = id;
       }
     </script>
   </head>
   <body>
-    <div id="one" class="box"></div>
-    <div id="two" class="box"></div>
-    <div id="three" class="box"></div>
-    <div id="four" class="box"></div>
+    <div id="one" ondblclick="onDblClick('one')" class="box"></div>
+    <div id="two" ondblclick="onDblClick('two')" class="box"></div>
+    <div id="three" ondblclick="onDblClick('three')" class="box"></div>
+    <div id="four" ondblclick="onDblClick('four')" class="box"></div>
     <div id="log"></div>
   </body>
 </html>
