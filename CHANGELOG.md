@@ -6,6 +6,8 @@
 
 ### Fixed
 
+- `remote_debug_url` for modern Chrome returns chrome-devtools-frontend.appspot.com absolute url
+
 ### Removed
 
 
