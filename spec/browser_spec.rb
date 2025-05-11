@@ -632,6 +632,30 @@ describe Ferrum::Browser do
     end
   end
 
+  describe "#debug_url" do
+    it "parses the devtools frontend url correctly when devtoolsFrontendUrl is relative" do
+      browser = Ferrum::Browser.new(port: 12_345)
+      uri = instance_double(URI)
+
+      allow(browser).to receive(:URI).with("http://127.0.0.1:12345/json").and_return(uri)
+      allow(Net::HTTP).to receive(:get).with(uri).and_return(%([{"devtoolsFrontendUrl":"/works"}]))
+
+      expect(browser.send(:debug_url)).to eq("http://127.0.0.1:12345/works")
+    end
+
+    it "parses the devtools frontend url correctly when devtoolsFrontendUrl is fully qualified" do
+      browser = Ferrum::Browser.new(port: 12_346)
+      uri = instance_double(URI)
+
+      allow(browser).to receive(:URI).with("http://127.0.0.1:12346/json").and_return(uri)
+      allow(Net::HTTP).to receive(:get).with(uri).and_return(
+        %([{"devtoolsFrontendUrl":"https://chrome-devtools-frontend.appspot.com/serve_rev?ws=123"}])
+      )
+
+      expect(browser.send(:debug_url)).to eq("https://chrome-devtools-frontend.appspot.com/serve_rev?ws=123")
+    end
+  end
+
   context "with pty", if: Ferrum::Utils::Platform.mri? && !Ferrum::Utils::Platform.windows? do
     require "pty"
     require "timeout"

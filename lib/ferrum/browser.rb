@@ -295,6 +295,8 @@ module Ferrum
     end
 
     def build_remote_debug_url(path:)
+      return path if Addressable::URI.parse(path).absolute?
+
       "http://#{process.host}:#{process.port}#{path}"
     end
   end
