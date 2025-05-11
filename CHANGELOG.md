@@ -1,4 +1,4 @@
-## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.17...main) ##
+## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.17.1...main) ##
 
 ### Added
 
@@ -6,6 +6,18 @@
 
 ### Fixed
 
+### Removed
+
+
+## [0.17.1](https://github.com/rubycdp/ferrum/compare/v0.17...0.17.1) (May 11, 2025) ##
+
+### Added
+
+### Changed
+
+### Fixed
+
+- Can't use single quotes in screenshot :selector [#465]
 - `remote_debug_url` for modern Chrome returns chrome-devtools-frontend.appspot.com absolute url
 
 ### Removed
