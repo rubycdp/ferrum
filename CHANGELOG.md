@@ -16,7 +16,6 @@
 ### Changed
 
 ### Fixed
-
 - Can't use single quotes in screenshot :selector [#465]
 - `remote_debug_url` for modern Chrome returns chrome-devtools-frontend.appspot.com absolute url
 
@@ -26,7 +25,6 @@
 ## [0.17](https://github.com/rubycdp/ferrum/compare/v0.16...v0.17) - (May 10, 2025) ##
 
 ### Added
-
 - `Ferrum::Network::Exchange#blob?` determines if the exchange is blob [#516]
 - `Ferrum::Network::Request#headers` are enhanced and supplemented with `Network.requestWillBeSentExtraInfo` [#506]
 - `Ferrum::Page#off` to unsubscribe from CDP events [#455]
@@ -41,13 +39,11 @@
 - `Ferrum::Browser#new(incognito: false)` whether to create an incognito profile for the browser startup window, `true` by default.
 
 ### Changed
-
 - `Ferrum::Network::Exchange#finished?` takes into account that exchange might be in an unknown state after loader changed(next `go_to` call) and considers
   such as finished [#426]
 - `headless: "new"` mode is removed as it's now default in modern Chrome, just use `headless: true` instead [#518]
 
 ### Fixed
-
 - Correctly set mouse events buttons property [#509]
 - Prevent 'Hash#[]=': can't add a new key into hash during iteration [#513]
 - `Ferrum::Network::Exchange#finished?` and `Ferrum::Network#wait_for_idle` take into account that request can be a blob [#496]
@@ -59,7 +55,6 @@
 ## [0.16](https://github.com/rubycdp/ferrum/compare/v0.15...v0.16) - (Dec 1, 2024) ##
 
 ### Added
-
 - `Ferrum::Network#wait_for_idle!` raises an error if timeout reached.
 - `Ferrum::Browser#close` closes browser gracefully issuing a CDP command, doesn't clean up ruby resources.
 - `Ferrum::Node#remove` removes node from DOM tree.
@@ -70,11 +65,9 @@
 - `Ferrum::Page#activate` activates the target for the given page.
 
 ### Changed
-
 - `Ferrum::Network#wait_for_idle` now returns true or false. Doesn't raise an error [BREAKING CHANGE].
 
 ### Fixed
-
 - `:ws_url` option is now used without modifications WYSIWYG.
 - `Network.requestWillBeSent` callback didn't handle params in a type-safe way
 - `Page.frameStoppedLoading` callback shouldn't wait for document_node_id response
@@ -111,7 +104,6 @@ instead of passing browser and making cyclic dependency on the browser instance,
 - `Ferrum::Browser::Client` -> `Ferrum::Client` [#433]
 
 ### Fixed
-
 - Exceptions within `.on()` were swallowed by a thread pool of `Concurrent::Async` [#432]
 - `Ferrum::Context#add_target` puts wrong target to pendings sometimes [#433]
 - Leaking connection descriptors in tests and after browser quit [#433]
