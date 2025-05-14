@@ -115,10 +115,7 @@ module Ferrum
 
       response["frameId"]
     rescue TimeoutError
-      if @options.pending_connection_errors
-        pendings = network.traffic.select(&:pending?).map(&:url).compact
-        raise PendingConnectionsError.new(options[:url], pendings) unless pendings.empty?
-      end
+      process_timeout_error(options[:url]) if @options.pending_connection_errors
     end
     alias goto go_to
     alias go go_to
@@ -537,6 +534,20 @@ module Ferrum
       @proxy_port = options&.[](:port) || @options.proxy&.[](:port)
       @proxy_user = options&.[](:user) || @options.proxy&.[](:user)
       @proxy_password = options&.[](:password) || @options.proxy&.[](:password)
+    end
+
+    def process_timeout_error(url)
+      pendings = network.traffic.select(&:pending?).map(&:url).compact
+      pendings.each do |pending|
+        # fail if it's on the blocklist
+        if @options.pending_connection_blocklist.any?{ |regex| pending.match?(regex) }
+          raise PendingConnectionsError.new(url, pendings)
+        end
+        # fail if it's not on the allowlist
+        unless @options.pending_connection_allowlist.any?{ |regex| pending.match?(regex) }
+          raise PendingConnectionsError.new(url, pendings)
+        end
+      end
     end
   end
 end

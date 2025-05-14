@@ -83,6 +83,14 @@ module Ferrum
     #   why you have slow responses and fix or block them rather than turn this
     #   setting off.
     #
+    # @option options [Array<Regexp>] :pending_connection_blocklist
+    #   An array of regular expression to check pending connections with.
+    #   If a match is found always raise an exception.
+    #
+    # @option options [Array<Regexp>] :pending_connection_allowlist
+    #   An array of regular expression to check pending connections with.
+    #   If a match is found skip raising an exception.
+    #
     # @option options [:chrome, :firefox] :browser_name (:chrome)
     #   Sets the browser's name. **Note:** only experimental support for
     #   `:firefox` for now.

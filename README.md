@@ -11,50 +11,49 @@ It is Ruby clean and high-level API to Chrome. Runs headless by default, but you
 can configure it to run in a headful mode. All you need is Ruby and
 [Chrome](https://www.google.com/chrome/) or
 [Chromium](https://www.chromium.org/). Ferrum connects to the browser by [CDP
-protocol](https://chromedevtools.github.io/devtools-protocol/) and  there's _no_
+protocol](https://chromedevtools.github.io/devtools-protocol/) and there's _no_
 Selenium/WebDriver/ChromeDriver dependency. The emphasis was made on a raw CDP
 protocol because Chrome allows you to do so many things that are barely
 supported by WebDriver because it should have consistent design with other
 browsers.
 
-* [Cuprite](https://github.com/rubycdp/cuprite) is a pure Ruby driver for
-[Capybara](https://github.com/teamcapybara/capybara) based on Ferrum. If you are
-going to crawl sites you better use Ferrum or
-[Vessel](https://github.com/rubycdp/vessel) because you crawl, not test.
+- [Cuprite](https://github.com/rubycdp/cuprite) is a pure Ruby driver for
+  [Capybara](https://github.com/teamcapybara/capybara) based on Ferrum. If you are
+  going to crawl sites you better use Ferrum or
+  [Vessel](https://github.com/rubycdp/vessel) because you crawl, not test.
 
-* [Vessel](https://github.com/rubycdp/vessel) high-level web crawling framework
-based on Ferrum and Mechanize.
+- [Vessel](https://github.com/rubycdp/vessel) high-level web crawling framework
+  based on Ferrum and Mechanize.
 
 ## Index
 
-* [Install](https://github.com/rubycdp/ferrum#install)
-* [Examples](https://github.com/rubycdp/ferrum#examples)
-* [Docker](https://github.com/rubycdp/ferrum#docker)
-* [Customization](https://github.com/rubycdp/ferrum#customization)
-* [Navigation](https://github.com/rubycdp/ferrum#navigation)
-* [Finders](https://github.com/rubycdp/ferrum#finders)
-* [Screenshots](https://github.com/rubycdp/ferrum#screenshots)
-* [Screencast](https://github.com/rubycdp/ferrum#screencast)
-* [Network](https://github.com/rubycdp/ferrum#network)
-* [Downloads](https://github.com/rubycdp/ferrum#downloads)
-* [Proxy](https://github.com/rubycdp/ferrum#proxy)
-* [Mouse](https://github.com/rubycdp/ferrum#mouse)
-* [Keyboard](https://github.com/rubycdp/ferrum#keyboard)
-* [Cookies](https://github.com/rubycdp/ferrum#cookies)
-* [Headers](https://github.com/rubycdp/ferrum#headers)
-* [JavaScript](https://github.com/rubycdp/ferrum#javascript)
-* [Frames](https://github.com/rubycdp/ferrum#frames)
-* [Frame](https://github.com/rubycdp/ferrum#frame)
-* [Dialogs](https://github.com/rubycdp/ferrum#dialogs)
-* [Animation](https://github.com/rubycdp/ferrum#animation)
-* [Node](https://github.com/rubycdp/ferrum#node)
-* [Tracing](https://github.com/rubycdp/ferrum#tracing)
-* [Clean Up](https://github.com/rubycdp/ferrum#clean-up)
-* [Thread safety](https://github.com/rubycdp/ferrum#thread-safety)
-* [Development](https://github.com/rubycdp/ferrum#development)
-* [Contributing](https://github.com/rubycdp/ferrum#contributing)
-* [License](https://github.com/rubycdp/ferrum#license)
-
+- [Install](https://github.com/rubycdp/ferrum#install)
+- [Examples](https://github.com/rubycdp/ferrum#examples)
+- [Docker](https://github.com/rubycdp/ferrum#docker)
+- [Customization](https://github.com/rubycdp/ferrum#customization)
+- [Navigation](https://github.com/rubycdp/ferrum#navigation)
+- [Finders](https://github.com/rubycdp/ferrum#finders)
+- [Screenshots](https://github.com/rubycdp/ferrum#screenshots)
+- [Screencast](https://github.com/rubycdp/ferrum#screencast)
+- [Network](https://github.com/rubycdp/ferrum#network)
+- [Downloads](https://github.com/rubycdp/ferrum#downloads)
+- [Proxy](https://github.com/rubycdp/ferrum#proxy)
+- [Mouse](https://github.com/rubycdp/ferrum#mouse)
+- [Keyboard](https://github.com/rubycdp/ferrum#keyboard)
+- [Cookies](https://github.com/rubycdp/ferrum#cookies)
+- [Headers](https://github.com/rubycdp/ferrum#headers)
+- [JavaScript](https://github.com/rubycdp/ferrum#javascript)
+- [Frames](https://github.com/rubycdp/ferrum#frames)
+- [Frame](https://github.com/rubycdp/ferrum#frame)
+- [Dialogs](https://github.com/rubycdp/ferrum#dialogs)
+- [Animation](https://github.com/rubycdp/ferrum#animation)
+- [Node](https://github.com/rubycdp/ferrum#node)
+- [Tracing](https://github.com/rubycdp/ferrum#tracing)
+- [Clean Up](https://github.com/rubycdp/ferrum#clean-up)
+- [Thread safety](https://github.com/rubycdp/ferrum#thread-safety)
+- [Development](https://github.com/rubycdp/ferrum#development)
+- [Contributing](https://github.com/rubycdp/ferrum#contributing)
+- [License](https://github.com/rubycdp/ferrum#license)
 
 ## Install
 
@@ -68,10 +67,9 @@ option to browser instance see `:browser_path` in
 
 Add this to your `Gemfile` and run `bundle install`.
 
-``` ruby
+```ruby
 gem "ferrum"
 ```
-
 
 ## Examples
 
@@ -131,7 +129,6 @@ page.mouse
 browser.quit
 ```
 
-
 ## Docker
 
 In docker as root you must pass the no-sandbox browser option:
@@ -146,56 +143,60 @@ It has also been reported that the Chrome process repeatedly crashes when runnin
 
 You can customize options with the following code in your test setup:
 
-``` ruby
+```ruby
 Ferrum::Browser.new(options)
 ```
 
-* options `Hash`
-  * `:headless` (Boolean) - Set browser as headless or not, `true` by default.
-  * `:incognito` (Boolean) - Create an incognito profile for the browser startup window, `true` by default.
-  * `:xvfb` (Boolean) - Run browser in a virtual framebuffer, `false` by default.
-  * `:flatten` (Boolean) - Use one websocket connection to the browser and all the pages in flatten mode.
-  * `:window_size` (Array) - The dimensions of the browser window in which to
-      test, expressed as a 2-element array, e.g. [1024, 768]. Default: [1024, 768]
-  * `:extensions` (Array[String | Hash]) - An array of paths to files or JS
-      source code to be preloaded into the browser e.g.:
-      `["/path/to/script.js", { source: "window.secret = 'top'" }]`
-  * `:logger` (Object responding to `puts`) - When present, debug output is
-      written to this object.
-  * `:slowmo` (Integer | Float) - Set a delay in seconds to wait before sending command.
-      Useful companion of headless option, so that you have time to see changes.
-  * `:timeout` (Numeric) - The number of seconds we'll wait for a response when
-      communicating with browser. Default is 5.
-  * `:js_errors` (Boolean) - When true, JavaScript errors get re-raised in Ruby.
-  * `:pending_connection_errors` (Boolean) - When main frame is still waiting for slow responses while timeout is
-      reached `PendingConnectionsError` is raised. It's better to figure out why you have slow responses and fix or
-      block them rather than turn this setting off. Default is true.
-  * `:browser_name` (Symbol) - `:chrome` by default, only experimental support
-      for `:firefox` for now.
-  * `:browser_path` (String) - Path to Chrome binary, you can also set ENV
-      variable as `BROWSER_PATH=some/path/chrome bundle exec rspec`.
-  * `:browser_options` (Hash) - Additional command line options,
-      [see them all](https://peter.sh/experiments/chromium-command-line-switches/)
-      e.g. `{ "ignore-certificate-errors" => nil }`
-  * `:ignore_default_browser_options` (Boolean) - Ferrum has a number of default
-      options it passes to the browser, if you set this to `true` then only
-      options you put in `:browser_options` will be passed to the browser,
-      except required ones of course.
-  * `:port` (Integer) - Remote debugging port for headless Chrome.
-  * `:host` (String) - Remote debugging address for headless Chrome.
-  * `:url` (String) - URL for a running instance of Chrome. If this is set, a
-      browser process will not be spawned.
-  * `:ws_url` (String) - Websocket url for a running instance of Chrome. If this is set, a
+- options `Hash`
+  - `:headless` (Boolean) - Set browser as headless or not, `true` by default.
+  - `:incognito` (Boolean) - Create an incognito profile for the browser startup window, `true` by default.
+  - `:xvfb` (Boolean) - Run browser in a virtual framebuffer, `false` by default.
+  - `:flatten` (Boolean) - Use one websocket connection to the browser and all the pages in flatten mode.
+  - `:window_size` (Array) - The dimensions of the browser window in which to
+    test, expressed as a 2-element array, e.g. [1024, 768]. Default: [1024, 768]
+  - `:extensions` (Array[String | Hash]) - An array of paths to files or JS
+    source code to be preloaded into the browser e.g.:
+    `["/path/to/script.js", { source: "window.secret = 'top'" }]`
+  - `:logger` (Object responding to `puts`) - When present, debug output is
+    written to this object.
+  - `:slowmo` (Integer | Float) - Set a delay in seconds to wait before sending command.
+    Useful companion of headless option, so that you have time to see changes.
+  - `:timeout` (Numeric) - The number of seconds we'll wait for a response when
+    communicating with browser. Default is 5.
+  - `:js_errors` (Boolean) - When true, JavaScript errors get re-raised in Ruby.
+  - `:pending_connection_errors` (Boolean) - When main frame is still waiting for slow responses while timeout is
+    reached `PendingConnectionsError` is raised. It's better to figure out why you have slow responses and fix or
+    block them rather than turn this setting off. Default is true.
+  - `:pending_connection_allowlist` (Array[Regex]) - Before raising a `PendingConnectionsError`,
+    the pending url is matched against the allowlist, and the error ignored if matched.
+  - `:pending_connection_blocklist` (Array[Regex]) - Before raising a `PendingConnectionsError`,
+    the pending url is matched against the blocklist, and the exception is always raised if matched.
+    This takes precedence over the `:pending_connection_allowlist`.
+  - `:browser_name` (Symbol) - `:chrome` by default, only experimental support
+    for `:firefox` for now.
+  - `:browser_path` (String) - Path to Chrome binary, you can also set ENV
+    variable as `BROWSER_PATH=some/path/chrome bundle exec rspec`.
+  - `:browser_options` (Hash) - Additional command line options,
+    [see them all](https://peter.sh/experiments/chromium-command-line-switches/)
+    e.g. `{ "ignore-certificate-errors" => nil }`
+  - `:ignore_default_browser_options` (Boolean) - Ferrum has a number of default
+    options it passes to the browser, if you set this to `true` then only
+    options you put in `:browser_options` will be passed to the browser,
+    except required ones of course.
+  - `:port` (Integer) - Remote debugging port for headless Chrome.
+  - `:host` (String) - Remote debugging address for headless Chrome.
+  - `:url` (String) - URL for a running instance of Chrome. If this is set, a
+    browser process will not be spawned.
+  - `:ws_url` (String) - Websocket url for a running instance of Chrome. If this is set, a
     browser process will not be spawned. It's higher priority than `:url`, setting both doesn't make sense.
-  * `:process_timeout` (Integer) - How long to wait for the Chrome process to
-      respond on startup.
-  * `:ws_max_receive_size` (Integer) - How big messages to accept from Chrome
-      over the web socket, in bytes. Defaults to 64MB. Incoming messages larger
-      than this will cause a `Ferrum::DeadBrowserError`.
-  * `:proxy` (Hash) - Specify proxy settings, [read more](https://github.com/rubycdp/ferrum#proxy)
-  * `:save_path` (String) - Path to save attachments with [Content-Disposition](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition) header.
-  * `:env` (Hash) - Environment variables you'd like to pass through to the process
-
+  - `:process_timeout` (Integer) - How long to wait for the Chrome process to
+    respond on startup.
+  - `:ws_max_receive_size` (Integer) - How big messages to accept from Chrome
+    over the web socket, in bytes. Defaults to 64MB. Incoming messages larger
+    than this will cause a `Ferrum::DeadBrowserError`.
+  - `:proxy` (Hash) - Specify proxy settings, [read more](https://github.com/rubycdp/ferrum#proxy)
+  - `:save_path` (String) - Path to save attachments with [Content-Disposition](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition) header.
+  - `:env` (Hash) - Environment variables you'd like to pass through to the process
 
 ## Navigation
 
@@ -203,7 +204,7 @@ Ferrum::Browser.new(options)
 
 Navigate page to.
 
-  * url `String` The url should include scheme unless you set `base_url` when
+- url `String` The url should include scheme unless you set `base_url` when
   configuring driver.
 
 ```ruby
@@ -253,9 +254,9 @@ page.stop
 
 Set the position for the browser window
 
-* options `Hash`
-  * :left `Integer`
-  * :top `Integer`
+- options `Hash`
+  - :left `Integer`
+  - :top `Integer`
 
 ```ruby
 browser.position = { left: 10, top: 20 }
@@ -273,12 +274,12 @@ browser.position # => [10, 20]
 
 Set window bounds
 
-* options `Hash`
-  * :left `Integer`
-  * :top `Integer`
-  * :width `Integer`
-  * :height `Integer`
-  * :window_state `String`
+- options `Hash`
+  - :left `Integer`
+  - :top `Integer`
+  - :width `Integer`
+  - :height `Integer`
+  - :window_state `String`
 
 ```ruby
 browser.window_bounds = { left: 10, top: 20, width: 1024, height: 768, window_state: "normal" }
@@ -307,24 +308,23 @@ browser.window_id # => 1
 Find node by selector. Runs `document.querySelector` within the document or
 provided node.
 
-  * selector `String`
-  * options `Hash`
-    * :within `Node` | `nil`
+- selector `String`
+- options `Hash`
+  - :within `Node` | `nil`
 
 ```ruby
 page.go_to("https://github.com/")
 page.at_css("a[aria-label='Issues you created']") # => Node
 ```
 
-
 #### css(selector, \*\*options) : `Array<Node>` | `[]`
 
 Find nodes by selector. The method runs `document.querySelectorAll` within the
 document or provided node.
 
-* selector `String`
-* options `Hash`
-  * :within `Node` | `nil`
+- selector `String`
+- options `Hash`
+  - :within `Node` | `nil`
 
 ```ruby
 page.go_to("https://github.com/")
@@ -335,9 +335,9 @@ page.css("a[aria-label='Issues you created']") # => [Node]
 
 Find node by xpath.
 
-* selector `String`
-* options `Hash`
-  * :within `Node` | `nil`
+- selector `String`
+- options `Hash`
+  - :within `Node` | `nil`
 
 ```ruby
 page.go_to("https://github.com/")
@@ -348,9 +348,9 @@ page.at_xpath("//a[@aria-label='Issues you created']") # => Node
 
 Find nodes by xpath.
 
-* selector `String`
-* options `Hash`
-  * :within `Node` | `nil`
+- selector `String`
+- options `Hash`
+  - :within `Node` | `nil`
 
 ```ruby
 page.go_to("https://github.com/")
@@ -384,29 +384,28 @@ page.go_to("https://google.com/")
 page.body # => '<html itemscope="" itemtype="http://schema.org/WebPage" lang="ru"><head>...
 ```
 
-
 ## Screenshots
 
 #### screenshot(\*\*options) : `String` | `Integer`
 
 Saves screenshot on a disk or returns it as base64.
 
-* options `Hash`
-  * :path `String` to save a screenshot on the disk. `:encoding` will be set to
+- options `Hash`
+  - :path `String` to save a screenshot on the disk. `:encoding` will be set to
     `:binary` automatically
-  * :encoding `Symbol` `:base64` | `:binary` you can set it to return image as
+  - :encoding `Symbol` `:base64` | `:binary` you can set it to return image as
     Base64
-  * :format `String` "jpeg" ("jpg") | "png" | "webp"
-  * :quality `Integer` 0-100 works for jpeg only
-  * :full `Boolean` whether you need full page screenshot or a viewport
-  * :selector `String` css selector for given element, optional
-  * :area `Hash` area for screenshot, optional
-    * :x `Integer`
-    * :y `Integer`
-    * :width `Integer`
-    * :height `Integer`
-  * :scale `Float` zoom in/out
-  * :background_color `Ferrum::RGBA.new(0, 0, 0, 0.0)` to have specific background color
+  - :format `String` "jpeg" ("jpg") | "png" | "webp"
+  - :quality `Integer` 0-100 works for jpeg only
+  - :full `Boolean` whether you need full page screenshot or a viewport
+  - :selector `String` css selector for given element, optional
+  - :area `Hash` area for screenshot, optional
+    - :x `Integer`
+    - :y `Integer`
+    - :width `Integer`
+    - :height `Integer`
+  - :scale `Float` zoom in/out
+  - :background_color `Ferrum::RGBA.new(0, 0, 0, 0.0)` to have specific background color
 
 ```ruby
 page.go_to("https://google.com/")
@@ -428,18 +427,19 @@ page.screenshot(background_color: Ferrum::RGBA.new(0, 0, 0, 0.0))
 
 Saves PDF on a disk or returns it as base64.
 
-* options `Hash`
-  * :path `String` to save a pdf on the disk. `:encoding` will be set to
-    `:binary` automatically
-  * :encoding `Symbol` `:base64` | `:binary` you can set it to return pdf as
-    Base64
-  * :landscape `Boolean` paper orientation. Defaults to false.
-  * :scale `Float` zoom in/out
-  * :format `symbol` standard paper sizes :letter, :legal, :tabloid, :ledger, :A0, :A1, :A2, :A3, :A4, :A5, :A6
+- options `Hash`
 
-  * :paper_width `Float` set paper width
-  * :paper_height `Float` set paper height
-  * See other [native options](https://chromedevtools.github.io/devtools-protocol/tot/Page#method-printToPDF) you can pass
+  - :path `String` to save a pdf on the disk. `:encoding` will be set to
+    `:binary` automatically
+  - :encoding `Symbol` `:base64` | `:binary` you can set it to return pdf as
+    Base64
+  - :landscape `Boolean` paper orientation. Defaults to false.
+  - :scale `Float` zoom in/out
+  - :format `symbol` standard paper sizes :letter, :legal, :tabloid, :ledger, :A0, :A1, :A2, :A3, :A4, :A5, :A6
+
+  - :paper_width `Float` set paper width
+  - :paper_height `Float` set paper height
+  - See other [native options](https://chromedevtools.github.io/devtools-protocol/tot/Page#method-printToPDF) you can pass
 
 ```ruby
 page.go_to("https://google.com/")
@@ -451,8 +451,8 @@ page.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => true
 
 Saves MHTML on a disk or returns it as a string.
 
-* options `Hash`
-  * :path `String` to save a file on the disk.
+- options `Hash`
+  - :path `String` to save a file on the disk.
 
 ```ruby
 page.go_to("https://google.com/")
@@ -465,24 +465,25 @@ page.mhtml(path: "google.mhtml") # => 87742
 
 Starts sending frames to record screencast to the given block.
 
-* options `Hash`
-  * :format `Symbol` `:jpeg` | `:png` The format the image should be returned in.
-  * :quality `Integer` The image quality. **Note:** 0-100 works for JPEG only.
-  * :max_width `Integer` Maximum screencast frame width.
-  * :max_height `Integer` Maximum screencast frame height.
-  * :every_nth_frame `Integer` Send every n-th frame.
+- options `Hash`
 
-* Block inputs:
-  * data `String` Base64-encoded compressed image.
-  * metadata `Hash` Screencast frame metadata.
-    * "offsetTop" `Integer` Top offset in DIP.
-    * "pageScaleFactor" `Integer` Page scale factor.
-    * "deviceWidth" `Integer` Device screen width in DIP.
-    * "deviceHeight" `Integer` Device screen height in DIP.
-    * "scrollOffsetX" `Integer` Position of horizontal scroll in CSS pixels.
-    * "scrollOffsetY" `Integer` Position of vertical scroll in CSS pixels.
-    * "timestamp" `Float` (optional) Frame swap timestamp in seconds since Unix epoch.
-  * session_id `Integer` Frame number.
+  - :format `Symbol` `:jpeg` | `:png` The format the image should be returned in.
+  - :quality `Integer` The image quality. **Note:** 0-100 works for JPEG only.
+  - :max_width `Integer` Maximum screencast frame width.
+  - :max_height `Integer` Maximum screencast frame height.
+  - :every_nth_frame `Integer` Send every n-th frame.
+
+- Block inputs:
+  - data `String` Base64-encoded compressed image.
+  - metadata `Hash` Screencast frame metadata.
+    - "offsetTop" `Integer` Top offset in DIP.
+    - "pageScaleFactor" `Integer` Page scale factor.
+    - "deviceWidth" `Integer` Device screen width in DIP.
+    - "deviceHeight" `Integer` Device screen height in DIP.
+    - "scrollOffsetX" `Integer` Position of horizontal scroll in CSS pixels.
+    - "scrollOffsetY" `Integer` Position of vertical scroll in CSS pixels.
+    - "timestamp" `Float` (optional) Frame swap timestamp in seconds since Unix epoch.
+  - session_id `Integer` Frame number.
 
 ```ruby
 require "base64"
@@ -558,12 +559,12 @@ page.network.status # => 200
 
 Waits for network idle, returns `true` in case of success and `false` if there are still connections.
 
-* options `Hash`
-  * :connections `Integer` how many connections are allowed for network to be
+- options `Hash`
+  - :connections `Integer` how many connections are allowed for network to be
     idling, `0` by default
-  * :duration `Float` sleep for given amount of time and check again, `0.05` by
+  - :duration `Float` sleep for given amount of time and check again, `0.05` by
     default
-  * :timeout `Float` during what time we try to check idle, `browser.timeout`
+  - :timeout `Float` during what time we try to check idle, `browser.timeout`
     by default
 
 ```ruby
@@ -586,7 +587,7 @@ page.network.wait_for_idle! # might raise an error
 
 Clear page's cache or collected traffic.
 
-* type `Symbol` it is either `:traffic` or `:cache`
+- type `Symbol` it is either `:traffic` or `:cache`
 
 ```ruby
 traffic = page.network.traffic # => []
@@ -602,9 +603,9 @@ Set request interception for given options. This method is only sets request
 interception, you should use `on` callback to catch requests and abort or
 continue them.
 
-* options `Hash`
-  * :pattern `String` \* by default
-  * :resource_type `Symbol` one of the [resource types](https://chromedevtools.github.io/devtools-protocol/tot/Network#type-ResourceType)
+- options `Hash`
+  - :pattern `String` \* by default
+  - :resource_type `Symbol` one of the [resource types](https://chromedevtools.github.io/devtools-protocol/tot/Network#type-ResourceType)
 
 ```ruby
 browser = Ferrum::Browser.new
@@ -626,12 +627,12 @@ page.go_to("https://google.com")
 
 If site or proxy uses authorization you can provide credentials using this method.
 
-* options `Hash`
-  * :type `Symbol` `:server` | `:proxy` site or proxy authorization
-  * :user `String`
-  * :password `String`
-* &block accepts authenticated request, which you must subsequently allow or deny, if you don't
-care about unwanted requests just call `request.continue`.
+- options `Hash`
+  - :type `Symbol` `:server` | `:proxy` site or proxy authorization
+  - :user `String`
+  - :password `String`
+- &block accepts authenticated request, which you must subsequently allow or deny, if you don't
+  care about unwanted requests just call `request.continue`.
 
 ```ruby
 page.network.authorize(user: "login", password: "pass") { |req| req.continue }
@@ -669,15 +670,15 @@ while your code denies but it's too late. The block is mandatory now.
 
 Activates emulation of network conditions.
 
-* options `Hash`
-  * :offline `Boolean` emulate internet disconnection, `false` by default
-  * :latency `Integer` minimum latency from request sent to response headers received (ms), `0` by
+- options `Hash`
+  - :offline `Boolean` emulate internet disconnection, `false` by default
+  - :latency `Integer` minimum latency from request sent to response headers received (ms), `0` by
     default
-  * :download_throughput `Integer` maximal aggregated download throughput (bytes/sec), `-1`
+  - :download_throughput `Integer` maximal aggregated download throughput (bytes/sec), `-1`
     by default, disables download throttling
-  * :upload_throughput `Integer` maximal aggregated upload throughput (bytes/sec), `-1`
+  - :upload_throughput `Integer` maximal aggregated upload throughput (bytes/sec), `-1`
     by default, disables download throttling
-  * :connection_type `String` connection type if known, one of: none, cellular2g, cellular3g, cellular4g,
+  - :connection_type `String` connection type if known, one of: none, cellular2g, cellular3g, cellular4g,
     bluetooth, ethernet, wifi, wimax, other. `nil` by default
 
 ```ruby
@@ -701,7 +702,6 @@ Toggles ignoring cache for each request. If true, cache will not be used.
 ```ruby
 page.network.cache(disable: true)
 ```
-
 
 ## Downloads
 
@@ -736,15 +736,14 @@ page.downloads.wait { page.at_css("#download").click }
 
 Sets behavior in case of file to be downloaded.
 
-* options `Hash`
-  * :save_path `String` absolute path of where to store the file
-  * :behavior `Symbol` `deny | allow | allowAndName | default`, `allow` by default
+- options `Hash`
+  - :save_path `String` absolute path of where to store the file
+  - :behavior `Symbol` `deny | allow | allowAndName | default`, `allow` by default
 
 ```ruby
 page.go_to("https://example.com/")
 page.downloads.set_behavior(save_path: "/tmp", behavior: :allow)
 ```
-
 
 ## Proxy
 
@@ -778,7 +777,6 @@ browser.create_page(proxy: { host: "y.y.y.y", port: 31337, user: "user", passwor
 end
 ```
 
-
 ### Mouse
 
 `page.mouse`
@@ -787,9 +785,9 @@ end
 
 Scroll page to a given x, y
 
-  * x `Integer` the pixel along the horizontal axis of the document that you
+- x `Integer` the pixel along the horizontal axis of the document that you
   want displayed in the upper left
-  * y `Integer` the pixel along the vertical axis of the document that you want
+- y `Integer` the pixel along the vertical axis of the document that you want
   displayed in the upper left
 
 ```ruby
@@ -801,40 +799,40 @@ page.mouse.scroll_to(0, 400)
 
 Click given coordinates, fires mouse move, down and up events.
 
-* options `Hash`
-  * :x `Integer`
-  * :y `Integer`
-  * :delay `Float` defaults to 0. Delay between mouse down and mouse up events
-  * :button `Symbol` :left | :right, defaults to :left
-  * :count `Integer` defaults to 1
-  * :modifiers `Integer` bitfield for key modifiers. See`keyboard.modifiers`
+- options `Hash`
+  - :x `Integer`
+  - :y `Integer`
+  - :delay `Float` defaults to 0. Delay between mouse down and mouse up events
+  - :button `Symbol` :left | :right, defaults to :left
+  - :count `Integer` defaults to 1
+  - :modifiers `Integer` bitfield for key modifiers. See`keyboard.modifiers`
 
 #### down(\*\*options) : `Mouse`
 
 Mouse down for given coordinates.
 
-* options `Hash`
-  * :button `Symbol` :left | :right, defaults to :left
-  * :count `Integer` defaults to 1
-  * :modifiers `Integer` bitfield for key modifiers. See`keyboard.modifiers`
+- options `Hash`
+  - :button `Symbol` :left | :right, defaults to :left
+  - :count `Integer` defaults to 1
+  - :modifiers `Integer` bitfield for key modifiers. See`keyboard.modifiers`
 
 #### up(\*\*options) : `Mouse`
 
 Mouse up for given coordinates.
 
-* options `Hash`
-  * :button `Symbol` :left | :right, defaults to :left
-  * :count `Integer` defaults to 1
-  * :modifiers `Integer` bitfield for key modifiers. See`keyboard.modifiers`
+- options `Hash`
+  - :button `Symbol` :left | :right, defaults to :left
+  - :count `Integer` defaults to 1
+  - :modifiers `Integer` bitfield for key modifiers. See`keyboard.modifiers`
 
 #### move(x:, y:, steps: 1) : `Mouse`
 
 Mouse move to given x and y.
 
-* options `Hash`
-  * :x `Integer`
-  * :y `Integer`
-  * :steps `Integer` defaults to 1. Sends intermediate mousemove events.
+- options `Hash`
+  - :x `Integer`
+  - :y `Integer`
+  - :steps `Integer` defaults to 1. Sends intermediate mousemove events.
 
 ### Keyboard
 
@@ -844,27 +842,26 @@ Mouse move to given x and y.
 
 Dispatches a keydown event.
 
-* key `String` | `Symbol` Name of key such as "a", :enter, :backspace
+- key `String` | `Symbol` Name of key such as "a", :enter, :backspace
 
 #### up(key) : `Keyboard`
 
 Dispatches a keyup event.
 
-* key `String` | `Symbol` Name of key such as "b", :enter, :backspace
+- key `String` | `Symbol` Name of key such as "b", :enter, :backspace
 
 #### type(\*keys) : `Keyboard`
 
 Sends a keydown, keypress/input, and keyup event for each character in the text.
 
-* text `String` | `Array<String> | Array<Symbol>` A text to type into a focused
+- text `String` | `Array<String> | Array<Symbol>` A text to type into a focused
   element, `[:Shift, "s"], "tring"`
 
 #### modifiers(keys) : `Integer`
 
 Returns bitfield for a given keys
 
-* keys `Array<Symbol>` :alt | :ctrl | :command | :shift
-
+- keys `Array<Symbol>` :alt | :ctrl | :command | :shift
 
 ## Cookies
 
@@ -882,7 +879,7 @@ page.cookies.all # => {"NID"=>#<Ferrum::Cookies::Cookie:0x0000558624b37a40 @attr
 
 Returns cookie
 
-* value `String`
+- value `String`
 
 ```ruby
 page.cookies["NID"] # => <Ferrum::Cookies::Cookie:0x0000558624b67a88 @attributes={"name"=>"NID", "value"=>"...", "domain"=>".google.com", "path"=>"/", "expires"=>1583211046.575681, "size"=>178, "httpOnly"=>true, "secure"=>false, "session"=>false}>
@@ -892,19 +889,19 @@ page.cookies["NID"] # => <Ferrum::Cookies::Cookie:0x0000558624b67a88 @attributes
 
 Sets a cookie
 
-* value `Hash`
-  * :name `String`
-  * :value `String`
-  * :domain `String`
-  * :expires `Integer`
-  * :samesite `String`
-  * :httponly `Boolean`
+- value `Hash`
+  - :name `String`
+  - :value `String`
+  - :domain `String`
+  - :expires `Integer`
+  - :samesite `String`
+  - :httponly `Boolean`
 
 ```ruby
 page.cookies.set(name: "stealth", value: "omg", domain: "google.com") # => true
 ```
 
-* value `Cookie`
+- value `Cookie`
 
 ```ruby
 nid_cookie = page.cookies["NID"] # => <Ferrum::Cookies::Cookie:0x0000558624b67a88>
@@ -915,10 +912,10 @@ page.cookies.set(nid_cookie) # => true
 
 Removes given cookie
 
-* options `Hash`
-  * :name `String`
-  * :domain `String`
-  * :url `String`
+- options `Hash`
+  - :name `String`
+  - :domain `String`
+  - :url `String`
 
 ```ruby
 page.cookies.remove(name: "stealth", domain: "google.com") # => true
@@ -950,7 +947,6 @@ Loads all cookies from the file and sets them for current page.
 page.cookies.load # => true
 ```
 
-
 ## Headers
 
 `page.headers`
@@ -963,18 +959,17 @@ Get all headers
 
 Set given headers. Eventually clear all headers and set given ones.
 
-* headers `Hash` key-value pairs for example `"User-Agent" => "Browser"`
+- headers `Hash` key-value pairs for example `"User-Agent" => "Browser"`
 
 #### add(headers) : `Boolean`
 
 Adds given headers to already set ones.
 
-* headers `Hash` key-value pairs for example `"Referer" => "http://example.com"`
+- headers `Hash` key-value pairs for example `"Referer" => "http://example.com"`
 
 #### clear : `Boolean`
 
 Clear all headers.
-
 
 ## JavaScript
 
@@ -982,9 +977,9 @@ Clear all headers.
 
 Evaluate and return result for given JS expression
 
-* expression `String` should be valid JavaScript
-* args `Object` you can pass arguments, though it should be a valid `Node` or a
-simple value.
+- expression `String` should be valid JavaScript
+- args `Object` you can pass arguments, though it should be a valid `Node` or a
+  simple value.
 
 ```ruby
 page.evaluate("[window.scrollX, window.scrollY]")
@@ -994,10 +989,10 @@ page.evaluate("[window.scrollX, window.scrollY]")
 
 Evaluate asynchronous expression and return result
 
-* expression `String` should be valid JavaScript
-* wait_time How long we should wait for Promise to resolve or reject
-* args `Object` you can pass arguments, though it should be a valid `Node` or a
-simple value.
+- expression `String` should be valid JavaScript
+- wait_time How long we should wait for Promise to resolve or reject
+- args `Object` you can pass arguments, though it should be a valid `Node` or a
+  simple value.
 
 ```ruby
 page.evaluate_async(%(arguments[0]({foo: "bar"})), 5) # => { "foo" => "bar" }
@@ -1007,9 +1002,9 @@ page.evaluate_async(%(arguments[0]({foo: "bar"})), 5) # => { "foo" => "bar" }
 
 Execute expression. Doesn't return the result
 
-* expression `String` should be valid JavaScript
-* args `Object` you can pass arguments, though it should be a valid `Node` or a
-simple value.
+- expression `String` should be valid JavaScript
+- args `Object` you can pass arguments, though it should be a valid `Node` or a
+  simple value.
 
 ```ruby
 page.execute(%(1 + 1)) # => true
@@ -1019,7 +1014,7 @@ page.execute(%(1 + 1)) # => true
 
 Evaluate JavaScript to modify things before a page load
 
-* expression `String` should be valid JavaScript
+- expression `String` should be valid JavaScript
 
 ```ruby
 browser.evaluate_on_new_document <<~JS
@@ -1031,11 +1026,11 @@ JS
 
 #### add_script_tag(\*\*options) : `Boolean`
 
-* options `Hash`
-  * :url `String`
-  * :path `String`
-  * :content `String`
-  * :type `String` - `text/javascript` by default
+- options `Hash`
+  - :url `String`
+  - :path `String`
+  - :content `String`
+  - :type `String` - `text/javascript` by default
 
 ```ruby
 page.add_script_tag(url: "http://example.com/stylesheet.css") # => true
@@ -1043,19 +1038,20 @@ page.add_script_tag(url: "http://example.com/stylesheet.css") # => true
 
 #### add_style_tag(\*\*options) : `Boolean`
 
-* options `Hash`
-  * :url `String`
-  * :path `String`
-  * :content `String`
+- options `Hash`
+  - :url `String`
+  - :path `String`
+  - :content `String`
 
 ```ruby
 page.add_style_tag(content: "h1 { font-size: 40px; }") # => true
 
 ```
+
 #### bypass_csp(\*\*options) : `Boolean`
 
-* options `Hash`
-  * :enabled `Boolean`, `true` by default
+- options `Hash`
+  - :enabled `Boolean`, `true` by default
 
 ```ruby
 page.bypass_csp # => true
@@ -1064,7 +1060,6 @@ page.refresh
 page.add_script_tag(content: "window.__injected = 42")
 page.evaluate("window.__injected") # => 42
 ```
-
 
 ## Emulation
 
@@ -1078,21 +1073,19 @@ Returns nothing.
 page.disable_javascript
 ```
 
-
 #### set_viewport
 
 Overrides device screen dimensions and emulates viewport.
 
-* options `Hash`
-  * :width `Integer`, viewport width. `0` by default
-  * :height `Integer`, viewport height. `0` by default
-  * :scale_factor `Float`, device scale factor. `0` by default
-  * :mobile `Boolean`, whether to emulate mobile device. `false` by default
+- options `Hash`
+  - :width `Integer`, viewport width. `0` by default
+  - :height `Integer`, viewport height. `0` by default
+  - :scale_factor `Float`, device scale factor. `0` by default
+  - :mobile `Boolean`, whether to emulate mobile device. `false` by default
 
 ```ruby
 page.set_viewport(width: 1000, height: 600, scale_factor: 3)
 ```
-
 
 ## Frames
 
@@ -1119,14 +1112,13 @@ Returns page's main frame, the top of the tree and the parent of all frames.
 
 Find frame by given options.
 
-* options `Hash`
-  * :id `String` - Unique frame's id that browser provides
-  * :name `String` - Frame's name if there's one
+- options `Hash`
+  - :id `String` - Unique frame's id that browser provides
+  - :name `String` - Frame's name if there's one
 
 ```ruby
 page.frame_by(id: "C6D104CE454A025FBCF22B98DE612B12")
 ```
-
 
 ## Frame
 
@@ -1159,9 +1151,9 @@ If frame was given a name it should be here.
 
 One of the states frame's in:
 
-* `:started_loading`
-* `:navigated`
-* `:stopped_loading`
+- `:started_loading`
+- `:navigated`
+- `:stopped_loading`
 
 #### url : `String`
 
@@ -1236,7 +1228,7 @@ page.main_frame.doctype # => "<!DOCTYPE html>"
 
 Sets a content of a given frame.
 
-  * html `String`
+- html `String`
 
 ```ruby
 page.go_to("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
@@ -1246,14 +1238,13 @@ frame.content = "<html><head></head><body><p>lol</p></body></html>"
 frame.body # => <html><head></head><body><p>lol</p></body></html>
 ```
 
-
 ## Dialogs
 
 #### accept(text)
 
 Accept dialog with given text or default prompt if applicable
 
-  * text `String`
+- text `String`
 
 #### dismiss
 
@@ -1270,7 +1261,6 @@ end
 page.go_to("https://google.com")
 ```
 
-
 ## Animation
 
 You can slow down or speed up CSS animations.
@@ -1279,12 +1269,11 @@ You can slow down or speed up CSS animations.
 
 Returns playback rate for CSS animations, defaults to `1`.
 
-
 #### playback_rate = value
 
 Sets playback rate of CSS animations
 
-  * value `Integer`
+- value `Integer`
 
 ```ruby
 page.playback_rate = 2000
@@ -1292,12 +1281,13 @@ page.go_to("https://google.com")
 page.playback_rate # => 2000
 ```
 
-
 ## Node
 
 #### node? : `Boolean`
+
 #### frame_id
-#### frame  : `Frame`
+
+#### frame : `Frame`
 
 Returns [Frame](https://github.com/rubycdp/ferrum#frame) object for current node, you can keep using
 [Finders](https://github.com/rubycdp/ferrum#Finders) for that object:
@@ -1308,29 +1298,53 @@ frame.at_css("//a[text() = 'Log in']") # => Node
 ```
 
 #### focus
+
 #### focusable?
+
 #### moving? : `Boolean`
+
 #### wait_for_stop_moving
+
 #### blur
+
 #### type
+
 #### click
+
 #### hover
+
 #### select_file
+
 #### at_xpath
+
 #### at_css
+
 #### xpath
+
 #### css
+
 #### text
+
 #### inner_text
+
 #### value
+
 #### property
+
 #### attribute
+
 #### evaluate
+
 #### selected : `Array<Node>`
+
 #### select
+
 #### scroll_into_view
+
 #### in_viewport?(of: `Node | nil`) : `Boolean`
+
 #### remove
+
 #### exists?
 
 (chainable) Selects options by passed attribute.
@@ -1341,12 +1355,12 @@ page.at_xpath("//*[select]").select(["text"], by: :text) # => Node (select)
 ```
 
 Accept string, array or strings:
+
 ```ruby
 page.at_xpath("//*[select]").select("1")
 page.at_xpath("//*[select]").select("1", "2")
 page.at_xpath("//*[select]").select(["1", "2"])
 ```
-
 
 ## Tracing
 
@@ -1364,16 +1378,15 @@ end
 Accepts block, records trace and by default returns trace data from `Tracing.tracingComplete` event as output. When
 `path` is specified returns `true` and stores trace data into file.
 
-* options `Hash`
-  * :path `String` save data on the disk, `nil` by default
-  * :encoding `Symbol` `:base64` | `:binary` encode output as Base64 or plain text. `:binary` by default
-  * :timeout `Float` wait until file streaming finishes in the specified time or raise error, defaults to `nil`
-  * :screenshots `Boolean` capture screenshots in the trace, `false` by default
-  * :trace_config `Hash<String, Object>` config for
+- options `Hash`
+  - :path `String` save data on the disk, `nil` by default
+  - :encoding `Symbol` `:base64` | `:binary` encode output as Base64 or plain text. `:binary` by default
+  - :timeout `Float` wait until file streaming finishes in the specified time or raise error, defaults to `nil`
+  - :screenshots `Boolean` capture screenshots in the trace, `false` by default
+  - :trace_config `Hash<String, Object>` config for
     [trace](https://chromedevtools.github.io/devtools-protocol/tot/Tracing/#type-TraceConfig), for categories
     see [getCategories](https://chromedevtools.github.io/devtools-protocol/tot/Tracing/#method-getCategories),
     only one trace config can be active at a time per browser.
-
 
 ## Clean Up
 
@@ -1393,8 +1406,7 @@ browser.reset
 browser.quit
 ```
 
-
-## Thread safety ##
+## Thread safety
 
 Ferrum is fully thread-safe. You can create one browser or a few as you wish and
 start playing around using threads. Example below shows how to create a few pages
@@ -1461,7 +1473,6 @@ allow you to experiment.
 To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the
 version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version,
 push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
-
 
 ## Contributing
 

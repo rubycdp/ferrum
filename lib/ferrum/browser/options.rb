@@ -13,6 +13,7 @@ module Ferrum
 
       attr_reader :window_size, :logger, :ws_max_receive_size,
                   :js_errors, :base_url, :slowmo, :pending_connection_errors,
+                  :pending_connection_allowlist, :pending_connection_blocklist,
                   :url, :ws_url, :env, :process_timeout, :browser_name, :browser_path,
                   :save_path, :proxy, :port, :host, :headless, :incognito, :browser_options,
                   :ignore_default_browser_options, :xvfb, :flatten
@@ -30,6 +31,8 @@ module Ferrum
         @incognito = @options.fetch(:incognito, true)
         @flatten = @options.fetch(:flatten, true)
         @pending_connection_errors = @options.fetch(:pending_connection_errors, true)
+        @pending_connection_allowlist = Array(@options.fetch(:pending_connection_allowlist, []))
+        @pending_connection_blocklist = Array(@options.fetch(:pending_connection_blocklist, []))
         @process_timeout = @options.fetch(:process_timeout, PROCESS_TIMEOUT)
         @slowmo = @options[:slowmo].to_f
 
