@@ -93,8 +93,12 @@ module Ferrum
           process_options[:out] = process_options[:err] = write_io
 
           if @command.xvfb?
-            @xvfb = Xvfb.start(@command.options)
-            ObjectSpace.define_finalizer(self, self.class.process_killer(@xvfb.pid))
+            if @command.options.xvfb.respond_to?(:start)
+              @xvfb = @command.options.xvfb.start(@command.options)
+            else
+              @xvfb = Xvfb.start(@command.options)
+              ObjectSpace.define_finalizer(self, self.class.process_killer(@xvfb.pid))
+            end
           end
 
           env = Hash(@xvfb&.to_env).merge(@env)

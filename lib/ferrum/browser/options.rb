@@ -15,7 +15,7 @@ module Ferrum
                   :js_errors, :base_url, :slowmo, :pending_connection_errors,
                   :url, :ws_url, :env, :process_timeout, :browser_name, :browser_path,
                   :save_path, :proxy, :port, :host, :headless, :incognito, :browser_options,
-                  :ignore_default_browser_options, :xvfb, :flatten
+                  :ignore_default_browser_options, :xvfb, :flatten, :mobile
       attr_accessor :timeout, :default_user_agent
 
       def initialize(options = nil)
@@ -32,6 +32,7 @@ module Ferrum
         @pending_connection_errors = @options.fetch(:pending_connection_errors, true)
         @process_timeout = @options.fetch(:process_timeout, PROCESS_TIMEOUT)
         @slowmo = @options[:slowmo].to_f
+        @mobile = @options.fetch(:mobile, false)
 
         @env = @options[:env]
         @xvfb = @options[:xvfb]

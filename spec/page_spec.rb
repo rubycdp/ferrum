@@ -235,4 +235,48 @@ describe Ferrum::Page do
       wait_for { message_b }.to eq("goodbye")
     end
   end
+
+  describe "#resize" do
+    def body_size
+      {
+        height: page.evaluate("document.body.clientHeight"),
+        width: page.evaluate("document.body.clientWidth")
+      }
+    end
+
+    def is_mobile?
+      page.evaluate("'ontouchstart' in window || navigator.maxTouchPoints > 0")
+    end
+
+    before do
+      page.go_to("/")
+    end
+
+    context "given a different size" do
+      it "resizes the page" do
+        expect { page.resize(width: 2000, height: 1000) }.to change { body_size }.to(width: 2000, height: 1000)
+      end
+    end
+
+    context "given a zero height" do
+      it "does not change the height" do
+        expect { page.resize(width: 2000, height: 0) }.not_to(change { body_size[:height] })
+      end
+    end
+
+    context "given a zero width" do
+      it "does not change the width" do
+        expect { page.resize(width: 0, height: 1000) }.not_to(change { body_size[:width] })
+      end
+    end
+
+    context "when mobile is true" do
+      it "enables mobile emulation in the browser" do
+        expect do
+          page.resize(width: 0, height: 0, mobile: true)
+          page.reload
+        end.to change { is_mobile? }.to(true)
+      end
+    end
+  end
 end

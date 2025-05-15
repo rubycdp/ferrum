@@ -129,6 +129,8 @@ module Ferrum
     # @option options [Hash] :env
     #   Environment variables you'd like to pass through to the process.
     #
+    # @option options [Boolean] :mobile
+    #   Specify whether to enable mobile emulation and touch UI.
     def initialize(options = nil)
       @options = Options.new(options)
       @client = @process = @contexts = nil
