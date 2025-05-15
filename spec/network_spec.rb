@@ -517,6 +517,6 @@ describe Ferrum::Network do
       %r{Request to http://.*/with_js failed \(net::ERR_INTERNET_DISCONNECTED\)}
     )
 
-    expect(page.at_css("body").text).to match("No internet")
+    expect(page.at_css("body").text.downcase).to match("no internet")
   end
 end
