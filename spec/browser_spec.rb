@@ -243,9 +243,9 @@ describe Ferrum::Browser do
     end
 
     it "supports :pending_connection_allowlist argument" do
-      browser = Ferrum::Browser.new(base_url: base_url, pending_connection_allowlist: %r{slow}, timeout: 0.5)
+      browser = Ferrum::Browser.new(base_url: base_url, pending_connection_allowlist: /slow/, timeout: 0.5)
 
-      expect(browser.options.pending_connection_allowlist).to eq [%r{slow}]
+      expect(browser.options.pending_connection_allowlist).to eq [/slow/]
       expect { browser.go_to("/really_slow") }.not_to raise_error
     ensure
       browser&.quit
@@ -253,11 +253,11 @@ describe Ferrum::Browser do
 
     it "supports :pending_connection_blocklist argument" do
       browser = Ferrum::Browser.new(base_url: base_url,
-                                    pending_connection_allowlist: %r{slow},
-                                    pending_connection_blocklist: %r{_slow},
+                                    pending_connection_allowlist: /slow/,
+                                    pending_connection_blocklist: /_slow/,
                                     timeout: 0.5)
 
-      expect(browser.options.pending_connection_blocklist).to eq [%r{_slow}]
+      expect(browser.options.pending_connection_blocklist).to eq [/_slow/]
       expect { browser.go_to("/really_slow") }.to raise_error(Ferrum::PendingConnectionsError)
     ensure
       browser&.quit

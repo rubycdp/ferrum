@@ -540,11 +540,11 @@ module Ferrum
       pendings = network.traffic.select(&:pending?).map(&:url).compact
       pendings.each do |pending|
         # fail if it's on the blocklist
-        if @options.pending_connection_blocklist.any?{ |regex| pending.match?(regex) }
+        if @options.pending_connection_blocklist.any? { |regex| pending.match?(regex) }
           raise PendingConnectionsError.new(url, pendings)
         end
         # fail if it's not on the allowlist
-        unless @options.pending_connection_allowlist.any?{ |regex| pending.match?(regex) }
+        unless @options.pending_connection_allowlist.any? { |regex| pending.match?(regex) }
           raise PendingConnectionsError.new(url, pendings)
         end
       end
