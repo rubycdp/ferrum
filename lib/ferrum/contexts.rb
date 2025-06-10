@@ -96,7 +96,7 @@ module Ferrum
 
         if info["type"] == "iframe" &&
            (target = @contexts[context_id].find_target { |t| t.connected? && t.page.frame_by(id: info["targetId"]) })
-          @contexts[context_id]&.add_target(session_id: target.page.client.session_id, params: info)
+          @contexts[context_id]&.add_target(session_id: target.session_id, params: info)
         else
           @contexts[context_id]&.add_target(params: info)
         end
