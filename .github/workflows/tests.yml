@@ -33,8 +33,8 @@ jobs:
 
       - name: Fix GA Chrome Permissions
         run: |
-          sudo chown root:root /opt/hostedtoolcache/setup-chrome/chromium/stable/x64/chrome-sandbox
-          sudo chmod 4755 /opt/hostedtoolcache/setup-chrome/chromium/stable/x64/chrome-sandbox
+          sudo chown root:root /opt/hostedtoolcache/setup-chrome/chrome/stable/x64/chrome
+          sudo chmod 4755 /opt/hostedtoolcache/setup-chrome/chrome/stable/x64/chrome
 
       - name: Run tests
         run: |
