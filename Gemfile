@@ -18,3 +18,8 @@ gem "sinatra", "~> 3.2"
 gem "yard", "~> 0.9", require: false
 
 gemspec
+
+if RUBY_VERSION > "3.4"
+  gem "logger" # "warning: logger was loaded from the standard library, but will no longer be part of the default gems starting from Ruby 3.5.0."
+  gem "ostruct" # "warning: ostruct was loaded from the standard library, but will no longer be part of the default gems starting from Ruby 3.5.0."
+end
