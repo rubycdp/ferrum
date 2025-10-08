@@ -104,6 +104,7 @@ module Ferrum
     def run
       options = { Host: host, Port: port, Threads: "0:4", workers: 0, daemon: false }
       config = Rack::Handler::Puma.config(middleware, options)
+      config.clamp
       log_writer = config.options[:Silent] ? ::Puma::LogWriter.strings : ::Puma::LogWriter.stdio
       config.options[:log_writer] = log_writer
 
