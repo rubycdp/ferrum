@@ -20,7 +20,7 @@ module Ferrum
           "disable-extensions" => nil,
           "disable-component-extensions-with-background-pages" => nil,
           "disable-hang-monitor" => nil,
-          "disable-features" => "site-per-process,IsolateOrigins,TranslateUI",
+          "disable-features" => "site-per-process,IsolateOrigins,TranslateUI,MacAppCodeSignClone",
           "disable-translate" => nil,
           "disable-background-networking" => nil,
           "enable-features" => "NetworkService,NetworkServiceInProcess",
