@@ -1,8 +1,11 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.17.1...main) ##
 
 ### Added
+- `Ferrum::Network::Response#body!` returns body or throws error if implicable
 
 ### Changed
+- `Ferrum::Network::Response#body` returns body or nil in case of errors
+- Disable Chrome code sign clones [#555]
 
 ### Fixed
 

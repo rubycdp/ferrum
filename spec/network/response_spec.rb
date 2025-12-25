@@ -42,6 +42,36 @@ describe Ferrum::Network::Response do
     end
   end
 
+  describe "#body!" do
+    it "gets response body" do
+      page.go_to("/with_js")
+      responses = traffic.map(&:response)
+
+      expect(responses.size).to eq(4)
+
+      expect(responses[0].url).to end_with("/with_js")
+      expect(responses[0].body!).to include("ferrum with_js")
+
+      expect(responses[1].url).to end_with("/jquery.min.js")
+      expect(responses[1].body!).to include("jQuery v3.7.1")
+
+      expect(responses[2].url).to end_with("/jquery-ui.min.js")
+      expect(responses[2].body!).to include("jQuery UI - v1.13.2")
+
+      expect(responses[3].url).to end_with("/test.js")
+      expect(responses[3].body!).to include("This is test.js file content")
+    end
+
+    it "throws error" do
+      page.go_to("/with_js")
+      responses = traffic.map(&:response)
+      page.go_to("/with_different_resources")
+
+      expect(responses[0].url).to end_with("/with_js")
+      expect { responses[0].body! }.to raise_error(Ferrum::BrowserError, "No resource with given identifier found")
+    end
+  end
+
   describe "#body" do
     it "gets response body" do
       page.go_to("/with_js")
@@ -51,15 +81,15 @@ describe Ferrum::Network::Response do
 
       expect(responses[0].url).to end_with("/with_js")
       expect(responses[0].body).to include("ferrum with_js")
+    end
 
-      expect(responses[1].url).to end_with("/jquery.min.js")
-      expect(responses[1].body).to include("jQuery v3.7.1")
+    it "throws error" do
+      page.go_to("/with_js")
+      responses = traffic.map(&:response)
+      page.go_to("/with_different_resources")
 
-      expect(responses[2].url).to end_with("/jquery-ui.min.js")
-      expect(responses[2].body).to include("jQuery UI - v1.13.2")
-
-      expect(responses[3].url).to end_with("/test.js")
-      expect(responses[3].body).to include("This is test.js file content")
+      expect(responses[0].url).to end_with("/with_js")
+      expect(responses[0].body).to be_nil
     end
   end
 
