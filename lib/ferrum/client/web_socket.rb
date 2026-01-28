@@ -19,7 +19,7 @@ module Ferrum
         uri     = URI.parse(@url)
         port    = uri.port || DEFAULT_PORTS[uri.scheme]
 
-        if port == 443
+        if port == 443 || url.scheme == 'wss'
           tcp = TCPSocket.new(uri.host, port)
           ssl_context = OpenSSL::SSL::SSLContext.new
           @sock = OpenSSL::SSL::SSLSocket.new(tcp, ssl_context)
