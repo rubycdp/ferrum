@@ -21,6 +21,7 @@ module Ferrum
     GOTO_WAIT = ENV.fetch("FERRUM_GOTO_WAIT", 0.1).to_f
 
     extend Forwardable
+
     delegate %i[at_css at_xpath css xpath
                 current_url current_title url title body doctype content=
                 execution_id execution_id! evaluate evaluate_on evaluate_async execute evaluate_func

@@ -18,11 +18,8 @@ module Ferrum
       KILL_TIMEOUT = 2
       WAIT_KILLED = 0.05
 
-      attr_reader :host, :port, :ws_url, :pid, :command,
-                  :default_user_agent, :browser_version, :protocol_version,
-                  :v8_version, :webkit_version, :xvfb
-
       extend Forwardable
+
       delegate path: :command
 
       def self.start(*args)
@@ -60,6 +57,10 @@ module Ferrum
           end
         }
       end
+
+      attr_reader :host, :port, :ws_url, :pid, :command,
+                  :default_user_agent, :browser_version, :protocol_version,
+                  :v8_version, :webkit_version, :xvfb
 
       def initialize(options)
         @pid = @xvfb = @user_data_dir = nil

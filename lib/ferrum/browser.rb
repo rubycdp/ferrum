@@ -15,6 +15,7 @@ require "ferrum/browser/version_info"
 module Ferrum
   class Browser
     extend Forwardable
+
     delegate %i[default_context] => :contexts
     delegate %i[targets create_target page pages windows] => :default_context
     delegate %i[go_to goto go back forward refresh reload stop wait_for_reload
