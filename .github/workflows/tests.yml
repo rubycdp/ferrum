@@ -16,6 +16,7 @@ jobs:
     env:
       FERRUM_PROCESS_TIMEOUT: 25
       FERRUM_DEFAULT_TIMEOUT: 15
+      FERRUM_CHROME_DOCKERIZE: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,11 +31,6 @@ jobs:
         uses: browser-actions/setup-chrome@latest
         with:
           chrome-version: stable
-
-      - name: Fix GA Chrome Permissions
-        run: |
-          sudo chown root:root /opt/hostedtoolcache/setup-chrome/chromium/stable/x64/chrome-sandbox
-          sudo chmod 4755 /opt/hostedtoolcache/setup-chrome/chromium/stable/x64/chrome-sandbox
 
       - name: Run tests
         run: |

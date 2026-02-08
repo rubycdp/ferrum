@@ -40,9 +40,6 @@ module Ferrum
           "no-startup-window" => nil,
           "remote-allow-origins" => "*",
           "disable-blink-features" => "AutomationControlled"
-          # NOTE: --no-sandbox is not needed if you properly set up a user in the container.
-          # https://github.com/ebidel/lighthouse-ci/blob/master/builder/Dockerfile#L35-L40
-          # "no-sandbox" => nil,
         }.freeze
 
         MAC_BIN_PATH = [
@@ -76,15 +73,22 @@ module Ferrum
         end
 
         def merge_default(flags, options)
-          defaults = except("headless", "disable-gpu") if options.headless == false
-          defaults ||= DEFAULT_OPTIONS
+          defaults = options.headless == false ? except("headless", "disable-gpu") : DEFAULT_OPTIONS
           defaults.delete("no-startup-window") if options.incognito == false
+
+          # NOTE: --no-sandbox is not needed if you properly set up a user in the container.
+          # https://github.com/ebidel/lighthouse-ci/blob/master/builder/Dockerfile#L35-L40
+          defaults = defaults.merge("no-sandbox" => nil, "disable-setuid-sandbox" => nil,
+                                    "disable-dev-shm-usage" => nil, "disable-gpu" => nil) if ENV["FERRUM_CHROME_DOCKERIZE"] == "true"
+
           # On Windows, the --disable-gpu flag is a temporary workaround for a few bugs.
           # See https://bugs.chromium.org/p/chromium/issues/detail?id=737678 for more information.
           defaults = defaults.merge("disable-gpu" => nil) if Utils::Platform.windows?
+
           # Use Metal on Apple Silicon
           # https://github.com/google/angle#platform-support-via-backing-renderers
           defaults = defaults.merge("use-angle" => "metal") if Utils::Platform.mac_arm?
+
           defaults.merge(flags)
         end
       end
