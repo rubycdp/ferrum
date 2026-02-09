@@ -28,7 +28,6 @@ describe Ferrum::Browser::Options::Chrome do
 
   describe ".version" do
     it "returns an executable version" do
-      "Google Chrome for Testing 145.0.7632.46"
       expect(described_class.version).to match(/(Chromium|Chrome)(?: for Testing)? \d/)
     end
   end
