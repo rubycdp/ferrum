@@ -51,7 +51,7 @@ describe Ferrum::Browser do
 
     it "supports :ignore_default_browser_options argument" do
       defaults = Ferrum::Browser::Options::Chrome.options.except("disable-web-security")
-      browser = Ferrum::Browser.new(ignore_default_browser_options: true, browser_options: defaults)
+      browser = Ferrum::Browser.new(ignore_default_browser_options: true, browser_options: defaults.merge("no-sandbox" => nil))
       browser.go_to(base_url("/console_log"))
     ensure
       browser&.quit
