@@ -93,14 +93,20 @@ describe Ferrum::Page::Tracing do
 
     context "with screenshots enabled" do
       it "fills file with screenshot data" do
-        page.tracing.record(path: file_path, screenshots: true) { page.go_to("/grid") }
+        page.tracing.record(path: file_path, screenshots: true) do
+          page.go_to("/grid")
+          sleep 0.1
+        end
 
         expect(File.exist?(file_path)).to be(true)
         expect(content["traceEvents"].any? { |o| o["name"] == "Screenshot" }).to eq(true)
       end
 
       it "returns a buffer with screenshot data" do
-        trace = page.tracing.record(screenshots: true) { page.go_to("/grid") }
+        trace = page.tracing.record(screenshots: true) do
+          page.go_to("/grid")
+          sleep 0.1
+        end
 
         expect(File.exist?(file_path)).to be(false)
         content = JSON.parse(trace)

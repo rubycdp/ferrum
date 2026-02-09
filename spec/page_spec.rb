@@ -142,11 +142,11 @@ describe Ferrum::Page do
   describe "#wait_for_reload" do
     it "waits for page to be reloaded" do
       page.go_to("/auto_refresh")
-      expect(page.body).to include("Visited 0 times")
+      expect(page.body).to include("Visited 1 times")
 
       page.wait_for_reload(5)
 
-      expect(page.body).to include("Visited 1 times")
+      expect(page.body).to include("Visited 2 times")
     end
   end
 
