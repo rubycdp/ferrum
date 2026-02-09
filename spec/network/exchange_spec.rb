@@ -27,25 +27,45 @@ describe Ferrum::Network::Exchange do
 
   describe "#intercepted_request" do
     it "returns request" do
+      request_id = nil
       network.intercept
-      page.on(:request) { |r, _, _| r.continue }
+      page.on(:request) do |r|
+        unless r.url.end_with?("/")
+          r.continue
+          next
+        end
+
+        request_id = r.network_id
+        r.continue
+      end
 
       page.go_to
 
       expect(page.body).to include("Hello world!")
-      expect(last_exchange.intercepted_request).to be
-      expect(last_exchange.intercepted_request).to be_a(Ferrum::Network::InterceptedRequest)
+      exchange = network.select(request_id).first
+      expect(exchange.intercepted_request).to be
+      expect(exchange.intercepted_request).to be_a(Ferrum::Network::InterceptedRequest)
     end
 
     it "modifies request" do
+      request_id = nil
       network.intercept
-      page.on(:request) { |r, _, _| r.continue(url: base_url("/foo")) }
+      page.on(:request) do |r|
+        unless r.url.end_with?("/")
+          r.continue
+          next
+        end
+
+        request_id = r.network_id
+        r.continue(url: base_url("/foo"))
+      end
 
       page.go_to
 
       expect(page.body).to include("Another World")
-      expect(last_exchange.intercepted_request).to be
-      expect(last_exchange.intercepted_request).to be_a(Ferrum::Network::InterceptedRequest)
+      exchange = network.select(request_id).first
+      expect(exchange.intercepted_request).to be
+      expect(exchange.intercepted_request).to be_a(Ferrum::Network::InterceptedRequest)
     end
   end
 
