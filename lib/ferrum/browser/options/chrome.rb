@@ -76,10 +76,11 @@ module Ferrum
           defaults = options.headless == false ? except("headless", "disable-gpu") : DEFAULT_OPTIONS
           defaults.delete("no-startup-window") if options.incognito == false
 
-          # NOTE: --no-sandbox is not needed if you properly set up a user in the container.
-          # https://github.com/ebidel/lighthouse-ci/blob/master/builder/Dockerfile#L35-L40
-          defaults = defaults.merge("no-sandbox" => nil, "disable-setuid-sandbox" => nil,
-                                    "disable-dev-shm-usage" => nil, "disable-gpu" => nil) if ENV["FERRUM_CHROME_DOCKERIZE"] == "true"
+          if options.dockerize || ENV["FERRUM_CHROME_DOCKERIZE"] == "true"
+            # NOTE: --no-sandbox is not needed if you properly set up a user in the container.
+            # https://github.com/ebidel/lighthouse-ci/blob/master/builder/Dockerfile#L35-L40
+            defaults = defaults.merge("no-sandbox" => nil, "disable-setuid-sandbox" => nil)
+          end
 
           # On Windows, the --disable-gpu flag is a temporary workaround for a few bugs.
           # See https://bugs.chromium.org/p/chromium/issues/detail?id=737678 for more information.
