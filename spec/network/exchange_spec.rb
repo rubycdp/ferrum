@@ -177,12 +177,8 @@ describe Ferrum::Network::Exchange do
     it "determines if exchange is not fully loaded" do
       allow(page).to receive(:timeout) { 2 }
 
-      expect do
-        page.go_to("/visit_timeout")
-      end.to raise_error(
-        Ferrum::PendingConnectionsError,
-        %r{Request to http://.*/visit_timeout reached server, but there are still pending connections: http://.*/really_slow}
-      )
+      page.go_to("/visit_timeout")
+
       expect(last_exchange.pending?).to be true
     end
 

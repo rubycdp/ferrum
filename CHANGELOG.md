@@ -2,11 +2,12 @@
 
 ### Added
 - `Ferrum::Network::Response#body!` returns body or throws error if implicable
-- `Ferrum::Browser#new(dockerize: true)` whether to add CLI flags to run a browser in a container, `false` by default.
+- `Ferrum::Browser#new(dockerize: true)` whether to add CLI flags to run a browser in a container, `false` by default
 
 ### Changed
 - `Ferrum::Network::Response#body` returns body or nil in case of errors
 - Disable Chrome code sign clones [#555]
+- `Ferrum::Browser` option `:pending_connection_errors` is set to false by default
 
 ### Fixed
 

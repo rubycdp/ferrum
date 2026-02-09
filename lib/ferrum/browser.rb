@@ -81,7 +81,7 @@ module Ferrum
     # @option options [Boolean] :js_errors
     #   When true, JavaScript errors get re-raised in Ruby.
     #
-    # @option options [Boolean] :pending_connection_errors (true)
+    # @option options [Boolean] :pending_connection_errors (false)
     #   When main frame is still waiting for slow responses while timeout is
     #   reached {PendingConnectionsError} is raised. It's better to figure out
     #   why you have slow responses and fix or block them rather than turn this

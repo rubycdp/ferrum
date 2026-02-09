@@ -30,7 +30,7 @@ module Ferrum
         @incognito = @options.fetch(:incognito, true)
         @dockerize = @options.fetch(:dockerize, false)
         @flatten = @options.fetch(:flatten, true)
-        @pending_connection_errors = @options.fetch(:pending_connection_errors, true)
+        @pending_connection_errors = @options.fetch(:pending_connection_errors, false)
         @process_timeout = @options.fetch(:process_timeout, PROCESS_TIMEOUT)
         @slowmo = @options[:slowmo].to_f
 
