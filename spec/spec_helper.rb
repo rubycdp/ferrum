@@ -79,6 +79,7 @@ RSpec.configure do |config|
   def save_exception_screenshot(browser, filename, line_number, timestamp)
     screenshot_name = "screenshot-#{filename}-#{line_number}-#{timestamp}.png"
     screenshot_path = "/tmp/ferrum/#{screenshot_name}"
+    FileUtils.mkdir_p(File.dirname(screenshot_path))
     browser.screenshot(path: screenshot_path, full: true)
   rescue StandardError => e
     puts "#{e.class}: #{e.message}"
@@ -86,7 +87,9 @@ RSpec.configure do |config|
 
   def save_exception_log(_, filename, line_number, timestamp, logger)
     log_name = "logfile-#{filename}-#{line_number}-#{timestamp}.txt"
-    File.binwrite("/tmp/ferrum/#{log_name}", logger.string)
+    log_path = "/tmp/ferrum/#{log_name}"
+    FileUtils.mkdir_p(File.dirname(log_path))
+    File.binwrite(log_path, logger.string)
   rescue StandardError => e
     puts "#{e.class}: #{e.message}"
   end

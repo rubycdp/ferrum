@@ -134,13 +134,15 @@ browser.quit
 
 ## Docker
 
-In docker as root you must pass the no-sandbox browser option:
+Running in docker as root you should pass:
 
 ```ruby
-Ferrum::Browser.new(browser_options: { "no-sandbox": nil })
+Ferrum::Browser.new(dockerize: true)
 ```
 
-It has also been reported that the Chrome process repeatedly crashes when running inside a Docker container on an M1 Mac preventing Ferrum from working. Ferrum should work as expected when deployed to a Docker container on a non-M1 Mac.
+Essentially it just sets CLI flags for a browser to make it start. On CI, you can just set `FERRUM_CHROME_DOCKERIZE=true` environment variable, and it will be
+passed to all browser instances.
+
 
 ## Customization
 
@@ -153,6 +155,7 @@ Ferrum::Browser.new(options)
 * options `Hash`
   * `:headless` (Boolean) - Set browser as headless or not, `true` by default.
   * `:incognito` (Boolean) - Create an incognito profile for the browser startup window, `true` by default.
+  * `:dockerize` (Boolean) - Provide CLI flags to the browser to run it in a container, `false` by default.
   * `:xvfb` (Boolean) - Run browser in a virtual framebuffer, `false` by default.
   * `:flatten` (Boolean) - Use one websocket connection to the browser and all the pages in flatten mode.
   * `:window_size` (Array) - The dimensions of the browser window in which to
@@ -167,9 +170,8 @@ Ferrum::Browser.new(options)
   * `:timeout` (Numeric) - The number of seconds we'll wait for a response when
       communicating with browser. Default is 5.
   * `:js_errors` (Boolean) - When true, JavaScript errors get re-raised in Ruby.
-  * `:pending_connection_errors` (Boolean) - When main frame is still waiting for slow responses while timeout is
-      reached `PendingConnectionsError` is raised. It's better to figure out why you have slow responses and fix or
-      block them rather than turn this setting off. Default is true.
+  * `:pending_connection_errors` (Boolean) - Raise `PendingConnectionsError` when main frame is still waiting
+      for slow responses and timeout is reached. Default is false.
   * `:browser_name` (Symbol) - `:chrome` by default, only experimental support
       for `:firefox` for now.
   * `:browser_path` (String) - Path to Chrome binary, you can also set ENV

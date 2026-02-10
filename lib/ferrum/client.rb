@@ -61,6 +61,7 @@ module Ferrum
 
   class Client
     extend Forwardable
+
     delegate %i[timeout timeout=] => :options
 
     attr_reader :ws_url, :options, :subscriber

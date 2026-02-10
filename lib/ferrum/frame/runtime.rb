@@ -135,7 +135,7 @@ module Ferrum
         when /\AError: timed out promise/
           raise ScriptTimeoutError
         else
-          raise JavaScriptError.new(result, response.dig("exceptionDetails", "stackTrace"))
+          raise JavaScriptError, response["exceptionDetails"]
         end
       end
 

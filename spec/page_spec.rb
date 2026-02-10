@@ -25,6 +25,7 @@ describe Ferrum::Page do
 
       it "reports pending connection for image" do
         with_timeout(2) do
+          allow(browser.options).to receive(:pending_connection_errors).and_return(true)
           expect { browser.go_to("/visit_timeout") }.to raise_error(
             Ferrum::PendingConnectionsError,
             %r{Request to http://.*/visit_timeout reached server, but there are still pending connections: http://.*/really_slow}
@@ -34,6 +35,7 @@ describe Ferrum::Page do
 
       it "reports pending connection for main frame" do
         with_timeout(0.5) do
+          allow(browser.options).to receive(:pending_connection_errors).and_return(true)
           expect { browser.go_to("/really_slow") }.to raise_error(
             Ferrum::PendingConnectionsError,
             %r{Request to http://.*/really_slow reached server, but there are still pending connections: http://.*/really_slow}
@@ -140,11 +142,11 @@ describe Ferrum::Page do
   describe "#wait_for_reload" do
     it "waits for page to be reloaded" do
       page.go_to("/auto_refresh")
-      expect(page.body).to include("Visited 0 times")
+      expect(page.body).to include("Visited 1 times")
 
       page.wait_for_reload(5)
 
-      expect(page.body).to include("Visited 1 times")
+      expect(page.body).to include("Visited 2 times")
     end
   end
 
@@ -164,6 +166,7 @@ describe Ferrum::Page do
 
   describe "#timeout=" do
     it "supports to change timeout dynamically" do
+      allow(browser.options).to receive(:pending_connection_errors).and_return(true)
       page.timeout = 4
       expect { page.go_to("/really_slow") }.not_to raise_error
 
