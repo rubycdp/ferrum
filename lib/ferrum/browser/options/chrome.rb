@@ -20,7 +20,17 @@ module Ferrum
           "disable-extensions" => nil,
           "disable-component-extensions-with-background-pages" => nil,
           "disable-hang-monitor" => nil,
-          "disable-features" => "site-per-process,IsolateOrigins,TranslateUI,MacAppCodeSignClone",
+          "disable-features" => %w[
+            site-per-process
+            IsolateOrigins
+            TranslateUI
+            Translate
+            MacAppCodeSignClone
+            InterestFeedContentSuggestion
+            OptimizationHints
+            AcceptCHFrame
+            MediaRouter
+          ].join(","),
           "disable-translate" => nil,
           "disable-background-networking" => nil,
           "enable-features" => "NetworkService,NetworkServiceInProcess",
@@ -39,7 +49,16 @@ module Ferrum
           "password-store" => "basic",
           "no-startup-window" => nil,
           "remote-allow-origins" => "*",
-          "disable-blink-features" => "AutomationControlled"
+          "disable-blink-features" => "AutomationControlled",
+          "allow-pre-commit-input" => nil,
+          "disable-component-update" => nil,
+          "disable-crash-reporter" => nil,
+          "no-crash-upload" => nil,
+          "disable-field-trial-config" => nil,
+          "disable-infobars" => nil,
+          "disable-search-engine-choice-screen" => nil,
+          "disable-smooth-scrolling" => nil,
+          "no-default-browser-check" => nil
         }.freeze
 
         MAC_BIN_PATH = [
