@@ -5,41 +5,63 @@ module Ferrum
     class Options
       class Chrome < Base
         DEFAULT_OPTIONS = {
-          "headless" => nil,
-          "hide-scrollbars" => nil,
-          "mute-audio" => nil,
-          "enable-automation" => nil,
-          "disable-web-security" => nil,
-          "disable-session-crashed-bubble" => nil,
-          "disable-breakpad" => nil,
-          "disable-sync" => nil,
-          "no-first-run" => nil,
-          "use-mock-keychain" => nil,
-          "keep-alive-for-test" => nil,
-          "disable-popup-blocking" => nil,
-          "disable-extensions" => nil,
-          "disable-component-extensions-with-background-pages" => nil,
-          "disable-hang-monitor" => nil,
-          "disable-features" => "site-per-process,IsolateOrigins,TranslateUI,MacAppCodeSignClone",
-          "disable-translate" => nil,
+          "allow-pre-commit-input" => nil,
           "disable-background-networking" => nil,
-          "enable-features" => "NetworkService,NetworkServiceInProcess",
           "disable-background-timer-throttling" => nil,
           "disable-backgrounding-occluded-windows" => nil,
+          "disable-blink-features" => "AutomationControlled",
+          "disable-breakpad" => nil,
           "disable-client-side-phishing-detection" => nil,
+          "disable-component-extensions-with-background-pages" => nil,
+          "disable-component-update" => nil,
+          "disable-crash-reporter" => nil,
           "disable-default-apps" => nil,
           "disable-dev-shm-usage" => nil,
+          "disable-extensions" => nil,
+          "disable-features" => %w[
+            site-per-process
+            IsolateOrigins
+            TranslateUI
+            Translate
+            MacAppCodeSignClone
+            InterestFeedContentSuggestion
+            OptimizationHints
+            AcceptCHFrame
+            MediaRouter
+          ].join(","),
+          "disable-field-trial-config" => nil,
+          "disable-hang-monitor" => nil,
+          "disable-infobars" => nil,
           "disable-ipc-flooding-protection" => nil,
+          "disable-popup-blocking" => nil,
           "disable-prompt-on-repost" => nil,
           "disable-renderer-backgrounding" => nil,
+          "disable-search-engine-choice-screen" => nil,
+          "disable-session-crashed-bubble" => nil,
           "disable-site-isolation-trials" => nil,
+          "disable-smooth-scrolling" => nil,
+          "disable-sync" => nil,
+          "disable-translate" => nil,
+          "disable-web-security" => nil,
+          "enable-automation" => nil,
+          "enable-features" => %w[
+            NetworkService
+            NetworkServiceInProcess
+          ].join(","),
           "force-color-profile" => "srgb",
+          "headless" => nil,
+          "hide-scrollbars" => nil,
+          "keep-alive-for-test" => nil,
           "metrics-recording-only" => nil,
-          "safebrowsing-disable-auto-update" => nil,
-          "password-store" => "basic",
+          "mute-audio" => nil,
+          "no-crash-upload" => nil,
+          "no-default-browser-check" => nil,
+          "no-first-run" => nil,
           "no-startup-window" => nil,
+          "password-store" => "basic",
           "remote-allow-origins" => "*",
-          "disable-blink-features" => "AutomationControlled"
+          "safebrowsing-disable-auto-update" => nil,
+          "use-mock-keychain" => nil
         }.freeze
 
         MAC_BIN_PATH = [
