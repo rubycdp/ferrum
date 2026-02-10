@@ -155,7 +155,7 @@ Ferrum::Browser.new(options)
 * options `Hash`
   * `:headless` (Boolean) - Set browser as headless or not, `true` by default.
   * `:incognito` (Boolean) - Create an incognito profile for the browser startup window, `true` by default.
-  * `:dockerize` (Boolean) - Provide CLI flags to the browser to run it in a container.
+  * `:dockerize` (Boolean) - Provide CLI flags to the browser to run it in a container, `false` by default.
   * `:xvfb` (Boolean) - Run browser in a virtual framebuffer, `false` by default.
   * `:flatten` (Boolean) - Use one websocket connection to the browser and all the pages in flatten mode.
   * `:window_size` (Array) - The dimensions of the browser window in which to
@@ -170,8 +170,8 @@ Ferrum::Browser.new(options)
   * `:timeout` (Numeric) - The number of seconds we'll wait for a response when
       communicating with browser. Default is 5.
   * `:js_errors` (Boolean) - When true, JavaScript errors get re-raised in Ruby.
-  * `:pending_connection_errors` (Boolean) - When main frame is still waiting for slow responses and timeout is
-      reached, we raise `PendingConnectionsError`. Default is false.
+  * `:pending_connection_errors` (Boolean) - Raise `PendingConnectionsError` when main frame is still waiting
+      for slow responses and timeout is reached. Default is false.
   * `:browser_name` (Symbol) - `:chrome` by default, only experimental support
       for `:firefox` for now.
   * `:browser_path` (String) - Path to Chrome binary, you can also set ENV
