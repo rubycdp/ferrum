@@ -1,11 +1,12 @@
-# Ferrum - high-level API to control Chrome in Ruby
+---
+sidebar_position: 1
+---
 
-## [Documentation](https://docs.rubycdp.com/docs/ferrum/introduction)
+# Introduction
 
-<img align="right"
-     width="320" height="241"
-     alt="Ferrum logo"
-     src="https://raw.githubusercontent.com/rubycdp/ferrum/main/logo.svg?sanitize=true">
+Ferrum is a high-level API to control Chrome in Ruby.
+
+![Ferrum Logo](https://raw.githubusercontent.com/rubycdp/ferrum/main/logo.svg?sanitize=true)
 
 It is Ruby clean and high-level API to Chrome. Runs headless by default, but you
 can configure it to run in a headful mode. All you need is Ruby and [Chrome](https://www.google.com/chrome/) or [Chromium](https://www.chromium.org/).
@@ -15,23 +16,33 @@ protocol because Chrome allows you to do so many things that are barely
 supported by WebDriver because it should have consistent design with other
 browsers.
 
-* [Cuprite](https://github.com/rubycdp/cuprite) is a pure Ruby driver for[Capybara](https://github.com/teamcapybara/capybara) based on Ferrum.
-* [Vessel](https://github.com/rubycdp/vessel) high-level web crawling framework based on Ferrum and Mechanize.
-
-## Install
+## Installation
 
 There's no official Chrome or Chromium package for Linux don't install it this
 way because it's either outdated or unofficial, both are bad. Download it from
 official source for [Chrome](https://www.google.com/chrome/) or [Chromium](https://www.chromium.org/getting-involved/download-chromium).
 Chrome binary should be in the `PATH` or `BROWSER_PATH` and you can pass it as an
 option to browser instance see `:browser_path` in
-[Customization](https://docs.rubycdp.com/docs/ferrum/customization).
+[Customization](/docs/ferrum/customization).
 
 Add this to your `Gemfile` and run `bundle install`.
 
 ``` ruby
 gem "ferrum"
 ```
+
+## Docker
+
+:::note
+When running in docker as root
+:::
+
+```ruby
+Ferrum::Browser.new(dockerize: true)
+```
+
+Essentially it just sets CLI flags for a browser to make it start. On CI, you can just set `FERRUM_CHROME_DOCKERIZE=true` environment variable, and it will be
+passed to all browser instances.
 
 ## Quick Start
 
@@ -80,13 +91,86 @@ browser = Ferrum::Browser.new
 page = browser.create_page
 page.go_to("https://google.com")
 page.mouse
-  .move(x: 0, y: 0)
-  .down
-  .move(x: 0, y: 100)
-  .move(x: 100, y: 100)
-  .move(x: 100, y: 0)
-  .move(x: 0, y: 0)
-  .up
+    .move(x: 0, y: 0)
+    .down
+    .move(x: 0, y: 100)
+    .move(x: 100, y: 100)
+    .move(x: 100, y: 0)
+    .move(x: 0, y: 0)
+    .up
+
+browser.quit
+```
+
+## Clean Up
+
+Closes browser tabs opened by the `Browser` instance.
+
+```ruby
+# connect to a long-running Chrome process
+browser = Ferrum::Browser.new(url: "http://localhost:9222")
+
+browser.go_to("https://github.com/")
+
+# clean up, lest the tab stays there hanging forever
+browser.reset
+
+browser.quit
+```
+
+## Thread safety
+
+Ferrum is fully thread-safe. You can create one browser or a few as you wish and
+start playing around using threads. Example below shows how to create a few pages
+which share the same context. Context is similar to an incognito profile but you
+can have more than one, think of it like it's independent browser session:
+
+```ruby
+browser = Ferrum::Browser.new
+context = browser.contexts.create
+
+t1 = Thread.new(context) do |c|
+  page = c.create_page
+  page.go_to("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
+  page.screenshot(path: "t1.png")
+end
+
+t2 = Thread.new(context) do |c|
+  page = c.create_page
+  page.go_to("https://www.google.com/search?q=Ruby+static+typing")
+  page.screenshot(path: "t2.png")
+end
+
+t1.join
+t2.join
+
+context.dispose
+browser.quit
+```
+
+or you can create two independent contexts:
+
+```ruby
+browser = Ferrum::Browser.new
+
+t1 = Thread.new(browser) do |b|
+  context = b.contexts.create
+  page = context.create_page
+  page.go_to("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
+  page.screenshot(path: "t1.png")
+  context.dispose
+end
+
+t2 = Thread.new(browser) do |b|
+  context = b.contexts.create
+  page = context.create_page
+  page.go_to("https://www.google.com/search?q=Ruby+static+typing")
+  page.screenshot(path: "t2.png")
+  context.dispose
+end
+
+t1.join
+t2.join
 
 browser.quit
 ```
@@ -106,8 +190,3 @@ push git commits and the created tag, and push the `.gem` file to [rubygems.org]
 ## Contributing
 
 Bug reports and pull requests are welcome on [GitHub](https://github.com/rubycdp/ferrum).
-
-## License
-
-The gem is available as open source under the terms of the
-[MIT License](https://opensource.org/licenses/MIT).
