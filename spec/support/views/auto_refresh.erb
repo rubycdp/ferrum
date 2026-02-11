@@ -6,15 +6,10 @@
   <body>
     <script>
       var count = parseInt(localStorage.getItem("counter") || 0);
-      document.write(`Visited ${count} times`)
+      localStorage.setItem('counter', count + 1);
+      document.write(`Visited ${count + 1} times`);
 
-      setTimeout(function () {
-        location.reload();
-      }, 1000)
-
-      window.addEventListener("unload", function() {
-        localStorage.setItem('counter', ++count)
-      }, false);
+      setTimeout(function() { location.reload() }, 1000)
     </script>
   </body>
 </html>

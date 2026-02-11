@@ -113,9 +113,10 @@ module Ferrum
   class JavaScriptError < BrowserError
     attr_reader :class_name, :message, :stack_trace
 
-    def initialize(response, stack_trace = nil)
-      @class_name, @message = response.values_at("className", "description")
-      @stack_trace = stack_trace
+    def initialize(response)
+      @class_name, @message = response["exception"]&.values_at("className", "description")
+      @message ||= response["text"]
+      @stack_trace = response["stackTrace"]
       super(response.merge("message" => @message))
     end
   end

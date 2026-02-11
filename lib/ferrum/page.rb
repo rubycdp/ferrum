@@ -21,6 +21,7 @@ module Ferrum
     GOTO_WAIT = ENV.fetch("FERRUM_GOTO_WAIT", 0.1).to_f
 
     extend Forwardable
+
     delegate %i[at_css at_xpath css xpath
                 current_url current_title url title body doctype content=
                 execution_id execution_id! evaluate evaluate_on evaluate_async execute evaluate_func
@@ -442,10 +443,7 @@ module Ferrum
       if @options.js_errors
         on("Runtime.exceptionThrown") do |params|
           # FIXME: https://jvns.ca/blog/2015/11/27/why-rubys-timeout-is-dangerous-and-thread-dot-raise-is-terrifying/
-          Thread.main.raise JavaScriptError.new(
-            params.dig("exceptionDetails", "exception"),
-            params.dig("exceptionDetails", "stackTrace")
-          )
+          Thread.main.raise JavaScriptError, params["exceptionDetails"]
         end
       end
 

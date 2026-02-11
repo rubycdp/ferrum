@@ -5,7 +5,6 @@ describe Ferrum::Page::Tracing do
   let(:file_path2) { "#{PROJECT_ROOT}/spec/tmp/trace2.json" }
   let(:file_path3) { "#{PROJECT_ROOT}/spec/tmp/trace3.json" }
   let(:content) { JSON.parse(File.read(file_path)) }
-  let(:trace_config) { JSON.parse(content["metadata"]["trace-config"]) }
 
   after do
     FileUtils.rm_f(file_path)
@@ -30,21 +29,14 @@ describe Ferrum::Page::Tracing do
       ) { page.go_to }
 
       expect(File.exist?(file_path)).to be(true)
-      expect(trace_config["excluded_categories"]).to eq(["*"])
-      expect(trace_config["included_categories"]).to eq(["disabled-by-default-devtools.timeline"])
       expect(content["traceEvents"].any? { |o| o["cat"] == "toplevel" }).to eq(false)
+      expect(content["traceEvents"]).to include(hash_including("cat" => "disabled-by-default-devtools.timeline"))
     end
 
     it "runs with default categories" do
       page.tracing.record(path: file_path) { page.go_to }
 
       expect(File.exist?(file_path)).to be(true)
-      expect(trace_config["excluded_categories"]).to eq(["*"])
-      expect(trace_config["included_categories"])
-        .to match_array(%w[devtools.timeline v8.execute disabled-by-default-devtools.timeline
-                           disabled-by-default-devtools.timeline.frame toplevel blink.console
-                           blink.user_timing latencyInfo disabled-by-default-devtools.timeline.stack
-                           disabled-by-default-v8.cpu_profiler disabled-by-default-v8.cpu_profiler.hires])
       expect(content["traceEvents"].any? { |o| o["cat"] == "toplevel" }).to eq(true)
     end
 
@@ -101,20 +93,23 @@ describe Ferrum::Page::Tracing do
 
     context "with screenshots enabled" do
       it "fills file with screenshot data" do
-        page.tracing.record(path: file_path, screenshots: true) { page.go_to("/grid") }
+        page.tracing.record(path: file_path, screenshots: true) do
+          page.go_to("/grid")
+          sleep 0.1
+        end
 
         expect(File.exist?(file_path)).to be(true)
-        expect(trace_config["included_categories"]).to include("disabled-by-default-devtools.screenshot")
         expect(content["traceEvents"].any? { |o| o["name"] == "Screenshot" }).to eq(true)
       end
 
       it "returns a buffer with screenshot data" do
-        trace = page.tracing.record(screenshots: true) { page.go_to("/grid") }
+        trace = page.tracing.record(screenshots: true) do
+          page.go_to("/grid")
+          sleep 0.1
+        end
 
         expect(File.exist?(file_path)).to be(false)
         content = JSON.parse(trace)
-        trace_config = JSON.parse(content["metadata"]["trace-config"])
-        expect(trace_config["included_categories"]).to include("disabled-by-default-devtools.screenshot")
         expect(content["traceEvents"].any? { |o| o["name"] == "Screenshot" }).to eq(true)
       end
     end

@@ -15,6 +15,7 @@ require "ferrum/browser/version_info"
 module Ferrum
   class Browser
     extend Forwardable
+
     delegate %i[default_context] => :contexts
     delegate %i[targets create_target page pages windows] => :default_context
     delegate %i[go_to goto go back forward refresh reload stop wait_for_reload
@@ -48,6 +49,9 @@ module Ferrum
     # @option options [Boolean] :incognito (true)
     #   Create an incognito profile for the browser startup window.
     #
+    # @option options [Boolean] :dockerize (false)
+    #   Add CLI flags to a browser to run in a container.
+    #
     # @option options [Boolean] :xvfb (false)
     #   Run browser in a virtual framebuffer.
     #
@@ -77,7 +81,7 @@ module Ferrum
     # @option options [Boolean] :js_errors
     #   When true, JavaScript errors get re-raised in Ruby.
     #
-    # @option options [Boolean] :pending_connection_errors (true)
+    # @option options [Boolean] :pending_connection_errors (false)
     #   When main frame is still waiting for slow responses while timeout is
     #   reached {PendingConnectionsError} is raised. It's better to figure out
     #   why you have slow responses and fix or block them rather than turn this
