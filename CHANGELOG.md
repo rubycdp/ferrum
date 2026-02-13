@@ -10,6 +10,7 @@
 - `Ferrum::Browser` option `:pending_connection_errors` is set to false by default
 
 ### Fixed
+- Proper handle wss urls, and fix session_id loss for undetermined order of CDP events [#559]
 
 ### Removed
 
