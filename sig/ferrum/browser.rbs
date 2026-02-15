@@ -1,0 +1,59 @@
+module Ferrum
+  class Browser
+    extend Forwardable
+
+    attr_reader client: ::Ferrum::Client
+    attr_reader process: Browser::Process
+    attr_reader contexts: Contexts
+    attr_reader options: Browser::Options
+
+    @options: Browser::Options
+    @client: ::Ferrum::Client?
+    @process: Browser::Process?
+    @contexts: Contexts?
+
+    def initialize: (?Hash[Symbol, untyped]?) -> void
+
+    def base_url: () -> String?
+
+    def base_url=: (String) -> String
+
+    def timeout: () -> ::Numeric
+
+    def timeout=: (::Numeric) -> ::Numeric
+
+    def default_user_agent: () -> String?
+
+    def default_user_agent=: (String) -> String
+
+    def create_page: (?new_context: bool, ?proxy: Hash[Symbol, (String | ::Integer)]?) ?{ (Page) -> void } -> Page
+
+    def extensions: () -> ::Array[String]
+
+    def evaluate_on_new_document: (String expression) -> void
+
+    def command: (String method, **untyped params) -> Hash[String, untyped]
+
+    def reset: () -> void
+
+    def restart: () -> void
+
+    def quit: () -> void
+
+    def crash: () -> Hash[String, untyped]
+
+    def close: () -> Hash[String, untyped]
+
+    def version: () -> Browser::VersionInfo
+
+    def debug: (?Binding? bind) -> void
+
+    private
+
+    def start: () -> void
+
+    def debug_url: () -> String
+
+    def build_remote_debug_url: (path: String) -> String
+  end
+end

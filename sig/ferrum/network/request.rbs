@@ -1,0 +1,29 @@
+module Ferrum
+  class Network
+    class Request
+      def initialize: (untyped params) -> void
+
+      def id: () -> untyped
+
+      def type: () -> untyped
+
+      def type?: (untyped value) -> untyped
+
+      def frame_id: () -> untyped
+
+      def url: () -> untyped
+
+      def url_fragment: () -> untyped
+
+      def method: () -> untyped
+
+      def headers: () -> untyped
+
+      def time: () -> untyped
+
+      def post_data: () -> untyped
+
+      alias body post_data
+    end
+  end
+end

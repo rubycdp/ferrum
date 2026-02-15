@@ -1,0 +1,27 @@
+module Ferrum
+  class Browser
+    class WebSocket
+      WEBSOCKET_BUG_SLEEP: ::Float
+
+      SKIP_LOGGING_SCREENSHOTS: untyped
+
+      attr_reader url: untyped
+
+      attr_reader messages: untyped
+
+      def initialize: (untyped url, untyped max_receive_size, untyped logger) -> void
+
+      def on_open: (untyped _event) -> untyped
+
+      def on_message: (untyped event) -> untyped
+
+      def on_close: (untyped _event) -> untyped
+
+      def send_message: (untyped data) -> untyped
+
+      def write: (untyped data) -> untyped
+
+      def close: () -> untyped
+    end
+  end
+end

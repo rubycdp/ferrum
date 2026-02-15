@@ -1,0 +1,13 @@
+module Ferrum
+  module Utils
+    module Platform
+      def self?.name: () -> (:mac | :windows | :linux)
+
+      def self?.windows?: () -> untyped
+
+      def self?.mac?: () -> untyped
+
+      def self?.mri?: () -> untyped
+    end
+  end
+end

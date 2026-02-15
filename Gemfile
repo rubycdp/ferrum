@@ -9,6 +9,7 @@ gem "kramdown", "~> 2.0", require: false
 gem "pdf-reader", "~> 2.12"
 gem "puma", ">= 5.6.7"
 gem "rake", "~> 13.0"
+gem "rbs", "~> 3.10"
 gem "redcarpet", require: false, platform: :mri
 gem "rspec", "~> 3.8"
 gem "rspec-wait"

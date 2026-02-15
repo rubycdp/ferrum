@@ -1,0 +1,54 @@
+module Ferrum
+  class Target
+    NEW_WINDOW_WAIT: ::Float
+
+    attr_writer page: Page?
+    attr_reader options: Browser::Options
+    attr_accessor session_id: String?
+
+    @page: Page?
+    @session_id: String?
+    @params: Hash[String, untyped]
+    @browser_client: Client
+    @options: Browser::Options
+    @client: (Client | SessionClient)?
+
+    def initialize: (Client browser_client, ?String? session_id, ?Hash[String, untyped]? params) -> void
+
+    def update: (Hash[String, untyped] params) -> Hash[String, untyped]
+
+    def connected?: () -> bool
+
+    def page: () -> Page
+
+    def client: () -> (Client | SessionClient)
+
+    def build_page: (**untyped options) -> Page
+
+    def id: () -> String
+
+    def type: () -> String
+
+    def title: () -> String
+
+    def url: () -> String
+
+    def opener_id: () -> String?
+
+    def context_id: () -> String?
+
+    def window?: () -> bool
+
+    def iframe?: () -> bool
+
+    def maybe_sleep_if_new_window: () -> void
+
+    def command: (*untyped) -> Hash[String, untyped]
+
+    private
+
+    def build_client: () -> (Client | SessionClient)
+
+    def ws_url: () -> ::Addressable::URI
+  end
+end

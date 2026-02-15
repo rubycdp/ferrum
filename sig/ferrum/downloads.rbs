@@ -1,0 +1,25 @@
+module Ferrum
+  class Downloads
+    VALID_BEHAVIOR: ::Array[:deny | :allow | :allowAndName | :default]
+
+    @page: Page
+    @event: Utils::Event
+    @files: ::Hash[String, Hash[String, untyped]]
+
+    def initialize: (Page) -> void
+
+    def files: () -> ::Array[Hash[String, untyped]]
+
+    def wait: (?::Integer timeout) ?{ () -> void } -> void
+
+    def set_behavior: (save_path: String, ?behavior: :deny | :allow | :allowAndName | :default) -> void
+
+    def subscribe: () -> void
+
+    private
+
+    def subscribe_download_will_begin: () -> void
+
+    def subscribe_download_progress: () -> void
+  end
+end

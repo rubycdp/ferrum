@@ -1,0 +1,18 @@
+module Ferrum
+  class Proxy
+    def self.start: (?host: ::String, ?port: ::Integer, ?user: ::String?, ?password: ::String?) -> instance
+
+    attr_reader host: ::String
+    attr_reader port: ::Integer
+    attr_reader user: ::String?
+    attr_reader password: ::String?
+
+    def initialize: (?host: ::String, ?port: ::Integer, ?user: ::String?, ?password: ::String?) -> void
+
+    def start: () -> void
+
+    def rotate: (host: ::String, port: ::Integer, ?user: ::String?, ?password: ::String?) -> void
+
+    def stop: () -> void
+  end
+end

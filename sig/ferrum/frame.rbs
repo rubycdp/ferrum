@@ -1,0 +1,41 @@
+module Ferrum
+  class Frame
+    include DOM
+
+    include Runtime
+
+    STATE_VALUES: ::Array[:started_loading | :navigated | :stopped_loading]
+
+    attr_accessor id: untyped
+
+    attr_accessor name: untyped
+
+    attr_reader page: untyped
+
+    attr_reader parent_id: untyped
+
+    attr_reader state: untyped
+
+    def initialize: (untyped id, untyped page, ?untyped? parent_id) -> void
+
+    def state=: (untyped value) -> untyped
+
+    def url: () -> untyped
+
+    def title: () -> untyped
+
+    def main?: () -> untyped
+
+    def content=: (untyped html) -> untyped
+
+    alias set_content content=
+
+    def execution_id!: () -> untyped
+
+    def execution_id: () -> (nil | untyped)
+
+    def execution_id=: (untyped value) -> untyped
+
+    def inspect: () -> ::String
+  end
+end

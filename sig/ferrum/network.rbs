@@ -1,0 +1,81 @@
+module Ferrum
+  class Network
+    CLEAR_TYPE: ::Array[:traffic | :cache]
+
+    AUTHORIZE_TYPE: ::Array[:server | :proxy]
+
+    RESOURCE_TYPES: ::Array["Document" | "Stylesheet" | "Image" | "Media" | "Font" | "Script" | "TextTrack" | "XHR" | "Fetch" | "EventSource" | "WebSocket" | "Manifest" | "SignedExchange" | "Ping" | "CSPViolationReport" | "Other"]
+
+    AUTHORIZE_BLOCK_MISSING: "Block is missing, call `authorize(...) { |r| r.continue } or subscribe to `on(:request)` events before calling it"
+
+    AUTHORIZE_TYPE_WRONG: ::String
+
+    ALLOWED_CONNECTION_TYPE: ::Array["none" | "cellular2g" | "cellular3g" | "cellular4g" | "bluetooth" | "ethernet" | "wifi" | "wimax" | "other"]
+
+    attr_reader traffic: untyped
+
+    def initialize: (untyped page) -> void
+
+    def wait_for_idle: (?connections: ::Integer, ?duration: ::Float, ?timeout: untyped) -> untyped
+
+    def idle?: (?::Integer connections) -> untyped
+
+    def total_connections: () -> untyped
+
+    def finished_connections: () -> untyped
+
+    def pending_connections: () -> untyped
+
+    def request: () -> untyped
+
+    def response: () -> untyped
+
+    def status: () -> untyped
+
+    def clear: (untyped `type`) -> true
+
+    def blacklist=: (untyped patterns) -> untyped
+
+    alias blocklist= blacklist=
+
+    def whitelist=: (untyped patterns) -> untyped
+
+    alias allowlist= whitelist=
+
+    def intercept: (?pattern: ::String, ?resource_type: untyped?) -> untyped
+
+    def authorize: (user: untyped, password: untyped, ?type: ::Symbol) ?{ () -> untyped } -> untyped
+
+    def subscribe: () -> untyped
+
+    def authorized_response: (untyped ids, untyped request_id, untyped username, untyped password) -> ({ response: "CancelAuth" } | { response: "ProvideCredentials", username: untyped, password: untyped } | nil)
+
+    def select: (untyped request_id) -> untyped
+
+    def build_exchange: (untyped id) -> untyped
+
+    def emulate_network_conditions: (?offline: bool, ?latency: ::Integer, ?download_throughput: ::Integer, ?upload_throughput: ::Integer, ?connection_type: untyped?) -> true
+
+    def offline_mode: () -> untyped
+
+    private
+
+    def subscribe_request_will_be_sent: () -> untyped
+
+    def subscribe_response_received: () -> untyped
+
+    def subscribe_loading_finished: () -> untyped
+
+    def subscribe_loading_failed: () -> untyped
+
+    def subscribe_log_entry_added: () -> untyped
+
+    def blacklist_subscribe: () -> (nil | untyped)
+
+    def whitelist_subscribe: () -> (nil | untyped)
+
+    def blacklist?: () -> untyped
+
+    def whitelist?: () -> untyped
+  end
+end

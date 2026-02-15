@@ -1,0 +1,7 @@
+module Ferrum
+  module Utils
+    module Attempt
+      def self?.with_retry: (errors: Array[Exception] | Exception, max: Integer, wait: Integer) { () -> untyped } -> untyped
+    end
+  end
+end

@@ -1,0 +1,37 @@
+module Ferrum
+  class Page
+    module Frames
+      attr_reader main_frame: untyped
+
+      def frames: () -> untyped
+
+      def frame_by: (?id: untyped?, ?name: untyped?, ?execution_id: untyped?) -> untyped
+
+      def frames_subscribe: () -> untyped
+
+      private
+
+      def subscribe_frame_attached: () -> untyped
+
+      def subscribe_frame_detached: () -> untyped
+
+      def subscribe_frame_started_loading: () -> untyped
+
+      def subscribe_frame_navigated: () -> untyped
+
+      def subscribe_frame_stopped_loading: () -> untyped
+
+      def subscribe_navigated_within_document: () -> untyped
+
+      def subscribe_request_will_be_sent: () -> untyped
+
+      def subscribe_execution_context_created: () -> untyped
+
+      def subscribe_execution_context_destroyed: () -> untyped
+
+      def subscribe_execution_contexts_cleared: () -> untyped
+
+      def idling?: () -> untyped
+    end
+  end
+end

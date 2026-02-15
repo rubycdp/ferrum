@@ -1,0 +1,20 @@
+module Ferrum
+  class Headers
+    @page: Page
+    @headers: ::Hash[String, String]
+
+    def initialize: (Page page) -> void
+
+    def get: () -> ::Hash[String, String]
+
+    def set: (::Hash[String, String] headers) -> true
+
+    def clear: () -> true
+
+    def add: (::Hash[String, String] headers, ?permanent: bool) -> true
+
+    private
+
+    def set_overrides: (?user_agent: String?, ?accept_language: String?, ?platform: String?) -> Hash[String, untyped]?
+  end
+end

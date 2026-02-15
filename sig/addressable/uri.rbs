@@ -1,0 +1,24 @@
+module Addressable
+  class URI
+    def self.parse: (String uri) -> URI
+
+    def initialize: (?scheme: String?, ?user: String?, ?password: String?, ?host: String?, ?port: Integer?, ?path: String?, ?query: String?, ?fragment: String?) -> void
+
+    attr_accessor scheme: String?
+    attr_accessor user: String?
+    attr_accessor password: String?
+    attr_accessor host: String?
+    attr_accessor port: Integer?
+    attr_accessor path: String?
+    attr_accessor query: String?
+    attr_accessor fragment: String?
+
+    def to_s: () -> String
+    def to_str: () -> String
+    def normalize: () -> URI
+    def normalize!: () -> self
+    def origin: () -> String?
+    def omit: (*Symbol components) -> URI
+    def join: (String | URI uri) -> URI
+  end
+end

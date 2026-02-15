@@ -1,0 +1,95 @@
+module Ferrum
+  class Error < StandardError
+  end
+
+  class NoSuchPageError < Error
+  end
+
+  class NoSuchTargetError < Error
+  end
+
+  class NotImplementedError < Error
+  end
+
+  class BinaryNotFoundError < Error
+  end
+
+  class EmptyPathError < Error
+  end
+
+  class StatusError < Error
+    def initialize: (String url, ?String? message) -> void
+  end
+
+  class StatusError < Error
+    def initialize: (String url, ?String? message) -> void
+  end
+
+  class ServerError < Error
+  end
+
+  class PendingConnectionsError < StatusError
+    attr_reader pendings: ::Array[String]
+
+    def initialize: (String url, ?::Array[String] pendings) -> void
+  end
+
+  class TimeoutError < Error
+    def message: () -> "Timed out waiting for response. It's possible that this happened because something took a very long time (for example a page load was slow). If so, setting the :timeout option to a higher value might help."
+  end
+
+  class ScriptTimeoutError < Error
+    def message: () -> "Timed out waiting for evaluated script to return a value"
+  end
+
+  class ProcessTimeoutError < Error
+    attr_reader output: String
+
+    def initialize: (::Numeric timeout, String output) -> void
+  end
+
+  class DeadBrowserError < Error
+    def initialize: (?::String message) -> void
+  end
+
+  class NodeMovingError < Error
+    def initialize: (Node node, Hash[String, ::Numeric] prev, Hash[String, ::Numeric] current) -> void
+
+    def message: () -> ::String
+  end
+
+  class CoordinatesNotFoundError < Error
+    def initialize: (?::String message) -> void
+  end
+
+  class BrowserError < Error
+    attr_reader response: Hash[String, untyped]
+
+    def initialize: (Hash[String, untyped] response) -> void
+
+    def code: () -> ::Integer?
+
+    def data: () -> untyped
+  end
+
+  class NodeNotFoundError < BrowserError
+  end
+
+  class NoExecutionContextError < BrowserError
+    def initialize: (?Hash[String, untyped]? response) -> void
+  end
+
+  class JavaScriptError < BrowserError
+    attr_reader class_name: String?
+
+    attr_reader message: String
+
+    attr_reader stack_trace: String?
+
+    def initialize: (Hash[String, untyped] response, ?String? stack_trace) -> void
+  end
+
+  class InvalidScreenshotFormatError < Error
+    def initialize: (String format) -> void
+  end
+end
