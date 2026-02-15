@@ -22,10 +22,10 @@ module Ferrum
       @default_context ||= create
     end
 
-    def each(&block)
+    def each(&)
       return enum_for(__method__) unless block_given?
 
-      @contexts.each(&block)
+      @contexts.each(&)
     end
 
     def [](id)

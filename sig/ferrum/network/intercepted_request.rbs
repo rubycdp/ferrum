@@ -1,0 +1,45 @@
+module Ferrum
+  class Network
+    class InterceptedRequest
+      attr_accessor request_id: untyped
+
+      attr_accessor frame_id: untyped
+
+      attr_accessor resource_type: untyped
+
+      attr_accessor network_id: untyped
+
+      attr_accessor status: untyped
+
+      def initialize: (untyped page, untyped params) -> void
+
+      def status?: (untyped value) -> untyped
+
+      def navigation_request?: () -> untyped
+
+      def match?: (untyped regexp) -> untyped
+
+      def respond: (**untyped options) -> untyped
+
+      def continue: (**untyped options) -> untyped
+
+      def abort: () -> untyped
+
+      def url: () -> untyped
+
+      def method: () -> untyped
+
+      def headers: () -> untyped
+
+      def initial_priority: () -> untyped
+
+      def referrer_policy: () -> untyped
+
+      def inspect: () -> ::String
+
+      private
+
+      def header_array: (untyped values) -> untyped
+    end
+  end
+end

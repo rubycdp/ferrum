@@ -1,0 +1,13 @@
+module Ferrum
+  class RGBA
+    def initialize: (::Integer, ::Integer, ::Integer, ::Float) -> void
+
+    def to_h: () -> { r: ::Integer, g: ::Integer, b: ::Integer, a: ::Float }
+
+    private
+
+    def validate_color!: () -> void
+
+    def validate_alpha!: () -> void
+  end
+end

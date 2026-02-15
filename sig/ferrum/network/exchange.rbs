@@ -1,0 +1,35 @@
+module Ferrum
+  class Network
+    class Exchange
+      attr_reader id: untyped
+
+      attr_accessor intercepted_request: untyped
+
+      attr_accessor request: untyped
+
+      attr_accessor response: untyped
+
+      attr_accessor error: untyped
+
+      def initialize: (untyped page, untyped id) -> void
+
+      def navigation_request?: (untyped frame_id) -> untyped
+
+      def blank?: () -> untyped
+
+      def blocked?: () -> untyped
+
+      def finished?: () -> untyped
+
+      def pending?: () -> untyped
+
+      def intercepted?: () -> untyped
+
+      def url: () -> untyped
+
+      def to_a: () -> ::Array[untyped]
+
+      def inspect: () -> ::String
+    end
+  end
+end

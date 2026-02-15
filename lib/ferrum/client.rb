@@ -24,8 +24,8 @@ module Ferrum
       @client.send_message(message, async: async)
     end
 
-    def on(event, &block)
-      @client.on(event_name(event), &block)
+    def on(event, &)
+      @client.on(event_name(event), &)
     end
 
     def off(event, id)
@@ -40,8 +40,8 @@ module Ferrum
       @client.respond_to?(name, include_private)
     end
 
-    def method_missing(name, *args, **opts, &block)
-      @client.send(name, *args, **opts, &block)
+    def method_missing(name, ...)
+      @client.send(name, ...)
     end
 
     def close
@@ -102,8 +102,8 @@ module Ferrum
       end
     end
 
-    def on(event, &block)
-      @subscriber.on(event, &block)
+    def on(event, &)
+      @subscriber.on(event, &)
     end
 
     def off(event, id)

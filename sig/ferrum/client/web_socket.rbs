@@ -1,0 +1,43 @@
+module Ferrum
+  class Client
+    class WebSocket
+      WEBSOCKET_BUG_SLEEP: Float
+      DEFAULT_PORTS: Hash[String, Integer]
+      SKIP_LOGGING_SCREENSHOTS: bool
+
+      attr_reader url: (String | ::Addressable::URI)
+      attr_reader messages: ::Queue
+
+      @url: String
+      @logger: untyped
+      @sock: (::TCPSocket | ::OpenSSL::SSL::SSLSocket)
+      @driver: untyped
+      @messages: ::Queue
+      @screenshot_commands: ::Concurrent::Hash[Integer, bool]?
+      @thread: ::Thread
+
+      def initialize: ((String | ::Addressable::URI) url, Integer? max_receive_size, untyped logger) -> void
+
+      def on_open: (untyped event) -> void
+
+      def on_message: (untyped event) -> void
+
+      def on_close: (untyped event) -> void
+
+      def send_message: (Hash[Symbol, untyped] data) -> void
+
+      def write: (String data) -> void
+
+      def close: () -> void
+
+      private
+
+      def start: () -> void
+
+      def safely_parse_json: (String data) -> Hash[String, untyped]?
+
+      def safely_parse_escaped_json: (String data) -> Hash[String, untyped]?
+    end
+  end
+end
+

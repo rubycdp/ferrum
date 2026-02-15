@@ -1,0 +1,111 @@
+module Ferrum
+  class Page
+    GOTO_WAIT: ::Float
+
+    extend Forwardable
+
+    include Animation
+    include Screenshot
+    include Screencast
+    include Frames
+    include Stream
+
+    attr_accessor referrer: String?
+    attr_reader context_id: String
+    attr_reader target_id: String
+    attr_reader event: Utils::Event
+    attr_reader tracing: Page::Tracing
+    attr_reader mouse: Mouse
+    attr_reader keyboard: Keyboard
+    attr_reader network: Network
+    attr_reader headers: Headers
+    attr_reader cookies: Cookies
+    attr_reader downloads: Downloads
+    attr_reader client: (Client | SessionClient)
+
+    @client: (Client | SessionClient)
+    @context_id: String
+    @target_id: String
+    @options: Browser::Options
+    @frames: ::Concurrent::Map[String, Frame]
+    @main_frame: Frame
+    @event: Utils::Event
+    @mouse: Mouse
+    @keyboard: Keyboard
+    @headers: Headers
+    @cookies: Cookies
+    @network: Network
+    @tracing: Page::Tracing
+    @downloads: Downloads
+    @referrer: String?
+
+    def initialize: ((Client | SessionClient) client, context_id: String, target_id: String, ?proxy: { host: String, port: ::Integer, user: String?, password: String? }?) -> void
+
+    def context: () -> Context?
+
+    def go_to: (?String? url) -> String
+    alias goto go_to
+    alias go go_to
+
+    def close: () -> bool
+
+    def close_connection: () -> void
+
+    def resize: (?width: ::Numeric?, ?height: ::Numeric?, ?fullscreen: bool) -> Hash[String, untyped]
+
+    def position: () -> Hash[String, ::Integer]
+
+    def position=: (Hash[Symbol, ::Integer] bounds) -> Hash[String, untyped]
+
+    def window_bounds: () -> Hash[String, (::Integer | String)]
+
+    def window_bounds=: (Hash[Symbol, (::Integer | String)] bounds) -> Hash[String, untyped]
+
+    def refresh: () -> void
+    alias reload refresh
+
+    def stop: () -> Hash[String, untyped]
+
+    def back: () -> void
+
+    def forward: () -> void
+
+    def wait_for_reload: (?::Numeric timeout) -> void
+
+    def bypass_csp: (?enabled: bool) -> Hash[String, untyped]
+
+    def window_id: () -> ::Integer
+
+    def set_window_bounds: (Hash[Symbol, (::Integer | String)] bounds) -> Hash[String, untyped]
+
+    def command: (String method, ?wait: ::Numeric?, ?slowmoable: bool, **untyped) -> Hash[String, untyped]
+
+    def on: ((Symbol | String) event) ?{ (Hash[String, untyped]) -> void } -> Integer
+
+    def subscribed?: (String event) -> bool
+
+    def use_proxy?: () -> boolish
+
+    def use_authorized_proxy?: () -> boolish
+
+    def timeout: () -> ::Numeric
+
+    def timeout=: (::Numeric value) -> ::Numeric
+
+    private
+
+    def subscribe: () -> void
+
+    def prepare_page: () -> void
+
+    def inject_extensions: () -> void
+
+    def history_navigate: (::Integer delta) -> Hash[String, untyped]
+
+    def combine_url!: (String? url) -> String
+
+    def document_node_id: (?async: bool) -> (::Integer | bool)
+
+    def proxy=: ({ host: String, port: ::Integer, user: String?, password: String? }? proxy) -> void
+  end
+end

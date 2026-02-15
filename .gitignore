@@ -7,3 +7,4 @@ tmp
 .ruby-version
 .yardoc
 .tool-versions
+.gem_rbs_collection

@@ -1,0 +1,27 @@
+module Ferrum
+  class Network
+    class Error
+      attr_writer canceled: untyped
+
+      attr_reader time: untyped
+
+      attr_reader timestamp: untyped
+
+      attr_accessor id: untyped
+
+      attr_accessor url: untyped
+
+      attr_accessor type: untyped
+
+      attr_accessor error_text: untyped
+
+      attr_accessor monotonic_time: untyped
+
+      attr_accessor description: untyped
+
+      def canceled?: () -> untyped
+
+      def timestamp=: (untyped value) -> untyped
+    end
+  end
+end

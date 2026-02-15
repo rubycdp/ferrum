@@ -1,0 +1,9 @@
+module Ferrum
+  class Page
+    module Animation
+      def playback_rate: () -> Numeric
+
+      def playback_rate=: (Numeric value) -> Numeric
+    end
+  end
+end

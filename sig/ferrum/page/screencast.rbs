@@ -1,0 +1,31 @@
+module Ferrum
+  class Page
+    module Screencast
+      START_SCREENCAST_KEY_CONV: ::Hash[Symbol, Symbol]
+
+      type screencast_format = :jpeg | :png
+
+      type screencast_options = {
+        format: screencast_format,
+        quality: ::Integer,
+        max_width: ::Integer,
+        max_height: ::Integer,
+        every_nth_frame: ::Integer
+      }
+
+      type screencast_metadata = {
+        "offsetTop" => ::Integer,
+        "pageScaleFactor" => ::Integer,
+        "deviceWidth" => ::Integer,
+        "deviceHeight" => ::Integer,
+        "scrollOffsetX" => ::Integer,
+        "scrollOffsetY" => ::Integer,
+        "timestamp" => ::Float
+      }
+
+      def start_screencast: (?format: screencast_format, ?quality: ::Integer, ?max_width: ::Integer, ?max_height: ::Integer, ?every_nth_frame: ::Integer) { (String, screencast_metadata, ::Integer) -> void } -> void
+
+      def stop_screencast: () -> void
+    end
+  end
+end

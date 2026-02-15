@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 require "bundler/setup"
+
+# Configure RBS test target before loading setup
+require "rbs/test/setup" if ENV["RBS_TEST_TARGET"]
+
 require "rspec"
 require "rspec/wait"
 require "pathname"

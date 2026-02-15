@@ -1,0 +1,7 @@
+module Ferrum
+  module Utils
+    module Thread
+      def self.spawn: (?abort_on_exception: bool) { () -> void } -> ::Thread
+    end
+  end
+end

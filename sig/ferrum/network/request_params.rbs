@@ -1,0 +1,19 @@
+module Ferrum
+  class Network
+    module RequestParams
+      @request: Hash[String, untyped]
+
+      def url: () -> String
+
+      def url_fragment: () -> String?
+
+      def method: () -> String
+
+      def headers: () -> ::Hash[String, String]
+
+      def post_data: () -> String?
+
+      alias body post_data
+    end
+  end
+end

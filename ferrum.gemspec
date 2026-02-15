@@ -23,7 +23,7 @@ Gem::Specification.new do |s|
     "rubygems_mfa_required" => "true"
   }
 
-  s.required_ruby_version = ">= 2.7.0"
+  s.required_ruby_version = ">= 3.1"
 
   s.add_dependency "addressable",      "~> 2.5"
   s.add_dependency "base64",           "~> 0.2"

@@ -1,0 +1,89 @@
+module Ferrum
+  class Node
+    MOVING_WAIT_DELAY: untyped
+
+    MOVING_WAIT_ATTEMPTS: untyped
+
+    attr_reader page: untyped
+
+    attr_reader target_id: untyped
+
+    attr_reader node_id: untyped
+
+    attr_reader description: untyped
+
+    attr_reader tag_name: untyped
+
+    def initialize: (untyped frame, untyped target_id, untyped node_id, untyped description) -> void
+
+    def node?: () -> untyped
+
+    def frame_id: () -> untyped
+
+    def frame: () -> untyped
+
+    def focus: () -> untyped
+
+    def focusable?: () -> untyped
+
+    def wait_for_stop_moving: (?delay: untyped, ?attempts: untyped) -> untyped
+
+    def moving?: (?delay: untyped) -> untyped
+
+    def blur: () -> untyped
+
+    def type: (*untyped keys) -> untyped
+
+    def click: (?mode: ::Symbol, ?keys: untyped, ?offset: ::Hash[untyped, untyped], ?delay: ::Integer) -> self
+
+    def hover: () -> untyped
+
+    def select_file: (untyped value) -> untyped
+
+    def at_xpath: (untyped selector) -> untyped
+
+    def at_css: (untyped selector) -> untyped
+
+    def xpath: (untyped selector) -> untyped
+
+    def css: (untyped selector) -> untyped
+
+    def text: () -> untyped
+
+    def inner_text: () -> untyped
+
+    def value: () -> untyped
+
+    def property: (untyped name) -> untyped
+
+    alias [] property
+
+    def attribute: (untyped name) -> untyped
+
+    def selected: () -> untyped
+
+    def select: (*untyped values, ?by: ::Symbol) -> untyped
+
+    def evaluate: (untyped expression) -> untyped
+
+    def ==: (untyped other) -> (false | untyped)
+
+    def inspect: () -> ::String
+
+    def find_position: (?x: untyped?, ?y: untyped?, ?position: ::Symbol) -> untyped
+
+    def computed_style: () -> untyped
+
+    private
+
+    def bounding_rect_coordinates: () -> untyped
+
+    def content_quads: () -> untyped
+
+    def content_quads_with: (?delay: untyped) -> ::Array[untyped]
+
+    def get_position: (untyped points, untyped offset_x, untyped offset_y, untyped position) -> ::Array[untyped]
+
+    def to_points: (untyped quad) -> ::Array[{ x: untyped, y: untyped }]
+  end
+end

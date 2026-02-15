@@ -1,0 +1,38 @@
+module Ferrum
+  class Network
+    class AuthRequest
+      attr_accessor request_id: ::String
+
+      attr_accessor frame_id: ::String
+
+      attr_accessor resource_type: "Document" | "Stylesheet" | "Image" | "Media" | "Font" | "Script" | "TextTrack" | "XHR" | "Fetch" | "Prefetch" |
+                                   "EventSource" | "WebSocket" | "Manifest" | "SignedExchange" | "Ping" | "CSPViolationReport" | "Preflight" | "FedCM" |
+                                   "Other"
+
+      def initialize: (Page page, Hash[::String, untyped] params) -> void
+
+      def navigation_request?: () -> bool
+
+      def auth_challenge?: ((::String | ::Symbol) source) -> bool
+
+      def match?: (Regexp regexp) -> bool
+
+      def continue: (?response: "Default" | "CancelAuth" | "ProvideCredentials", ?username: ::String, ?password: ::String) -> untyped
+
+      def abort: () -> untyped
+
+      def url: () -> ::String
+
+      def method: () -> ::String
+
+      def headers: () -> Hash[::String, untyped]
+
+      def initial_priority: () -> ("VeryLow" | "Low" | "Medium" | "High" | "VeryHigh")
+
+      def referrer_policy: () -> ("unsafe-url" | "no-referrer-when-downgrade" | "no-referrer" | "origin" | "origin-when-cross-origin" | "same-origin" |
+                                  "strict-origin" | "strict-origin-when-cross-origin")
+
+      def inspect: () -> ::String
+    end
+  end
+end

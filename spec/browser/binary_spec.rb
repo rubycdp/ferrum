@@ -92,7 +92,7 @@ describe Ferrum::Browser::Binary do
 
   describe "#lazy_find" do
     it "works lazily" do
-      enum = Ferrum::Browser::Binary.lazy_find(%w[ls which none])
+      enum = Ferrum::Browser::Binary.lazy_find([%w[ls which none]])
 
       expect(enum.instance_of?(Enumerator::Lazy)).to be_truthy
     end

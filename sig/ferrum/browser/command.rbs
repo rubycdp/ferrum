@@ -1,0 +1,25 @@
+module Ferrum
+  class Browser
+    class Command
+      NOT_FOUND: ::String
+
+      def self.build: (untyped options, untyped user_data_dir) -> untyped
+
+      attr_reader defaults: untyped
+
+      attr_reader path: untyped
+
+      attr_reader options: untyped
+
+      def initialize: (untyped defaults, untyped options, untyped user_data_dir) -> void
+
+      def xvfb?: () -> untyped
+
+      def to_a: () -> untyped
+
+      private
+
+      def merge_options: () -> untyped
+    end
+  end
+end

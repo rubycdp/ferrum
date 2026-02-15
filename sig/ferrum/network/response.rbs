@@ -1,0 +1,37 @@
+module Ferrum
+  class Network
+    class Response
+      attr_reader body_size: untyped
+
+      attr_reader params: untyped
+
+      def initialize: (untyped page, untyped params) -> void
+
+      def id: () -> untyped
+
+      def url: () -> untyped
+
+      def status: () -> untyped
+
+      def status_text: () -> untyped
+
+      def headers: () -> untyped
+
+      def headers_size: () -> untyped
+
+      def type: () -> untyped
+
+      def content_type: () -> untyped
+
+      def body_size=: (untyped size) -> untyped
+
+      def body: () -> untyped
+
+      def main?: () -> untyped
+
+      def ==: (untyped other) -> untyped
+
+      def inspect: () -> ::String
+    end
+  end
+end

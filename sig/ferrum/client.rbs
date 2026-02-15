@@ -1,0 +1,81 @@
+module Ferrum
+  class SessionClient
+    attr_reader client: Client
+    attr_reader session_id: String
+
+    @client: Client
+    @session_id: String
+
+    def self.event_name: (String event, String? session_id) -> String
+
+    def initialize: (Client client, String session_id) -> void
+
+    def command: (String method, ?async: bool, **untyped params) -> (bool | Hash[String, untyped])
+
+    def on: (String event) { (Hash[String, untyped]) -> void } -> Integer
+
+    def off: (String event, Integer id) -> void
+
+    def subscribed?: (String event) -> bool
+
+    def respond_to_missing?: (Symbol name, bool include_private) -> bool
+
+    def method_missing: (Symbol name, *untyped args, **untyped opts) ?{ (*untyped) -> untyped } -> untyped
+
+    def close: () -> void
+
+    private
+
+    def build_message: (String method, Hash[Symbol, untyped] params) -> Hash[Symbol, untyped]
+
+    def event_name: (String event) -> String
+  end
+
+  class Client
+    extend Forwardable
+
+    attr_reader ws_url: (String | ::Addressable::URI)
+    attr_reader options: Browser::Options
+    attr_reader subscriber: Client::Subscriber
+
+    @command_id: ::Integer
+    @ws_url: (String | ::Addressable::URI)
+    @options: Browser::Options
+    @pendings: ::Concurrent::Hash[::Integer, ::Concurrent::IVar]
+    @ws: Client::WebSocket
+    @subscriber: Client::Subscriber
+    @thread: ::Thread
+
+    def initialize: ((String | ::Addressable::URI) ws_url, Browser::Options options) -> void
+
+    def command: (String method, ?async: bool, **untyped params) -> (bool | Hash[String, untyped])
+
+    def send_message: (Hash[Symbol, untyped] message, async: bool) -> (bool | Hash[String, untyped])
+
+    def on: (String event) { (Hash[String, untyped]) -> void } -> Integer
+
+    def off: (String event, Integer id) -> void
+
+    def subscribed?: (String event) -> bool
+
+    def session: (String session_id) -> SessionClient
+
+    def close: () -> void
+
+    def inspect: () -> String
+
+    def build_message: (String method, Hash[Symbol, untyped] params) -> Hash[Symbol, untyped]
+
+    def timeout: () -> ::Numeric
+
+    def timeout=: (::Numeric value) -> ::Numeric
+
+    private
+
+    def start: () -> void
+
+    def next_command_id: () -> ::Integer
+
+    def raise_browser_error: (Hash[String, untyped] error) -> void
+  end
+end
