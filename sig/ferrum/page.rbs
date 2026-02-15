@@ -84,9 +84,9 @@ module Ferrum
 
     def subscribed?: (String event) -> bool
 
-    def use_proxy?: () -> bool
+    def use_proxy?: () -> boolish
 
-    def use_authorized_proxy?: () -> bool
+    def use_authorized_proxy?: () -> boolish
 
     def timeout: () -> ::Numeric
 
@@ -104,7 +104,7 @@ module Ferrum
 
     def combine_url!: (String? url) -> String
 
-    def document_node_id: () -> ::Integer
+    def document_node_id: (?async: bool) -> (::Integer | bool)
 
     def proxy=: ({ host: String, port: ::Integer, user: String?, password: String? }? proxy) -> void
   end

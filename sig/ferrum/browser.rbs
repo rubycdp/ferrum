@@ -26,7 +26,8 @@ module Ferrum
 
     def default_user_agent=: (String) -> String
 
-    def create_page: (?new_context: bool, ?proxy: Hash[Symbol, (String | ::Integer)]?) ?{ (Page) -> void } -> Page
+    def create_page: (?new_context: bool, ?proxy: Hash[Symbol, (String | ::Integer)]?) -> Page
+                   | [T] (?new_context: bool, ?proxy: Hash[Symbol, (String | ::Integer)]?) { (Page) -> T } -> T
 
     def extensions: () -> ::Array[String]
 

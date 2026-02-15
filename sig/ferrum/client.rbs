@@ -10,7 +10,7 @@ module Ferrum
 
     def initialize: (Client client, String session_id) -> void
 
-    def command: (String method, ?async: bool, **untyped params) -> Hash[String, untyped]
+    def command: (String method, ?async: bool, **untyped params) -> (bool | Hash[String, untyped])
 
     def on: (String event) { (Hash[String, untyped]) -> void } -> Integer
 
@@ -48,7 +48,7 @@ module Ferrum
 
     def initialize: ((String | ::Addressable::URI) ws_url, Browser::Options options) -> void
 
-    def command: (String method, ?async: bool, **untyped params) -> Hash[String, untyped]
+    def command: (String method, ?async: bool, **untyped params) -> (bool | Hash[String, untyped])
 
     def send_message: (Hash[Symbol, untyped] message, async: bool) -> (bool | Hash[String, untyped])
 

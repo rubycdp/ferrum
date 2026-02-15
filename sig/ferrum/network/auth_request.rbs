@@ -13,7 +13,7 @@ module Ferrum
 
       def navigation_request?: () -> bool
 
-      def auth_challenge?: (::String source) -> bool
+      def auth_challenge?: ((::String | ::Symbol) source) -> bool
 
       def match?: (Regexp regexp) -> bool
 

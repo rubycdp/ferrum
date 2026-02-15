@@ -38,7 +38,7 @@ module Ferrum
 
     def close_targets_connection: () -> void
 
-    def dispose: () -> Hash[String, untyped]
+    def dispose: () -> bool
 
     def target?: (String target_id) -> bool
 
