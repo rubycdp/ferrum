@@ -2,7 +2,7 @@
 
 source "https://rubygems.org"
 
-gem "byebug", "~> 11.0", platforms: %i[mri mingw x64_mingw]
+gem "byebug", "~> 11.0", platforms: %i[mri windows]
 gem "chunky_png", "~> 1.3"
 gem "image_size", "~> 2.0"
 gem "kramdown", "~> 2.0", require: false
