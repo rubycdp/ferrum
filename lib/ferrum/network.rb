@@ -17,7 +17,7 @@ module Ferrum
                         SignedExchange Ping CSPViolationReport Preflight Other].freeze
     AUTHORIZE_BLOCK_MISSING = "Block is missing, call `authorize(...) { |r| r.continue } " \
                               "or subscribe to `on(:request)` events before calling it"
-    AUTHORIZE_TYPE_WRONG = ":type should be in #{AUTHORIZE_TYPE}"
+    AUTHORIZE_TYPE_WRONG = ":type should be in #{AUTHORIZE_TYPE}".freeze
     ALLOWED_CONNECTION_TYPE = %w[none cellular2g cellular3g cellular4g bluetooth ethernet wifi wimax other].freeze
 
     # Network traffic.

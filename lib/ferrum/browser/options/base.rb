@@ -26,7 +26,7 @@ module Ferrum
         end
 
         def except(*keys)
-          to_h.reject { |n, _| keys.include?(n) }
+          to_h.except(*keys)
         end
 
         def detect_path

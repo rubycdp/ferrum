@@ -5,8 +5,8 @@ require "sinatra/base"
 module Ferrum
   class Application < Sinatra::Base
     configure { set :protection, except: :frame_options }
-    FERRUM_VIEWS  = "#{File.dirname(__FILE__)}/views"
-    FERRUM_PUBLIC = "#{File.dirname(__FILE__)}/public"
+    FERRUM_VIEWS  = "#{File.dirname(__FILE__)}/views".freeze
+    FERRUM_PUBLIC = "#{File.dirname(__FILE__)}/public".freeze
 
     set :root, File.dirname(__FILE__)
     set :static, true
