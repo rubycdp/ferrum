@@ -1,0 +1,34 @@
+module Ferrum
+  class Client
+    class Subscriber
+      INTERRUPTIONS: Array[String]
+
+      @regular: ::Queue
+      @priority: ::Queue
+      @on: ::Concurrent::Hash[String, ::Concurrent::Array[Proc]]
+      @regular_thread: ::Thread?
+      @priority_thread: ::Thread?
+
+      def initialize: () -> void
+
+      def <<: (Hash[String, untyped] message) -> void
+
+      def on: (String event) { (Hash[String, untyped], Integer, Integer) -> void } -> Integer
+
+      def off: (String event, Integer id) -> bool
+
+      def subscribed?: (String event) -> bool
+
+      def close: () -> void
+
+      def clear: (session_id: String) -> void
+
+      private
+
+      def start: () -> void
+
+      def call: (Hash[String, untyped] message) -> void
+    end
+  end
+end
+

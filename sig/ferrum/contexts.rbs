@@ -2,11 +2,11 @@ module Ferrum
   class Contexts
     ALLOWED_TARGET_TYPES: ::Array[String]
 
-    include Enumerable[::Array[String, Context]]
+    include Enumerable[[String, Context]]
 
-    attr_reader contexts: ::Concurrent::Map
+    attr_reader contexts: ::Concurrent::Map[String, Context]
 
-    @contexts: ::Concurrent::Map
+    @contexts: ::Concurrent::Map[String, Context]
     @client: Client
     @default_context: Context?
 
@@ -14,8 +14,8 @@ module Ferrum
 
     def default_context: () -> Context
 
-    def each: () { (::Array[String, Context]) -> void } -> void
-            | () -> Enumerator[::Array[String, Context], void]
+    def each: () { ([String, Context]) -> void } -> void
+            | () -> Enumerator[[String, Context], void]
 
     def []: (String id) -> Context?
 

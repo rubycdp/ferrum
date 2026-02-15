@@ -12,9 +12,9 @@ module Ferrum
 
     def command: (String method, ?async: bool, **untyped params) -> Hash[String, untyped]
 
-    def on: (String event) { (Hash[String, untyped]) -> void } -> String
+    def on: (String event) { (Hash[String, untyped]) -> void } -> Integer
 
-    def off: (String event, String id) -> void
+    def off: (String event, Integer id) -> void
 
     def subscribed?: (String event) -> bool
 
@@ -34,27 +34,27 @@ module Ferrum
   class Client
     extend Forwardable
 
-    attr_reader ws_url: String
+    attr_reader ws_url: (String | ::Addressable::URI)
     attr_reader options: Browser::Options
     attr_reader subscriber: Client::Subscriber
 
     @command_id: ::Integer
-    @ws_url: String
+    @ws_url: (String | ::Addressable::URI)
     @options: Browser::Options
     @pendings: ::Concurrent::Hash[::Integer, ::Concurrent::IVar]
     @ws: Client::WebSocket
     @subscriber: Client::Subscriber
     @thread: ::Thread
 
-    def initialize: (String ws_url, Browser::Options options) -> void
+    def initialize: ((String | ::Addressable::URI) ws_url, Browser::Options options) -> void
 
     def command: (String method, ?async: bool, **untyped params) -> Hash[String, untyped]
 
     def send_message: (Hash[Symbol, untyped] message, async: bool) -> (bool | Hash[String, untyped])
 
-    def on: (String event) { (Hash[String, untyped]) -> void } -> String
+    def on: (String event) { (Hash[String, untyped]) -> void } -> Integer
 
-    def off: (String event, String id) -> void
+    def off: (String event, Integer id) -> void
 
     def subscribed?: (String event) -> bool
 

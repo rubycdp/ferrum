@@ -3,13 +3,13 @@ module Ferrum
     POSITION: ::Array[:first | :last]
 
     attr_reader id: String
-    attr_reader targets: ::Concurrent::Map
+    attr_reader targets: ::Concurrent::Map[String, Target]
 
     @id: String
     @client: Client
     @contexts: Contexts
-    @targets: ::Concurrent::Map
-    @pendings: ::Concurrent::Map
+    @targets: ::Concurrent::Map[String, Target]
+    @pendings: ::Concurrent::Map[String, ::Concurrent::IVar]
     @default_target: Target?
 
     def initialize: (Client, Contexts, String) -> void

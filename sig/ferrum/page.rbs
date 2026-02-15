@@ -27,7 +27,7 @@ module Ferrum
     @context_id: String
     @target_id: String
     @options: Browser::Options
-    @frames: ::Concurrent::Map
+    @frames: ::Concurrent::Map[String, Frame]
     @main_frame: Frame
     @event: Utils::Event
     @mouse: Mouse
@@ -80,7 +80,7 @@ module Ferrum
 
     def command: (String method, ?wait: ::Numeric?, ?slowmoable: bool, **untyped) -> Hash[String, untyped]
 
-    def on: ((Symbol | String) event) ?{ (Hash[String, untyped]) -> void } -> String
+    def on: ((Symbol | String) event) ?{ (Hash[String, untyped]) -> void } -> Integer
 
     def subscribed?: (String event) -> bool
 

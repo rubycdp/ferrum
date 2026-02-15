@@ -21,10 +21,6 @@ module Ferrum
     def initialize: (String url, ?String? message) -> void
   end
 
-  class StatusError < Error
-    def initialize: (String url, ?String? message) -> void
-  end
-
   class ServerError < Error
   end
 

@@ -1,0 +1,22 @@
+module Concurrent
+  class IVar
+    def initialize: (?untyped value, ?opts: Hash[Symbol, untyped]) -> void
+    def value: (?Numeric? timeout) -> untyped
+    def value=: (untyped value) -> untyped
+    def complete?: () -> bool
+    def incomplete?: () -> bool
+    def wait: (?Numeric? timeout) -> self
+  end
+
+  module Async
+    def self.included: (Module base) -> void
+
+    def async: () -> IVar
+
+    def await: () -> untyped
+
+    module ClassMethods
+      def new: (*untyped args) -> instance
+    end
+  end
+end
