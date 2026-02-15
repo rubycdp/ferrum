@@ -1,7 +1,7 @@
 module Ferrum
   module Utils
     module Platform
-      def self?.name: () -> (:mac | :windows | :linux)
+      def self?.platform_name: () -> (:mac | :windows | :linux)
 
       def self?.windows?: () -> Integer?
 

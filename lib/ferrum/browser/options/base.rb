@@ -30,7 +30,7 @@ module Ferrum
         end
 
         def detect_path
-          Binary.find(self.class::PLATFORM_PATH[Utils::Platform.name])
+          Binary.find(self.class::PLATFORM_PATH[Utils::Platform.platform_name])
         end
 
         def merge_required(flags, options, user_data_dir)
