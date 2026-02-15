@@ -3,11 +3,13 @@ module Ferrum
     module Platform
       def self?.name: () -> (:mac | :windows | :linux)
 
-      def self?.windows?: () -> untyped
+      def self?.windows?: () -> Integer?
 
-      def self?.mac?: () -> untyped
+      def self?.mac?: () -> Integer?
 
-      def self?.mri?: () -> untyped
+      def self?.mac_arm?: () -> Integer?
+
+      def self?.mri?: () -> bool
     end
   end
 end
