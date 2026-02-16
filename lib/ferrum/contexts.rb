@@ -48,6 +48,8 @@ module Ferrum
 
     def dispose(context_id)
       context = @contexts[context_id]
+      return unless context
+
       context.close_targets_connection
       @client.command("Target.disposeBrowserContext", browserContextId: context.id)
       @contexts.delete(context_id)
@@ -59,8 +61,9 @@ module Ferrum
     end
 
     def reset
-      @default_context = nil
-      @contexts.each_key { |id| dispose(id) }
+      context_ids = @client.command("Target.getBrowserContexts")["browserContextIds"]
+      @default_context = nil if context_ids.include?(@default_context&.id)
+      @contexts.each_key { |id| dispose(id) if context_ids.include?(id) }
     end
 
     def size
@@ -69,18 +72,13 @@ module Ferrum
 
     private
 
-    # rubocop:disable Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
-    def subscribe
+    def subscribe # rubocop:disable Metrics/PerceivedComplexity
       @client.on("Target.attachedToTarget") do |params|
         info, session_id = params.values_at("targetInfo", "sessionId")
         next unless ALLOWED_TARGET_TYPES.include?(info["type"])
 
         context_id = info["browserContextId"]
-        unless @contexts[context_id]
-          context = Context.new(@client, self, context_id)
-          @contexts[context_id] = context
-          @default_context ||= context
-        end
+        add_context(context_id)
 
         @contexts[context_id]&.add_target(session_id: session_id, params: info)
         if params["waitingForDebugger"]
@@ -93,6 +91,7 @@ module Ferrum
         next unless ALLOWED_TARGET_TYPES.include?(info["type"])
 
         context_id = info["browserContextId"]
+        add_context(context_id)
 
         if info["type"] == "iframe" &&
            (target = @contexts[context_id].find_target { |t| t.connected? && t.page.frame_by(id: info["targetId"]) })
@@ -120,16 +119,21 @@ module Ferrum
         context&.delete_target(params["targetId"])
       end
     end
-    # rubocop:enable Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
 
     def discover
       @client.command("Target.setDiscoverTargets", discover: true)
     end
 
     def auto_attach
-      return unless @client.options.flatten
-
       @client.command("Target.setAutoAttach", autoAttach: true, waitForDebuggerOnStart: true, flatten: true)
+    end
+
+    def add_context(context_id)
+      return if @contexts[context_id]
+
+      context = Context.new(@client, self, context_id)
+      @contexts[context_id] = context
+      @default_context ||= context # rubocop:disable Naming/MemoizedInstanceVariableName
     end
   end
 end
