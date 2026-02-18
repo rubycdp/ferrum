@@ -386,6 +386,14 @@ module Ferrum
           exchange.intercepted_request = request
           block.call(request, index, total)
         end
+      when :response
+        @client.on('Network.responseReceived') do |params, index, total|
+          exchange = network.select(params["requestId"]).last
+
+          if exchange
+            block.call(exchange, index, total)
+          end
+        end
       when :auth
         client.on("Fetch.authRequired") do |params, index, total|
           request = Network::AuthRequest.new(self, params)
