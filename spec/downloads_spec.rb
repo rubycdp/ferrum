@@ -4,15 +4,8 @@ describe Ferrum::Downloads do
   let(:filename) { "attachment.pdf" }
   let(:save_path) { "/tmp/ferrum" }
 
-  def skip_browser_bug
-    # Also https://github.com/puppeteer/puppeteer/issues/10161
-    skip "https://bugs.chromium.org/p/chromium/issues/detail?id=1444729"
-  end
-
   describe "#files" do
     it "saves an attachment" do
-      skip_browser_bug
-
       page.downloads.set_behavior(save_path: save_path)
       page.go_to("/#{filename}")
       page.downloads.wait
@@ -50,8 +43,6 @@ describe Ferrum::Downloads do
   describe "#set_behavior" do
     context "with absolute path" do
       it "saves an attachment" do
-        skip_browser_bug
-
         page.downloads.set_behavior(save_path: save_path)
         page.go_to("/#{filename}")
         page.downloads.wait
@@ -62,8 +53,6 @@ describe Ferrum::Downloads do
       end
 
       it "saves no attachment when behavior is deny" do
-        skip_browser_bug
-
         page.downloads.set_behavior(save_path: save_path, behavior: :deny)
         page.downloads.wait { page.go_to("/#{filename}") }
 
@@ -71,8 +60,6 @@ describe Ferrum::Downloads do
       end
 
       it "saves an attachment on click" do
-        skip_browser_bug
-
         page.downloads.set_behavior(save_path: save_path)
         page.go_to("/attachment")
         page.downloads.wait { page.at_css("#download").click }
