@@ -29,7 +29,7 @@ Ferrum::Browser.new(options)
       communicating with browser. Default is 5.
     * `:js_errors` (Boolean) - When true, JavaScript errors get re-raised in Ruby.
     * `:pending_connection_errors` (Boolean) - Raise `PendingConnectionsError` when main frame is still waiting
-      for slow responses and timeout is reached. Default is false.
+      for slow responses and timeout is reached. Default is true.
     * `:browser_name` (Symbol) - `:chrome` by default, only experimental support
       for `:firefox` for now.
     * `:browser_path` (String) - Path to Chrome binary, you can also set ENV

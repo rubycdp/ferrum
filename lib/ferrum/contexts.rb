@@ -72,7 +72,7 @@ module Ferrum
 
     private
 
-    def subscribe # rubocop:disable Metrics/PerceivedComplexity
+    def subscribe # rubocop:disable Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
       @client.on("Target.attachedToTarget") do |params|
         info, session_id = params.values_at("targetInfo", "sessionId")
         next unless ALLOWED_TARGET_TYPES.include?(info["type"])

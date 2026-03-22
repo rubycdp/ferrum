@@ -161,7 +161,7 @@ module Ferrum
       #   The raw cookie string.
       #
       def to_s
-        string = String.new("#{@attributes['name']}=#{@attributes['value']}")
+        string = "#{@attributes['name']}=#{@attributes['value']}"
 
         @attributes.each do |key, value|
           case key

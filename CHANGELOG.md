@@ -8,7 +8,6 @@
 ### Changed
 - `Ferrum::Network::Response#body` returns body or nil in case of errors
 - Disable Chrome code sign clones [#555]
-- `Ferrum::Browser` option `:pending_connection_errors` is set to false by default
 - Ruby version required is >= 3.1 [#565]
 
 ### Fixed
