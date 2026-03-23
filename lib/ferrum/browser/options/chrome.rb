@@ -95,7 +95,7 @@ module Ferrum
         end
 
         def merge_default(flags, options)
-          defaults = options.headless == false ? except("headless", "disable-gpu") : DEFAULT_OPTIONS
+          defaults = options.headless == false ? except("headless", "disable-gpu") : DEFAULT_OPTIONS.dup
           defaults.delete("no-startup-window") if options.incognito == false
 
           if options.dockerize || ENV["FERRUM_CHROME_DOCKERIZE"] == "true"
