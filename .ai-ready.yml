@@ -1,0 +1,193 @@
+# .ai-ready.yml — Project metadata for AI-assisted development
+# https://github.com/nichochar/ai-ready
+
+project:
+  name: ferrum
+  description: Ruby headless Chrome driver using the Chrome DevTools Protocol (CDP)
+  version: 0.17.2
+  language: ruby
+  min_ruby_version: "3.1"
+  license: MIT
+  homepage: https://ferrum.rubycdp.com/
+
+architecture:
+  style: "Object-oriented library wrapping Chrome DevTools Protocol over WebSocket"
+  summary: |
+    Ferrum is a pure-Ruby driver for headless Chrome/Chromium. It launches a browser
+    process, connects to it via WebSocket using the Chrome DevTools Protocol (CDP),
+    and provides a Ruby object model for controlling pages, frames, network, input,
+    and screenshots. There is no Selenium dependency — Ferrum talks directly to Chrome.
+
+  object_model:
+    - name: Browser
+      path: lib/ferrum/browser.rb
+      role: "Top-level entry point. Spawns a Chrome process, holds the CDP Client, manages Contexts. Delegates most page-level methods to the default page via Forwardable."
+
+    - name: Browser::Process
+      path: lib/ferrum/browser/process.rb
+      role: "Spawns and manages the Chrome OS process. Parses the WebSocket URL from Chrome's stderr output. Handles process lifecycle (start/stop/kill) and temp user data directories."
+
+    - name: Browser::Options
+      path: lib/ferrum/browser/options.rb
+      role: "Parses and validates all browser configuration (headless, timeout, proxy, window_size, extensions, etc). Immutable after initialization."
+
+    - name: Client
+      path: lib/ferrum/client.rb
+      role: "CDP WebSocket client. Sends JSON-RPC commands, receives responses via Concurrent::IVar. Routes CDP events to the Subscriber. Each command gets an incrementing ID."
+
+    - name: SessionClient
+      path: lib/ferrum/client.rb
+      role: "Wraps Client for a specific CDP session (target). Appends sessionId to all outgoing messages. Used in flatten mode where one WebSocket serves all targets."
+
+    - name: Client::WebSocket
+      path: lib/ferrum/client/web_socket.rb
+      role: "Low-level WebSocket I/O using websocket-driver gem over a raw TCPSocket. Runs a reader thread that pushes parsed JSON messages into a Queue."
+
+    - name: Client::Subscriber
+      path: lib/ferrum/client/subscriber.rb
+      role: "Event dispatch system with two priority levels. Priority queue handles Fetch.requestPaused and Fetch.authRequired (network interception). Regular queue handles all other CDP events."
+
+    - name: Contexts
+      path: lib/ferrum/contexts.rb
+      role: "Manages browser contexts (CDP's isolation mechanism, similar to incognito profiles). Subscribes to Target.* events for target lifecycle management."
+
+    - name: Context
+      path: lib/ferrum/context.rb
+      role: "A single browser context holding multiple Targets. Creates pages, manages target attachment."
+
+    - name: Target
+      path: lib/ferrum/target.rb
+      role: "Represents a CDP target (page or iframe). Builds Page instances and SessionClient connections. Used by cuprite to inject custom Page subclasses."
+
+    - name: Page
+      path: lib/ferrum/page.rb
+      role: "Central class for interacting with a browser tab. Composes Mouse, Keyboard, Headers, Cookies, Network, Downloads, Tracing. Subscribes to CDP events for frame lifecycle and navigation."
+
+    - name: Frame
+      path: lib/ferrum/frame.rb
+      role: "Represents a document frame in the page tree. Includes DOM (CSS/XPath finders) and Runtime (JS evaluation) modules. Tracks execution context IDs via Concurrent::MVar."
+
+    - name: Frame::DOM
+      path: lib/ferrum/frame/dom.rb
+      role: "CSS and XPath selectors (at_css, at_xpath, css, xpath), body/title/url accessors, script/style tag injection. All implemented via JS evaluation through Runtime."
+
+    - name: Frame::Runtime
+      path: lib/ferrum/frame/runtime.rb
+      role: "JavaScript evaluation engine. Calls Runtime.callFunctionOn, handles return value deserialization (primitives, arrays, objects, DOM nodes, cyclic objects). Retries on intermittent context errors."
+
+    - name: Node
+      path: lib/ferrum/node.rb
+      role: "Represents a DOM element. Provides click, type, focus, scroll, select, attribute access, computed styles. Click uses coordinate-based approach with movement detection."
+
+    - name: Network
+      path: lib/ferrum/network.rb
+      role: "Network traffic monitoring and interception. Tracks all exchanges (request/response/error triples). Supports blocklist/allowlist, authorization, network condition emulation."
+
+    - name: Network::Exchange
+      path: lib/ferrum/network/exchange.rb
+      role: "Groups a request, response, and optional error into one traffic entry. Tracks loading state (pending/finished)."
+
+  key_patterns:
+    - name: "CDP command abstraction"
+      description: "All Chrome interaction goes through `command(method, **params)` which maps to CDP JSON-RPC. Page adds wait/slowmo semantics on top."
+
+    - name: "Forwardable delegation chains"
+      description: "Browser delegates to Page, Page delegates to Frame. This lets users call `browser.at_css(...)` which flows through: Browser -> default_context -> default_target -> page -> main_frame."
+
+    - name: "Event subscription with on/off"
+      description: "CDP events are subscribed via `on('Domain.event') { |params| ... }`. Page provides symbolic shortcuts (:dialog, :request, :auth) that map to specific CDP events."
+
+    - name: "Concurrent data structures everywhere"
+      description: "Uses concurrent-ruby extensively: Concurrent::Map for frames/targets/contexts, Concurrent::IVar for pending command responses, Concurrent::MVar for execution context IDs, Concurrent::Hash for thread-safe storage."
+
+    - name: "Two-queue priority subscriber"
+      description: "Network interception events (Fetch.*) go to a priority queue processed by a dedicated thread, so they don't get blocked behind regular events."
+
+    - name: "Flatten mode (single WebSocket)"
+      description: "By default, one WebSocket connection serves the browser and all pages. SessionClient adds sessionId to route messages to the correct target. This is more efficient than per-page connections."
+
+dependencies:
+  runtime:
+    - name: websocket-driver
+      purpose: "WebSocket protocol implementation for CDP communication"
+    - name: concurrent-ruby
+      purpose: "Thread-safe data structures (Map, IVar, MVar, Hash, Array) used throughout for concurrent CDP event handling"
+    - name: addressable
+      purpose: "URI parsing for WebSocket URLs and base_url handling"
+    - name: webrick
+      purpose: "Used internally for HTTP utilities"
+    - name: base64
+      purpose: "Encoding/decoding screenshots and PDF output"
+
+  development:
+    - name: rspec
+      purpose: "Test framework"
+    - name: rspec-wait
+      purpose: "Async-aware RSpec matchers for browser interaction tests"
+    - name: sinatra
+      purpose: "Test web application that specs run against"
+    - name: puma
+      purpose: "Test server for the Sinatra application"
+    - name: rubocop
+      purpose: "Code linting"
+    - name: yard
+      purpose: "API documentation generation"
+    - name: rbs
+      purpose: "Type signatures (sig/ directory)"
+
+testing:
+  framework: rspec
+  command: "bundle exec rake"
+  ci_matrix: "Ruby 3.1, 3.2, 3.3, 3.4, 4.0 on ubuntu-latest"
+  structure: |
+    Tests are integration-heavy — they launch a real Chrome browser and interact with
+    a local Sinatra test app (spec/support/application.rb served by spec/support/server.rb).
+    Spec files mirror the lib/ structure: spec/browser_spec.rb, spec/page_spec.rb,
+    spec/network_spec.rb, etc. Unit tests live under spec/unit/.
+
+    The shared context "Global helpers" (spec/support/global_helpers.rb) provides
+    browser, page, network, and traffic accessors. Each spec group gets its own
+    Browser instance via before(:all), and reset is called after each example.
+
+  environment_variables:
+    - FERRUM_DEFAULT_TIMEOUT: "Override default CDP timeout (default: 5s)"
+    - FERRUM_PROCESS_TIMEOUT: "Override browser process startup timeout (default: 10s)"
+    - FERRUM_INTERMITTENT_ATTEMPTS: "Retry count for intermittent JS context errors (default: 6)"
+    - FERRUM_INTERMITTENT_SLEEP: "Sleep between intermittent retries (default: 0.1s)"
+    - FERRUM_NODE_MOVING_WAIT: "Delay for node movement detection (default: 0.01s)"
+    - FERRUM_NODE_MOVING_ATTEMPTS: "Max attempts for node stop-moving check (default: 50)"
+    - FERRUM_GOTO_WAIT: "Wait after navigation command (default: 0.1s)"
+    - FERRUM_NEW_WINDOW_WAIT: "Wait for new window events (default: 0.3s)"
+    - FERRUM_DEBUG: "Enable debug logging to stdout"
+    - FERRUM_LOGGING_SCREENSHOTS: "Include base64 screenshot data in logs"
+    - HEADLESS: "Set to 'false' to run browser visibly"
+    - SLOWMO: "Add delay between commands (seconds)"
+    - BROWSER_PATH: "Path to Chrome/Chromium binary"
+    - CI: "Enables CI-specific logging and screenshot capture on failure"
+
+file_structure:
+  lib/ferrum.rb: "Entry point, requires core modules"
+  lib/ferrum/browser.rb: "Browser class — main public API"
+  lib/ferrum/browser/: "Browser subsystem (process, options, command, binary detection, xvfb)"
+  lib/ferrum/client.rb: "CDP WebSocket client and SessionClient"
+  lib/ferrum/client/: "WebSocket and Subscriber internals"
+  lib/ferrum/page.rb: "Page class with navigation, events, viewport"
+  lib/ferrum/page/: "Page modules (screenshot, screencast, animation, frames, tracing, stream)"
+  lib/ferrum/frame.rb: "Frame class"
+  lib/ferrum/frame/: "Frame modules (dom finders, JS runtime evaluation)"
+  lib/ferrum/node.rb: "DOM node interaction (click, type, attributes)"
+  lib/ferrum/network.rb: "Network monitoring and interception"
+  lib/ferrum/network/: "Network types (request, response, exchange, error, intercepted_request)"
+  lib/ferrum/cookies.rb: "Cookie management"
+  lib/ferrum/headers.rb: "HTTP header management"
+  lib/ferrum/keyboard.rb: "Keyboard input simulation"
+  lib/ferrum/mouse.rb: "Mouse input simulation"
+  lib/ferrum/downloads.rb: "File download handling"
+  lib/ferrum/proxy.rb: "Per-page proxy support"
+  lib/ferrum/dialog.rb: "JavaScript dialog (alert/confirm/prompt) handling"
+  lib/ferrum/errors.rb: "Error class hierarchy"
+  lib/ferrum/utils/: "Utilities (elapsed time, platform detection, thread spawning, event, retry)"
+  sig/: "RBS type signatures"
+  spec/: "RSpec tests mirroring lib/ structure"
+  spec/support/: "Test infrastructure (Sinatra app, Puma server, helpers)"
+  docs/: "Markdown documentation organized by feature"
