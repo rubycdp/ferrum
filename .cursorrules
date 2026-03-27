@@ -1,0 +1,138 @@
+# Cursor Rules for Ferrum
+
+## Project context
+
+Ferrum is a Ruby gem that controls headless Chrome/Chromium via the Chrome DevTools Protocol (CDP). Direct WebSocket connection, no Selenium, no chromedriver. ~2k GitHub stars, used as the backend for the cuprite Capybara driver.
+
+## Architecture at a glance
+
+```
+Browser
+  ├── Browser::Process (spawns Chrome, parses WS URL from stderr)
+  ├── Browser::Options (immutable config: headless, timeout, proxy, etc.)
+  ├── Client (WebSocket CDP JSON-RPC: send commands, receive responses)
+  │     ├── Client::WebSocket (raw TCP + websocket-driver, reader thread)
+  │     └── Client::Subscriber (two-queue event dispatch: priority for Fetch.*, regular for rest)
+  ├── Contexts (manages browser contexts via Target.* CDP events)
+  │     └── Context (holds Targets, creates pages)
+  │           └── Target (CDP target, builds Page + SessionClient)
+  └── (delegates to) Page
+        ├── Frame (DOM finders + JS Runtime evaluation)
+        ├── Mouse, Keyboard (input simulation)
+        ├── Network (traffic monitoring, interception, Exchange objects)
+        ├── Headers, Cookies, Downloads
+        ├── Page::Screenshot, Page::Screencast, Page::Animation, Page::Tracing
+        └── Node (DOM element: click, type, attributes, computed styles)
+```
+
+## Code style rules
+
+- Always use `# frozen_string_literal: true` at the top of every Ruby file.
+- One class/module per file. File path mirrors the namespace: `Ferrum::Page::Screenshot` -> `lib/ferrum/page/screenshot.rb`.
+- Use `extend Forwardable` and `delegate` for method forwarding. The Browser -> Page -> Frame chain relies heavily on this.
+- Prefer composition over inheritance. Page composes Mouse, Keyboard, Network, etc. as instance variables.
+- Page capabilities are Ruby modules included into Page (Screenshot, Frames, Animation, etc.).
+- Keep runtime dependencies minimal. Currently only 5 gems. Do not add new runtime deps without strong justification.
+
+## CDP interaction pattern
+
+All Chrome communication follows this pattern:
+
+```ruby
+# Raw CDP call
+client.command("Domain.method", paramName: value)
+
+# Page-level call with navigation wait semantics
+command("Page.navigate", wait: GOTO_WAIT, url: url)
+
+# Page-level call with slowmo support
+command("Page.reload", wait: timeout, slowmoable: true)
+```
+
+CDP method names are PascalCase domains with camelCase methods: `Page.captureScreenshot`, `Runtime.callFunctionOn`, `DOM.getDocument`, `Network.enable`.
+
+Parameters use camelCase: `nodeId`, `objectId`, `executionContextId`, `browserContextId`.
+
+## Thread safety rules
+
+Ferrum runs multiple threads (WebSocket reader, two subscriber threads, main thread). Follow these rules:
+
+- Use `Concurrent::Map` instead of `Hash` for any data shared between threads.
+- Use `Concurrent::IVar` for one-shot futures (pending CDP responses).
+- Use `Concurrent::MVar` for values that get set/cleared repeatedly (execution context IDs).
+- Use `Concurrent::Array` for thread-safe ordered collections.
+- Never use plain Ruby `Hash`, `Array`, or instance variables for cross-thread data without synchronization.
+- Spawn threads via `Utils::Thread.spawn` which names threads and sets `abort_on_exception`.
+
+## Testing patterns
+
+```ruby
+# Tests use a real Chrome browser + local Sinatra app
+# Available helpers from "Global helpers" shared context:
+browser    # Ferrum::Browser instance
+page       # Creates a new page via browser.create_page
+network    # page.network shortcut
+traffic    # Filtered network traffic (excludes chrome-error:// URLs)
+server     # Test server instance
+base_url   # Test server URL
+
+# Navigation to test views:
+page.go_to("/view_name")  # loads spec/support/views/view_name.erb
+
+# Common patterns:
+page.at_css("#element")    # find single element
+page.css(".elements")      # find multiple elements
+page.evaluate("js code")   # evaluate JavaScript
+node.click                 # click element
+node.text                  # get text content
+```
+
+- Add HTML fixtures as ERB files in `spec/support/views/`
+- Add routes in `spec/support/application.rb` (Sinatra)
+- Run tests: `bundle exec rake`
+- CI matrix: Ruby 3.1, 3.2, 3.3, 3.4, 4.0
+
+## Error handling
+
+Map CDP errors to Ferrum error classes defined in `lib/ferrum/errors.rb`:
+
+| CDP error message | Ruby exception |
+|---|---|
+| "No node with given id found" | `NodeNotFoundError` |
+| "Cannot find context with specified id" | `NoExecutionContextError` |
+| "No target with given id found" | `NoSuchPageError` |
+| "Could not compute content quads" | `CoordinatesNotFoundError` |
+| Timeout waiting for response | `TimeoutError` |
+| WebSocket closed | `DeadBrowserError` |
+
+Use `Utils::Attempt.with_retry` for transient errors during page loads (NodeNotFoundError, NoExecutionContextError).
+
+## JS evaluation internals
+
+All JavaScript runs through `Frame::Runtime#call` -> `Runtime.callFunctionOn`:
+
+1. Expression is wrapped in a function: `"function() { return <expr> }"`
+2. Called on an execution context (frame) or a specific object (node)
+3. Return values deserialized by `handle_response`: primitives, arrays, objects, nodes, dates, cyclic objects
+4. Node references come back as `Node` instances (via DOM.requestNode + DOM.describeNode)
+5. Retries on `NodeNotFoundError` and `NoExecutionContextError` (up to INTERMITTENT_ATTEMPTS times)
+
+## Environment variables
+
+| Variable | Purpose |
+|---|---|
+| `FERRUM_DEFAULT_TIMEOUT` | CDP command timeout (default: 5s) |
+| `FERRUM_PROCESS_TIMEOUT` | Chrome startup timeout (default: 10s) |
+| `FERRUM_DEBUG` | Enable debug logging |
+| `BROWSER_PATH` | Chrome binary path |
+| `HEADLESS` | "false" for visible browser |
+| `SLOWMO` | Delay between commands |
+
+## Things to avoid
+
+- Do not add Selenium or WebDriver dependencies.
+- Do not use `sleep` for synchronization. Use Event, IVar, or MVar.
+- Do not break the Forwardable delegation chain (users call `browser.at_css` and expect it to work).
+- Do not cache node IDs across navigations (they become stale).
+- Do not add global mutable state. Configuration is immutable after Browser initialization.
+- Do not introduce per-page WebSocket connections unless explicitly needed (flatten mode is the default).
