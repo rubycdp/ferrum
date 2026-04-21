@@ -282,22 +282,11 @@ module Ferrum
       end
 
       def capture_screenshot(options, full, background_color)
-        maybe_resize_fullscreen(full) do
-          with_background_color(background_color) do
-            command("Page.captureScreenshot", **options)
-          end
+        options = options.merge(captureBeyondViewport: true) if full
+
+        with_background_color(background_color) do
+          command("Page.captureScreenshot", **options)
         end.fetch("data")
-      end
-
-      def maybe_resize_fullscreen(full)
-        if full
-          width, height = viewport_size.dup
-          resize(fullscreen: true)
-        end
-
-        yield
-      ensure
-        resize(width: width, height: height) if full
       end
 
       def with_background_color(color)
