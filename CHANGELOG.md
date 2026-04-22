@@ -5,6 +5,7 @@
 ### Changed
 
 ### Fixed
+- Full-page screenshots no longer resize the window, preventing focus steal on macOS [#580]
 
 ### Removed
 
