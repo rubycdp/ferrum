@@ -172,7 +172,7 @@ module Ferrum
     ensure
       if block_given?
         page&.close
-        context.dispose if new_context
+        context&.dispose if new_context
       end
     end
 

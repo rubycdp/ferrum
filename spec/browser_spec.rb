@@ -580,6 +580,17 @@ describe Ferrum::Browser do
 
         expect(browser.contexts.size).to eq(0)
       end
+
+      it "propagates the original error when context creation fails inside the block form" do
+        original_error = Ferrum::DeadBrowserError.new("simulated browser death")
+        allow(browser.contexts).to receive(:create).and_raise(original_error)
+
+        expect do
+          browser.create_page(new_context: true) do |page|
+            page.go_to("/simple")
+          end
+        end.to raise_error(Ferrum::DeadBrowserError, "simulated browser death")
+      end
     end
 
     context "with :proxy" do
