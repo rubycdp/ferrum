@@ -63,23 +63,28 @@ module Ferrum
     # mode: (:left | :right | :double)
     # keys: (:alt, (:ctrl | :control), (:meta | :command), :shift)
     # offset: { :x, :y, :position (:top | :center) }
-    def click(mode: :left, keys: [], offset: {}, delay: 0)
+    # wait_for_pending_js: see Mouse#click. Applies to all click modes.
+    #
+    # All three modes delegate to Mouse#click so `wait_for_pending_js:` lives
+    # in one place. The `:right` and `:double` modes pass `wait: 0` to
+    # preserve the historical no-network-wait behavior of `Node#click` for
+    # non-primary buttons; `:left` uses Mouse#click's default `wait: CLICK_WAIT`
+    # because Capybara has historically relied on the primary click to block
+    # for short navigations.
+    def click(mode: :left, keys: [], offset: {}, delay: 0, wait_for_pending_js: false)
       x, y = find_position(**offset)
       modifiers = page.keyboard.modifiers(keys)
 
       case mode
       when :right
-        page.mouse.move(x: x, y: y)
-        page.mouse.down(button: :right, modifiers: modifiers)
-        sleep(delay)
-        page.mouse.up(button: :right, modifiers: modifiers)
+        page.mouse.click(x: x, y: y, button: :right, modifiers: modifiers, delay: delay,
+                         wait: 0, wait_for_pending_js: wait_for_pending_js)
       when :double
-        page.mouse.move(x: x, y: y)
-        page.mouse.down(modifiers: modifiers, count: 2)
-        sleep(delay)
-        page.mouse.up(modifiers: modifiers, count: 2)
+        page.mouse.click(x: x, y: y, count: 2, modifiers: modifiers, delay: delay,
+                         wait: 0, wait_for_pending_js: wait_for_pending_js)
       when :left
-        page.mouse.click(x: x, y: y, modifiers: modifiers, delay: delay)
+        page.mouse.click(x: x, y: y, modifiers: modifiers, delay: delay,
+                         wait_for_pending_js: wait_for_pending_js)
       end
 
       self

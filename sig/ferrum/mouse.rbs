@@ -15,7 +15,7 @@ module Ferrum
 
     def scroll_to: (::Numeric top, ::Numeric left) -> self
 
-    def click: (x: ::Numeric, y: ::Numeric, ?delay: ::Numeric, ?wait: ::Numeric, ?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer) -> self
+    def click: (x: ::Numeric, y: ::Numeric, ?delay: ::Numeric, ?wait: ::Numeric, ?wait_for_pending_js: bool, ?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer) -> self
 
     def down: (?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer) -> self
 
@@ -24,6 +24,8 @@ module Ferrum
     def move: (x: ::Numeric, y: ::Numeric, ?steps: ::Integer) -> self
 
     private
+
+    def wait_for_pending_js!: () -> Hash[String, untyped]
 
     def mouse_event: (type: String, ?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer?, ?wait: ::Numeric) -> Hash[String, untyped]
 

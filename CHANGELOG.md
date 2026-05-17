@@ -1,6 +1,7 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.17.2...main) ##
 
 ### Added
+- `Ferrum::Mouse#click` and `Ferrum::Node#click` accept `wait_for_pending_js:` to drain pending JS microtasks after the click [#586]
 
 ### Changed
 

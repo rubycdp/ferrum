@@ -66,6 +66,13 @@ module Ferrum
     #
     # @param [Float] wait
     #
+    # @param [Boolean] wait_for_pending_js
+    #   When `true`, follows the click with a no-op `Runtime.evaluate` so the
+    #   renderer's microtask checkpoint runs before this method returns.
+    #   Useful when a click handler depends on state set inside a `.then()`
+    #   chain (for example, a dynamically `import()`-ed Stimulus controller).
+    #   Defaults to `false`, preserving the historical behavior.
+    #
     # @param [Hash{Symbol => Object}] options
     #   Additional keyword arguments.
     #
@@ -79,13 +86,14 @@ module Ferrum
     #
     # @return [self]
     #
-    def click(x:, y:, delay: 0, wait: CLICK_WAIT, **options)
+    def click(x:, y:, delay: 0, wait: CLICK_WAIT, wait_for_pending_js: false, **options)
       move(x: x, y: y)
       down(**options)
       sleep(delay)
       # Potential wait because if some network event is triggered then we have
       # to wait until it's over and frame is loaded or failed to load.
       up(wait: wait, **options)
+      wait_for_pending_js! if wait_for_pending_js
       self
     end
 
@@ -163,6 +171,13 @@ module Ferrum
     end
 
     private
+
+    # Forces the renderer's microtask checkpoint to drain before this call
+    # returns by issuing a no-op `Runtime.evaluate`. Private because the
+    # `wait_for_pending_js:` kwarg on `#click` is the public surface.
+    def wait_for_pending_js!
+      @page.command("Runtime.evaluate", expression: "")
+    end
 
     def mouse_event(type:, button: :left, count: 1, modifiers: nil, wait: 0)
       button = validate_button(button)

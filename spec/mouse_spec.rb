@@ -30,6 +30,57 @@ describe Ferrum::Mouse do
       browser.at_xpath("//a[text() = 'Link']").click
       expect(browser.body).to include("Hello world")
     end
+
+    # Regression specs for [#584]. The bug: Input.dispatchMouseEvent returns
+    # before the renderer has run any microtasks queued behind the click (for
+    # example, a Stimulus controller registered inside import().then(...)). We
+    # can't observe this from a black-box DOM assertion because every ferrum
+    # DOM read goes through Runtime.*, which itself drains microtasks. Instead,
+    # spy on Page#command and assert that Runtime.evaluate is or isn't issued
+    # after the click depending on the option.
+    context "with wait_for_pending_js: option" do
+      before { browser.go_to("/click_coordinates") }
+
+      it "issues a no-op Runtime.evaluate after the click when true" do
+        allow(browser.page).to receive(:command).and_call_original
+
+        browser.mouse.click(x: 100, y: 150, wait_for_pending_js: true)
+
+        expect(browser.page).to have_received(:command).with("Runtime.evaluate", expression: "")
+      end
+
+      it "does not issue Runtime.evaluate by default" do
+        allow(browser.page).to receive(:command).and_call_original
+
+        browser.mouse.click(x: 100, y: 150)
+
+        expect(browser.page).not_to have_received(:command).with("Runtime.evaluate", expression: "")
+      end
+
+      it "is threaded through Node#click for :left mode" do
+        allow(browser.page).to receive(:command).and_call_original
+
+        browser.at_xpath("//body").click(wait_for_pending_js: true)
+
+        expect(browser.page).to have_received(:command).with("Runtime.evaluate", expression: "")
+      end
+
+      it "is threaded through Node#click for :right mode" do
+        allow(browser.page).to receive(:command).and_call_original
+
+        browser.at_xpath("//body").click(mode: :right, wait_for_pending_js: true)
+
+        expect(browser.page).to have_received(:command).with("Runtime.evaluate", expression: "")
+      end
+
+      it "is threaded through Node#click for :double mode" do
+        allow(browser.page).to receive(:command).and_call_original
+
+        browser.at_xpath("//body").click(mode: :double, wait_for_pending_js: true)
+
+        expect(browser.page).to have_received(:command).with("Runtime.evaluate", expression: "")
+      end
+    end
   end
 
   describe "#scroll_by" do
