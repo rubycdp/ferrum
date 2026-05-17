@@ -50,6 +50,9 @@ describe Ferrum::Mouse do
       end
 
       it "does not issue Runtime.evaluate by default" do
+        # Explicitly stub so the spec is deterministic regardless of whether
+        # FERRUM_WAIT_FOR_PENDING_JS is set in the developer's environment.
+        stub_const("Ferrum::Mouse::WAIT_FOR_PENDING_JS", false)
         allow(browser.page).to receive(:command).and_call_original
 
         browser.mouse.click(x: 100, y: 150)
@@ -79,6 +82,61 @@ describe Ferrum::Mouse do
         browser.at_xpath("//body").click(mode: :double, wait_for_pending_js: true)
 
         expect(browser.page).to have_received(:command).with("Runtime.evaluate", expression: "")
+      end
+    end
+
+    # The FERRUM_WAIT_FOR_PENDING_JS env var is read once at require time
+    # into Mouse::WAIT_FOR_PENDING_JS. Use stub_const to flip it. The
+    # Node#click default of `wait_for_pending_js: nil` also resolves to this
+    # constant (via Mouse#click's resolution), so one env-var setting covers
+    # both layers.
+    context "with FERRUM_WAIT_FOR_PENDING_JS env var" do
+      it "Ferrum::Mouse::WAIT_FOR_PENDING_JS is false by default",
+         skip: (ENV["FERRUM_WAIT_FOR_PENDING_JS"] == "true" ? "skipped: FERRUM_WAIT_FOR_PENDING_JS=true" : false) do
+        # Documents the contract: default off unless opted in. Skips (rather
+        # than fails) when the developer has opted in via env var, so the
+        # ferrum suite doesn't break in environments that exercise that path.
+        expect(Ferrum::Mouse::WAIT_FOR_PENDING_JS).to be(false)
+      end
+
+      it "flips the default for Mouse#click when set to true" do
+        stub_const("Ferrum::Mouse::WAIT_FOR_PENDING_JS", true)
+        browser.go_to("/click_coordinates")
+        allow(browser.page).to receive(:command).and_call_original
+
+        browser.mouse.click(x: 100, y: 150)
+
+        expect(browser.page).to have_received(:command).with("Runtime.evaluate", expression: "")
+      end
+
+      it "flips the default for Node#click when set to true" do
+        stub_const("Ferrum::Mouse::WAIT_FOR_PENDING_JS", true)
+        browser.go_to("/click_coordinates")
+        allow(browser.page).to receive(:command).and_call_original
+
+        browser.at_xpath("//body").click
+
+        expect(browser.page).to have_received(:command).with("Runtime.evaluate", expression: "")
+      end
+
+      it "lets an explicit wait_for_pending_js: false at the call site beat the env-var default" do
+        stub_const("Ferrum::Mouse::WAIT_FOR_PENDING_JS", true)
+        browser.go_to("/click_coordinates")
+        allow(browser.page).to receive(:command).and_call_original
+
+        browser.mouse.click(x: 100, y: 150, wait_for_pending_js: false)
+
+        expect(browser.page).not_to have_received(:command).with("Runtime.evaluate", expression: "")
+      end
+
+      it "lets an explicit wait_for_pending_js: false on Node#click beat the env-var default" do
+        stub_const("Ferrum::Mouse::WAIT_FOR_PENDING_JS", true)
+        browser.go_to("/click_coordinates")
+        allow(browser.page).to receive(:command).and_call_original
+
+        browser.at_xpath("//body").click(wait_for_pending_js: false)
+
+        expect(browser.page).not_to have_received(:command).with("Runtime.evaluate", expression: "")
       end
     end
   end

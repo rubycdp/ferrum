@@ -2,6 +2,8 @@ module Ferrum
   class Mouse
     CLICK_WAIT: ::Float
 
+    WAIT_FOR_PENDING_JS: bool
+
     BUTTON_MASKS: ::Hash[String, ::Integer]
 
     @page: Page
@@ -15,7 +17,7 @@ module Ferrum
 
     def scroll_to: (::Numeric top, ::Numeric left) -> self
 
-    def click: (x: ::Numeric, y: ::Numeric, ?delay: ::Numeric, ?wait: ::Numeric, ?wait_for_pending_js: bool, ?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer) -> self
+    def click: (x: ::Numeric, y: ::Numeric, ?delay: ::Numeric, ?wait: ::Numeric, ?wait_for_pending_js: bool?, ?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer) -> self
 
     def down: (?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer) -> self
 

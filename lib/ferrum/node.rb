@@ -64,6 +64,9 @@ module Ferrum
     # keys: (:alt, (:ctrl | :control), (:meta | :command), :shift)
     # offset: { :x, :y, :position (:top | :center) }
     # wait_for_pending_js: see Mouse#click. Applies to all click modes.
+    #   Default `nil` resolves to Mouse::WAIT_FOR_PENDING_JS so a single
+    #   FERRUM_WAIT_FOR_PENDING_JS setting covers both layers. Explicit
+    #   true/false at the call site wins over the env-var default.
     #
     # All three modes delegate to Mouse#click so `wait_for_pending_js:` lives
     # in one place. The `:right` and `:double` modes pass `wait: 0` to
@@ -71,7 +74,7 @@ module Ferrum
     # non-primary buttons; `:left` uses Mouse#click's default `wait: CLICK_WAIT`
     # because Capybara has historically relied on the primary click to block
     # for short navigations.
-    def click(mode: :left, keys: [], offset: {}, delay: 0, wait_for_pending_js: false)
+    def click(mode: :left, keys: [], offset: {}, delay: 0, wait_for_pending_js: nil)
       x, y = find_position(**offset)
       modifiers = page.keyboard.modifiers(keys)
 

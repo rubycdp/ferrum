@@ -2,6 +2,7 @@
 
 ### Added
 - `Ferrum::Mouse#click` and `Ferrum::Node#click` accept `wait_for_pending_js:` to drain pending JS microtasks after the click [#586]
+- `Ferrum::Mouse::WAIT_FOR_PENDING_JS` (set by `FERRUM_WAIT_FOR_PENDING_JS`, default `false`) sets the project-wide default for `wait_for_pending_js:`. Read once at load time, so the env var must be set before `require "ferrum"` (e.g. before `require "capybara/cuprite"`) [#586]
 
 ### Changed
 

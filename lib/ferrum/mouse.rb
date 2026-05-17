@@ -3,6 +3,7 @@
 module Ferrum
   class Mouse
     CLICK_WAIT = ENV.fetch("FERRUM_CLICK_WAIT", 0.1).to_f
+    WAIT_FOR_PENDING_JS = ENV.fetch("FERRUM_WAIT_FOR_PENDING_JS", "false") == "true"
     BUTTON_MASKS = {
       "none" => 0,
       "left" => 1,
@@ -66,12 +67,16 @@ module Ferrum
     #
     # @param [Float] wait
     #
-    # @param [Boolean] wait_for_pending_js
+    # @param [Boolean, nil] wait_for_pending_js
     #   When `true`, follows the click with a no-op `Runtime.evaluate` so the
     #   renderer's microtask checkpoint runs before this method returns.
     #   Useful when a click handler depends on state set inside a `.then()`
     #   chain (for example, a dynamically `import()`-ed Stimulus controller).
-    #   Defaults to `false`, preserving the historical behavior.
+    #
+    #   When `nil` (the default), resolves to {WAIT_FOR_PENDING_JS}, which is
+    #   driven by the `FERRUM_WAIT_FOR_PENDING_JS` env var. Set the env var
+    #   to `"true"` before requiring ferrum to flip the project-wide default.
+    #   It is read once at load time.
     #
     # @param [Hash{Symbol => Object}] options
     #   Additional keyword arguments.
@@ -86,14 +91,15 @@ module Ferrum
     #
     # @return [self]
     #
-    def click(x:, y:, delay: 0, wait: CLICK_WAIT, wait_for_pending_js: false, **options)
+    def click(x:, y:, delay: 0, wait: CLICK_WAIT, wait_for_pending_js: nil, **options)
+      should_wait = wait_for_pending_js.nil? ? WAIT_FOR_PENDING_JS : wait_for_pending_js
       move(x: x, y: y)
       down(**options)
       sleep(delay)
       # Potential wait because if some network event is triggered then we have
       # to wait until it's over and frame is loaded or failed to load.
       up(wait: wait, **options)
-      wait_for_pending_js! if wait_for_pending_js
+      wait_for_pending_js! if should_wait
       self
     end
 
