@@ -6,6 +6,7 @@
 
 ### Fixed
 - Full-page screenshots no longer resize the window, preventing focus steal on macOS [#580]
+- `idling?` no longer blocks on `loading="lazy"` iframes that Chrome never starts loading [#585]
 
 ### Removed
 

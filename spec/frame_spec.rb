@@ -125,6 +125,121 @@ describe Ferrum::Frame do
     end
   end
 
+  context "with loading=lazy iframe Chrome never starts loading" do
+    # Regression test for [#583]. Chrome fires Page.frameAttached for every
+    # iframe in the DOM but only fires frameStoppedLoading for frames it
+    # actually loads. A `loading="lazy"` iframe outside the viewport never
+    # starts loading, so its Frame#state stays nil. Without the fix, the
+    # idle predicate refuses to consider such frames idle and page.go_to
+    # blocks for the full browser timeout (silently rescued — no error
+    # is raised, the call just takes ~timeout seconds to return).
+    #
+    # with_timeout(1) bounds the bug path's wall-clock to 1s so a failing
+    # test fails fast. The 0.5s assertion threshold leaves ~5-10x headroom
+    # for the fix path (a static page load is well under 100ms).
+    it "does not block page.go_to (lazy iframe in closed <details>)" do
+      with_timeout(1) do
+        started_at = Ferrum::Utils::ElapsedTime.monotonic_time
+        page.go_to("/lazy_iframe")
+        expect(Ferrum::Utils::ElapsedTime.elapsed_time(started_at)).to be < 0.5
+      end
+
+      # Load-bearing on two axes:
+      # 1. Confirms we hit the bug's precondition (a frame in nil state)
+      #    rather than passing because no lazy frame was attached at all.
+      # 2. Guards against false-pass via Runtime.executionContextsCleared.
+      #    That handler (subscribe_execution_contexts_cleared in
+      #    lib/ferrum/page/frames.rb) unconditionally sets every frame's
+      #    state to :stopped_loading. If it fires during navigation on
+      #    some Chrome versions, the old idling? would return true and
+      #    the timing assertion would pass on `main`. The nil-state
+      #    postcondition catches that case.
+      lazy = page.frames.reject(&:main?).first
+      expect(lazy.state).to be_nil
+    end
+
+    # Scenario 2 from #583. The lazy iframe is inserted by a click handler
+    # AFTER the page has loaded. The handler also triggers a same-document
+    # navigation (location.hash) so idling? is re-evaluated while the
+    # nil-state frame is in @frames. A full reload or cross-document
+    # navigation would fire Runtime.executionContextsCleared and mask the
+    # bug. Under the bug, ferrum's internal mouse_event wait on idling?
+    # blocks for the full browser.timeout and raises Ferrum::TimeoutError.
+    it "does not block click whose handler attaches a lazy iframe" do
+      page.go_to("/lazy_iframe_via_click")
+
+      with_timeout(1) do
+        started_at = Ferrum::Utils::ElapsedTime.monotonic_time
+        page.at_css("#add_iframe").click
+        expect(Ferrum::Utils::ElapsedTime.elapsed_time(started_at)).to be < 0.5
+      end
+
+      # See load-bearing rationale on the scenario 1 test above.
+      lazy = page.frames.reject(&:main?).first
+      expect(lazy.state).to be_nil
+    end
+
+    # Same bug, exercised via reload rather than initial go_to. Under the
+    # bug, page.reload raises Ferrum::TimeoutError after browser.timeout;
+    # with the fix it returns quickly. The post-reload state postcondition
+    # used by the other tests doesn't work here because reload fires
+    # Runtime.executionContextsCleared, which overwrites the frame's state
+    # to :stopped_loading by the time the postcondition would run. Capture
+    # the precondition before reload instead.
+    it "does not block page.reload (lazy iframe in closed <details>)" do
+      page.go_to("/lazy_iframe")
+
+      # Confirm the bug's precondition (a frame in nil state) holds before
+      # reload runs, so a green test means the fix handled that state
+      # rather than the test passing for an unrelated reason.
+      lazy = page.frames.reject(&:main?).first
+      expect(lazy.state).to be_nil
+
+      with_timeout(1) do
+        started_at = Ferrum::Utils::ElapsedTime.monotonic_time
+        page.reload
+        expect(Ferrum::Utils::ElapsedTime.elapsed_time(started_at)).to be < 0.5
+      end
+    end
+
+    # The reporter's real-world case from #583 (two YouTube iframes side
+    # by side). The all? predicate must accept multiple nil-state frames,
+    # not just one. Exercises the same code path as scenario 1 but with
+    # @frames.size == 3 (main + two lazies).
+    it "does not block page.go_to (multiple lazy iframes outside viewport)" do
+      with_timeout(1) do
+        started_at = Ferrum::Utils::ElapsedTime.monotonic_time
+        page.go_to("/lazy_iframes_two")
+        expect(Ferrum::Utils::ElapsedTime.elapsed_time(started_at)).to be < 0.5
+      end
+
+      # See load-bearing rationale on the scenario 1 test above, applied
+      # to both nil-state frames.
+      lazies = page.frames.reject(&:main?)
+      expect(lazies.size).to eq(2)
+      expect(lazies.map(&:state)).to all(be_nil)
+    end
+
+    # Even for lazy iframes Chrome decides to load (in or near the
+    # viewport), frameStartedLoading can be deferred past the main frame's
+    # frameStoppedLoading. With the fix, page.go_to no longer waits on
+    # nil-state frames, so it may return before such an iframe begins
+    # loading. That's a deliberate behavior change: ferrum can't tell at
+    # idle-check time whether a nil-state frame is one Chrome will never
+    # load (the #583 bug) or one Chrome is about to load (this case).
+    # Treating both as idle is the only correct choice for the never-load
+    # case; for the about-to-load case, callers wait explicitly via
+    # frame.body (blocks until the frame is loaded) or
+    # page.network.wait_for_idle.
+    it "still loads in-viewport lazy iframes (callers wait via frame.body)" do
+      page.go_to("/lazy_iframe_in_viewport")
+
+      lazy = page.frames.reject(&:main?).first
+      expect(lazy.body).to include("slow page")
+      expect(lazy.state).to eq(:stopped_loading)
+    end
+  end
+
   it "supports clicking in a frame", skip: true do
     page.go_to
     page.execute <<-JS

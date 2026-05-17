@@ -190,8 +190,25 @@ module Ferrum
         end
       end
 
+      # A frame is idle if it has finished loading (:stopped_loading) or has
+      # never started loading (state == nil).
+      #
+      # The nil case handles loading="lazy" iframes that Chrome attaches but
+      # parks outside the viewport. Chrome creates a Frame in nil state (via
+      # Page.frameAttached or Runtime.executionContextCreated, both of which
+      # call Frame.new and leave state unset), but no frameStartedLoading or
+      # frameStoppedLoading ever follows. Without this branch, idling? blocks
+      # page.go_to for the full browser timeout on any page containing such
+      # an iframe (see #583).
+      #
+      # nil matches the documented initial value on Frame#state and is
+      # structurally unreachable via Frame#state= (which raises ArgumentError
+      # on anything outside STATE_VALUES). Don't "fix" this by initializing
+      # state to :stopped_loading on frameAttached. That would lie about state
+      # ("stopped" implies the frame had loaded) and would silently re-close
+      # #583 with no test failure signal.
       def idling?
-        @frames.values.all? { |f| f.state == :stopped_loading }
+        @frames.values.all? { |f| f.state == :stopped_loading || f.state.nil? }
       end
     end
   end
