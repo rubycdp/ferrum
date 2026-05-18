@@ -67,19 +67,15 @@ module Ferrum
       x, y = find_position(**offset)
       modifiers = page.keyboard.modifiers(keys)
 
+      # `:right` and `:double` pass `wait: 0` to preserve the historical
+      # no-network-wait default of `Mouse#up` and `Mouse#down`
       case mode
       when :right
-        page.mouse.move(x: x, y: y)
-        page.mouse.down(button: :right, modifiers: modifiers)
-        sleep(delay)
-        page.mouse.up(button: :right, modifiers: modifiers)
+        page.mouse.click(x:, y:, modifiers:, delay:, button: :right, wait: 0)
       when :double
-        page.mouse.move(x: x, y: y)
-        page.mouse.down(modifiers: modifiers, count: 2)
-        sleep(delay)
-        page.mouse.up(modifiers: modifiers, count: 2)
+        page.mouse.click(x:, y:, modifiers:, delay:, count: 2, wait: 0)
       when :left
-        page.mouse.click(x: x, y: y, modifiers: modifiers, delay: delay)
+        page.mouse.click(x:, y:, modifiers:, delay:)
       end
 
       self
