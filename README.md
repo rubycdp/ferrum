@@ -15,7 +15,7 @@ protocol because Chrome allows you to do so many things that are barely
 supported by WebDriver because it should have consistent design with other
 browsers.
 
-* [Cuprite](https://github.com/rubycdp/cuprite) is a pure Ruby driver for[Capybara](https://github.com/teamcapybara/capybara) based on Ferrum.
+* [Cuprite](https://github.com/rubycdp/cuprite) is a pure Ruby driver for [Capybara](https://github.com/teamcapybara/capybara) based on Ferrum.
 * [Vessel](https://github.com/rubycdp/vessel) high-level web crawling framework based on Ferrum and Mechanize.
 
 ## Install
