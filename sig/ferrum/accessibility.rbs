@@ -1,0 +1,25 @@
+module Ferrum
+  class Accessibility
+    @page: Page
+
+    def initialize: (Page page) -> void
+
+    def node_for: (Node node) -> AXNode?
+
+    def partial_tree: (node: Node, ?fetch_relatives: bool) -> Array[AXNode]
+
+    def snapshot: (?depth: Integer?, ?frame_id: String?) -> Array[AXNode]
+
+    def query: (?name: String?, ?role: String?, ?node: Node?) -> Array[AXNode]
+
+    def root: (?frame_id: String?) -> AXNode?
+
+    def enable: () -> self
+
+    def disable: () -> self
+
+    private
+
+    def build: (Array[untyped]? nodes) -> Array[AXNode]
+  end
+end

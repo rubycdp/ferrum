@@ -1,0 +1,31 @@
+module Ferrum
+  class Accessibility
+    class AXNode
+      @params: Hash[String, untyped]
+
+      def initialize: (Hash[String, untyped] params) -> void
+
+      def role: () -> String?
+
+      def name: () -> String?
+
+      def description: () -> String?
+
+      def value: () -> (String | Numeric | bool | nil)
+
+      def properties: () -> Hash[String, untyped]
+
+      def ignored?: () -> bool
+
+      def ignored_reasons: () -> Array[untyped]?
+
+      def node_id: () -> String?
+
+      def backend_dom_node_id: () -> Integer?
+
+      def child_ids: () -> Array[String]?
+
+      def to_h: () -> Hash[String, untyped]
+    end
+  end
+end

@@ -229,6 +229,14 @@ module Ferrum
         .each_with_object({}) { |style, memo| memo.merge!(style["name"] => style["value"]) }
     end
 
+    # Returns the computed accessibility node for the element, or nil if the
+    # element is ignored by the accessibility tree.
+    #
+    # @return [Accessibility::AXNode, nil]
+    def axnode
+      page.accessibility.node_for(self)
+    end
+
     def remove
       page.command("DOM.removeNode", nodeId: node_id)
     end

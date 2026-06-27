@@ -77,6 +77,8 @@ module Ferrum
 
     def computed_style: () -> untyped
 
+    def axnode: () -> Accessibility::AXNode?
+
     private
 
     def bounding_rect_coordinates: () -> untyped
