@@ -2,10 +2,13 @@
 
 ### Added
 
+
 ### Changed
 
 ### Fixed
 - Full-page screenshots no longer resize the window, preventing focus steal on macOS [#580]
+- DOM.enable is now has `includeWhitespace: "all"` to keep track of new line nodes which previously were resolved to 0, and errored with NodeNotFoundError [#596]
+- `DOM.requestNode` call is moved to the node class and being done lazily, this reduces number of intermediate node ids sent by backend to frontend [#596]
 
 ### Removed
 
