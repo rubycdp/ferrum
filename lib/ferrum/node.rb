@@ -5,14 +5,29 @@ module Ferrum
     MOVING_WAIT_DELAY = ENV.fetch("FERRUM_NODE_MOVING_WAIT", 0.01).to_f
     MOVING_WAIT_ATTEMPTS = ENV.fetch("FERRUM_NODE_MOVING_ATTEMPTS", 50).to_i
 
-    attr_reader :page, :target_id, :node_id, :description, :tag_name
+    attr_reader :page, :target_id, :description, :tag_name
 
-    def initialize(frame, target_id, node_id, description)
+    def initialize(frame, target_id, description, object_id: nil, node_id: nil)
       @page = frame.page
       @target_id = target_id
-      @node_id = node_id
       @description = description
       @tag_name = description["nodeName"].downcase
+      @object_id = object_id
+      @node_id = node_id
+    end
+
+    # Frontend node id is resolved lazily, on first actual need (focus, click, scroll_into_view, etc.)
+    # We can try to subscribe to `DOM.childNodeRemoved` and `DOM.childNodeInserted` in the future
+    # to keep track of nodes.
+    def node_id
+      @node_id ||= begin
+        id = page.command("DOM.requestNode", objectId: @object_id)["nodeId"]
+        raise NodeNotFoundError, "node is not trackable" if id.zero?
+
+        id
+      rescue NoExecutionContextError
+        raise NodeNotFoundError, "node is not trackable"
+      end
     end
 
     def node?

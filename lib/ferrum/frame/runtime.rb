@@ -152,13 +152,8 @@ module Ferrum
 
           case response["subtype"]
           when "node"
-            # We cannot store object_id in the node because page can be reloaded
-            # and node destroyed so we need to retrieve it each time for given id.
-            # Though we can try to subscribe to `DOM.childNodeRemoved` and
-            # `DOM.childNodeInserted` in the future.
-            node_id = @page.command("DOM.requestNode", objectId: object_id)["nodeId"]
-            description = @page.command("DOM.describeNode", nodeId: node_id)["node"]
-            Node.new(self, @page.target_id, node_id, description)
+            description = @page.command("DOM.describeNode", objectId: object_id)["node"]
+            Node.new(self, @page.target_id, description, object_id: object_id)
           when "array"
             reduce_props(object_id, []) do |memo, key, value|
               next(memo) unless Integer(key, exception: false)

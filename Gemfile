@@ -16,7 +16,7 @@ gem "rspec", "~> 3.8"
 gem "rspec-wait"
 gem "rubocop", "~> 1.22"
 gem "rubocop-rake", require: false
-gem "sinatra", "~> 3.2"
+gem "sinatra", "~> 4.0"
 gem "yard", "~> 0.9", require: false
 
 gemspec

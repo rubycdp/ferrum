@@ -4,11 +4,12 @@ module Ferrum
 
     MOVING_WAIT_ATTEMPTS: untyped
 
+    @node_id: untyped
+    @object_id: untyped
+
     attr_reader page: untyped
 
     attr_reader target_id: untyped
-
-    attr_reader node_id: untyped
 
     attr_reader description: untyped
 
@@ -25,6 +26,8 @@ module Ferrum
     def focus: () -> untyped
 
     def focusable?: () -> untyped
+
+    def node_id: -> untyped
 
     def wait_for_stop_moving: (?delay: untyped, ?attempts: untyped) -> untyped
 

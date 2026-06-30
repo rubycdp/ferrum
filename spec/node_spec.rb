@@ -148,6 +148,15 @@ describe Ferrum::Node do
       expect(links.size).to eq(1)
       expect(links.first.text).to eq("Open for match")
     end
+
+    it "works with whitespace nodes" do
+      browser.go_to("/ws_node")
+
+      values = browser.xpath("//li//text()").map(&:text)
+
+      expect(values.size).to eq(5)
+      expect(values).to eq(["\n        ", "\n          ", "b", "\n        ", "\n      "])
+    end
   end
 
   describe "#at_css" do
@@ -853,6 +862,17 @@ describe Ferrum::Node do
       browser.execute "window.location = 'about:blank'"
 
       expect { node.text }.to raise_error(Ferrum::NodeNotFoundError)
+    end
+
+    it "works for a new node after refresh" do
+      browser.go_to("/index")
+      shallow_node = browser.at_xpath(".//a")
+
+      browser.refresh
+      expect { shallow_node.click }.to raise_error(Ferrum::NodeNotFoundError)
+
+      node = browser.at_xpath(".//a")
+      expect { node.click }.not_to raise_error(Ferrum::NodeNotFoundError)
     end
   end
 end
