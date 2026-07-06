@@ -20,8 +20,8 @@ module Ferrum
 
     def initialize(url, pendings = [])
       @pendings = pendings
-
-      message = "Request to #{url} reached server, but there are still pending connections: #{pendings.join(', ')}"
+      message = "Request to #{url} reached server, but there are still pending connections"
+      message += ": #{pendings.join(', ')}" unless @pendings.empty?
 
       super(url, message)
     end

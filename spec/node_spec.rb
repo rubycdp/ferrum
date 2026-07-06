@@ -872,7 +872,7 @@ describe Ferrum::Node do
       expect { shallow_node.click }.to raise_error(Ferrum::NodeNotFoundError)
 
       node = browser.at_xpath(".//a")
-      expect { node.click }.not_to raise_error(Ferrum::NodeNotFoundError)
+      expect { node.click }.not_to raise_error
     end
   end
 end

@@ -63,12 +63,16 @@ module Ferrum
         end
       end
 
+      private
+
       def frames_subscribe
         subscribe_frame_attached
         subscribe_frame_detached
+        subscribe_frame_started_navigating
         subscribe_frame_started_loading
         subscribe_frame_navigated
         subscribe_frame_stopped_loading
+        subscribe_frame_lifecycle_events
 
         subscribe_navigated_within_document
 
@@ -78,8 +82,6 @@ module Ferrum
         subscribe_execution_context_destroyed
         subscribe_execution_contexts_cleared
       end
-
-      private
 
       def subscribe_frame_attached
         on("Page.frameAttached") do |params|
@@ -96,6 +98,18 @@ module Ferrum
             frame.execution_id = nil
           else
             @frames.delete(params["frameId"])
+          end
+        end
+      end
+
+      # Tracks the +loaderId+ for each navigating frame and clears stale
+      # lifecycle events from the previous navigation.
+      def subscribe_frame_started_navigating
+        on("Page.frameStartedNavigating") do |params|
+          frame = @frames[params["frameId"]]
+          if frame
+            frame.loader_id = params["loaderId"]
+            frame.lifecycle_events.clear
           end
         end
       end
@@ -138,6 +152,33 @@ module Ferrum
         end
       end
 
+      # Appends +Page.lifecycleEvent+ events to {Frame#lifecycle_events}.
+      # Events from a superseded navigation (+loaderId+ mismatch) are dropped.
+      # Transitions +loading="lazy"+ iframes that Chrome never starts loading
+      # to +:stopped_loading+ on +networkIdle+, preventing a {Page#go_to} timeout.
+      def subscribe_frame_lifecycle_events
+        on("Page.lifecycleEvent") do |params|
+          frame = @frames[params["frameId"]]
+          next unless frame
+
+          frame.loader_id = params["loaderId"] unless frame.loader_id
+          # Reject stale events from a superseded navigation, iframes are not destroyed by Chrome, instead it creates
+          # new ones. Main frame stays with the same id, but new events start to flow in.
+          next if frame.loader_id != params["loaderId"]
+
+          event = params.slice("name", "timestamp")
+          frame.lifecycle_events << event
+
+          # This handles iframes with loading="lazy", those that Chrome attaches but parks outside the viewport.
+          # They do not trigger any events except `Page.frameAttached` and lifecycle events like:
+          # `init` and `networkIdle`. Without it `go_to` would wait for such iframe until it raises timeout.
+          if event["name"] == "networkIdle" && !frame.main?
+            frame.state = :stopped_loading
+            @event.set if idling?
+          end
+        end
+      end
+
       def subscribe_navigated_within_document
         on("Page.navigatedWithinDocument") do
           @event.set if idling?
@@ -177,21 +218,36 @@ module Ferrum
           execution_id = params["executionContextId"]
           frame = frame_by(execution_id: execution_id)
           frame&.execution_id = nil
-          frame&.state = :stopped_loading
+          frame&.state = :canceled
         end
       end
 
+      # On full navigations/reloads Chrome fires +Page.frameAttached+ with new
+      # frame IDs but skips +Page.frameDetached+ for old ones. Removing stale
+      # child frames here prevents them from blocking {#idling?} indefinitely.
+      # The main frame is reset in-place; child frames are re-added via
+      # +Page.frameAttached+.
       def subscribe_execution_contexts_cleared
         on("Runtime.executionContextsCleared") do
-          @frames.each_value do |f|
-            f.execution_id = nil
-            f.state = :stopped_loading
+          children = []
+
+          @frames.each do |frame_id, f|
+            if f.main?
+              f.execution_id = nil
+              f.loader_id = nil
+              f.lifecycle_events.clear
+              f.state = :canceled
+            else
+              children << frame_id
+            end
           end
+
+          children.each { |id| @frames.delete(id) }
         end
       end
 
       def idling?
-        @frames.values.all? { |f| f.state == :stopped_loading }
+        @frames.values.all?(&:idle?)
       end
     end
   end

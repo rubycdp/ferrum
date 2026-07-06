@@ -118,7 +118,7 @@ module Ferrum
     rescue TimeoutError
       if @options.pending_connection_errors
         pendings = network.traffic.select(&:pending?).map(&:url).compact
-        raise PendingConnectionsError.new(options[:url], pendings) unless pendings.empty?
+        raise PendingConnectionsError.new(options[:url], Array(pendings))
       end
     end
     alias goto go_to
@@ -361,7 +361,7 @@ module Ferrum
       if wait.positive?
         # Wait a bit after command and check if iteration has
         # changed which means there was some network event for
-        # the main frame and it started to load new content.
+        # the main frame, and it started to load new content.
         @event.wait(wait)
         if iteration != @event.iteration
           set = @event.wait(timeout)
@@ -458,6 +458,7 @@ module Ferrum
 
     def prepare_page
       command("Page.enable")
+      command("Page.setLifecycleEventsEnabled", enabled: true)
       command("Runtime.enable")
       command("DOM.enable", includeWhitespace: "all")
       command("CSS.enable")
