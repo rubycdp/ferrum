@@ -1,14 +1,19 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.17.2...main) ##
 
 ### Added
+- `Ferrum::Frame#loader_id` provides a loader id when frame navigates [#583]
+- `Ferrum::Frame#lifecycle_events` provides a list of frame's events like init, networkIdle, firstPaint, etc. [#583]
+- `Ferrum::Frame#idle?` whether frame was loaded [#583]
 
 ### Changed
+- `Ferrum::PendingConnectionsError` and `Ferrum::TimeoutError` were swallowed even though happening when traffic iterator results in empty array. [#583]
 
 ### Fixed
 - Full-page screenshots no longer resize the window, preventing focus steal on macOS [#580]
 - DOM.enable is now has `includeWhitespace: "all"` to keep track of new line nodes which previously were resolved to 0, and errored with NodeNotFoundError [#596]
 - `DOM.requestNode` call is moved to the node class and being done lazily, this reduces number of intermediate node ids sent by backend to frontend [#596]
 - Fix `context` can be nilable in ensure Browser#create_page [#582]
+- `Ferrum::Page#idling?` no longer blocks on `loading="lazy"` iframes that Chrome never starts loading [#583]
 
 ### Removed
 

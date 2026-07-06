@@ -7,19 +7,23 @@ module Ferrum
 
       def frame_by: (?id: untyped?, ?name: untyped?, ?execution_id: untyped?) -> untyped
 
-      def frames_subscribe: () -> untyped
-
       private
+
+      def frames_subscribe: () -> untyped
 
       def subscribe_frame_attached: () -> untyped
 
       def subscribe_frame_detached: () -> untyped
+
+      def subscribe_frame_started_navigating: () -> untyped
 
       def subscribe_frame_started_loading: () -> untyped
 
       def subscribe_frame_navigated: () -> untyped
 
       def subscribe_frame_stopped_loading: () -> untyped
+
+      def subscribe_frame_lifecycle_events: () -> untyped
 
       def subscribe_navigated_within_document: () -> untyped
 

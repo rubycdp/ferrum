@@ -4,17 +4,21 @@ module Ferrum
 
     include Runtime
 
-    STATE_VALUES: ::Array[:started_loading | :navigated | :stopped_loading]
+    STATE_VALUES: ::Array[:started_loading | :navigated | :stopped_loading | :canceled]
 
-    attr_accessor id: untyped
+    attr_accessor id: String
 
-    attr_accessor name: untyped
+    attr_accessor name: String?
 
     attr_reader page: untyped
 
-    attr_reader parent_id: untyped
+    attr_reader parent_id: String?
 
-    attr_reader state: untyped
+    attr_reader state: (:started_loading | :navigated | :stopped_loading | :canceled)?
+
+    attr_accessor loader_id: String?
+
+    attr_reader lifecycle_events: ::Array[::Hash[::String, ::String | ::Float]]
 
     def initialize: (untyped id, untyped page, ?untyped? parent_id) -> void
 
@@ -24,7 +28,9 @@ module Ferrum
 
     def title: () -> untyped
 
-    def main?: () -> untyped
+    def main?: () -> bool
+
+    def idle?: () -> bool
 
     def content=: (untyped html) -> untyped
 

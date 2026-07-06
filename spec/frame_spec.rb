@@ -125,6 +125,33 @@ describe Ferrum::Frame do
     end
   end
 
+  context "with lazy loading iframes" do
+    it "does not block visit on lazy iframe" do
+      expect { page.go_to("/lazy_iframe") }.not_to raise_error
+
+      states = page.frames.reject(&:main?).map(&:state)
+      expect(states).to eq(%i[stopped_loading stopped_loading])
+    end
+
+    it "does not block click whose handler attaches a lazy iframe" do
+      page.go_to("/lazy_iframe")
+
+      expect { page.at_css("#add_iframe").click }.not_to raise_error
+
+      states = page.frames.reject(&:main?).map(&:state)
+      expect(states).to eq(%i[stopped_loading stopped_loading stopped_loading])
+    end
+
+    it "loads in-viewport lazy iframes" do
+      page.go_to("/lazy_iframe")
+      frame = page.frame_by(name: "lazy_in_viewport")
+
+      states = page.frames.reject(&:main?).map(&:state)
+      expect(frame.body).to include("slow page")
+      expect(states).to eq(%i[stopped_loading stopped_loading])
+    end
+  end
+
   it "supports clicking in a frame", skip: true do
     page.go_to
     page.execute <<-JS

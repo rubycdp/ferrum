@@ -12,6 +12,7 @@ module Ferrum
       started_loading
       navigated
       stopped_loading
+      canceled
     ].freeze
 
     # The Frame's unique id.
@@ -36,13 +37,24 @@ module Ferrum
 
     # One of the states frame's in.
     #
-    # @return [:started_loading, :navigated, :stopped_loading, nil]
+    # @return [:started_loading, :navigated, :stopped_loading, :canceled, nil]
     attr_reader :state
+
+    # Frame loader id.
+    #
+    # @return [String, nil]
+    attr_accessor :loader_id
+
+    # Frame's lifecycle events (navigation, load, paint, etc.).
+    #
+    # @return [Array<Hash{String => (String|Float)}>]
+    attr_reader :lifecycle_events
 
     def initialize(id, page, parent_id = nil)
       @id = id
       @page = page
       @parent_id = parent_id
+      @lifecycle_events = []
       @execution_id = Concurrent::MVar.new
     end
 
@@ -92,6 +104,20 @@ module Ferrum
     #
     def main?
       @parent_id.nil?
+    end
+
+    #
+    # Returns whether the frame has finished loading (+:stopped_loading+ state).
+    # Frames in +:canceled+ state (execution context torn down mid-navigation)
+    # are not considered idle.
+    #
+    # @return [Boolean]
+    #
+    # @example
+    #   browser.go_to("https://example.com")
+    #   browser.main_frame.idle? # => true
+    def idle?
+      state == :stopped_loading
     end
 
     #
@@ -177,6 +203,8 @@ module Ferrum
         "@id=#{@id.inspect} " \
         "@parent_id=#{@parent_id.inspect} " \
         "@name=#{@name.inspect} " \
+        "@loader_id=#{@loader_id.inspect} " \
+        "@lifecycle_events=#{@lifecycle_events.inspect} " \
         "@state=#{@state.inspect} " \
         "@execution_id=#{@execution_id.inspect}>"
     end
