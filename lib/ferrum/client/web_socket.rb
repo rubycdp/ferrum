@@ -30,7 +30,10 @@ module Ferrum
         end
 
         max_receive_size ||= ::WebSocket::Driver::MAX_LENGTH
-        @driver   = ::WebSocket::Driver.client(self, max_length: max_receive_size)
+        @driver = ::WebSocket::Driver.client(self, max_length: max_receive_size)
+        # websocket-driver holds no locks and is called from many threads: commands from
+        # callers, pong/close replies from the reader. One lock keeps frames from interleaving.
+        @driver_mutex = Mutex.new
         @messages = Queue.new
 
         @screenshot_commands = Concurrent::Hash.new if SKIP_LOGGING_SCREENSHOTS
@@ -41,7 +44,7 @@ module Ferrum
 
         start
 
-        @driver.start
+        @driver_mutex.synchronize { @driver.start }
       end
 
       def on_open(_event)
@@ -76,7 +79,7 @@ module Ferrum
         @screenshot_commands[data[:id]] = true if SKIP_LOGGING_SCREENSHOTS
 
         json = data.to_json
-        @driver.text(json)
+        @driver_mutex.synchronize { @driver.text(json) }
         @logger&.puts("\n\n▶ #{Utils::ElapsedTime.elapsed_time} #{json}")
       end
 
@@ -87,7 +90,7 @@ module Ferrum
       end
 
       def close
-        @driver.close
+        @driver_mutex.synchronize { @driver.close }
       end
 
       private
@@ -98,7 +101,7 @@ module Ferrum
             data = @sock.readpartial(512)
             break unless data
 
-            @driver.parse(data)
+            @driver_mutex.synchronize { @driver.parse(data) }
           end
         rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, IOError # rubocop:disable Lint/ShadowedException
           @messages.close

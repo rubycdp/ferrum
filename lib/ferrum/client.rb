@@ -68,6 +68,7 @@ module Ferrum
 
     def initialize(ws_url, options)
       @command_id = 0
+      @command_id_mutex = Mutex.new
       @ws_url = ws_url
       @options = options
       @pendings = Concurrent::Hash.new
@@ -154,8 +155,10 @@ module Ferrum
       end
     end
 
+    # Locked so two concurrent commands never share an id and read each
+    # other's responses from @pendings.
     def next_command_id
-      @command_id += 1
+      @command_id_mutex.synchronize { @command_id += 1 }
     end
 
     def raise_browser_error(error)
