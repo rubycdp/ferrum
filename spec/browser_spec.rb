@@ -45,6 +45,9 @@ describe Ferrum::Browser do
       browser = Ferrum::Browser.new(logger: logger)
       browser.go_to(base_url("/console_log"))
       expect(logger.string).to include("Hello world")
+      expect(logger.string).to include("[log] Hello world")
+      expect(logger.string).to include("at window.onload")
+      expect(logger.string).to include("/console_log")
     ensure
       browser&.quit
     end
