@@ -1,8 +1,14 @@
 # frozen_string_literal: true
 
 require "tempfile"
-require "webrick"
-require "webrick/httpproxy"
+
+begin
+  require "webrick"
+  require "webrick/httpproxy"
+rescue LoadError
+  warn("Please add webrick to your Gemfile to use Ferrum proxy")
+  raise
+end
 
 module Ferrum
   class Proxy

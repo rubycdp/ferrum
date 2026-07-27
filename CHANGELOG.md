@@ -7,6 +7,7 @@
 
 ### Changed
 - `Ferrum::PendingConnectionsError` and `Ferrum::TimeoutError` were swallowed even though happening when traffic iterator results in empty array. [#583]
+- `webrick` is no longer a runtime dependency. It is only required by `Ferrum::Proxy`, so add `gem "webrick"` to your Gemfile if you use it.
 
 ### Fixed
 - Full-page screenshots no longer resize the window, preventing focus steal on macOS [#580]
@@ -16,6 +17,7 @@
 - `Ferrum::Page#idling?` no longer blocks on `loading="lazy"` iframes that Chrome never starts loading [#583]
 
 ### Removed
+- `webrick` runtime dependency dropped from the gemspec. `Ferrum::Proxy` still needs it, so add `gem "webrick"` to your Gemfile if you use the proxy server.
 
 
 ## [0.17.2](https://github.com/rubycdp/ferrum/compare/v0.17.1...v0.17.2) (March 23, 2026) ##

@@ -33,3 +33,22 @@ browser.create_page(proxy: { host: "y.y.y.y", port: 31337, user: "user", passwor
   page.body # => "y.y.y.y"
 end
 ```
+
+## Built-in proxy server
+
+Ferrum also ships a small forwarding proxy server, `Ferrum::Proxy`, which is handy
+for tests or when you need to rotate upstream proxies at runtime:
+
+```ruby
+require "ferrum/proxy"
+
+proxy = Ferrum::Proxy.start(host: "127.0.0.1", port: 0)
+browser = Ferrum::Browser.new(proxy: { host: proxy.host, port: proxy.port })
+```
+
+`Ferrum::Proxy` is built on top of [`webrick`](https://rubygems.org/gems/webrick),
+which is **not** a dependency of Ferrum. If you use it, add webrick to your Gemfile:
+
+```ruby
+gem "webrick"
+```

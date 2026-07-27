@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ferrum/proxy"
+
 describe Ferrum::Browser do
   describe "#new" do
     let(:logger) { StringIO.new }

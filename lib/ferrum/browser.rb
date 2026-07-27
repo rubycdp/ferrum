@@ -3,7 +3,6 @@
 require "base64"
 require "forwardable"
 require "ferrum/page"
-require "ferrum/proxy"
 require "ferrum/client"
 require "ferrum/contexts"
 require "ferrum/browser/xvfb"
