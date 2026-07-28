@@ -516,6 +516,15 @@ describe Ferrum::Node do
         expect(input.value).to eq("Text appended")
       end
 
+      it "selects all in an input with the command modifier then clears" do
+        input = browser.at_css("#filled_input")
+        modifier = Ferrum::Utils::Platform.mac? ? :meta : :ctrl
+
+        input.focus.type([modifier, "a"], :backspace)
+
+        expect(input.value).to eq("")
+      end
+
       it "sends keys to empty textarea" do
         input = browser.at_css("#empty_textarea")
 
@@ -641,6 +650,15 @@ describe Ferrum::Node do
         input.click.type(" appended")
 
         expect(input.text).to eq("Content appended")
+      end
+
+      it "selects all with the command modifier then clears" do
+        input = browser.at_css("#filled_div")
+        modifier = Ferrum::Utils::Platform.mac? ? :meta : :ctrl
+
+        input.focus.type([modifier, "a"], :backspace)
+
+        expect(input.text).to eq("")
       end
 
       it "sets content" do

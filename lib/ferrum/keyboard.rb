@@ -136,6 +136,13 @@ module Ferrum
               modifiers: pressed.map { |k| MODIFIERS[k] }.reduce(0, :|)
             )
 
+            # Synthetic key events alone do not trigger the browser's editing
+            # shortcuts (e.g. select-all). When the chord matches a platform
+            # accelerator, name the editing command explicitly so Chrome
+            # executes it via the CDP `commands` field.
+            command = editing_command(pressed, char)
+            key = key.merge(commands: [command]) if command
+
             modifiers = pressed.map { |k| to_options(KEYS.fetch(KEYS_MAPPING[k.to_sym])) }
             modifiers + [to_options(key)]
           end.flatten
@@ -156,6 +163,18 @@ module Ferrum
 
     def to_options(hash)
       hash.inject({}) { |memo, (k, v)| memo.merge(k.to_sym => v) }
+    end
+
+    # Names the CDP editing command for a modifier chord, or nil if the chord
+    # is not an editing accelerator. The accelerator modifier is Cmd on macOS
+    # and Ctrl elsewhere, matching Chrome's own key bindings. Currently only
+    # select-all is mapped; extend the guard for further commands as needed.
+    def editing_command(pressed, char)
+      return unless char.casecmp?("a")
+      return if pressed.include?("shift")
+
+      accelerator = Utils::Platform.mac? ? MODIFIERS["meta"] : MODIFIERS["ctrl"]
+      "selectAll" if pressed.map { |k| MODIFIERS[k] }.compact.uniq == [accelerator]
     end
   end
 end

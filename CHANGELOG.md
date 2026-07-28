@@ -5,6 +5,9 @@
 - `Ferrum::Frame#lifecycle_events` provides a list of frame's events like init, networkIdle, firstPaint, etc. [#583]
 - `Ferrum::Frame#idle?` whether frame was loaded [#583]
 
+### Fixed
+- `Ferrum::Node#type` / `Ferrum::Keyboard` now trigger the select-all editing shortcut (`Ctrl`/`Cmd`+`A`) by naming the CDP `commands` field, so selecting and replacing text in inputs and contenteditables works.
+
 ### Changed
 - `Ferrum::PendingConnectionsError` and `Ferrum::TimeoutError` were swallowed even though happening when traffic iterator results in empty array. [#583]
 - `webrick` is no longer a runtime dependency. It is only required by `Ferrum::Proxy`, so add `gem "webrick"` to your Gemfile if you use it.
