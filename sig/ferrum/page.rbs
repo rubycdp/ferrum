@@ -18,6 +18,7 @@ module Ferrum
     attr_reader mouse: Mouse
     attr_reader keyboard: Keyboard
     attr_reader network: Network
+    attr_reader accessibility: Accessibility
     attr_reader headers: Headers
     attr_reader cookies: Cookies
     attr_reader downloads: Downloads

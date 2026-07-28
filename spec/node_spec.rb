@@ -368,6 +368,22 @@ describe Ferrum::Node do
     end
   end
 
+  describe "#axnode" do
+    before { browser.go_to("/accessibility") }
+
+    it "returns the AXNode for the element" do
+      ax = browser.at_css("#submit").axnode
+
+      expect(ax).to be_a(Ferrum::Accessibility::AXNode)
+      expect(ax.role).to eq("button")
+      expect(ax.name).to eq("Send form")
+    end
+
+    it "returns nil for an ignored element" do
+      expect(browser.at_css("#hidden").axnode).to be_nil
+    end
+  end
+
   describe "#remove" do
     it "removes node" do
       browser.go_to("/simple")

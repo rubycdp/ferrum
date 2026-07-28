@@ -8,6 +8,7 @@ require "ferrum/headers"
 require "ferrum/cookies"
 require "ferrum/dialog"
 require "ferrum/network"
+require "ferrum/accessibility"
 require "ferrum/downloads"
 require "ferrum/page/frames"
 require "ferrum/page/screencast"
@@ -57,6 +58,11 @@ module Ferrum
     # @return [Network]
     attr_reader :network
 
+    # Accessibility object.
+    #
+    # @return [Accessibility]
+    attr_reader :accessibility
+
     # Headers object.
     #
     # @return [Headers]
@@ -88,6 +94,7 @@ module Ferrum
       @headers = Headers.new(self)
       @cookies = Cookies.new(self)
       @network = Network.new(self)
+      @accessibility = Accessibility.new(self)
       @tracing = Tracing.new(self)
       @downloads = Downloads.new(self)
 

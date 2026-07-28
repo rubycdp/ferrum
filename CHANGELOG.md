@@ -4,6 +4,7 @@
 - `Ferrum::Frame#loader_id` provides a loader id when frame navigates [#583]
 - `Ferrum::Frame#lifecycle_events` provides a list of frame's events like init, networkIdle, firstPaint, etc. [#583]
 - `Ferrum::Frame#idle?` whether frame was loaded [#583]
+- `page.accessibility` API and `Node#axnode` for reading the CDP accessibility tree
 
 ### Fixed
 - `Ferrum::Node#type` / `Ferrum::Keyboard` now trigger the select-all editing shortcut (`Ctrl`/`Cmd`+`A`) by naming the CDP `commands` field, so selecting and replacing text in inputs and contenteditables works.
