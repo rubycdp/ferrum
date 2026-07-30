@@ -8,6 +8,10 @@
 
 ### Fixed
 - `Ferrum::Node#type` / `Ferrum::Keyboard` now trigger the select-all editing shortcut (`Ctrl`/`Cmd`+`A`) by naming the CDP `commands` field, so selecting and replacing text in inputs and contenteditables works.
+- `Ferrum::Network::InterceptedRequest#match?` no longer coerces string blacklist/whitelist patterns containing regexp metacharacters
+  (e.g. `?`, `.`) into regexps; string patterns are now compared literally instead. [#405], [#604]
+- `Ferrum::Network::AuthRequest#match?` and `Ferrum::Dialog#match?` received the same fix as [#604] above for consistency. String patterns
+  now compare literally: exact-match for requests/auth requests, substring-match for dialog messages. [#405]
 
 ### Changed
 - `Ferrum::PendingConnectionsError` and `Ferrum::TimeoutError` were swallowed even though happening when traffic iterator results in empty array. [#583]

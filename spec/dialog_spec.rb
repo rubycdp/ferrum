@@ -60,7 +60,7 @@ describe Ferrum::Dialog do
     it "matches on partial strings" do
       browser.go_to("/with_js")
       browser.on(:dialog) do |dialog, _index, _total|
-        if dialog.match?(Regexp.escape("[reg.exp] (chara©+er$)"))
+        if dialog.match?("[reg.exp] (chara©+er$)")
           dialog.accept
         else
           dialog.dismiss
@@ -70,6 +70,21 @@ describe Ferrum::Dialog do
       browser.at_css("a#open-match").click
 
       expect(browser.at_xpath("//a[@id='open-match' and @confirmed='true']")).to be
+    end
+
+    it "treats string patterns literally instead of as regexps" do
+      browser.go_to("/with_js")
+      browser.on(:dialog) do |dialog, _index, _total|
+        if dialog.match?("[reg.exp?]")
+          dialog.accept
+        else
+          dialog.dismiss
+        end
+      end
+
+      browser.at_css("a#open-match").click
+
+      expect(browser.at_xpath("//a[@id='open-match' and @confirmed='true']")).not_to be
     end
 
     it "matches on regular expressions" do

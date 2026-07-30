@@ -51,8 +51,10 @@ module Ferrum
       @page.command("Page.handleJavaScriptDialog", slowmoable: true, accept: false)
     end
 
-    def match?(regexp)
-      !!message.match(regexp)
+    def match?(pattern)
+      return message.match?(pattern) if pattern.is_a?(Regexp)
+
+      message.include?(pattern.to_s)
     end
   end
 end

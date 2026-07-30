@@ -22,8 +22,13 @@ module Ferrum
         @params.dig("authChallenge", "source")&.downcase&.to_s == source.to_s
       end
 
-      def match?(regexp)
-        !!url.match(regexp)
+      def match?(pattern)
+        case url
+        when pattern
+          true
+        else
+          false
+        end
       end
 
       def continue(**options)
