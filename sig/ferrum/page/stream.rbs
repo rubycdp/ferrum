@@ -10,6 +10,8 @@ module Ferrum
       def stream_to_memory: (encoding: untyped, handle: untyped) -> untyped
 
       def stream: (output: untyped, handle: untyped) -> untyped
+
+      def close_stream: (handle: untyped) -> untyped
     end
   end
 end

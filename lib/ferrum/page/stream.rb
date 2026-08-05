@@ -70,7 +70,8 @@ module Ferrum
 
       #
       # Reads a CDP `IO` stream in chunks, writing each chunk to the given
-      # output until the stream is exhausted.
+      # output until the stream is exhausted, then releases the stream
+      # handle on the browser side.
       #
       # @param [#<<] output
       #   Anything that responds to `#<<`, e.g. an open `File` or a `String`.
@@ -88,6 +89,20 @@ module Ferrum
           output << chunk
           break if result["eof"]
         end
+        close_stream(handle: handle)
+      end
+
+      #
+      # Releases a CDP `IO` stream handle, discarding any backing storage
+      # the browser is holding for it.
+      #
+      # @param [String] handle
+      #   The CDP `IO` stream handle to close.
+      #
+      # @return [void]
+      #
+      def close_stream(handle:)
+        command("IO.close", handle: handle)
       end
     end
   end
