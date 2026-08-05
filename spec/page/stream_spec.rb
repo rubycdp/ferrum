@@ -7,6 +7,10 @@ describe Ferrum::Page::Stream do
     let(:output) { String.new }
     let(:handle) { "stream-handle" }
 
+    before do
+      allow(streamer).to receive(:command).with("IO.close", handle: handle).and_return({})
+    end
+
     it "reads and appends chunks until EOF" do
       expect(streamer).to receive(:command)
         .with("IO.read", handle: handle, size: described_class::STREAM_CHUNK)

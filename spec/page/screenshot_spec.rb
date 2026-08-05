@@ -429,6 +429,7 @@ describe Ferrum::Page::Screenshot do
         allow(browser.page).to receive(:command).with("IO.read", hash_including(handle: "1")) {
           { "data" => "", "base64Encoded" => false, "eof" => true }
         }
+        allow(browser.page).to receive(:command).with("IO.close", handle: "1").and_return({})
 
         browser.pdf(path: file,
                     landscape: false,

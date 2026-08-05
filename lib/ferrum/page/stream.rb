@@ -25,6 +25,7 @@ module Ferrum
       end
 
       def stream(output:, handle:)
+        completed = false
         loop do
           result = command("IO.read", handle: handle, size: STREAM_CHUNK)
           chunk = result.fetch("data")
@@ -32,6 +33,17 @@ module Ferrum
           output << chunk
           break if result["eof"]
         end
+        completed = true
+      ensure
+        close_stream(handle: handle, suppress_errors: !completed)
+      end
+
+      private
+
+      def close_stream(handle:, suppress_errors:)
+        command("IO.close", handle: handle)
+      rescue StandardError
+        raise unless suppress_errors
       end
     end
   end

@@ -7,6 +7,7 @@
 - `page.accessibility` API and `Node#axnode` for reading the CDP accessibility tree
 
 ### Fixed
+- CDP streams opened for `Ferrum::Browser#pdf` and `Ferrum::Page::Tracing#record` are now closed with `IO.close` after being read.
 - `Ferrum::Node#type` / `Ferrum::Keyboard` now trigger the select-all editing shortcut (`Ctrl`/`Cmd`+`A`) by naming the CDP `commands` field, so selecting and replacing text in inputs and contenteditables works.
 - `Ferrum::Network::InterceptedRequest#match?` no longer coerces string blacklist/whitelist patterns containing regexp metacharacters
   (e.g. `?`, `.`) into regexps; string patterns are now compared literally instead. [#405], [#604]
@@ -14,6 +15,7 @@
   now compare literally: exact-match for requests/auth requests, substring-match for dialog messages. [#405]
 
 ### Changed
+- An `IO.close` failure is now propagated after a PDF or tracing stream has otherwise been read successfully.
 - `Ferrum::PendingConnectionsError` and `Ferrum::TimeoutError` were swallowed even though happening when traffic iterator results in empty array. [#583]
 - `webrick` is no longer a runtime dependency. It is only required by `Ferrum::Proxy`, so add `gem "webrick"` to your Gemfile if you use it.
 
