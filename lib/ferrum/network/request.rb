@@ -33,7 +33,7 @@ module Ferrum
       end
 
       #
-      # The request resouce type.
+      # The request resource type.
       #
       # @return [String]
       #
