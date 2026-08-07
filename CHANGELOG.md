@@ -5,8 +5,10 @@
 - `Ferrum::Frame#lifecycle_events` provides a list of frame's events like init, networkIdle, firstPaint, etc. [#583]
 - `Ferrum::Frame#idle?` whether frame was loaded [#583]
 - `page.accessibility` API and `Node#axnode` for reading the CDP accessibility tree
+- `--no-crashpad` is now included in the default Chrome flags, fully disabling the crashpad handler process [#610]
 
 ### Fixed
+- `Ferrum::Client` command id generation and `Ferrum::Client::WebSocket`'s driver interactions were not thread-safe, allowing concurrent commands to collide on the same id or corrupt the frame stream; both are now serialized under a mutex [#602]
 - `Ferrum::Node#type` / `Ferrum::Keyboard` now trigger the select-all editing shortcut (`Ctrl`/`Cmd`+`A`) by naming the CDP `commands` field, so selecting and replacing text in inputs and contenteditables works.
 - `Ferrum::Network::InterceptedRequest#match?` no longer coerces string blacklist/whitelist patterns containing regexp metacharacters
   (e.g. `?`, `.`) into regexps; string patterns are now compared literally instead. [#405], [#604]
@@ -16,6 +18,7 @@
 ### Changed
 - `Ferrum::PendingConnectionsError` and `Ferrum::TimeoutError` were swallowed even though happening when traffic iterator results in empty array. [#583]
 - `webrick` is no longer a runtime dependency. It is only required by `Ferrum::Proxy`, so add `gem "webrick"` to your Gemfile if you use it.
+- Logger output for `Runtime.consoleAPICalled` now includes the console API type and stack trace call frames, not just the argument values [#605]
 
 ### Fixed
 - Full-page screenshots no longer resize the window, preventing focus steal on macOS [#580]
