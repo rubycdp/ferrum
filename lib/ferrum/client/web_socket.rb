@@ -54,12 +54,6 @@ module Ferrum
 
       def on_message(event)
         data = safely_parse_json(event.data)
-        # If we couldn't parse JSON data for some reason (parse error or deeply nested object) we
-        # don't push response to @messages. Worse that could happen we raise timeout error due to command didn't return
-        # anything or skip the background notification, but at least we don't crash the thread that crashes the main
-        # thread and the application.
-        @messages.push(data) if data
-
         output = event.data
         if SKIP_LOGGING_SCREENSHOTS && @screenshot_commands[data&.dig("id")]
           @screenshot_commands.delete(data&.dig("id"))
@@ -67,6 +61,12 @@ module Ferrum
         end
 
         @logger&.puts("    ◀ #{Utils::ElapsedTime.elapsed_time} #{output}\n")
+
+        # If we couldn't parse JSON data for some reason (parse error or deeply nested object) we
+        # don't push response to @messages. Worse that could happen we raise timeout error due to command didn't return
+        # anything or skip the background notification, but at least we don't crash the thread that crashes the main
+        # thread and the application.
+        @messages.push(data) if data
       end
 
       def on_close(_event)
