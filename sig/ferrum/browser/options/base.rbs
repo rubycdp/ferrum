@@ -1,0 +1,23 @@
+module Ferrum
+  class Browser
+    class Options
+      class Base
+        include Singleton
+
+        def self.options: () -> Base
+
+        def self.version: -> ::String?
+
+        def to_h: () -> Hash[::String, untyped]
+
+        def except: (*String keys) -> Hash[::String, untyped]
+
+        def detect_path: () -> ::String?
+
+        def merge_required: (untyped flags, untyped options, untyped user_data_dir) -> untyped
+
+        def merge_default: (untyped flags, untyped options) -> untyped
+      end
+    end
+  end
+end

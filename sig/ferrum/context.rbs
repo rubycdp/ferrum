@@ -1,0 +1,47 @@
+module Ferrum
+  class Context
+    POSITION: ::Array[:first | :last]
+
+    attr_reader id: String
+    attr_reader targets: ::Concurrent::Map[String, Target]
+
+    @id: String
+    @client: Client
+    @contexts: Contexts
+    @targets: ::Concurrent::Map[String, Target]
+    @pendings: ::Concurrent::Map[String, ::Concurrent::IVar]
+    @default_target: Target?
+
+    def initialize: (Client, Contexts, String) -> void
+
+    def default_target: () -> Target
+
+    def page: () -> Page
+
+    def pages: () -> ::Array[Page]
+
+    def windows: (?(:first | :last)?, ?::Integer) -> ::Array[Page]
+
+    def create_page: (**untyped options) -> Page
+
+    def create_target: () -> Target
+
+    def add_target: (params: Hash[String, untyped], ?session_id: String?) -> bool
+
+    def update_target: (String target_id, Hash[String, untyped] params) -> void
+
+    def delete_target: (String target_id) -> Target?
+
+    def attach_target: (String target_id) -> bool
+
+    def find_target: () { (Target) -> bool } -> Target?
+
+    def close_targets_connection: () -> void
+
+    def dispose: () -> bool
+
+    def target?: (String target_id) -> bool
+
+    def inspect: () -> ::String
+  end
+end

@@ -5,7 +5,7 @@ module Ferrum
     module Platform
       module_function
 
-      def name
+      def platform_name
         return :mac if mac?
         return :windows if windows?
 

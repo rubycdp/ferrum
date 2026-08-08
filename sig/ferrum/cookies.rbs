@@ -1,0 +1,30 @@
+module Ferrum
+  class Cookies
+    include Enumerable[Cookies::Cookie]
+
+    @page: Page
+
+    def initialize: (Page page) -> void
+
+    def each: () { (Cookies::Cookie) -> void } -> void
+            | () -> Enumerator[Cookies::Cookie, void]
+
+    def all: () -> ::Hash[String, Cookies::Cookie]
+
+    def []: (String name) -> Cookies::Cookie?
+
+    def set: ((Cookies::Cookie | Hash[Symbol, untyped]) options) -> bool
+
+    def remove: (name: String, ?domain: String?, ?url: String?) -> true
+
+    def clear: () -> true
+
+    def store: (?String path) -> ::Integer
+
+    def load: (?String path) -> true
+
+    private
+
+    def default_domain: () -> String?
+  end
+end

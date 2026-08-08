@@ -1,0 +1,29 @@
+module Forwardable
+  def self.extended: (Module obj) -> void
+
+  def instance_delegate: (Hash[Symbol, Symbol | Array[Symbol]] hash) -> void
+
+  def def_instance_delegator: (Symbol accessor, Symbol method, ?Symbol? ali) -> void
+
+  def def_instance_delegators: (Symbol accessor, *Symbol methods) -> void
+
+  def def_delegator: (Symbol accessor, Symbol method, ?Symbol? ali) -> void
+
+  def def_delegators: (Symbol accessor, *Symbol methods) -> void
+
+  def delegate: (Hash[Symbol | Array[Symbol], Symbol] hash) -> void
+end
+
+module SingleForwardable
+  def self.extended: (Module obj) -> void
+
+  def single_delegate: (Hash[Symbol, Symbol | Array[Symbol]] hash) -> void
+
+  def def_single_delegator: (Symbol accessor, Symbol method, ?Symbol? ali) -> void
+
+  def def_single_delegators: (Symbol accessor, *Symbol methods) -> void
+
+  def def_delegator: (Symbol accessor, Symbol method, ?Symbol? ali) -> void
+
+  def def_delegators: (Symbol accessor, *Symbol methods) -> void
+end

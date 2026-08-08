@@ -8,6 +8,7 @@ require "ferrum/headers"
 require "ferrum/cookies"
 require "ferrum/dialog"
 require "ferrum/network"
+require "ferrum/accessibility"
 require "ferrum/downloads"
 require "ferrum/page/frames"
 require "ferrum/page/screencast"
@@ -21,6 +22,7 @@ module Ferrum
     GOTO_WAIT = ENV.fetch("FERRUM_GOTO_WAIT", 0.1).to_f
 
     extend Forwardable
+
     delegate %i[at_css at_xpath css xpath
                 current_url current_title url title body doctype content=
                 execution_id execution_id! evaluate evaluate_on evaluate_async execute evaluate_func
@@ -56,6 +58,11 @@ module Ferrum
     # @return [Network]
     attr_reader :network
 
+    # Accessibility object.
+    #
+    # @return [Accessibility]
+    attr_reader :accessibility
+
     # Headers object.
     #
     # @return [Headers]
@@ -87,6 +94,7 @@ module Ferrum
       @headers = Headers.new(self)
       @cookies = Cookies.new(self)
       @network = Network.new(self)
+      @accessibility = Accessibility.new(self)
       @tracing = Tracing.new(self)
       @downloads = Downloads.new(self)
 
@@ -117,7 +125,7 @@ module Ferrum
     rescue TimeoutError
       if @options.pending_connection_errors
         pendings = network.traffic.select(&:pending?).map(&:url).compact
-        raise PendingConnectionsError.new(options[:url], pendings) unless pendings.empty?
+        raise PendingConnectionsError.new(options[:url], Array(pendings))
       end
     end
     alias goto go_to
@@ -360,7 +368,7 @@ module Ferrum
       if wait.positive?
         # Wait a bit after command and check if iteration has
         # changed which means there was some network event for
-        # the main frame and it started to load new content.
+        # the main frame, and it started to load new content.
         @event.wait(wait)
         if iteration != @event.iteration
           set = @event.wait(timeout)
@@ -380,8 +388,7 @@ module Ferrum
       when :request
         client.on("Fetch.requestPaused") do |params, index, total|
           request = Network::InterceptedRequest.new(client, params)
-          exchange = network.select(request.network_id).last
-          exchange ||= network.build_exchange(request.network_id)
+          exchange = network.find_or_build_exchange(request.network_id)
           exchange.intercepted_request = request
           block.call(request, index, total)
         end
@@ -435,17 +442,14 @@ module Ferrum
 
       if @options.logger
         on("Runtime.consoleAPICalled") do |params|
-          params["args"].each { |r| @options.logger.puts(r["value"]) }
+          log_console_api(params)
         end
       end
 
       if @options.js_errors
         on("Runtime.exceptionThrown") do |params|
           # FIXME: https://jvns.ca/blog/2015/11/27/why-rubys-timeout-is-dangerous-and-thread-dot-raise-is-terrifying/
-          Thread.main.raise JavaScriptError.new(
-            params.dig("exceptionDetails", "exception"),
-            params.dig("exceptionDetails", "stackTrace")
-          )
+          Thread.main.raise JavaScriptError, params["exceptionDetails"]
         end
       end
 
@@ -460,8 +464,9 @@ module Ferrum
 
     def prepare_page
       command("Page.enable")
+      command("Page.setLifecycleEventsEnabled", enabled: true)
       command("Runtime.enable")
-      command("DOM.enable")
+      command("DOM.enable", includeWhitespace: "all")
       command("CSS.enable")
       command("Log.enable")
       command("Network.enable")
@@ -492,6 +497,16 @@ module Ferrum
       # the history and if the transitionType for example `link` then
       # content is already loaded, and we can try to get the document.
       document_node_id
+    end
+
+    def log_console_api(params)
+      message = params.fetch("args", []).filter_map { |arg| arg["value"] || arg["description"] }.join(" ")
+      @options.logger.puts("[#{params['type']}] #{message}")
+
+      params.dig("stackTrace", "callFrames")&.each do |frame|
+        location = "#{frame['url']}:#{frame['lineNumber'].to_i + 1}:#{frame['columnNumber'].to_i + 1}"
+        @options.logger.puts("    at #{frame['functionName']} (#{location})")
+      end
     end
 
     def inject_extensions

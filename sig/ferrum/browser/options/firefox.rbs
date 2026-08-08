@@ -1,0 +1,21 @@
+module Ferrum
+  class Browser
+    class Options
+      class Firefox < Base
+        DEFAULT_OPTIONS: ::Hash[::String, nil]
+
+        MAC_BIN_PATH: ::Array["/Applications/Firefox.app/Contents/MacOS/firefox-bin"]
+
+        LINUX_BIN_PATH: ::Array["firefox"]
+
+        WINDOWS_BIN_PATH: ::Array["C:/Program Files/Firefox Developer Edition/firefox.exe" | "C:/Program Files/Mozilla Firefox/firefox.exe"]
+
+        PLATFORM_PATH: { mac: untyped, windows: untyped, linux: untyped }
+
+        def merge_required: (untyped flags, untyped options, untyped user_data_dir) -> untyped
+
+        def merge_default: (untyped flags, untyped options) -> untyped
+      end
+    end
+  end
+end

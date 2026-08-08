@@ -1,0 +1,34 @@
+module Ferrum
+  class Mouse
+    CLICK_WAIT: ::Float
+
+    BUTTON_MASKS: ::Hash[String, ::Integer]
+
+    @page: Page
+    @x: ::Numeric
+    @y: ::Numeric
+    @buttons: ::Integer
+
+    def initialize: (Page page) -> void
+
+    def scroll_by: (::Numeric x, ::Numeric y) -> self
+
+    def scroll_to: (::Numeric top, ::Numeric left) -> self
+
+    def click: (x: ::Numeric, y: ::Numeric, ?delay: ::Numeric, ?wait: ::Numeric, ?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer) -> self
+
+    def down: (?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer) -> self
+
+    def up: (?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer, ?wait: ::Numeric) -> self
+
+    def move: (x: ::Numeric, y: ::Numeric, ?steps: ::Integer) -> self
+
+    private
+
+    def mouse_event: (type: String, ?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer?, ?wait: ::Numeric) -> Hash[String, untyped]
+
+    def validate_button: (Symbol button) -> String
+
+    def register_event_button: (String type, String button) -> ::Integer
+  end
+end

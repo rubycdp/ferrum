@@ -5,10 +5,12 @@ require "sinatra/base"
 module Ferrum
   class Application < Sinatra::Base
     configure { set :protection, except: :frame_options }
-    FERRUM_VIEWS  = "#{File.dirname(__FILE__)}/views"
-    FERRUM_PUBLIC = "#{File.dirname(__FILE__)}/public"
 
-    set :root, File.dirname(__FILE__)
+    FERRUM_APP = File.dirname(__FILE__)
+    FERRUM_VIEWS  = "#{FERRUM_APP}/views".freeze
+    FERRUM_PUBLIC = "#{FERRUM_APP}/public".freeze
+
+    set :root, FERRUM_APP
     set :static, true
     set :raise_errors, true
     set :show_exceptions, false
@@ -65,8 +67,9 @@ module Ferrum
     end
 
     get "/attachment.pdf" do
-      attachment("attachment.pdf")
-      send_file("attachment.pdf")
+      send_file File.join(FERRUM_APP, "static", "attachment.pdf"),
+                disposition: :attachment,
+                filename: "attachment.pdf"
     end
 
     get "/foo" do
@@ -181,20 +184,34 @@ module Ferrum
       halt(204)
     end
 
+    get "/with_ajax_connection_refused" do
+      port = closed_port
+      render_view :with_ajax_connection_refused, closed_port: port
+    end
+
     get "/:view" do |view|
       render_view view
     end
 
     protected
 
-    def render_view(view)
-      erb File.read("#{FERRUM_VIEWS}/#{view}.erb")
+    def render_view(view, locals = {})
+      erb File.read("#{FERRUM_VIEWS}/#{view}.erb"), locals: locals
     end
 
     def set_stealth_cookie
       cookie_value = "test_cookie"
       response.set_cookie("stealth", cookie_value)
       "Cookie set to #{cookie_value}"
+    end
+
+    private
+
+    def closed_port
+      server = TCPServer.new("127.0.0.1", 0)
+      server.addr[1]
+    ensure
+      server.close
     end
   end
 end

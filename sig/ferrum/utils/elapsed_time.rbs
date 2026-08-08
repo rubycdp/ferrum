@@ -1,0 +1,13 @@
+module Ferrum
+  module Utils
+    module ElapsedTime
+      def self?.start: () -> untyped
+
+      def self?.elapsed_time: (?untyped? start) -> untyped
+
+      def self?.monotonic_time: () -> untyped
+
+      def self?.timeout?: (untyped start, untyped timeout) -> untyped
+    end
+  end
+end

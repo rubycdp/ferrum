@@ -1,0 +1,113 @@
+module Ferrum
+  class Browser
+    class Options
+      BROWSER_PORT: String
+
+      BROWSER_HOST: String
+
+      WINDOW_SIZE: ::Array[::Integer]
+
+      BASE_URL_SCHEMA: ::Array[String]
+
+      DEFAULT_TIMEOUT: ::Integer
+
+      PROCESS_TIMEOUT: ::Integer
+
+      DEBUG_MODE: bool
+
+      attr_reader window_size: ::Array[::Integer]
+
+      attr_accessor timeout: ::Numeric
+
+      attr_accessor default_user_agent: String?
+
+      attr_reader logger: (IO | StringIO | nil)
+
+      attr_reader ws_max_receive_size: ::Integer?
+
+      attr_reader js_errors: bool
+
+      attr_reader base_url: ::Addressable::URI?
+
+      attr_reader slowmo: ::Float
+
+      attr_reader pending_connection_errors: bool
+
+      attr_reader url: String?
+
+      attr_reader ws_url: String?
+
+      attr_reader env: Hash[String, String]?
+
+      attr_reader process_timeout: ::Integer
+
+      attr_reader browser_name: Symbol?
+
+      attr_reader browser_path: String?
+
+      attr_reader save_path: String?
+
+      attr_reader proxy: Hash[Symbol, (String | ::Integer)]?
+
+      attr_reader port: String | ::Integer
+
+      attr_reader host: String
+
+      attr_reader headless: bool
+
+      attr_reader incognito: bool
+
+      attr_reader flatten: bool
+
+      attr_reader ignore_default_browser_options: bool?
+
+      attr_reader browser_options: Hash[String, (String | bool | nil)]
+
+      attr_reader xvfb: bool?
+
+      @options: Hash[Symbol, untyped]
+      @port: String
+      @host: String
+      @timeout: ::Numeric
+      @window_size: ::Array[::Integer]
+      @js_errors: bool
+      @headless: bool
+      @incognito: bool
+      @flatten: bool
+      @pending_connection_errors: bool
+      @process_timeout: ::Integer
+      @slowmo: ::Float
+      @env: Hash[String, String]?
+      @xvfb: bool?
+      @save_path: String?
+      @browser_name: Symbol?
+      @browser_path: String?
+      @ws_max_receive_size: ::Integer?
+      @ignore_default_browser_options: bool?
+      @proxy: Hash[Symbol, (String | ::Integer)]?
+      @logger: (IO | nil)
+      @base_url: ::Addressable::URI?
+      @url: String?
+      @ws_url: String?
+      @browser_options: Hash[String, (String | bool | nil)]
+      @extensions: ::Array[String]?
+      @default_user_agent: String?
+
+      def initialize: (?Hash[Symbol, untyped]? options) -> void
+
+      def base_url=: (String value) -> ::Addressable::URI
+
+      def extensions: () -> ::Array[String]
+
+      def validate_proxy: (Hash[Symbol, (String | ::Integer)]? options) -> Hash[Symbol, (String | ::Integer)]?
+
+      def to_h: () -> Hash[Symbol, untyped]
+
+      private
+
+      def parse_logger: ((IO | StringIO | bool | nil) logger) -> (IO | StringIO | nil)
+
+      def parse_base_url: (String value) -> ::Addressable::URI
+    end
+  end
+end

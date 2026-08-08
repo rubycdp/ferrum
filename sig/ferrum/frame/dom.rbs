@@ -1,0 +1,33 @@
+module Ferrum
+  class Frame
+    module DOM
+      SCRIPT_SRC_TAG: ::String
+
+      SCRIPT_TEXT_TAG: ::String
+
+      STYLE_TAG: ::String
+
+      LINK_TAG: ::String
+
+      def current_url: () -> untyped
+
+      def current_title: () -> untyped
+
+      def doctype: () -> untyped
+
+      def body: () -> untyped
+
+      def xpath: (untyped selector, ?within: untyped?) -> untyped
+
+      def at_xpath: (untyped selector, ?within: untyped?) -> untyped
+
+      def css: (untyped selector, ?within: untyped?) -> untyped
+
+      def at_css: (untyped selector, ?within: untyped?) -> untyped
+
+      def add_script_tag: (?url: untyped?, ?path: untyped?, ?content: untyped?, ?type: ::String) -> untyped
+
+      def add_style_tag: (?url: untyped?, ?path: untyped?, ?content: untyped?) -> untyped
+    end
+  end
+end

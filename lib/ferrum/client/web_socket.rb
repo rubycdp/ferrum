@@ -19,7 +19,7 @@ module Ferrum
         uri     = URI.parse(@url)
         port    = uri.port || DEFAULT_PORTS[uri.scheme]
 
-        if port == 443
+        if port == 443 || url.scheme == "wss"
           tcp = TCPSocket.new(uri.host, port)
           ssl_context = OpenSSL::SSL::SSLContext.new
           @sock = OpenSSL::SSL::SSLSocket.new(tcp, ssl_context)
@@ -30,7 +30,10 @@ module Ferrum
         end
 
         max_receive_size ||= ::WebSocket::Driver::MAX_LENGTH
-        @driver   = ::WebSocket::Driver.client(self, max_length: max_receive_size)
+        @driver = ::WebSocket::Driver.client(self, max_length: max_receive_size)
+        # websocket-driver holds no locks and is called from many threads: commands from
+        # callers, pong/close replies from the reader. One lock keeps frames from interleaving.
+        @driver_mutex = Mutex.new
         @messages = Queue.new
 
         @screenshot_commands = Concurrent::Hash.new if SKIP_LOGGING_SCREENSHOTS
@@ -41,7 +44,7 @@ module Ferrum
 
         start
 
-        @driver.start
+        @driver_mutex.synchronize { @driver.start }
       end
 
       def on_open(_event)
@@ -51,12 +54,6 @@ module Ferrum
 
       def on_message(event)
         data = safely_parse_json(event.data)
-        # If we couldn't parse JSON data for some reason (parse error or deeply nested object) we
-        # don't push response to @messages. Worse that could happen we raise timeout error due to command didn't return
-        # anything or skip the background notification, but at least we don't crash the thread that crashes the main
-        # thread and the application.
-        @messages.push(data) if data
-
         output = event.data
         if SKIP_LOGGING_SCREENSHOTS && @screenshot_commands[data&.dig("id")]
           @screenshot_commands.delete(data&.dig("id"))
@@ -64,6 +61,12 @@ module Ferrum
         end
 
         @logger&.puts("    ◀ #{Utils::ElapsedTime.elapsed_time} #{output}\n")
+
+        # If we couldn't parse JSON data for some reason (parse error or deeply nested object) we
+        # don't push response to @messages. Worse that could happen we raise timeout error due to command didn't return
+        # anything or skip the background notification, but at least we don't crash the thread that crashes the main
+        # thread and the application.
+        @messages.push(data) if data
       end
 
       def on_close(_event)
@@ -76,7 +79,7 @@ module Ferrum
         @screenshot_commands[data[:id]] = true if SKIP_LOGGING_SCREENSHOTS
 
         json = data.to_json
-        @driver.text(json)
+        @driver_mutex.synchronize { @driver.text(json) }
         @logger&.puts("\n\n▶ #{Utils::ElapsedTime.elapsed_time} #{json}")
       end
 
@@ -87,7 +90,7 @@ module Ferrum
       end
 
       def close
-        @driver.close
+        @driver_mutex.synchronize { @driver.close }
       end
 
       private
@@ -98,7 +101,7 @@ module Ferrum
             data = @sock.readpartial(512)
             break unless data
 
-            @driver.parse(data)
+            @driver_mutex.synchronize { @driver.parse(data) }
           end
         rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, IOError # rubocop:disable Lint/ShadowedException
           @messages.close

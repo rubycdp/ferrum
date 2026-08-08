@@ -148,6 +148,15 @@ describe Ferrum::Node do
       expect(links.size).to eq(1)
       expect(links.first.text).to eq("Open for match")
     end
+
+    it "works with whitespace nodes" do
+      browser.go_to("/ws_node")
+
+      values = browser.xpath("//li//text()").map(&:text)
+
+      expect(values.size).to eq(5)
+      expect(values).to eq(["\n        ", "\n          ", "b", "\n        ", "\n      "])
+    end
   end
 
   describe "#at_css" do
@@ -359,6 +368,22 @@ describe Ferrum::Node do
     end
   end
 
+  describe "#axnode" do
+    before { browser.go_to("/accessibility") }
+
+    it "returns the AXNode for the element" do
+      ax = browser.at_css("#submit").axnode
+
+      expect(ax).to be_a(Ferrum::Accessibility::AXNode)
+      expect(ax.role).to eq("button")
+      expect(ax.name).to eq("Send form")
+    end
+
+    it "returns nil for an ignored element" do
+      expect(browser.at_css("#hidden").axnode).to be_nil
+    end
+  end
+
   describe "#remove" do
     it "removes node" do
       browser.go_to("/simple")
@@ -507,6 +532,15 @@ describe Ferrum::Node do
         expect(input.value).to eq("Text appended")
       end
 
+      it "selects all in an input with the command modifier then clears" do
+        input = browser.at_css("#filled_input")
+        modifier = Ferrum::Utils::Platform.mac? ? :meta : :ctrl
+
+        input.focus.type([modifier, "a"], :backspace)
+
+        expect(input.value).to eq("")
+      end
+
       it "sends keys to empty textarea" do
         input = browser.at_css("#empty_textarea")
 
@@ -632,6 +666,15 @@ describe Ferrum::Node do
         input.click.type(" appended")
 
         expect(input.text).to eq("Content appended")
+      end
+
+      it "selects all with the command modifier then clears" do
+        input = browser.at_css("#filled_div")
+        modifier = Ferrum::Utils::Platform.mac? ? :meta : :ctrl
+
+        input.focus.type([modifier, "a"], :backspace)
+
+        expect(input.text).to eq("")
       end
 
       it "sets content" do
@@ -853,6 +896,17 @@ describe Ferrum::Node do
       browser.execute "window.location = 'about:blank'"
 
       expect { node.text }.to raise_error(Ferrum::NodeNotFoundError)
+    end
+
+    it "works for a new node after refresh" do
+      browser.go_to("/index")
+      shallow_node = browser.at_xpath(".//a")
+
+      browser.refresh
+      expect { shallow_node.click }.to raise_error(Ferrum::NodeNotFoundError)
+
+      node = browser.at_xpath(".//a")
+      expect { node.click }.not_to raise_error
     end
   end
 end

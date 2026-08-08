@@ -1,0 +1,17 @@
+module Ferrum
+  class Browser
+    class Subscriber
+      include Concurrent::Async
+
+      def self.build: (untyped size) -> untyped
+
+      def initialize: () -> void
+
+      def on: (untyped event) ?{ () -> untyped } -> true
+
+      def subscribed?: (untyped event) -> untyped
+
+      def call: (untyped message) -> untyped
+    end
+  end
+end

@@ -1,0 +1,15 @@
+module Ferrum
+  class Browser
+    module Binary
+      def self?.find: (::String | Array[::String] commands) -> ::String?
+
+      def self?.all: (::String | Array[::String] commands) -> Array[::String]
+
+      def self?.enum: (::String | Array[::String] commands) -> Enumerator::Lazy[::String]
+
+      def self?.prepare_paths: () -> Array[Array[::String]]
+
+      def self?.lazy_find: (Array[Array[::String]] cmds) -> Enumerator::Lazy[::String]
+    end
+  end
+end

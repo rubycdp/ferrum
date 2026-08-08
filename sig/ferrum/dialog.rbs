@@ -1,0 +1,19 @@
+module Ferrum
+  class Dialog
+    attr_reader message: String
+
+    attr_reader default_prompt: String?
+
+    @page: Page
+    @message: String
+    @default_prompt: String?
+
+    def initialize: (Page page, Hash[String, untyped] params) -> void
+
+    def accept: (?String? prompt_text) -> Hash[String, untyped]
+
+    def dismiss: () -> Hash[String, untyped]
+
+    def match?: (Regexp regexp) -> bool
+  end
+end

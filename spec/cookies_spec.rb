@@ -23,7 +23,6 @@ describe Ferrum::Cookies do
                                         "secure" => false,
                                         "session" => true,
                                         "priority" => "Medium",
-                                        "sameParty" => false,
                                         "sourceScheme" => "NonSecure",
                                         "sourcePort" => server.port)
           ]
@@ -47,7 +46,6 @@ describe Ferrum::Cookies do
                                         "secure" => false,
                                         "session" => true,
                                         "priority" => "Medium",
-                                        "sameParty" => false,
                                         "sourceScheme" => "NonSecure",
                                         "sourcePort" => server.port)
           ]
@@ -72,7 +70,6 @@ describe Ferrum::Cookies do
                                                                        "secure" => false,
                                                                        "session" => true,
                                                                        "priority" => "Medium",
-                                                                       "sameParty" => false,
                                                                        "sourceScheme" => "NonSecure",
                                                                        "sourcePort" => server.port) })
     end

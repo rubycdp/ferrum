@@ -1,0 +1,25 @@
+module Ferrum
+  class Browser
+    class Client
+      INTERRUPTIONS: ::Array["Fetch.requestPaused" | "Fetch.authRequired"]
+
+      def initialize: (untyped ws_url, untyped connectable, ?logger: untyped?, ?ws_max_receive_size: untyped?, ?id_starts_with: ::Integer) -> void
+
+      def command: (untyped method, ?::Hash[untyped, untyped] params) -> untyped
+
+      def on: (untyped event) ?{ () -> untyped } -> untyped
+
+      def subscribed?: (untyped event) -> untyped
+
+      def close: () -> untyped
+
+      private
+
+      def build_message: (untyped method, untyped params) -> untyped
+
+      def next_command_id: () -> untyped
+
+      def raise_browser_error: (untyped error) -> untyped
+    end
+  end
+end

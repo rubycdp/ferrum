@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ferrum/proxy"
+
 describe Ferrum::Browser do
   describe "#new" do
     let(:logger) { StringIO.new }
@@ -45,13 +47,17 @@ describe Ferrum::Browser do
       browser = Ferrum::Browser.new(logger: logger)
       browser.go_to(base_url("/console_log"))
       expect(logger.string).to include("Hello world")
+      expect(logger.string).to include("[log] Hello world")
+      expect(logger.string).to include("at window.onload")
+      expect(logger.string).to include("/console_log")
     ensure
       browser&.quit
     end
 
     it "supports :ignore_default_browser_options argument" do
       defaults = Ferrum::Browser::Options::Chrome.options.except("disable-web-security")
-      browser = Ferrum::Browser.new(ignore_default_browser_options: true, browser_options: defaults)
+      browser = Ferrum::Browser.new(ignore_default_browser_options: true,
+                                    browser_options: defaults.merge("no-sandbox" => nil))
       browser.go_to(base_url("/console_log"))
     ensure
       browser&.quit
@@ -578,6 +584,17 @@ describe Ferrum::Browser do
         end
 
         expect(browser.contexts.size).to eq(0)
+      end
+
+      it "propagates the original error when context creation fails inside the block form" do
+        original_error = Ferrum::DeadBrowserError.new("simulated browser death")
+        allow(browser.contexts).to receive(:create).and_raise(original_error)
+
+        expect do
+          browser.create_page(new_context: true) do |page|
+            page.go_to("/simple")
+          end
+        end.to raise_error(Ferrum::DeadBrowserError, "simulated browser death")
       end
     end
 

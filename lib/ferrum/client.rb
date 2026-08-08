@@ -24,8 +24,8 @@ module Ferrum
       @client.send_message(message, async: async)
     end
 
-    def on(event, &block)
-      @client.on(event_name(event), &block)
+    def on(event, &)
+      @client.on(event_name(event), &)
     end
 
     def off(event, id)
@@ -40,8 +40,8 @@ module Ferrum
       @client.respond_to?(name, include_private)
     end
 
-    def method_missing(name, *args, **opts, &block)
-      @client.send(name, *args, **opts, &block)
+    def method_missing(name, ...)
+      @client.send(name, ...)
     end
 
     def close
@@ -61,12 +61,14 @@ module Ferrum
 
   class Client
     extend Forwardable
+
     delegate %i[timeout timeout=] => :options
 
     attr_reader :ws_url, :options, :subscriber
 
     def initialize(ws_url, options)
       @command_id = 0
+      @command_id_mutex = Mutex.new
       @ws_url = ws_url
       @options = options
       @pendings = Concurrent::Hash.new
@@ -101,8 +103,8 @@ module Ferrum
       end
     end
 
-    def on(event, &block)
-      @subscriber.on(event, &block)
+    def on(event, &)
+      @subscriber.on(event, &)
     end
 
     def off(event, id)
@@ -153,8 +155,10 @@ module Ferrum
       end
     end
 
+    # Locked so two concurrent commands never share an id and read each
+    # other's responses from @pendings.
     def next_command_id
-      @command_id += 1
+      @command_id_mutex.synchronize { @command_id += 1 }
     end
 
     def raise_browser_error(error)

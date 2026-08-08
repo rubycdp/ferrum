@@ -1,10 +1,52 @@
-## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.17.1...main) ##
+## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.17.2...main) ##
 
 ### Added
-
-### Changed
+- `Ferrum::Frame#loader_id` provides a loader id when frame navigates [#583]
+- `Ferrum::Frame#lifecycle_events` provides a list of frame's events like init, networkIdle, firstPaint, etc. [#583]
+- `Ferrum::Frame#idle?` whether frame was loaded [#583]
+- `page.accessibility` API and `Node#axnode` for reading the CDP accessibility tree
+- `--no-crashpad` is now included in the default Chrome flags, fully disabling the crashpad handler process [#610]
 
 ### Fixed
+- `Ferrum::Client` command id generation and `Ferrum::Client::WebSocket`'s driver interactions were not thread-safe, allowing concurrent commands to collide on the same id or corrupt the frame stream; both are now serialized under a mutex [#602]
+- `Ferrum::Network` built duplicate `Exchange` objects for the same request when `Network.requestWillBeSent` (regular event thread) and `Fetch.requestPaused` (priority interruption thread) raced to look up/create the exchange for a request id; the find-or-build is now atomic, fixing intermittently `nil` `Exchange#request` on blocked/intercepted requests
+- `Ferrum::Node#type` / `Ferrum::Keyboard` now trigger the select-all editing shortcut (`Ctrl`/`Cmd`+`A`) by naming the CDP `commands` field, so selecting and replacing text in inputs and contenteditables works.
+- `Ferrum::Network::InterceptedRequest#match?` no longer coerces string blacklist/whitelist patterns containing regexp metacharacters
+  (e.g. `?`, `.`) into regexps; string patterns are now compared literally instead. [#405], [#604]
+- `Ferrum::Network::AuthRequest#match?` and `Ferrum::Dialog#match?` received the same fix as [#604] above for consistency. String patterns
+  now compare literally: exact-match for requests/auth requests, substring-match for dialog messages. [#405]
+
+### Changed
+- `Ferrum::PendingConnectionsError` and `Ferrum::TimeoutError` were swallowed even though happening when traffic iterator results in empty array. [#583]
+- `webrick` is no longer a runtime dependency. It is only required by `Ferrum::Proxy`, so add `gem "webrick"` to your Gemfile if you use it.
+- Logger output for `Runtime.consoleAPICalled` now includes the console API type and stack trace call frames, not just the argument values [#605]
+
+### Fixed
+- Full-page screenshots no longer resize the window, preventing focus steal on macOS [#580]
+- DOM.enable is now has `includeWhitespace: "all"` to keep track of new line nodes which previously were resolved to 0, and errored with NodeNotFoundError [#596]
+- `DOM.requestNode` call is moved to the node class and being done lazily, this reduces number of intermediate node ids sent by backend to frontend [#596]
+- Fix `context` can be nilable in ensure Browser#create_page [#582]
+- `Ferrum::Page#idling?` no longer blocks on `loading="lazy"` iframes that Chrome never starts loading [#583]
+
+### Removed
+- `webrick` runtime dependency dropped from the gemspec. `Ferrum::Proxy` still needs it, so add `gem "webrick"` to your Gemfile if you use the proxy server.
+
+
+## [0.17.2](https://github.com/rubycdp/ferrum/compare/v0.17.1...v0.17.2) (March 23, 2026) ##
+
+### Added
+- `Ferrum::Network::Response#body!` returns body or throws error if implicable
+- `Ferrum::Browser#new(dockerize: true)` whether to add CLI flags to run a browser in a container, `false` by default
+- Initial support for RBS types [#565]
+
+### Changed
+- `Ferrum::Network::Response#body` returns body or nil in case of errors
+- Disable Chrome code sign clones [#555]
+- Ruby version required is >= 3.1 [#565]
+
+### Fixed
+- Proper handle wss urls, and fix session_id loss for undetermined order of CDP events [#559]
+- `browser.reset` tries to dispose default implicit context [#566], [#540]
 
 ### Removed
 

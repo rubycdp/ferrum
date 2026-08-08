@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Lazy iframe</title>
+    <link rel="icon" href="data:,">
+  </head>
+  <body>
+    <h1>Lazy iframe in viewport</h1>
+    <iframe loading="lazy" src="/slow" name="lazy_in_viewport"></iframe>
+
+    <h1>Lazy iframe</h1>
+    <details>
+      <summary>Hidden until expanded</summary>
+      <iframe loading="lazy" src="/slow" name="lazy_frame"></iframe>
+    </details>
+
+    <h1>Lazy iframe via click</h1>
+    <button id="add_iframe" onclick="addIframe()">Add iframe</button>
+    <script>
+      function addIframe() {
+        var iframe = document.createElement("iframe");
+        iframe.name = "lazy_added";
+        iframe.loading = "lazy";
+        iframe.src = "/slow";
+        // Positioned far off-screen so Chrome never starts loading it.
+        iframe.style = "position: absolute; top: 10000px;";
+        document.body.appendChild(iframe);
+        // Trigger Page.navigatedWithinDocument so the idle check is
+        // re-evaluated with the nil-state lazy frame in @frames. A full
+        // navigation would fire Runtime.executionContextsCleared and
+        // overwrite the frame's state, masking the bug.
+        location.hash = "added-" + Date.now();
+      }
+    </script>
+  </body>
+</html>

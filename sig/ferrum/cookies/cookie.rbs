@@ -1,0 +1,35 @@
+module Ferrum
+  class Cookies
+    class Cookie
+      attr_reader attributes: untyped
+
+      def initialize: (untyped attributes) -> void
+
+      def name: () -> untyped
+
+      def value: () -> untyped
+
+      def domain: () -> untyped
+
+      def path: () -> untyped
+
+      def samesite: () -> untyped
+
+      alias same_site samesite
+
+      def size: () -> untyped
+
+      def secure?: () -> untyped
+
+      def httponly?: () -> untyped
+
+      alias http_only? httponly?
+
+      def session?: () -> untyped
+
+      def expires: () -> (untyped | nil)
+
+      def ==: (untyped other) -> untyped
+    end
+  end
+end

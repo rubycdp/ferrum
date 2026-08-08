@@ -1,0 +1,27 @@
+module Ferrum
+  class Keyboard
+    KEYS: Hash[String, Hash[String, untyped]]
+    MODIFIERS: Hash[String, ::Integer]
+    KEYS_MAPPING: Hash[Symbol, String]
+
+    @page: Page
+
+    def initialize: (Page page) -> void
+
+    def down: ((String | Symbol) key) -> self
+
+    def up: ((String | Symbol) key) -> self
+
+    def type: (*(String | Symbol | ::Array[String | Symbol])) -> self
+
+    def modifiers: (::Array[Symbol]) -> ::Integer
+
+    private
+
+    def normalize_keys: ((::Array[untyped] | Symbol | String) keys, ?::Array[::Array[String]] pressed_keys, ?::Array[Hash[Symbol, untyped]] memo) -> ::Array[Hash[Symbol, untyped]]
+
+    def combine_strings: (::Array[untyped] keys) -> ::Array[untyped]
+
+    def to_options: (Hash[String, untyped] hash) -> Hash[Symbol, untyped]
+  end
+end

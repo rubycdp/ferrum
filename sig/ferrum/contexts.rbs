@@ -1,0 +1,42 @@
+module Ferrum
+  class Contexts
+    ALLOWED_TARGET_TYPES: ::Array[String]
+
+    include Enumerable[[String, Context]]
+
+    attr_reader contexts: ::Concurrent::Map[String, Context]
+
+    @contexts: ::Concurrent::Map[String, Context]
+    @client: Client
+    @default_context: Context?
+
+    def initialize: (Client client) -> void
+
+    def default_context: () -> Context
+
+    def each: () { ([String, Context]) -> void } -> void
+            | () -> Enumerator[[String, Context], void]
+
+    def []: (String id) -> Context?
+
+    def find_by: (target_id: String) -> Context?
+
+    def create: (**untyped options) -> Context
+
+    def dispose: (String context_id) -> true
+
+    def close_connections: () -> void
+
+    def reset: () -> void
+
+    def size: () -> ::Integer
+
+    private
+
+    def subscribe: () -> void
+
+    def discover: () -> Hash[String, untyped]
+
+    def auto_attach: () -> Hash[String, untyped]?
+  end
+end

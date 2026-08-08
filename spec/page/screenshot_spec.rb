@@ -208,14 +208,15 @@ describe Ferrum::Page::Screenshot do
         expect(browser.viewport_size).to eq([800, 200])
       end
 
-      it "resets to previous viewport when exception is raised" do
+      it "keeps previous viewport when exception is raised" do
         browser.go_to("/custom_html_size")
         browser.resize(width: 100, height: 100)
 
         allow(browser.page).to receive(:command).and_call_original
         expect(browser.page).to receive(:command)
           .with("Page.captureScreenshot",
-                format: "png", clip: { x: 0, y: 0, width: 1280, height: 1024, scale: 1.0 })
+                format: "png", clip: { x: 0, y: 0, width: 1280, height: 1024, scale: 1.0 },
+                captureBeyondViewport: true)
           .and_raise(StandardError)
         expect { browser.screenshot(path: file, full: true) }
           .to raise_exception(StandardError)
@@ -225,6 +226,43 @@ describe Ferrum::Page::Screenshot do
 
         expect(File.exist?(file)).not_to be
         expect(browser.viewport_size).to eq([100, 100])
+      end
+
+      it "does not mutate window state (no native macOS fullscreen transition)" do
+        browser.go_to("/long_page")
+
+        client = browser.page.client
+        commands = []
+        allow(client).to receive(:command).and_wrap_original do |m, name, **opts|
+          commands << [name, opts]
+          m.call(name, **opts)
+        end
+
+        browser.screenshot(path: file, full: true)
+
+        # Fix Ruby 3 `and_call_original` bug
+        RSpec::Mocks.space.proxy_for(client).reset
+
+        bounds_calls = commands.select { |(name, _)| name == "Browser.setWindowBounds" }
+        expect(bounds_calls).to be_empty
+      end
+
+      it "forwards captureBeyondViewport: true to Page.captureScreenshot" do
+        browser.go_to("/long_page")
+
+        client = browser.page.client
+        capture_opts = nil
+        allow(client).to receive(:command).and_wrap_original do |m, name, **opts|
+          capture_opts = opts if name == "Page.captureScreenshot"
+          m.call(name, **opts)
+        end
+
+        browser.screenshot(path: file, full: true)
+
+        # Fix Ruby 3 `and_call_original` bug
+        RSpec::Mocks.space.proxy_for(client).reset
+
+        expect(capture_opts).to include(captureBeyondViewport: true)
       end
     end
 

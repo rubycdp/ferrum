@@ -6,7 +6,7 @@ module Ferrum
       #
       # Returns playback rate for CSS animations, defaults to `1`.
       #
-      # @return [Integer]
+      # @return [Number]
       #
       def playback_rate
         command("Animation.getPlaybackRate")["playbackRate"]
@@ -15,7 +15,7 @@ module Ferrum
       #
       # Sets playback rate of CSS animations.
       #
-      # @param [Integer] value
+      # @param [Number] value
       #
       # @example
       #   browser = Ferrum::Browser.new

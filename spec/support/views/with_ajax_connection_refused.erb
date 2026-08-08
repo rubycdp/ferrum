@@ -9,8 +9,9 @@
   <body>
     <h1>Here</h1>
     <script>
-      $.ajax("http://localhost:12345", {
-        error: function(){$("h1").text("Error");}
+      let port = <%= closed_port %>;
+      $.ajax(`http://localhost:${port}`, {
+        error: function(){ $("h1").text("Error"); }
       });
     </script>
   </body>

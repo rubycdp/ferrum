@@ -1,0 +1,21 @@
+module Ferrum
+  class Browser
+    class Options
+      class Chrome < Base
+        DEFAULT_OPTIONS: ::Hash[::String, untyped]
+
+        MAC_BIN_PATH: ::Array["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" | "/Applications/Chromium.app/Contents/MacOS/Chromium"]
+
+        LINUX_BIN_PATH: ::Array["chrome" | "google-chrome" | "google-chrome-stable" | "google-chrome-beta" | "chromium" | "chromium-browser" | "google-chrome-unstable"]
+
+        WINDOWS_BIN_PATH: ::Array["C:/Program Files/Google/Chrome/Application/chrome.exe" | "C:/Program Files/Google/Chrome Dev/Application/chrome.exe"]
+
+        PLATFORM_PATH: { mac: untyped, windows: untyped, linux: untyped }
+
+        def merge_required: (untyped flags, untyped options, untyped user_data_dir) -> untyped
+
+        def merge_default: (untyped flags, untyped options) -> untyped
+      end
+    end
+  end
+end

@@ -20,8 +20,8 @@ module Ferrum
 
     def initialize(url, pendings = [])
       @pendings = pendings
-
-      message = "Request to #{url} reached server, but there are still pending connections: #{pendings.join(', ')}"
+      message = "Request to #{url} reached server, but there are still pending connections"
+      message += ": #{pendings.join(', ')}" unless @pendings.empty?
 
       super(url, message)
     end
@@ -113,9 +113,10 @@ module Ferrum
   class JavaScriptError < BrowserError
     attr_reader :class_name, :message, :stack_trace
 
-    def initialize(response, stack_trace = nil)
-      @class_name, @message = response.values_at("className", "description")
-      @stack_trace = stack_trace
+    def initialize(response)
+      @class_name, @message = response["exception"]&.values_at("className", "description")
+      @message ||= response["text"]
+      @stack_trace = response["stackTrace"]
       super(response.merge("message" => @message))
     end
   end

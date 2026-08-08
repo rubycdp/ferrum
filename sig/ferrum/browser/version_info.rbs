@@ -1,0 +1,17 @@
+module Ferrum
+  class Browser
+    class VersionInfo
+      def initialize: (untyped properties) -> void
+
+      def protocol_version: () -> untyped
+
+      def product: () -> untyped
+
+      def revision: () -> untyped
+
+      def user_agent: () -> untyped
+
+      def js_version: () -> untyped
+    end
+  end
+end

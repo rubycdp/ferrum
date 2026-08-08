@@ -1,0 +1,9 @@
+module Concurrent
+  class Event
+    def initialize: () -> void
+    def set: () -> bool
+    def reset: () -> bool
+    def wait: (?Numeric? timeout) -> bool
+    def set?: () -> bool
+  end
+end

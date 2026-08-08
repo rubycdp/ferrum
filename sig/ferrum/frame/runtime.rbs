@@ -1,0 +1,41 @@
+module Ferrum
+  class CyclicObject
+    include Singleton
+
+    def inspect: () -> ::String
+  end
+
+  class Frame
+    module Runtime
+      INTERMITTENT_ATTEMPTS: untyped
+
+      INTERMITTENT_SLEEP: untyped
+
+      def evaluate: (untyped expression, *untyped args) -> untyped
+
+      def evaluate_async: (untyped expression, untyped wait, *untyped args) -> untyped
+
+      def execute: (untyped expression, *untyped args) -> true
+
+      def evaluate_func: (untyped expression, *untyped args, ?on: untyped?) -> untyped
+
+      def evaluate_on: (node: untyped, expression: untyped, ?by_value: bool, ?wait: ::Integer) -> untyped
+
+      private
+
+      def call: (expression: untyped, ?arguments: untyped, ?on: untyped?, ?wait: ::Integer, ?handle: bool, **untyped options) -> untyped
+
+      def handle_error: (untyped response) -> (nil | untyped)
+
+      def handle_response: (untyped response) -> untyped
+
+      def prepare_args: (untyped args) -> untyped
+
+      def reduce_props: (untyped object_id, untyped to) { (untyped, untyped, untyped) -> untyped } -> (::Array[untyped] | untyped | untyped)
+
+      def cyclic?: (untyped object_id) -> untyped
+
+      def cyclic_object: () -> untyped
+    end
+  end
+end

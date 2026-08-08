@@ -29,8 +29,13 @@ module Ferrum
         @params["isNavigationRequest"]
       end
 
-      def match?(regexp)
-        !!url.match(regexp)
+      def match?(pattern)
+        case url
+        when pattern
+          true
+        else
+          false
+        end
       end
 
       def respond(**options)

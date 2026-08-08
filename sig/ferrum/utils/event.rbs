@@ -1,0 +1,11 @@
+module Ferrum
+  module Utils
+    class Event < ::Concurrent::Event
+      @iteration: ::Integer
+
+      def iteration: () -> ::Integer
+
+      def reset: () -> ::Integer
+    end
+  end
+end

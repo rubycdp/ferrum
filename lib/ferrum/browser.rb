@@ -3,7 +3,6 @@
 require "base64"
 require "forwardable"
 require "ferrum/page"
-require "ferrum/proxy"
 require "ferrum/client"
 require "ferrum/contexts"
 require "ferrum/browser/xvfb"
@@ -15,12 +14,13 @@ require "ferrum/browser/version_info"
 module Ferrum
   class Browser
     extend Forwardable
+
     delegate %i[default_context] => :contexts
     delegate %i[targets create_target page pages windows] => :default_context
     delegate %i[go_to goto go back forward refresh reload stop wait_for_reload
                 at_css at_xpath css xpath current_url current_title url title
                 body doctype content=
-                headers cookies network downloads
+                headers cookies network accessibility downloads
                 mouse keyboard
                 screenshot pdf mhtml viewport_size device_pixel_ratio
                 start_screencast stop_screencast
@@ -47,6 +47,9 @@ module Ferrum
     #
     # @option options [Boolean] :incognito (true)
     #   Create an incognito profile for the browser startup window.
+    #
+    # @option options [Boolean] :dockerize (false)
+    #   Add CLI flags to a browser to run in a container.
     #
     # @option options [Boolean] :xvfb (false)
     #   Run browser in a virtual framebuffer.
@@ -168,7 +171,7 @@ module Ferrum
     ensure
       if block_given?
         page&.close
-        context.dispose if new_context
+        context&.dispose if new_context
       end
     end
 

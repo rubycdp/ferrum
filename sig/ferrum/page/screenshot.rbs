@@ -1,0 +1,43 @@
+module Ferrum
+  class Page
+    module Screenshot
+      DEFAULT_PDF_OPTIONS: { landscape: false, paper_width: ::Float, paper_height: 11, scale: ::Float }
+
+      PAPER_FORMATS: { letter: { width: ::Float, height: ::Float }, legal: { width: ::Float, height: ::Float }, tabloid: { width: ::Float, height: ::Float }, ledger: { width: ::Float, height: ::Float }, :A0 => { width: ::Float, height: ::Float }, :A1 => { width: ::Float, height: ::Float }, :A2 => { width: ::Float, height: ::Float }, :A3 => { width: ::Float, height: ::Float }, :A4 => { width: ::Float, height: ::Float }, :A5 => { width: ::Float, height: ::Float }, :A6 => { width: ::Float, height: ::Float } }
+
+      def screenshot: (**untyped opts) -> untyped
+
+      def pdf: (**untyped opts) -> untyped
+
+      def mhtml: (?path: untyped?) -> untyped
+
+      def viewport_size: () -> untyped
+
+      def document_size: () -> untyped
+
+      private
+
+      def save_file: (untyped path, untyped data) -> untyped
+
+      def common_options: (?encoding: ::Symbol, ?path: untyped?, **untyped _) -> ::Array[untyped]
+
+      def pdf_options: (**untyped opts) -> untyped
+
+      def screenshot_options: (?untyped? path, ?format: untyped?, ?scale: ::Float, **untyped options) -> untyped
+
+      def format_options: (untyped format, untyped path, untyped quality) -> ::Array[untyped]
+
+      def area_options: (untyped full, untyped selector, untyped scale) -> untyped
+
+      def bounding_rect: (untyped selector) -> { x: untyped, y: untyped, width: untyped, height: untyped }
+
+      def to_camel_case: (untyped option) -> (:preferCSSPageSize | untyped)
+
+      def capture_screenshot: (untyped options, untyped full, untyped background_color) -> untyped
+
+      def maybe_resize_fullscreen: (untyped full) { () -> untyped } -> untyped
+
+      def with_background_color: (untyped color) { () -> untyped } -> untyped
+    end
+  end
+end

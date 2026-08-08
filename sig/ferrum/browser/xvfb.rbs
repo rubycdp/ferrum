@@ -1,0 +1,21 @@
+module Ferrum
+  class Browser
+    class Xvfb
+      NOT_FOUND: ::String
+
+      def self.start: (*untyped args) -> untyped
+
+      attr_reader screen_size: untyped
+
+      attr_reader display_id: untyped
+
+      attr_reader pid: untyped
+
+      def initialize: (untyped options) -> void
+
+      def start: () -> untyped
+
+      def to_env: () -> ::Hash[::String, ::String]
+    end
+  end
+end

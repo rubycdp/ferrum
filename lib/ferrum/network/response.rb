@@ -124,12 +124,25 @@ module Ferrum
       #
       # @return [String]
       #
-      def body
+      # @raise [Ferrum::BrowserError]
+      #
+      def body!
         @body ||= begin
           body, encoded = @page.command("Network.getResponseBody", requestId: id)
                                .values_at("body", "base64Encoded")
           encoded ? Base64.decode64(body) : body
         end
+      end
+
+      #
+      # The response body.
+      #
+      # @return [String, nil]
+      #
+      def body
+        body!
+      rescue Ferrum::BrowserError
+        # nop
       end
 
       #

@@ -1,0 +1,81 @@
+module Ferrum
+  class Browser
+    class Process
+      KILL_TIMEOUT: ::Integer
+
+      WAIT_KILLED: ::Float
+
+      attr_reader host: String?
+
+      attr_reader port: ::Integer?
+
+      attr_reader ws_url: Addressable::URI? | String?
+
+      attr_reader pid: ::Integer?
+
+      attr_reader command: Browser::Command?
+
+      attr_reader default_user_agent: String?
+
+      attr_reader browser_version: String?
+
+      attr_reader protocol_version: String?
+
+      attr_reader v8_version: String?
+
+      attr_reader webkit_version: String?
+
+      attr_reader xvfb: Browser::Xvfb?
+
+      @pid: ::Integer?
+      @xvfb: Browser::Xvfb?
+      @user_data_dir: String?
+      @logger: (IO | nil)
+      @process_timeout: ::Integer
+      @env: Hash[String, String]
+      @command: Browser::Command?
+      @ws_url: String?
+      @host: String?
+      @port: ::Integer?
+      @default_user_agent: String?
+      @browser_version: String?
+      @protocol_version: String?
+      @v8_version: String?
+      @webkit_version: String?
+
+      extend Forwardable
+
+      def self.start: (Browser::Options options) -> Browser::Process
+
+      def self.process_killer: (::Integer pid) -> Proc
+
+      def self.directory_remover: (String path) -> Proc
+
+      def initialize: (Browser::Options options) -> void
+
+      def start: () -> void
+
+      def stop: () -> void
+
+      def restart: () -> void
+
+      def path: () -> String
+
+      private
+
+      def kill: (::Integer pid) -> void
+
+      def remove_user_data_dir: () -> void
+
+      def parse_ws_url: (IO read_io, ::Integer timeout) -> String?
+
+      def ws_url=: (String? url) -> void
+
+      def parse_browser_versions: () -> void
+
+      def parse_json_version: (Addressable::URI | String url) -> Hash[String, untyped]?
+
+      def close_io: (*IO ios) -> void
+    end
+  end
+end

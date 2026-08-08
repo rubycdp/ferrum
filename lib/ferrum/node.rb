@@ -5,14 +5,29 @@ module Ferrum
     MOVING_WAIT_DELAY = ENV.fetch("FERRUM_NODE_MOVING_WAIT", 0.01).to_f
     MOVING_WAIT_ATTEMPTS = ENV.fetch("FERRUM_NODE_MOVING_ATTEMPTS", 50).to_i
 
-    attr_reader :page, :target_id, :node_id, :description, :tag_name
+    attr_reader :page, :target_id, :description, :tag_name
 
-    def initialize(frame, target_id, node_id, description)
+    def initialize(frame, target_id, description, object_id: nil, node_id: nil)
       @page = frame.page
       @target_id = target_id
-      @node_id = node_id
       @description = description
       @tag_name = description["nodeName"].downcase
+      @object_id = object_id
+      @node_id = node_id
+    end
+
+    # Frontend node id is resolved lazily, on first actual need (focus, click, scroll_into_view, etc.)
+    # We can try to subscribe to `DOM.childNodeRemoved` and `DOM.childNodeInserted` in the future
+    # to keep track of nodes.
+    def node_id
+      @node_id ||= begin
+        id = page.command("DOM.requestNode", objectId: @object_id)["nodeId"]
+        raise NodeNotFoundError, "node is not trackable" if id.zero?
+
+        id
+      rescue NoExecutionContextError
+        raise NodeNotFoundError, "node is not trackable"
+      end
     end
 
     def node?
@@ -67,19 +82,15 @@ module Ferrum
       x, y = find_position(**offset)
       modifiers = page.keyboard.modifiers(keys)
 
+      # `:right` and `:double` pass `wait: 0` to preserve the historical
+      # no-network-wait default of `Mouse#up` and `Mouse#down`
       case mode
       when :right
-        page.mouse.move(x: x, y: y)
-        page.mouse.down(button: :right, modifiers: modifiers)
-        sleep(delay)
-        page.mouse.up(button: :right, modifiers: modifiers)
+        page.mouse.click(x:, y:, modifiers:, delay:, button: :right, wait: 0)
       when :double
-        page.mouse.move(x: x, y: y)
-        page.mouse.down(modifiers: modifiers, count: 2)
-        sleep(delay)
-        page.mouse.up(modifiers: modifiers, count: 2)
+        page.mouse.click(x:, y:, modifiers:, delay:, count: 2, wait: 0)
       when :left
-        page.mouse.click(x: x, y: y, modifiers: modifiers, delay: delay)
+        page.mouse.click(x:, y:, modifiers:, delay:)
       end
 
       self
@@ -216,6 +227,14 @@ module Ferrum
       page
         .command("CSS.getComputedStyleForNode", nodeId: node_id)["computedStyle"]
         .each_with_object({}) { |style, memo| memo.merge!(style["name"] => style["value"]) }
+    end
+
+    # Returns the computed accessibility node for the element, or nil if the
+    # element is ignored by the accessibility tree.
+    #
+    # @return [Accessibility::AXNode, nil]
+    def axnode
+      page.accessibility.node_for(self)
     end
 
     def remove
