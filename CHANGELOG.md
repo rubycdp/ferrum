@@ -9,6 +9,7 @@
 
 ### Fixed
 - `Ferrum::Client` command id generation and `Ferrum::Client::WebSocket`'s driver interactions were not thread-safe, allowing concurrent commands to collide on the same id or corrupt the frame stream; both are now serialized under a mutex [#602]
+- `Ferrum::Network` built duplicate `Exchange` objects for the same request when `Network.requestWillBeSent` (regular event thread) and `Fetch.requestPaused` (priority interruption thread) raced to look up/create the exchange for a request id; the find-or-build is now atomic, fixing intermittently `nil` `Exchange#request` on blocked/intercepted requests
 - `Ferrum::Node#type` / `Ferrum::Keyboard` now trigger the select-all editing shortcut (`Ctrl`/`Cmd`+`A`) by naming the CDP `commands` field, so selecting and replacing text in inputs and contenteditables works.
 - `Ferrum::Network::InterceptedRequest#match?` no longer coerces string blacklist/whitelist patterns containing regexp metacharacters
   (e.g. `?`, `.`) into regexps; string patterns are now compared literally instead. [#405], [#604]

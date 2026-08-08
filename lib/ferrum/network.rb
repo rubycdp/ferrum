@@ -38,6 +38,7 @@ module Ferrum
       @exchange = nil
       @blacklist = nil
       @whitelist = nil
+      @mutex = Mutex.new
     end
 
     #
@@ -294,6 +295,17 @@ module Ferrum
       Network::Exchange.new(@page, id).tap { |e| @traffic << e }
     end
 
+    # `Network.requestWillBeSent` and `Fetch.requestPaused` are handled on
+    # separate threads (see `Client::Subscriber`), so the "find the existing
+    # exchange for this id or build a new one" check has to be atomic,
+    # otherwise both threads can race past the `select` before either has
+    # appended, and end up building two exchanges for the same request.
+    #
+    # @api private
+    def find_or_build_exchange(id)
+      @mutex.synchronize { select(id).last || build_exchange(id) }
+    end
+
     #
     # Activates emulation of network conditions.
     #
@@ -380,12 +392,14 @@ module Ferrum
 
         # We can build exchange in two places, here on the event or when request
         # is interrupted. So we have to be careful when to create new one. We
-        # create new exchange only if there's no with such id or there's, but
-        # it's filled with request which means this one is new but has response
-        # for a redirect. So we assign response from the params to previous
-        # exchange and build new exchange to assign this request to it.
-        exchange = select(request.id).last
-        exchange = build_exchange(request.id) if exchange.nil? || !exchange.blank?
+        # create a new exchange only if there's no with such an id or there's, but
+        # it's filled with request which means this one is new but has a response
+        # for a redirect. So we assign a response from the params to the previous
+        # exchange and build a new exchange to assign this request to it.
+        exchange = @mutex.synchronize do
+          ex = select(request.id).last
+          ex.nil? || !ex.blank? ? build_exchange(request.id) : ex
+        end
         request.headers.merge!(Hash(exchange.request_extra_info&.dig("headers")))
         exchange.request = request
 
@@ -396,8 +410,7 @@ module Ferrum
       end
 
       @page.on("Network.requestWillBeSentExtraInfo") do |params|
-        exchange = select(params["requestId"]).last
-        exchange ||= build_exchange(params["requestId"])
+        exchange = find_or_build_exchange(params["requestId"])
         exchange.request_extra_info = params
         exchange.request&.headers&.merge!(params["headers"])
       end
