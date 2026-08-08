@@ -74,6 +74,25 @@ One of the states frame's in:
 * `:navigated`
 * `:stopped_loading`
 
+#### loader_id : `String | nil`
+
+Id of the loader associated with the frame's current navigation, set once the frame navigates.
+
+#### lifecycle_events : `Array[Hash]`
+
+List of the frame's lifecycle events as reported by the browser, each a `{"name" => String, "timestamp" => Float}`
+hash, e.g. `init`, `networkIdle`, `firstPaint`.
+
+#### idle? : `Boolean`
+
+Whether the frame has finished loading (`:stopped_loading` state). Frames in `:canceled` state (execution context
+torn down mid-navigation) are not considered idle.
+
+```ruby
+page.go_to("https://example.com")
+page.main_frame.idle? # => true
+```
+
 #### url : `String`
 
 Returns current frame's location href.

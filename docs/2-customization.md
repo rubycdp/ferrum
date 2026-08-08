@@ -15,7 +15,9 @@ Ferrum::Browser.new(options)
     * `:incognito` (Boolean) - Create an incognito profile for the browser startup window, `true` by default.
     * `:dockerize` (Boolean) - Provide CLI flags to the browser to run it in a container, `false` by default.
     * `:xvfb` (Boolean) - Run browser in a virtual framebuffer, `false` by default.
-    * `:flatten` (Boolean) - Use one websocket connection to the browser and all the pages in flatten mode.
+    * `:flatten` (Boolean) - Use one websocket connection to the browser and all the pages in flatten mode,
+      `true` by default. When set to `false`, each page/target opens its own dedicated websocket connection instead
+      of sharing the browser's connection.
     * `:window_size` (Array) - The dimensions of the browser window in which to
       test, expressed as a 2-element array, e.g. [1024, 768]. Default: [1024, 768]
     * `:extensions` (Array[String | Hash]) - An array of paths to files or JS
