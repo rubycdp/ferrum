@@ -15,6 +15,7 @@
   (e.g. `?`, `.`) into regexps; string patterns are now compared literally instead. [#405], [#604]
 - `Ferrum::Network::AuthRequest#match?` and `Ferrum::Dialog#match?` received the same fix as [#604] above for consistency. String patterns
   now compare literally: exact-match for requests/auth requests, substring-match for dialog messages. [#405]
+- `Target.targetCreated` handler for an iframe target reusing an already-connected target raised `NoMethodError` on `Ferrum::Browser#new(flatten: false)`, since it read `session_id` off the target's underlying `Ferrum::Client`, which doesn't expose it in that mode; it now reads `Target#session_id` directly. [#539]
 
 ### Changed
 - `Ferrum::PendingConnectionsError` and `Ferrum::TimeoutError` were swallowed even though happening when traffic iterator results in empty array. [#583]
