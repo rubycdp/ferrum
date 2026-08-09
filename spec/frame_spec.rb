@@ -181,7 +181,7 @@ describe Ferrum::Frame do
     page.go_to
 
     # The padding on the frame here is to differ the sizes of the two
-    # frames, ensuring that their offsets are being calculated seperately.
+    # frames, ensuring that their offsets are being calculated separately.
     # This avoids a false positive where the same frame"s offset is
     # calculated twice, but the click still works because both frames had
     # the same offset.
