@@ -58,6 +58,15 @@ Ferrum::Browser.new(options)
     * `:save_path` (String) - Path to save attachments with [Content-Disposition](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition) header.
     * `:env` (Hash) - Environment variables you'd like to pass through to the process
 
+You can emulate specific devices at the time you register a driver:
+
+```ruby
+require "capybara/cuprite/devices"
+Capybara.register_driver(:cuprite) do |app|
+  Capybara::Cuprite::Driver.new(app, Capybara::Cuprite::Devices::IPHONE_14)
+end
+```
+
 ## Examples
 
 ```ruby

@@ -65,6 +65,7 @@ module Ferrum
     delegate %i[timeout timeout=] => :options
 
     attr_reader :ws_url, :options, :subscriber
+    attr_accessor :on_synchronous_message
 
     def initialize(ws_url, options)
       @command_id = 0
@@ -98,6 +99,7 @@ module Ferrum
         raise TimeoutError unless data
 
         error, response = data.values_at("error", "result")
+        on_synchronous_message&.call(message:, error:, response:)
         raise_browser_error(error) if error
         response
       end
