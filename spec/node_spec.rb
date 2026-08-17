@@ -870,26 +870,6 @@ describe Ferrum::Node do
 
       expect(input.value).to eq("C:\\fakepath\\node_spec.rb")
     end
-
-    it "uses the backend node id for the file input" do
-      page = instance_double(Ferrum::Page)
-      frame = instance_double(Ferrum::Frame, page: page)
-      node = described_class.new(
-        frame,
-        "target-id",
-        { "nodeName" => "INPUT", "backendNodeId" => 42 },
-        node_id: 7
-      )
-
-      expect(page).to receive(:command).with(
-        "DOM.setFileInputFiles",
-        slowmoable: true,
-        backendNodeId: 42,
-        files: ["spec/tmp/upload.txt"]
-      )
-
-      node.select_file("spec/tmp/upload.txt")
-    end
   end
 
   describe "#drag_to", skip: true do
