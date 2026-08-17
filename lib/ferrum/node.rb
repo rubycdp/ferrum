@@ -121,7 +121,12 @@ module Ferrum
     end
 
     def select_file(value)
-      page.command("DOM.setFileInputFiles", slowmoable: true, nodeId: node_id, files: Array(value))
+      page.command(
+        "DOM.setFileInputFiles",
+        slowmoable: true,
+        backendNodeId: description["backendNodeId"],
+        files: Array(value)
+      )
     end
 
     def at_xpath(selector)
