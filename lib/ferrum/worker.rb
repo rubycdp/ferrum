@@ -36,10 +36,17 @@ module Ferrum
     # @return [Network]
     attr_reader :network
 
+    # How long to wait for CDP responses and JS evaluation to complete.
+    #
+    # @return [Numeric]
     def timeout
       @options.timeout
     end
 
+    # Sends a CDP command through {#client}.
+    #
+    # @return [Boolean, Hash]
+    #   `true` when sent asynchronously, otherwise the command's result.
     def command(...)
       client.command(...)
     end
@@ -50,6 +57,9 @@ module Ferrum
       nil
     end
 
+    # Closes the target in the browser, and its connection.
+    #
+    # @return [Boolean]
     def close
       client.command("Target.closeTarget", async: true, targetId: target_id)
       close_connection
@@ -57,10 +67,19 @@ module Ferrum
       true
     end
 
+    # Closes the WebSocket connection only, without asking the browser to
+    # close the underlying target. Kept separate from {#close} so a whole
+    # context can be dropped (the browser closes its targets anyway) without
+    # every worker having to be closed one by one.
+    #
+    # @return [void]
     def close_connection
       client&.close
     end
 
+    # Debug representation of the worker.
+    #
+    # @return [String]
     def inspect
       "#<#{self.class} @target_id=#{@target_id.inspect} @url=#{@url.inspect}>"
     end

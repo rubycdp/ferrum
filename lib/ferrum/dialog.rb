@@ -51,6 +51,14 @@ module Ferrum
       @page.command("Page.handleJavaScriptDialog", slowmoable: true, accept: false)
     end
 
+    #
+    # Whether the dialog's message matches the given pattern.
+    #
+    # @param [Regexp, String] pattern
+    #   A regexp matched against the message, or a string checked for inclusion in it.
+    #
+    # @return [Boolean]
+    #
     def match?(pattern)
       return message.match?(pattern) if pattern.is_a?(Regexp)
 

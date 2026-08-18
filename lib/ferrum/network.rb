@@ -82,18 +82,45 @@ module Ferrum
       raise TimeoutError unless result
     end
 
+    #
+    # Whether the network is idle, i.e. no more than `connections`
+    # connections are still pending.
+    #
+    # @param [Integer] connections
+    #   How many connections are allowed for network to be idling.
+    #
+    # @return [Boolean]
+    #
     def idle?(connections = 0)
       pending_connections <= connections
     end
 
+    #
+    # Total number of network connections seen since the traffic was last
+    # cleared.
+    #
+    # @return [Integer]
+    #
     def total_connections
       @traffic.size
     end
 
+    #
+    # Number of network connections that have finished, i.e. were blocked, got
+    # a loaded response, errored, or are otherwise no longer pending.
+    #
+    # @return [Integer]
+    #
     def finished_connections
       @traffic.count(&:finished?)
     end
 
+    #
+    # Number of network connections that are still pending, i.e. haven't
+    # finished yet.
+    #
+    # @return [Integer]
+    #
     def pending_connections
       total_connections - finished_connections
     end
@@ -165,12 +192,38 @@ module Ferrum
       true
     end
 
+    #
+    # Sets a list of patterns for URLs that should be blocked from loading.
+    # Aborts any request whose URL matches one of the given patterns, and
+    # continues all others. Can't be used together with `whitelist=`.
+    #
+    # @param [String, Regexp, Array<String, Regexp>] patterns
+    #   One or more patterns matched against the request's URL, see
+    #   {InterceptedRequest#match?}.
+    #
+    # @example
+    #   browser.network.blacklist = /jquery/
+    #   browser.go_to("https://example.com/")
+    #
     def blacklist=(patterns)
       @blacklist = Array(patterns)
       blacklist_subscribe
     end
     alias blocklist= blacklist=
 
+    #
+    # Sets a list of patterns for URLs that are the only ones allowed to load.
+    # Continues any request whose URL matches one of the given patterns, and
+    # aborts all others. Can't be used together with `blacklist=`.
+    #
+    # @param [String, Regexp, Array<String, Regexp>] patterns
+    #   One or more patterns matched against the request's URL, see
+    #   {InterceptedRequest#match?}.
+    #
+    # @example
+    #   browser.network.whitelist = /example/
+    #   browser.go_to("https://example.com/")
+    #
     def whitelist=(patterns)
       @whitelist = Array(patterns)
       whitelist_subscribe
@@ -269,6 +322,11 @@ module Ferrum
       end
     end
 
+    #
+    # Subscribes to the CDP events needed to keep track of `traffic`. Called
+    # once when the page is initialized.
+    #
+    # @api private
     def subscribe
       subscribe_request_will_be_sent
       subscribe_response_received
@@ -277,6 +335,23 @@ module Ferrum
       subscribe_log_entry_added
     end
 
+    #
+    # Builds the `authChallengeResponse` sent back to Chrome for an
+    # authenticated request, used by `authorize`.
+    #
+    # @param [Array<String>] ids
+    #   Request ids that were already given credentials, to avoid an infinite
+    #   retry loop if the credentials are rejected.
+    #
+    # @param [String] request_id
+    #
+    # @param [String, nil] username
+    #
+    # @param [String, nil] password
+    #
+    # @return [Hash, nil]
+    #
+    # @api private
     def authorized_response(ids, request_id, username, password)
       if ids.include?(request_id)
         { response: "CancelAuth" }
@@ -287,10 +362,27 @@ module Ferrum
       end
     end
 
+    #
+    # Finds the exchanges in `traffic` with the given request id.
+    #
+    # @param [String] request_id
+    #
+    # @return [Array<Exchange>]
+    #
+    # @api private
     def select(request_id)
       @traffic.select { |e| e.id == request_id }
     end
 
+    #
+    # Builds a new {Exchange} for the given request id and appends it to
+    # `traffic`.
+    #
+    # @param [String] id
+    #
+    # @return [Exchange]
+    #
+    # @api private
     def build_exchange(id)
       Network::Exchange.new(@page, id).tap { |e| @traffic << e }
     end

@@ -6,6 +6,14 @@ module Ferrum
       NOT_FOUND = "Could not find an executable for the Xvfb. Try to install " \
                   "it with your package manager"
 
+      #
+      # Builds and starts a new Xvfb instance.
+      #
+      # @param [Array] args
+      #   Arguments forwarded to {#initialize}.
+      #
+      # @return [Xvfb]
+      #
       def self.start(*args)
         new(*args).tap(&:start)
       end
@@ -20,11 +28,21 @@ module Ferrum
         @display_id = (Time.now.to_f * 1000).to_i % 100_000_000
       end
 
+      #
+      # Spawns the Xvfb process on the configured display.
+      #
+      # @return [void]
+      #
       def start
         @pid = ::Process.spawn("#{@path} :#{display_id} -screen 0 #{screen_size}")
         ::Process.detach(@pid)
       end
 
+      #
+      # Environment variables needed to point the browser at this Xvfb display.
+      #
+      # @return [Hash{String => String}]
+      #
       def to_env
         { "DISPLAY" => ":#{display_id}" }
       end

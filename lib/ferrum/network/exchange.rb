@@ -34,6 +34,11 @@ module Ferrum
       # @return Boolean
       attr_accessor :unknown
 
+      # The raw `Network.requestWillBeSentExtraInfo` params for the request,
+      # if it arrived before `request` was set.
+      #
+      # @return [Hash, nil]
+      #
       # @api private
       attr_accessor :request_extra_info
 

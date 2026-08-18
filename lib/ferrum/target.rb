@@ -20,56 +20,106 @@ module Ferrum
       @options = browser_client.options
     end
 
+    # Merges freshly received CDP target info into this target's params,
+    # e.g. on `Target.targetInfoChanged`.
+    #
+    # @param [Hash] params
+    #
+    # @return [Hash]
     def update(params)
       @params.merge!(params)
     end
 
+    # Whether this target has already been connected to as a {Page} or
+    # {Worker}.
+    #
+    # @return [Boolean]
     def connected?
       !!@page || !!@worker
     end
 
+    # Connects to and returns this target's {Page}.
+    #
+    # @return [Page]
     def page
       @page ||= build_page
     end
 
+    # Connects to and returns this target's {Worker}.
+    #
+    # @return [Worker]
     def worker
       @worker ||= build_worker
     end
 
+    # The client connected to this target's own session (or a dedicated
+    # WebSocket connection if `options.flatten` is disabled).
+    #
+    # @return [Client, SessionClient]
     def client
       @client ||= build_client
     end
 
+    # Builds a {Page} for this target. Called lazily by `page`, or eagerly
+    # by {Context#create_page}.
+    #
+    # @param [Hash] options
+    #
+    # @return [Page]
     def build_page(**options)
       maybe_sleep_if_new_window
       Page.new(client, context_id: context_id, target_id: id, **options)
     end
 
+    # Builds a {Worker} for this target. Called lazily by {#worker}.
+    #
+    # @return [Worker]
     def build_worker
       Worker.new(client, target_id: id, url: url)
     end
 
+    # Closes the WebSocket connection, without closing the target itself
+    # in the browser.
+    #
+    # @return [void]
     def close_connection
       @page&.close_connection
       @worker&.close_connection
     end
 
+    # The target's id.
+    #
+    # @return [String]
     def id
       @params["targetId"]
     end
 
+    # The target's type, e.g. `"page"`, `"iframe"`, `"worker"`,
+    # `"shared_worker"`, `"service_worker"`.
+    #
+    # @return [String]
     def type
       @params["type"]
     end
 
+    # The target's title.
+    #
+    # @return [String]
     def title
       @params["title"]
     end
 
+    # The target's URL.
+    #
+    # @return [String]
     def url
       @params["url"]
     end
 
+    # The id of the target that opened this one, set only for
+    # windows/tabs opened via `window.open`/links/etc.
+    #
+    # @return [String, nil]
     def opener_id
       @params["openerId"]
     end
@@ -81,39 +131,69 @@ module Ferrum
       @params["parentId"]
     end
 
+    # The id of the browser context this target belongs to.
+    #
+    # @return [String, nil]
     def context_id
       @params["browserContextId"]
     end
 
+    # Whether this target is a window/tab, i.e. was opened via
+    # `window.open`/a link/etc. and thus has an {#opener_id}.
+    #
+    # @return [Boolean]
     def window?
       !!opener_id
     end
 
+    # Whether this target is an iframe.
+    #
+    # @return [Boolean]
     def iframe?
       type == "iframe"
     end
 
+    # Whether this target is a page.
+    #
+    # @return [Boolean]
     def page?
       type == "page"
     end
 
+    # Whether this target is a dedicated worker.
+    #
+    # @return [Boolean]
     def worker?
       type == "worker"
     end
 
+    # Whether this target is a shared worker.
+    #
+    # @return [Boolean]
     def shared_worker?
       type == "shared_worker"
     end
 
+    # Whether this target is a service worker.
+    #
+    # @return [Boolean]
     def service_worker?
       type == "service_worker"
     end
 
+    # Chrome fires no events for a newly opened window, so we sleep a bit
+    # to give it a chance to load before connecting.
+    #
+    # @return [void]
     def maybe_sleep_if_new_window
       # Dirty hack because new window doesn't have events at all
       sleep(NEW_WINDOW_WAIT) if window?
     end
 
+    # Sends a CDP command through {#client}.
+    #
+    # @return [Boolean, Hash]
+    #   `true` when sent asynchronously, otherwise the command's result.
     def command(...)
       client.command(...)
     end

@@ -10,6 +10,19 @@ module Ferrum
   class SessionClient
     attr_reader :client, :session_id
 
+    #
+    # Builds the internal event key used to route an event to a specific
+    # session, joining the CDP event name with a session id (or leaving it
+    # session-less when `session_id` is `nil`).
+    #
+    # @param [String] event
+    #   The CDP event name, e.g. `"Page.loadEventFired"`.
+    #
+    # @param [String, nil] session_id
+    #   The target session id, or `nil` for the browser-wide session.
+    #
+    # @return [String]
+    #
     def self.event_name(event, session_id)
       [event, session_id].compact.join("_")
     end
@@ -19,31 +32,89 @@ module Ferrum
       @session_id = session_id
     end
 
+    #
+    # Sends a CDP command scoped to this session.
+    #
+    # @param [String] method
+    #   The CDP method name, e.g. `"Page.navigate"`.
+    #
+    # @param [Boolean] async
+    #   Whether to send the command without waiting for a response.
+    #
+    # @param [Hash] params
+    #   The command's parameters.
+    #
+    # @return [Boolean, Hash]
+    #   `true` when sent asynchronously, otherwise the command's result.
+    #
     def command(method, async: false, **params)
       message = build_message(method, params)
       @client.send_message(message, async: async)
     end
 
+    #
+    # Subscribes to a CDP event scoped to this session.
+    #
+    # @param [String] event
+    #   The CDP event name.
+    #
+    # @return [Integer]
+    #   The subscription id, used to unsubscribe via {#off}.
+    #
     def on(event, &)
       @client.on(event_name(event), &)
     end
 
+    #
+    # Unsubscribes from a CDP event scoped to this session.
+    #
+    # @param [String] event
+    #   The CDP event name.
+    #
+    # @param [Integer] id
+    #   The subscription id returned by {#on}.
+    #
+    # @return [void]
+    #
     def off(event, id)
       @client.off(event_name(event), id)
     end
 
+    # Whether there's at least one callback registered for the event, scoped
+    # to this session.
+    #
+    # @param [String] event
+    #   The CDP event name.
+    #
+    # @return [Boolean]
     def subscribed?(event)
       @client.subscribed?(event_name(event))
     end
 
+    # Supports {#method_missing} delegation by reporting the underlying
+    # {Client}'s methods as responded to.
+    #
+    # @return [Boolean]
     def respond_to_missing?(name, include_private)
       @client.respond_to?(name, include_private)
     end
 
+    #
+    # Delegates any method not defined on `SessionClient` to the underlying
+    # {Client}, e.g. `subscribed?`.
+    #
+    # @return [untyped]
+    #
     def method_missing(name, ...)
       @client.send(name, ...)
     end
 
+    #
+    # Removes all event callbacks registered for this session from the
+    # underlying client's subscriber.
+    #
+    # @return [void]
+    #
     def close
       @client.subscriber.clear(session_id: session_id)
     end
@@ -78,11 +149,41 @@ module Ferrum
       start
     end
 
+    #
+    # Sends a CDP command to the browser-wide session.
+    #
+    # @param [String] method
+    #   The CDP method name, e.g. `"Target.createTarget"`.
+    #
+    # @param [Boolean] async
+    #   Whether to send the command without waiting for a response.
+    #
+    # @param [Hash] params
+    #   The command's parameters.
+    #
+    # @return [Boolean, Hash]
+    #   `true` when sent asynchronously, otherwise the command's result.
+    #
     def command(method, async: false, **params)
       message = build_message(method, params)
       send_message(message, async: async)
     end
 
+    #
+    # Sends a raw CDP message over the websocket. Synchronous calls block
+    # until a matching response arrives, or `timeout` (delegated to
+    # {Browser::Options#timeout}) elapses.
+    #
+    # @param [Hash] message
+    #   The message to send, must include an `:id` key.
+    #
+    # @param [Boolean] async
+    #   Whether to return immediately instead of waiting for a response.
+    #
+    # @return [Boolean, Hash]
+    #   `true` when sent asynchronously, otherwise the parsed `"result"`
+    #   from the response.
+    #
     def send_message(message, async:)
       if async
         @ws.send_message(message)
@@ -103,22 +204,63 @@ module Ferrum
       end
     end
 
+    #
+    # Subscribes to a CDP event.
+    #
+    # @param [String] event
+    #   The CDP event name.
+    #
+    # @return [Integer]
+    #   The subscription id, used to unsubscribe via {#off}.
+    #
     def on(event, &)
       @subscriber.on(event, &)
     end
 
+    #
+    # Unsubscribes from a CDP event.
+    #
+    # @param [String] event
+    #   The CDP event name.
+    #
+    # @param [Integer] id
+    #   The subscription id returned by {#on}.
+    #
+    # @return [void]
+    #
     def off(event, id)
       @subscriber.off(event, id)
     end
 
+    # Whether there's at least one callback registered for the event.
+    #
+    # @param [String] event
+    #   The CDP event name.
+    #
+    # @return [Boolean]
     def subscribed?(event)
       @subscriber.subscribed?(event)
     end
 
+    #
+    # Builds a client scoped to a given CDP session, e.g. a browsing
+    # context created via `Target.attachToTarget`.
+    #
+    # @param [String] session_id
+    #   The CDP session id to scope commands and events to.
+    #
+    # @return [SessionClient]
+    #
     def session(session_id)
       SessionClient.new(self, session_id)
     end
 
+    #
+    # Closes the underlying websocket, drops pending commands and stops
+    # the message-processing thread and subscriber.
+    #
+    # @return [void]
+    #
     def close
       @ws.close
       # Give a thread some time to handle a tail of messages
@@ -127,6 +269,11 @@ module Ferrum
       @subscriber.close
     end
 
+    #
+    # Custom inspection that exposes internal state useful for debugging.
+    #
+    # @return [String]
+    #
     def inspect
       "#<#{self.class} " \
         "@command_id=#{@command_id.inspect} " \
@@ -134,6 +281,17 @@ module Ferrum
         "@ws=#{@ws.inspect}>"
     end
 
+    #
+    # Builds a CDP message hash with a fresh, thread-safe command id.
+    #
+    # @param [String] method
+    #   The CDP method name.
+    #
+    # @param [Hash] params
+    #   The command's parameters.
+    #
+    # @return [Hash]
+    #
     def build_message(method, params)
       { method: method, params: params }.merge(id: next_command_id)
     end

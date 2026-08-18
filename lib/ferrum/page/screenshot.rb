@@ -153,18 +153,46 @@ module Ferrum
         save_file(path, data)
       end
 
+      #
+      # Current viewport size.
+      #
+      # @return [(Integer, Integer)]
+      #   The width, height of the viewport.
+      #
+      # @example
+      #   page.viewport_size # => [1024, 768]
+      #
       def viewport_size
         evaluate <<~JS
           [window.innerWidth, window.innerHeight]
         JS
       end
 
+      #
+      # The ratio of the resolution in physical pixels to the resolution in
+      # CSS pixels for the current display device.
+      #
+      # @return [Float]
+      #
+      # @example
+      #   page.device_pixel_ratio # => 1.0
+      #
       def device_pixel_ratio
         evaluate <<~JS
           window.devicePixelRatio
         JS
       end
 
+      #
+      # Full size of the document, including the part that is not visible in
+      # the viewport.
+      #
+      # @return [(Integer, Integer)]
+      #   The scroll width, scroll height of the document.
+      #
+      # @example
+      #   page.document_size # => [1024, 4000]
+      #
       def document_size
         evaluate <<~JS
           [document.documentElement.scrollWidth,

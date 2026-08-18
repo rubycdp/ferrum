@@ -28,6 +28,11 @@ module Ferrum
   end
 
   class TimeoutError < Error
+    #
+    # Explains that waiting for a response timed out.
+    #
+    # @return [String]
+    #
     def message
       "Timed out waiting for response. It's possible that this happened " \
         "because something took a very long time (for example a page load " \
@@ -37,6 +42,11 @@ module Ferrum
   end
 
   class ScriptTimeoutError < Error
+    #
+    # Explains that the evaluated script timed out.
+    #
+    # @return [String]
+    #
     def message
       "Timed out waiting for evaluated script to return a value"
     end
@@ -65,6 +75,11 @@ module Ferrum
       super(message)
     end
 
+    #
+    # Explains that the node moved between attempts to interact with it.
+    #
+    # @return [String]
+    #
     def message
       "#{@node.inspect} that you're trying to click is moving, hence " \
         "we cannot. Previously it was at #{@prev.inspect} but now at " \
@@ -93,10 +108,20 @@ module Ferrum
       super(response["message"])
     end
 
+    #
+    # Error code from the raw CDP error response.
+    #
+    # @return [Integer, nil]
+    #
     def code
       response["code"]
     end
 
+    #
+    # Additional data from the raw CDP error response.
+    #
+    # @return [Object, nil]
+    #
     def data
       response["data"]
     end

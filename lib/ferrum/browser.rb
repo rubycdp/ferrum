@@ -211,11 +211,17 @@ module Ferrum
       contexts.reset
     end
 
+    #
+    # Restarts the browser process, keeping the same options.
+    #
     def restart
       quit
       start
     end
 
+    #
+    # Terminates the browser process and closes the client connection.
+    #
     def quit
       return unless @client
 

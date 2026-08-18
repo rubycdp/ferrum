@@ -58,6 +58,15 @@ module Ferrum
       @execution_id = Concurrent::MVar.new
     end
 
+    # Sets the frame's state, validating it's one of {STATE_VALUES}.
+    #
+    # @param [Symbol] value
+    #   One of `:started_loading`, `:navigated`, `:stopped_loading`,
+    #   `:canceled`.
+    #
+    # @return [Symbol]
+    #
+    # @raise [ArgumentError]
     def state=(value)
       raise ArgumentError unless STATE_VALUES.include?(value)
 
@@ -190,6 +199,15 @@ module Ferrum
       value
     end
 
+    #
+    # Sets the execution context id, or clears it if +nil+ is given (e.g.
+    # when the context is torn down mid-navigation and hasn't been
+    # replaced yet).
+    #
+    # @param [Integer, nil] value
+    #
+    # @return [Integer, nil]
+    #
     def execution_id=(value)
       if value.nil?
         @execution_id.try_take!
@@ -198,6 +216,11 @@ module Ferrum
       end
     end
 
+    #
+    # Debug representation of the frame, including its internal state.
+    #
+    # @return [String]
+    #
     def inspect
       "#<#{self.class} " \
         "@id=#{@id.inspect} " \

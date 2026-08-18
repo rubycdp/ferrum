@@ -11,6 +11,11 @@ module Ferrum
       validate
     end
 
+    #
+    # Converts the color to a Hash.
+    #
+    # @return [Hash{Symbol => Integer, Float}]
+    #
     def to_h
       { r: red, g: green, b: blue, a: alpha }
     end

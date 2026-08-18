@@ -16,14 +16,24 @@ module Ferrum
       @pendings = Concurrent::Map.new
     end
 
+    # The context's first known target, creating one via
+    # `Target.createTarget` if none has attached yet.
+    #
+    # @return [Target]
     def default_target
       @default_target ||= create_target
     end
 
+    # Connects to and returns the {#default_target}'s page.
+    #
+    # @return [Page]
     def page
       default_target.page
     end
 
+    # All page targets in this context, connected to as {Page}s.
+    #
+    # @return [Array<Page>]
     def pages
       @targets.values.select(&:page?).map(&:page)
     end
@@ -57,11 +67,23 @@ module Ferrum
       windows.map(&:page)
     end
 
+    # Creates a new target in this context and eagerly connects to it as a
+    # {Page}, forwarding `options` to {Target#build_page}.
+    #
+    # @param [Hash] options
+    #
+    # @return [Page]
     def create_page(**options)
       target = create_target
       target.page = target.build_page(**options)
     end
 
+    # Creates a new target in this context via `Target.createTarget` and
+    # blocks until it's been registered (see {#add_target}).
+    #
+    # @return [Target]
+    #
+    # @raise [NoSuchTargetError]
     def create_target
       target_id = @client.command("Target.createTarget", browserContextId: @id, url: "about:blank")["targetId"]
 
@@ -74,6 +96,16 @@ module Ferrum
       @targets[target_id]
     end
 
+    # Registers a target discovered via a CDP `Target.*` event, or updates
+    # the session id on one already known. Called by {Contexts} as targets
+    # are created/attached.
+    #
+    # @param [Hash] params
+    #   The target's `targetInfo`.
+    #
+    # @param [String, nil] session_id
+    #
+    # @return [Target]
     def add_target(params:, session_id: nil)
       new_target = Target.new(@client, session_id, params)
       # `put_if_absent` returns nil if added a new value or existing if there was one already
@@ -88,10 +120,22 @@ module Ferrum
       target
     end
 
+    # Updates a known target's params, e.g. on `Target.targetInfoChanged`.
+    #
+    # @param [String] target_id
+    #
+    # @param [Hash] params
+    #
+    # @return [void]
     def update_target(target_id, params)
       @targets[target_id]&.update(params)
     end
 
+    # Removes a target, e.g. on `Target.targetDestroyed`/`targetCrashed`.
+    #
+    # @param [String] target_id
+    #
+    # @return [Target, nil]
     def delete_target(target_id)
       @targets.delete(target_id)
     end
@@ -112,12 +156,19 @@ module Ferrum
       true
     end
 
+    # Returns the first target for which the block returns truthy.
+    #
+    # @return [Target, nil]
     def find_target
       @targets.each_value { |t| return t if yield(t) }
 
       nil
     end
 
+    # Closes the WebSocket connection of every connected target, without
+    # disposing the targets themselves.
+    #
+    # @return [void]
     def close_targets_connection
       @targets.each_value do |target|
         next unless target.connected?
@@ -126,14 +177,25 @@ module Ferrum
       end
     end
 
+    # Disposes this browser context and all of its targets.
+    #
+    # @return [Boolean]
     def dispose
       @contexts.dispose(@id)
     end
 
+    # Whether a target with the given id is known in this context.
+    #
+    # @param [String] target_id
+    #
+    # @return [Boolean]
     def target?(target_id)
       !!@targets[target_id]
     end
 
+    # Debug representation of the context, including its known targets.
+    #
+    # @return [String]
     def inspect
       %(#<#{self.class} @id=#{@id.inspect} @targets=#{@targets.inspect} @default_target=#{@default_target.inspect}>)
     end

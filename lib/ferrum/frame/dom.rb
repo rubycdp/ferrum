@@ -77,6 +77,17 @@ module Ferrum
         evaluate("window.top.document.title")
       end
 
+      #
+      # Returns current document's doctype declaration.
+      #
+      # @return [String, nil]
+      #   The serialized `<!DOCTYPE ...>` declaration, or +nil+ if the
+      #   document has none.
+      #
+      # @example
+      #   browser.go_to("https://example.com")
+      #   browser.doctype # => "<!DOCTYPE html>"
+      #
       def doctype
         evaluate("document.doctype && new XMLSerializer().serializeToString(document.doctype)")
       end

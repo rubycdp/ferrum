@@ -133,6 +133,14 @@ module Ferrum
     alias goto go_to
     alias go go_to
 
+    #
+    # Closes the page's target and its underlying client connection.
+    #
+    # @return [Boolean]
+    #
+    # @example
+    #   page.close # => true
+    #
     def close
       @headers.clear
       client.command("Target.closeTarget", async: true, targetId: @target_id)
@@ -141,6 +149,11 @@ module Ferrum
       true
     end
 
+    #
+    # Closes the underlying client connection only, without closing the
+    # target itself. Useful when you want to detach from a page without
+    # ending the browser tab it represents.
+    #
     def close_connection
       client&.close
     end
@@ -169,6 +182,26 @@ module Ferrum
       )
     end
 
+    #
+    # Resizes the window and emulates the viewport accordingly, optionally
+    # switching to fullscreen.
+    #
+    # @param [Integer, nil] width width value in pixels.
+    #
+    # @param [Integer, nil] height height value in pixels.
+    #
+    # @param [Boolean] fullscreen whether to put the window into fullscreen
+    #   mode. When `true`, `width` and `height` are read from
+    #   {#document_size} instead of the given arguments.
+    #
+    # @return [Hash{String => Object}]
+    #
+    # @example
+    #   page.resize(width: 1024, height: 768)
+    #
+    # @example
+    #   page.resize(fullscreen: true)
+    #
     def resize(width: nil, height: nil, fullscreen: false)
       if fullscreen
         width, height = document_size
@@ -323,6 +356,15 @@ module Ferrum
       history_navigate(delta: 1)
     end
 
+    #
+    # Blocks until the page reloads or the timeout is reached.
+    #
+    # @param [Numeric] timeout
+    #   Maximum time in seconds to wait for a reload event.
+    #
+    # @example
+    #   page.wait_for_reload
+    #
     def wait_for_reload(timeout = 1)
       @event.reset if @event.set?
       @event.wait(timeout)
@@ -362,6 +404,26 @@ module Ferrum
       true
     end
 
+    #
+    # Sends a CDP command to the browser and optionally waits for network
+    # activity on the main frame to settle before returning.
+    #
+    # @param [String] method
+    #   The CDP method name, e.g. `"Page.navigate"`.
+    #
+    # @param [Numeric] wait
+    #   How many seconds to wait for a network event on the main frame after
+    #   the command is sent. `0` disables waiting.
+    #
+    # @param [Boolean] slowmoable
+    #   Whether to sleep for `Browser::Options#slowmo` seconds before sending
+    #   the command.
+    #
+    # @return [Hash{String => Object}]
+    #
+    # @example
+    #   page.command("Page.navigate", url: "https://github.com/")
+    #
     def command(method, wait: 0, slowmoable: false, **params)
       iteration = @event.reset if wait.positive?
       sleep(@options.slowmo) if slowmoable && @options.slowmo.positive?
@@ -410,14 +472,29 @@ module Ferrum
       client.off("Page.javascriptDialogOpening", id)
     end
 
+    # Whether the page is configured to use a proxy.
+    #
+    # @return [Boolean]
     def use_proxy?
       @proxy_host && @proxy_port
     end
 
+    # Whether the page is configured to use a proxy that requires authentication.
+    #
+    # @return [Boolean]
     def use_authorized_proxy?
       use_proxy? && @proxy_user && @proxy_password
     end
 
+    #
+    # Returns the node id of the document's root element.
+    #
+    # @param [Boolean] async
+    #   Whether to send the command without waiting for a response.
+    #
+    # @return [Integer, Boolean]
+    #   The root node id, or `true` when sent asynchronously.
+    #
     def document_node_id(async: false)
       return client.command("DOM.getDocument", async: true, depth: 0) if async
 

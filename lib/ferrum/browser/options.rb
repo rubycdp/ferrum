@@ -52,16 +52,42 @@ module Ferrum
         @browser_options = @options.fetch(:browser_options, {}).freeze
       end
 
+      #
+      # Sets the base URL relative navigations are resolved against.
+      #
+      # @param [String] value
+      #   An absolute URL including scheme, e.g. `"https://example.com"`.
+      #
+      # @return [Addressable::URI]
+      #
       def base_url=(value)
         @base_url = parse_base_url(value)
       end
 
+      #
+      # JS source to preload into the browser, read from `:extensions` option.
+      #
+      # @return [Array<String>]
+      #   JS source code for each configured extension.
+      #
       def extensions
         @extensions ||= Array(@options[:extensions]).map do |extension|
           (extension.is_a?(Hash) && extension[:source]) || File.read(extension)
         end
       end
 
+      #
+      # Validates the `:proxy` option, if given.
+      #
+      # @param [Hash, nil] options
+      #   The `:proxy` option as passed to {#initialize}.
+      #
+      # @return [Hash, nil]
+      #   The same `options`, unchanged.
+      #
+      # @raise [ArgumentError]
+      #   If `options` is not a `Hash`, or is a `Hash` without `:host` or `:port`.
+      #
       def validate_proxy(options)
         return unless options
 
@@ -74,6 +100,11 @@ module Ferrum
         options
       end
 
+      #
+      # Raw options hash used to initialize the browser.
+      #
+      # @return [Hash{Symbol => Object}]
+      #
       def to_h
         @options
       end

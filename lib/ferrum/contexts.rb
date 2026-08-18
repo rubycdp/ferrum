@@ -26,26 +26,49 @@ module Ferrum
       @manually_attached[target_id] = true
     end
 
+    # The browser's first context, created lazily.
+    #
+    # @return [Context]
     def default_context
       @default_context ||= create
     end
 
+    # Iterates over `[id, context]` pairs; returns an `Enumerator` if no
+    # block is given.
+    #
+    # @return [void, Enumerator]
     def each(&)
       return enum_for(__method__) unless block_given?
 
       @contexts.each(&)
     end
 
+    # The context with the given id, if any.
+    #
+    # @param [String] id
+    #
+    # @return [Context, nil]
     def [](id)
       @contexts[id]
     end
 
+    # The context that owns the given target, if any.
+    #
+    # @param [String] target_id
+    #
+    # @return [Context, nil]
     def find_by(target_id:)
       context = nil
       @contexts.each_value { |c| context = c if c.target?(target_id) }
       context
     end
 
+    # Creates a new browser context (like an incognito profile).
+    #
+    # @param [Hash] options
+    #   Keyword arguments forwarded to `Target.createBrowserContext`.
+    #
+    # @return [Context]
     def create(**options)
       response = @client.command("Target.createBrowserContext", **options)
       context_id = response["browserContextId"]
@@ -54,6 +77,11 @@ module Ferrum
       context
     end
 
+    # Disposes a browser context and all of its targets.
+    #
+    # @param [String] context_id
+    #
+    # @return [Boolean]
     def dispose(context_id)
       context = @contexts[context_id]
       return unless context
@@ -64,16 +92,26 @@ module Ferrum
       true
     end
 
+    # Closes the WebSocket connection of every target in every context,
+    # without disposing the contexts themselves.
+    #
+    # @return [void]
     def close_connections
       @contexts.each_value(&:close_targets_connection)
     end
 
+    # Disposes every context still known to the browser.
+    #
+    # @return [void]
     def reset
       context_ids = @client.command("Target.getBrowserContexts")["browserContextIds"]
       @default_context = nil if context_ids.include?(@default_context&.id)
       @contexts.each_key { |id| dispose(id) if context_ids.include?(id) }
     end
 
+    # Number of known contexts.
+    #
+    # @return [Integer]
     def size
       @contexts.size
     end

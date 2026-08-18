@@ -22,10 +22,26 @@ module Ferrum
 
       delegate path: :command
 
+      #
+      # Builds and starts a new browser process.
+      #
+      # @param [Array] args
+      #   Arguments forwarded to {#initialize}.
+      #
+      # @return [Process]
+      #
       def self.start(*args)
         new(*args).tap(&:start)
       end
 
+      #
+      # Builds a finalizer proc that kills the process with the given pid.
+      #
+      # @param [Integer] pid
+      #   Process id to kill.
+      #
+      # @return [Proc]
+      #
       def self.process_killer(pid)
         proc do
           if Utils::Platform.windows?
@@ -48,6 +64,14 @@ module Ferrum
         end
       end
 
+      #
+      # Builds a finalizer proc that removes the directory at the given path.
+      #
+      # @param [String] path
+      #   Directory to remove.
+      #
+      # @return [Proc]
+      #
       def self.directory_remover(path)
         proc {
           begin
@@ -83,6 +107,11 @@ module Ferrum
         @command = Command.build(options, tmpdir)
       end
 
+      #
+      # Spawns the browser process and waits for it to become reachable over CDP.
+      #
+      # @return [void]
+      #
       def start
         # Don't do anything as browser is already running as external process.
         return if ws_url
@@ -109,6 +138,12 @@ module Ferrum
         end
       end
 
+      #
+      # Kills the browser process (and Xvfb, if running) and removes the user
+      # data directory.
+      #
+      # @return [void]
+      #
       def stop
         if @pid
           kill(@pid)
@@ -120,11 +155,21 @@ module Ferrum
         ObjectSpace.undefine_finalizer(self)
       end
 
+      #
+      # Stops and starts the browser process again.
+      #
+      # @return [void]
+      #
       def restart
         stop
         start
       end
 
+      #
+      # Custom inspection that omits noisy internal command details.
+      #
+      # @return [String]
+      #
       def inspect
         "#<#{self.class} " \
           "@user_data_dir=#{@user_data_dir.inspect} " \

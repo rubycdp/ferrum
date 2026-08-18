@@ -35,14 +35,28 @@ module Ferrum
         merge_options
       end
 
+      # Whether the browser should be launched under Xvfb.
+      #
+      # @return [Boolean]
       def xvfb?
         !!options.xvfb
       end
 
+      #
+      # Command line arguments for spawning the browser process.
+      #
+      # @return [Array<String>]
+      #   The browser path followed by its CLI flags.
+      #
       def to_a
         [path] + @flags.map { |k, v| v.nil? ? "--#{k}" : "--#{k}=#{v}" }
       end
 
+      #
+      # String representation of the command used to spawn the browser process.
+      #
+      # @return [String]
+      #
       def to_s
         to_a.join(" \\ \n  ")
       end

@@ -146,6 +146,8 @@ module Ferrum
       end
 
       #
+      # Whether this response is the main frame's current response.
+      #
       # @return [Boolean]
       #
       def main?
