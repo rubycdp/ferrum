@@ -9,6 +9,7 @@ require "ferrum/cookies"
 require "ferrum/dialog"
 require "ferrum/network"
 require "ferrum/accessibility"
+require "ferrum/interceptable"
 require "ferrum/downloads"
 require "ferrum/page/frames"
 require "ferrum/page/screencast"
@@ -34,6 +35,7 @@ module Ferrum
     include Screenshot
     include Frames
     include Stream
+    include Interceptable
 
     attr_accessor :referrer
     attr_reader :context_id, :target_id, :event, :tracing
@@ -378,45 +380,34 @@ module Ferrum
       result
     end
 
+    # Subscribes to a CDP event, or to `:dialog`, `:request`, `:auth` (the
+    # latter two handled by {Interceptable}).
+    #
+    # @param [Symbol, String] name
+    #
+    # @return [Integer]
+    #   The subscription id, used to unsubscribe via {#off}.
     def on(name, &block)
-      case name
-      when :dialog
-        client.on("Page.javascriptDialogOpening") do |params, index, total|
-          dialog = Dialog.new(self, params)
-          block.call(dialog, index, total)
-        end
-      when :request
-        client.on("Fetch.requestPaused") do |params, index, total|
-          request = Network::InterceptedRequest.new(client, params)
-          exchange = network.find_or_build_exchange(request.network_id)
-          exchange.intercepted_request = request
-          block.call(request, index, total)
-        end
-      when :auth
-        client.on("Fetch.authRequired") do |params, index, total|
-          request = Network::AuthRequest.new(self, params)
-          block.call(request, index, total)
-        end
-      else
-        client.on(name, &block)
+      return super unless name == :dialog
+
+      client.on("Page.javascriptDialogOpening") do |params, index, total|
+        dialog = Dialog.new(self, params)
+        block.call(dialog, index, total)
       end
     end
 
+    # Unsubscribes a listener previously registered via {#on}.
+    #
+    # @param [Symbol, String] name
+    #
+    # @param [Integer] id
+    #   The subscription id returned by {#on}.
+    #
+    # @return [void]
     def off(name, id)
-      case name
-      when :dialog
-        client.off("Page.javascriptDialogOpening", id)
-      when :request
-        client.off("Fetch.requestPaused", id)
-      when :auth
-        client.off("Fetch.authRequired", id)
-      else
-        client.off(name, id)
-      end
-    end
+      return super unless name == :dialog
 
-    def subscribed?(event)
-      client.subscribed?(event)
+      client.off("Page.javascriptDialogOpening", id)
     end
 
     def use_proxy?

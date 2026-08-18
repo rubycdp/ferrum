@@ -13,6 +13,7 @@ module Ferrum
 
     def initialize(browser_client, session_id = nil, params = nil)
       @page = nil
+      @worker = nil
       @session_id = session_id
       @params = params
       @browser_client = browser_client
@@ -24,11 +25,15 @@ module Ferrum
     end
 
     def connected?
-      !!@page
+      !!@page || !!@worker
     end
 
     def page
       @page ||= build_page
+    end
+
+    def worker
+      @worker ||= build_worker
     end
 
     def client
@@ -38,6 +43,15 @@ module Ferrum
     def build_page(**options)
       maybe_sleep_if_new_window
       Page.new(client, context_id: context_id, target_id: id, **options)
+    end
+
+    def build_worker
+      Worker.new(client, target_id: id, url: url)
+    end
+
+    def close_connection
+      @page&.close_connection
+      @worker&.close_connection
     end
 
     def id
@@ -60,6 +74,13 @@ module Ferrum
       @params["openerId"]
     end
 
+    # The id of the target that spawned this one, set for iframes and
+    # workers. Unlike `opener_id`, which is only set for windows/tabs opened
+    # via `window.open`/links/etc.
+    def parent_id
+      @params["parentId"]
+    end
+
     def context_id
       @params["browserContextId"]
     end
@@ -70,6 +91,22 @@ module Ferrum
 
     def iframe?
       type == "iframe"
+    end
+
+    def page?
+      type == "page"
+    end
+
+    def worker?
+      type == "worker"
+    end
+
+    def shared_worker?
+      type == "shared_worker"
+    end
+
+    def service_worker?
+      type == "service_worker"
     end
 
     def maybe_sleep_if_new_window

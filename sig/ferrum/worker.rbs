@@ -1,0 +1,43 @@
+module Ferrum
+  class Worker
+    include Frame::Runtime
+    include Interceptable
+
+    attr_reader client: (Client | SessionClient)
+    attr_reader target_id: String
+    attr_reader url: String
+    attr_reader network: Network
+
+    @client: (Client | SessionClient)
+    @target_id: String
+    @url: String
+    @options: Browser::Options
+    @page: Worker
+    @execution_id: untyped
+    @network: Network
+
+    def initialize: ((Client | SessionClient) client, target_id: String, url: String) -> void
+
+    def timeout: () -> ::Numeric
+
+    def command: (*untyped) -> (bool | Hash[String, untyped])
+
+    def main_frame: () -> nil
+
+    def close: () -> true
+
+    def close_connection: () -> void
+
+    def inspect: () -> ::String
+
+    private
+
+    def subscribe: () -> void
+
+    def prepare: () -> void
+
+    def execution_id!: () -> untyped
+
+    def execution_id=: (untyped value) -> untyped
+  end
+end

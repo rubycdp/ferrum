@@ -4,18 +4,26 @@ require "ferrum/context"
 
 module Ferrum
   class Contexts
-    ALLOWED_TARGET_TYPES = %w[page iframe].freeze
+    ALLOWED_TARGET_TYPES = %w[page iframe worker shared_worker service_worker].freeze
+    RECURSIVE_AUTO_ATTACH_TYPES = %w[page iframe worker shared_worker].freeze
 
     include Enumerable
 
     attr_reader :contexts
 
     def initialize(client)
-      @contexts = Concurrent::Map.new
       @client = client
+      @contexts = Concurrent::Map.new
+      @manually_attached = Concurrent::Map.new
       subscribe
       auto_attach
       discover
+    end
+
+    # Marks a target, so the next time we see it attached, we leave its session alone instead of {#detach}ing it.
+    # Used by {Context#attach_target} right before it manually attaches to a service worker on the caller's behalf.
+    def manually_attached(target_id)
+      @manually_attached[target_id] = true
     end
 
     def default_context
@@ -72,20 +80,28 @@ module Ferrum
 
     private
 
-    def subscribe # rubocop:disable Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
-      @client.on("Target.attachedToTarget") do |params|
+    def subscribe
+      subscribe_attached_target(@client)
+      subscribe_target_created
+    end
+
+    # Registered once on the top-level client, and again on every page's/
+    # worker's own session once we re-arm auto-attach on it.
+    def subscribe_attached_target(client)
+      client.on("Target.attachedToTarget") do |params|
         info, session_id = params.values_at("targetInfo", "sessionId")
         next unless ALLOWED_TARGET_TYPES.include?(info["type"])
 
         context_id = info["browserContextId"]
         add_context(context_id)
+        target = @contexts[context_id]&.add_target(session_id: session_id, params: info)
 
-        @contexts[context_id]&.add_target(session_id: session_id, params: info)
-        if params["waitingForDebugger"]
-          @client.session(session_id).command("Runtime.runIfWaitingForDebugger", async: true)
-        end
+        rearm_auto_attach(session_id, info["type"])
+        handle_attach(target, session_id, params)
       end
+    end
 
+    def subscribe_target_created
       @client.on("Target.targetCreated") do |params|
         info = params["targetInfo"]
         next unless ALLOWED_TARGET_TYPES.include?(info["type"])
@@ -118,6 +134,55 @@ module Ferrum
         context = find_by(target_id: params["targetId"])
         context&.delete_target(params["targetId"])
       end
+    end
+
+    def rearm_auto_attach(session_id, type)
+      return unless RECURSIVE_AUTO_ATTACH_TYPES.include?(type)
+
+      client = @client.session(session_id)
+      client.command("Target.setAutoAttach", autoAttach: true, waitForDebuggerOnStart: true, flatten: true, async: true)
+      subscribe_attached_target(client)
+    end
+
+    def handle_attach(target, session_id, params)
+      return unless target
+
+      if target.service_worker?
+        detach_unless_manually_attached(target, session_id)
+      elsif target.worker? || target.shared_worker?
+        connect_worker(target)
+      elsif params["waitingForDebugger"]
+        resume(session_id)
+      end
+    end
+
+    # Attaching keeps a service worker alive forever, so unless the caller
+    # explicitly asked to connect to it (via Context#attach_target), we
+    # just resume it and let go.
+    def detach_unless_manually_attached(target, session_id)
+      return if @manually_attached.delete(target.id)
+
+      detach(session_id)
+    rescue BrowserError
+      nil
+    end
+
+    # Workers have no events to notify us when they're ready, so we
+    # connect right away. Worker#prepare enables the Network domain and
+    # only then resumes the debugger itself.
+    def connect_worker(target)
+      target.worker
+    rescue BrowserError
+      nil
+    end
+
+    def resume(session_id)
+      @client.session(session_id).command("Runtime.runIfWaitingForDebugger", async: true)
+    end
+
+    def detach(session_id)
+      resume(session_id)
+      @client.command("Target.detachFromTarget", sessionId: session_id)
     end
 
     def discover

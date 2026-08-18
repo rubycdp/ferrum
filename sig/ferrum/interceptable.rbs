@@ -1,0 +1,9 @@
+module Ferrum
+  module Interceptable
+    def on: (Symbol | String name) { (*untyped) -> void } -> Integer
+
+    def off: (Symbol | String name, Integer id) -> void
+
+    def subscribed?: (String event) -> bool
+  end
+end

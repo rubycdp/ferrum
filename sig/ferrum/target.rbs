@@ -7,6 +7,7 @@ module Ferrum
     attr_accessor session_id: String?
 
     @page: Page?
+    @worker: Worker?
     @session_id: String?
     @params: Hash[String, untyped]
     @browser_client: Client
@@ -21,9 +22,15 @@ module Ferrum
 
     def page: () -> Page
 
+    def worker: () -> Worker
+
     def client: () -> (Client | SessionClient)
 
     def build_page: (**untyped options) -> Page
+
+    def build_worker: () -> Worker
+
+    def close_connection: () -> void
 
     def id: () -> String
 
@@ -35,15 +42,25 @@ module Ferrum
 
     def opener_id: () -> String?
 
+    def parent_id: () -> String?
+
     def context_id: () -> String?
 
     def window?: () -> bool
 
     def iframe?: () -> bool
 
+    def page?: () -> bool
+
+    def worker?: () -> bool
+
+    def shared_worker?: () -> bool
+
+    def service_worker?: () -> bool
+
     def maybe_sleep_if_new_window: () -> void
 
-    def command: (*untyped) -> Hash[String, untyped]
+    def command: (*untyped) -> (bool | Hash[String, untyped])
 
     private
 

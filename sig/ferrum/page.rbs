@@ -9,6 +9,7 @@ module Ferrum
     include Screencast
     include Frames
     include Stream
+    include Interceptable
 
     attr_accessor referrer: String?
     attr_reader context_id: String
@@ -83,7 +84,7 @@ module Ferrum
 
     def on: ((Symbol | String) event) ?{ (Hash[String, untyped]) -> void } -> Integer
 
-    def subscribed?: (String event) -> bool
+    def off: ((Symbol | String) event, Integer id) -> void
 
     def use_proxy?: () -> boolish
 

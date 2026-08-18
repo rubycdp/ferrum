@@ -403,7 +403,7 @@ module Ferrum
         request.headers.merge!(Hash(exchange.request_extra_info&.dig("headers")))
         exchange.request = request
 
-        if exchange.navigation_request?(@page.main_frame.id)
+        if exchange.navigation_request?(@page.main_frame&.id)
           @exchange = exchange
           classify_pending_exchanges(exchange.loader_id)
         end

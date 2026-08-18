@@ -6,6 +6,15 @@
 - `Ferrum::Frame#idle?` whether frame was loaded [#583]
 - `page.accessibility` API and `Node#axnode` for reading the CDP accessibility tree
 - `--no-crashpad` is now included in the default Chrome flags, fully disabling the crashpad handler process [#610]
+- Support for dedicated/shared Workers and Service Workers [#391], [#388]:
+  - `Ferrum::Worker` -- a lightweight connection to a Worker's single execution context, with its own `#network`,
+    `#evaluate`/`#evaluate_async`/`#execute`, and `#on(:request)`/`#on(:auth)` for interception.
+  - Dedicated and shared workers spawned by a page are discovered and connected to automatically and are reachable
+    through `Browser#workers`/ `Context#workers`.
+  - Service workers are discovered too, through `Browser#service_workers`/`Context#service_workers`, but aren't
+    connected to by default. Attaching to one keeps it alive forever, so that's opt-in via `Context#attach_target`,
+    then `target.worker`.
+  - `Ferrum::Target#worker?`, `#shared_worker?`, `#service_worker?`, and `#parent_id` for telling targets apart.
 
 ### Fixed
 - `Ferrum::Client` command id generation and `Ferrum::Client::WebSocket`'s driver interactions were not thread-safe, allowing concurrent commands to collide on the same id or corrupt the frame stream; both are now serialized under a mutex [#602]
