@@ -3,6 +3,7 @@
 require "base64"
 require "forwardable"
 require "ferrum/page"
+require "ferrum/worker"
 require "ferrum/client"
 require "ferrum/contexts"
 require "ferrum/browser/xvfb"
@@ -16,7 +17,7 @@ module Ferrum
     extend Forwardable
 
     delegate %i[default_context] => :contexts
-    delegate %i[targets create_target page pages windows] => :default_context
+    delegate %i[targets create_target page pages windows workers service_workers attach_target] => :default_context
     delegate %i[go_to goto go back forward refresh reload stop wait_for_reload
                 at_css at_xpath css xpath current_url current_title url title
                 body doctype content=

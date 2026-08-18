@@ -25,7 +25,24 @@ module Ferrum
     end
 
     def pages
-      @targets.values.reject(&:iframe?).map(&:page)
+      @targets.values.select(&:page?).map(&:page)
+    end
+
+    # Dedicated and shared workers spawned by any page in this context.
+    #
+    # @return [Array<Worker>]
+    def workers
+      @targets.values.select { |t| t.worker? || t.shared_worker? }.map(&:worker)
+    end
+
+    # Service worker targets registered in this context. Unlike {#workers},
+    # these are plain {Target}s and are not connected to. Attaching to a
+    # service worker's session keeps it alive indefinitely, so we only do
+    # that on demand, via `target.worker`.
+    #
+    # @return [Array<Target>]
+    def service_workers
+      @targets.values.select(&:service_worker?)
     end
 
     # When we call `page` method on target it triggers ruby to connect to given
@@ -68,7 +85,7 @@ module Ferrum
       new_pending = Concurrent::IVar.new
       pending = @pendings.put_if_absent(target.id, new_pending) || new_pending
       pending.try_set(true)
-      true
+      target
     end
 
     def update_target(target_id, params)
@@ -79,10 +96,17 @@ module Ferrum
       @targets.delete(target_id)
     end
 
+    # Manually attaches to a target, e.g. a service worker discovered via
+    # {#service_workers}. Once attached, `target.worker`/`target.page`
+    # returns a connected {Worker}/{Page} for it.
+    #
+    # Note: attaching to a service worker's session prevents Chrome from
+    # ever terminating it while the connection is open.
     def attach_target(target_id)
       target = @targets[target_id]
       raise NoSuchTargetError unless target
 
+      @contexts.manually_attached(target_id)
       session = @client.command("Target.attachToTarget", targetId: target_id, flatten: true)
       target.session_id = session["sessionId"]
       true
@@ -98,7 +122,7 @@ module Ferrum
       @targets.each_value do |target|
         next unless target.connected?
 
-        target.page.close_connection
+        target.close_connection
       end
     end
 

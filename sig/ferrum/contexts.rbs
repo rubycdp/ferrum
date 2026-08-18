@@ -1,6 +1,7 @@
 module Ferrum
   class Contexts
     ALLOWED_TARGET_TYPES: ::Array[String]
+    RECURSIVE_AUTO_ATTACH_TYPES: ::Array[String]
 
     include Enumerable[[String, Context]]
 
@@ -9,8 +10,11 @@ module Ferrum
     @contexts: ::Concurrent::Map[String, Context]
     @client: Client
     @default_context: Context?
+    @manually_attached: ::Concurrent::Map[String, bool]
 
     def initialize: (Client client) -> void
+
+    def manually_attached: (String target_id) -> true
 
     def default_context: () -> Context
 
@@ -23,7 +27,7 @@ module Ferrum
 
     def create: (**untyped options) -> Context
 
-    def dispose: (String context_id) -> true
+    def dispose: (String context_id) -> bool
 
     def close_connections: () -> void
 
@@ -35,8 +39,26 @@ module Ferrum
 
     def subscribe: () -> void
 
-    def discover: () -> Hash[String, untyped]
+    def subscribe_attached_target: ((Client | SessionClient) client) -> void
 
-    def auto_attach: () -> Hash[String, untyped]?
+    def subscribe_target_created: () -> void
+
+    def rearm_auto_attach: (String session_id, String type) -> void
+
+    def handle_attach: (Target? target, String session_id, Hash[String, untyped] params) -> void
+
+    def detach_unless_manually_attached: (Target target, String session_id) -> void
+
+    def connect_worker: (Target target) -> void
+
+    def resume: (String session_id) -> void
+
+    def detach: (String session_id) -> void
+
+    def discover: () -> void
+
+    def auto_attach: () -> void
+
+    def add_context: (String? context_id) -> Context?
   end
 end
