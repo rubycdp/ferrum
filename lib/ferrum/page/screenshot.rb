@@ -4,6 +4,10 @@ require "ferrum/rgba"
 
 module Ferrum
   class Page
+    #
+    # Captures screenshots, PDFs, and MHTML snapshots of the page, and
+    # exposes viewport/document size helpers used to compute capture areas.
+    #
     module Screenshot
       FULL_WARNING = "Ignoring :selector or :area in #screenshot since full: true was given at %s"
       AREA_WARNING = "Ignoring :area in #screenshot since selector: was given at %s"

@@ -2,6 +2,12 @@
 
 module Ferrum
   class Browser
+    #
+    # Builds the OS-level command used to spawn the browser process: resolves
+    # the executable path and merges the browser-specific required/default
+    # flags (see {Options::Base}) with any user-supplied ones into a single
+    # argument list.
+    #
     class Command
       NOT_FOUND = "Could not find an executable for the browser. Try to make " \
                   "it available on the PATH or set environment variable for " \

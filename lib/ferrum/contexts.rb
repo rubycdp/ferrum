@@ -3,6 +3,13 @@
 require "ferrum/context"
 
 module Ferrum
+  #
+  # Owns the browser's whole collection of {Context}s, keyed by their
+  # `browserContextId`. Subscribes to the CDP `Target.*` events, creates
+  # {Context}s and {Target}s as they're discovered/attached, and routes
+  # target lifecycle updates (info changed, destroyed, crashed) to the
+  # {Context} they belong to.
+  #
   class Contexts
     ALLOWED_TARGET_TYPES = %w[page iframe worker shared_worker service_worker].freeze
     RECURSIVE_AUTO_ATTACH_TYPES = %w[page iframe worker shared_worker].freeze

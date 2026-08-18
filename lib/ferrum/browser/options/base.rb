@@ -6,6 +6,13 @@ require "open3"
 module Ferrum
   class Browser
     class Options
+      #
+      # Abstract base for browser-specific default option builders. Subclasses
+      # (e.g. {Options::Chrome}, {Options::Firefox}) declare their own
+      # `DEFAULT_OPTIONS` and `PLATFORM_PATH` constants and implement
+      # {#merge_required}/{#merge_default} to produce the final CLI flags used
+      # by {Command}.
+      #
       class Base
         include Singleton
 

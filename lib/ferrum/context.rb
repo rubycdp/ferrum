@@ -3,6 +3,13 @@
 require "ferrum/target"
 
 module Ferrum
+  #
+  # Represents a browser context, i.e. an isolated browsing profile (similar
+  # to an incognito window) with its own cookies, cache and storage. Keeps
+  # track of the {Target}s that belong to it and connects to them as {Page}s
+  # or {Worker}s. Managed by {Contexts}, which owns the browser's collection
+  # of contexts and routes CDP target events to the right one.
+  #
   class Context
     POSITION = %i[first last].freeze
 

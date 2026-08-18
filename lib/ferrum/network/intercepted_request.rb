@@ -5,6 +5,11 @@ require "base64"
 
 module Ferrum
   class Network
+    #
+    # Represents a request paused by request interception (`Fetch.enable`),
+    # allowing it to be continued as is or with overrides, fulfilled with a
+    # fake response, or aborted before it reaches the network.
+    #
     class InterceptedRequest
       include RequestParams
 

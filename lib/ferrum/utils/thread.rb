@@ -2,6 +2,10 @@
 
 module Ferrum
   module Utils
+    #
+    # A helper for spawning threads with consistent exception-handling
+    # behavior (abort-on-exception and report-on-exception).
+    #
     module Thread
       module_function
 

@@ -4,6 +4,12 @@ require "ferrum/frame/dom"
 require "ferrum/frame/runtime"
 
 module Ferrum
+  #
+  # Represents a frame (the main document or a nested `iframe`) within a
+  # {Page}. Each frame has its own execution context for JavaScript and its
+  # own lifecycle state, tracked via {#state}. DOM search and JS evaluation
+  # methods are provided by the included {DOM} and {Runtime} modules.
+  #
   class Frame
     include DOM
     include Runtime

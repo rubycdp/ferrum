@@ -2,6 +2,11 @@
 
 module Ferrum
   class Page
+    #
+    # Reads a CDP `IO` stream handle (e.g. from `Page.printToPDF` or
+    # `Tracing.tracingComplete`) in chunks and writes its contents to a file
+    # on disk or accumulates it in memory.
+    #
     module Stream
       STREAM_CHUNK = 128 * 1024
 

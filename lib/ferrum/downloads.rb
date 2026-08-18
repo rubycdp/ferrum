@@ -1,6 +1,13 @@
 # frozen_string_literal: true
 
 module Ferrum
+  #
+  # Tracks files downloaded by a page. Configures the browser's download
+  # behavior/destination via {#set_behavior}, subscribes to the
+  # `Browser.downloadWillBegin`/`Browser.downloadProgress` CDP events to
+  # record their progress in {#files}, and lets callers block until the
+  # current download finishes via {#wait}.
+  #
   class Downloads
     VALID_BEHAVIOR = %i[deny allow allowAndName default].freeze
 

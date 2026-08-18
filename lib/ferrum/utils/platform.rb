@@ -2,6 +2,10 @@
 
 module Ferrum
   module Utils
+    #
+    # OS and Ruby engine detection helpers, used to pick the right browser
+    # path/flags and behavior for the current platform.
+    #
     module Platform
       module_function
 

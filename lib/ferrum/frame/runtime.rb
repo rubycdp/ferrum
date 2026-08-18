@@ -3,6 +3,12 @@
 require "singleton"
 
 module Ferrum
+  #
+  # Placeholder object substituted for a JavaScript value that couldn't be
+  # fully serialized because it contains circular references. It exists
+  # only so that {#inspect} can report the situation instead of the
+  # evaluation raising or hanging.
+  #
   class CyclicObject
     include Singleton
 
@@ -15,6 +21,12 @@ module Ferrum
   end
 
   class Frame
+    #
+    # Evaluates and executes JavaScript in a frame's execution context via
+    # `Runtime.callFunctionOn`, converting arguments and return values
+    # between Ruby and JS, and resolving object/array/node results
+    # (including cyclic ones, via {CyclicObject}) into Ruby equivalents.
+    #
     module Runtime
       INTERMITTENT_ATTEMPTS = ENV.fetch("FERRUM_INTERMITTENT_ATTEMPTS", 6).to_i
       INTERMITTENT_SLEEP = ENV.fetch("FERRUM_INTERMITTENT_SLEEP", 0.1).to_f

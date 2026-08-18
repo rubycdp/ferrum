@@ -2,6 +2,12 @@
 
 module Ferrum
   class Page
+    #
+    # Records a Chrome performance trace for the page via the CDP
+    # [Tracing](https://chromedevtools.github.io/devtools-protocol/tot/Tracing/)
+    # domain, optionally including screenshots, and streams the resulting
+    # trace data to disk or memory once recording stops.
+    #
     class Tracing
       EXCLUDED_CATEGORIES = %w[*].freeze
       SCREENSHOT_CATEGORIES = %w[disabled-by-default-devtools.screenshot].freeze

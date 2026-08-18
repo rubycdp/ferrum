@@ -3,6 +3,11 @@
 module Ferrum
   class Browser
     class Options
+      #
+      # Firefox-specific default flags and binary locations. Provides the CLI
+      # flags required to drive Firefox over CDP (remote debugger address and
+      # profile directory) along with its (minimal) set of default flags.
+      #
       class Firefox < Base
         DEFAULT_OPTIONS = {
           "headless" => nil

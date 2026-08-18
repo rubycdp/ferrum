@@ -2,6 +2,11 @@
 
 module Ferrum
   class Page
+    #
+    # Controls the playback of CSS animations on the page via the CDP
+    # [Animation](https://chromedevtools.github.io/devtools-protocol/tot/Animation/)
+    # domain, allowing animations to be sped up, slowed down, or paused.
+    #
     module Animation
       #
       # Returns playback rate for CSS animations, defaults to `1`.

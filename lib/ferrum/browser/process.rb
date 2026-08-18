@@ -14,6 +14,12 @@ require "ferrum/utils/platform"
 
 module Ferrum
   class Browser
+    #
+    # Spawns and manages the lifecycle of the browser OS process: builds the
+    # launch {Command}, starts it (optionally under {Xvfb} for headful mode),
+    # waits for the CDP WebSocket endpoint to become available, and handles
+    # stopping/restarting the process and cleaning up its user data directory.
+    #
     class Process
       KILL_TIMEOUT = 2
       WAIT_KILLED = 0.05

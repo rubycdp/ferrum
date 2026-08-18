@@ -2,6 +2,10 @@
 
 module Ferrum
   module Utils
+    #
+    # A monotonic-clock helper for tracking elapsed time and checking
+    # timeouts, backed by `Concurrent.monotonic_time`.
+    #
     module ElapsedTime
       module_function
 

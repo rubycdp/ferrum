@@ -13,6 +13,16 @@ require "ferrum/browser/binary"
 require "ferrum/browser/version_info"
 
 module Ferrum
+  #
+  # The main entry point of the library. Instantiating it spawns (or connects
+  # to) a browser process and opens a CDP connection to it, exposing a single
+  # default {Page} that most of the top-level methods (`go_to`, `at_css`,
+  # `screenshot`, etc.) are delegated to for convenience.
+  #
+  # @note A `Browser` can host multiple {Context}s (like incognito profiles)
+  #   and multiple {Page}s within each of them, reachable through {#contexts}
+  #   and {#create_page}.
+  #
   class Browser
     extend Forwardable
 

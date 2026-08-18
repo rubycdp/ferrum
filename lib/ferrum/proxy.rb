@@ -11,6 +11,15 @@ rescue LoadError
 end
 
 module Ferrum
+  #
+  # A local WEBrick-based proxy server, useful for injecting HTTP Basic-Auth
+  # credentials into requests or forwarding to (and rotating between)
+  # upstream proxies, cases the browser's own proxy support can't handle
+  # directly.
+  #
+  # @note Requires the `webrick` gem, which isn't a hard dependency of
+  #   Ferrum; add it to your Gemfile to use this class.
+  #
   class Proxy
     #
     # Builds a new proxy server and starts it.

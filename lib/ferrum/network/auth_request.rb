@@ -2,6 +2,11 @@
 
 module Ferrum
   class Network
+    #
+    # Represents an HTTP authentication challenge (basic or digest auth
+    # prompt) raised by the browser via `Fetch.authRequired`, which can be
+    # answered with credentials or canceled.
+    #
     class AuthRequest
       attr_accessor :request_id, :frame_id, :resource_type
 

@@ -1,6 +1,15 @@
 # frozen_string_literal: true
 
 module Ferrum
+  #
+  # Represents a DOM node (an element or a text node) found on a {Page} or
+  # within a {Frame}. Provides methods to inspect it (`text`, `property`,
+  # `attribute`), interact with it (`click`, `focus`, `type`, `select`) and
+  # search within it (`at_css`, `at_xpath`, `css`, `xpath`).
+  #
+  # @note Node identity is tied to the target it was found on; a `Node`
+  #   fetched before a navigation cannot be used afterwards.
+  #
   class Node
     MOVING_WAIT_DELAY = ENV.fetch("FERRUM_NODE_MOVING_WAIT", 0.01).to_f
     MOVING_WAIT_ATTEMPTS = ENV.fetch("FERRUM_NODE_MOVING_ATTEMPTS", 50).to_i

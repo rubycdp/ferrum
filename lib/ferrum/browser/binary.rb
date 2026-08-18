@@ -2,6 +2,11 @@
 
 module Ferrum
   class Browser
+    #
+    # Locates an executable on the system `PATH`, mirroring what a shell's
+    # `which`/`where` would find. Used to resolve the browser (and Xvfb)
+    # binary when no explicit path is configured.
+    #
     module Binary
       module_function
 

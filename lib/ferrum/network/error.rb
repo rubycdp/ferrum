@@ -2,6 +2,11 @@
 
 module Ferrum
   class Network
+    #
+    # Represents a network-level loading error reported for a request,
+    # e.g. via `Network.loadingFailed`. Distinct from the Ruby exceptions
+    # defined in `ferrum/errors.rb`.
+    #
     class Error
       attr_writer :canceled
       attr_reader :time, :timestamp

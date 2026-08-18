@@ -19,6 +19,12 @@
 # details (DOM.describeNode).
 module Ferrum
   class Frame
+    #
+    # Evaluates and executes JavaScript to query and manipulate a frame's
+    # DOM: reading the URL, title, doctype, and HTML, finding nodes by
+    # XPath or CSS selector, and injecting `<script>`, `<style>`, and
+    # `<link>` tags.
+    #
     module DOM
       SCRIPT_SRC_TAG = <<~JS
         const script = document.createElement("script");

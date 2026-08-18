@@ -1,6 +1,12 @@
 # frozen_string_literal: true
 
 module Ferrum
+  #
+  # Represents a JavaScript dialog (`alert`, `confirm`, `prompt` or
+  # `beforeunload`) shown by the page. Instances are yielded to blocks
+  # registered with `page.on(:dialog)`, and can be accepted (optionally with
+  # a prompt's text) or dismissed.
+  #
   class Dialog
     attr_reader :message, :default_prompt
 

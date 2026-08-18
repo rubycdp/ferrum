@@ -8,6 +8,13 @@ require "ferrum/network/request"
 require "ferrum/network/response"
 
 module Ferrum
+  #
+  # Tracks a page's network activity, exposing it as a list of {#traffic}
+  # {Network::Exchange}s built from the underlying CDP `Network.*` events.
+  # Also provides request interception/authorization (`intercept`,
+  # `authorize`, `blacklist=`/`whitelist=`) and network condition emulation
+  # (`emulate_network_conditions`, `offline_mode`).
+  #
   class Network
     CLEAR_TYPE = %i[traffic cache].freeze
     AUTHORIZE_TYPE = %i[server proxy].freeze

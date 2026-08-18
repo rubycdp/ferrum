@@ -7,6 +7,13 @@ require "ferrum/client/web_socket"
 require "ferrum/utils/thread"
 
 module Ferrum
+  #
+  # A thin wrapper around {Client} that scopes commands and events to a
+  # single CDP session (a `sessionId` obtained via `Target.attachToTarget`).
+  # Targets connect through one of these rather than the top-level {Client}
+  # directly, so their commands/events don't leak into other sessions.
+  # Method calls not defined here are forwarded to the underlying {Client}.
+  #
   class SessionClient
     attr_reader :client, :session_id
 
@@ -130,6 +137,12 @@ module Ferrum
     end
   end
 
+  #
+  # The low-level CDP client. Owns the {WebSocket} connection to the browser,
+  # assigns command ids, matches responses back to their pending commands and
+  # dispatches incoming events to the {Subscriber}. {SessionClient} builds on
+  # top of it to scope commands/events to a particular target's session.
+  #
   class Client
     extend Forwardable
 

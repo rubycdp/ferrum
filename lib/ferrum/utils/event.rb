@@ -2,6 +2,10 @@
 
 module Ferrum
   module Utils
+    #
+    # A {Concurrent::Event} subclass that additionally tracks how many
+    # times it has been reset, via {#iteration}.
+    #
     class Event < Concurrent::Event
       #
       # Number of times the event has been reset.

@@ -6,6 +6,12 @@ require "websocket/driver"
 
 module Ferrum
   class Client
+    #
+    # Low-level WebSocket connection to the browser's CDP endpoint. Opens
+    # the raw TCP/TLS socket, drives the `websocket-driver` handshake and
+    # framing, and exposes a queue of parsed incoming messages alongside
+    # methods to send commands and close the connection.
+    #
     class WebSocket
       WEBSOCKET_BUG_SLEEP = 0.05
       DEFAULT_PORTS = { "ws" => 80, "wss" => 443 }.freeze

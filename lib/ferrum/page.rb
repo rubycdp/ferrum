@@ -19,6 +19,13 @@ require "ferrum/page/tracing"
 require "ferrum/page/stream"
 
 module Ferrum
+  #
+  # Represents a single browser tab (a CDP target of type `page`). Owns the
+  # tab's {Mouse}, {Keyboard}, {Network}, {Cookies}, {Headers}, {Downloads}
+  # and {Accessibility} helpers, as well as its frame tree (see the included
+  # {Page::Frames} module), and is the object that navigation, DOM search and
+  # JavaScript evaluation methods are ultimately delegated to from {Browser}.
+  #
   class Page
     GOTO_WAIT = ENV.fetch("FERRUM_GOTO_WAIT", 0.1).to_f
 

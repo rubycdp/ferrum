@@ -2,6 +2,12 @@
 
 module Ferrum
   class Client
+    #
+    # Dispatches incoming CDP events to registered callbacks. Messages are
+    # queued and processed on dedicated threads, with `Fetch.requestPaused`
+    # and `Fetch.authRequired` given priority so request interception isn't
+    # delayed behind other events.
+    #
     class Subscriber
       INTERRUPTIONS = %w[Fetch.requestPaused Fetch.authRequired].freeze
 

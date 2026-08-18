@@ -2,6 +2,12 @@
 
 module Ferrum
   class Browser
+    #
+    # Manages an Xvfb virtual display server, letting a "headful" browser run
+    # in environments without a real display (e.g. CI). Spawned by {Process}
+    # when the `:xvfb` option is set, and exposes the `DISPLAY` environment
+    # variable the browser process needs to attach to it.
+    #
     class Xvfb
       NOT_FOUND = "Could not find an executable for the Xvfb. Try to install " \
                   "it with your package manager"

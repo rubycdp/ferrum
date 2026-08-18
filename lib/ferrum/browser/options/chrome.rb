@@ -3,6 +3,12 @@
 module Ferrum
   class Browser
     class Options
+      #
+      # Chrome/Chromium-specific default flags and binary locations. Provides
+      # the CLI flags required to drive Chrome over CDP as well as the
+      # hardened defaults (disabling background networking, extensions,
+      # infobars, etc.) applied unless the user opts out.
+      #
       class Chrome < Base
         DEFAULT_OPTIONS = {
           "allow-pre-commit-input" => nil,

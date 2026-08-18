@@ -1,6 +1,12 @@
 # frozen_string_literal: true
 
 module Ferrum
+  #
+  # Represents a CDP target, e.g. a page, iframe, dedicated/shared worker or
+  # service worker. Wraps the raw `targetInfo` params and lazily connects to
+  # the target as a {Page} or {Worker} over its own {Client}/{SessionClient}
+  # session, so a `Target` can exist without being connected to yet.
+  #
   class Target
     NEW_WINDOW_WAIT = ENV.fetch("FERRUM_NEW_WINDOW_WAIT", 0.3).to_f
 

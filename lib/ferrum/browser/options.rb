@@ -2,6 +2,12 @@
 
 module Ferrum
   class Browser
+    #
+    # Resolves and normalizes the options hash passed to {Browser.new},
+    # applying defaults for connection settings (host, port, timeouts),
+    # window size, and other launch behavior. Used throughout the browser to
+    # look up user-configured settings.
+    #
     class Options
       BROWSER_PORT = "0"
       BROWSER_HOST = "127.0.0.1"

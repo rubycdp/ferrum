@@ -2,6 +2,11 @@
 
 module Ferrum
   class Network
+    #
+    # Pairs a {Request} with its eventual {Response} or {Error} (and, if
+    # interception is enabled, its {InterceptedRequest}), representing the
+    # full lifecycle of a single network request.
+    #
     class Exchange
       # ID of the request.
       #
