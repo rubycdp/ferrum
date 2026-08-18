@@ -1,7 +1,7 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.17.2...main) ##
 
 ### Added
-- `Ferrum::Frame#loader_id` provides a loader id when frame navigates [#583]
+- `Ferrum::Frame#loader_id` provides a loader id when the frame navigates [#583]
 - `Ferrum::Frame#lifecycle_events` provides a list of frame's events like init, networkIdle, firstPaint, etc. [#583]
 - `Ferrum::Frame#idle?` whether frame was loaded [#583]
 - `page.accessibility` API and `Node#axnode` for reading the CDP accessibility tree
@@ -26,18 +26,16 @@
   now compare literally: exact-match for requests/auth requests, substring-match for dialog messages. [#405]
 - `Target.targetCreated` handler for an iframe target reusing an already-connected target raised `NoMethodError` on `Ferrum::Browser#new(flatten: false)`, since it read `session_id` off the target's underlying `Ferrum::Client`, which doesn't expose it in that mode; it now reads `Target#session_id` directly. [#539]
 - `Ferrum::Node#select_file` now uses the stable `backendNodeId` instead. [#568], [#611]
-
-### Changed
-- `Ferrum::PendingConnectionsError` and `Ferrum::TimeoutError` were swallowed even though happening when traffic iterator results in empty array. [#583]
-- `webrick` is no longer a runtime dependency. It is only required by `Ferrum::Proxy`, so add `gem "webrick"` to your Gemfile if you use it.
-- Logger output for `Runtime.consoleAPICalled` now includes the console API type and stack trace call frames, not just the argument values [#605]
-
-### Fixed
 - Full-page screenshots no longer resize the window, preventing focus steal on macOS [#580]
-- DOM.enable is now has `includeWhitespace: "all"` to keep track of new line nodes which previously were resolved to 0, and errored with NodeNotFoundError [#596]
-- `DOM.requestNode` call is moved to the node class and being done lazily, this reduces number of intermediate node ids sent by backend to frontend [#596]
+- DOM.enable is now has `includeWhitespace: "all"` to keep track of new line nodes, which previously were resolved to 0, and errored with NodeNotFoundError [#596]
+- `DOM.requestNode` call is moved to the node class and being done lazily, this reduces the number of intermediate node ids sent by backend to frontend [#596]
 - Fix `context` can be nilable in ensure Browser#create_page [#582]
 - `Ferrum::Page#idling?` no longer blocks on `loading="lazy"` iframes that Chrome never starts loading [#583]
+
+### Changed
+- `Ferrum::PendingConnectionsError` and `Ferrum::TimeoutError` were swallowed even though it happens when a traffic iterator results in an empty array. [#583]
+- `webrick` is no longer a runtime dependency. It is only required by `Ferrum::Proxy`, so add `gem "webrick"` to your Gemfile if you use it.
+- Logger output for `Runtime.consoleAPICalled` now includes the console API type and stack trace call frames, not just the argument values [#605]
 
 ### Removed
 - `webrick` runtime dependency dropped from the gemspec. `Ferrum::Proxy` still needs it, so add `gem "webrick"` to your Gemfile if you use the proxy server.
