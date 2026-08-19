@@ -96,7 +96,7 @@ module Ferrum
 
       new_pending = Concurrent::IVar.new
       pending = @pendings.put_if_absent(target_id, new_pending) || new_pending
-      resolved = pending.value(@client.protocol_timeout)
+      resolved = pending.value(@client.options.timeout)
       raise NoSuchTargetError unless resolved
 
       @pendings.delete(target_id)

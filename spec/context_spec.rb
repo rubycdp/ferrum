@@ -1,6 +1,30 @@
 # frozen_string_literal: true
 
 describe Ferrum::Context do
+  describe "#create_target" do
+    let(:options) { Ferrum::Browser::Options.new(timeout: 0.2, protocol_timeout: 0.01) }
+    let(:client) { instance_double(Ferrum::Client, options: options) }
+    let(:contexts) { instance_double(Ferrum::Contexts) }
+    let(:context) { described_class.new(client, contexts, "context-id") }
+
+    it "waits for target registration using the browser timeout" do
+      allow(client).to receive(:command)
+        .with("Target.createTarget", browserContextId: "context-id", url: "about:blank")
+        .and_return({ "targetId" => "target-id" })
+
+      thread = Thread.new do
+        sleep 0.05
+        context.add_target(params: { "targetId" => "target-id", "type" => "page", "browserContextId" => "context-id" })
+      end
+
+      target = context.create_target
+
+      expect(target).to be_a(Ferrum::Target)
+      expect(target.id).to eq("target-id")
+      thread.join
+    end
+  end
+
   describe "#windows" do
     it "waits for the window to load" do
       browser.go_to
