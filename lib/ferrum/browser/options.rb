@@ -14,6 +14,7 @@ module Ferrum
       WINDOW_SIZE = [1024, 768].freeze
       BASE_URL_SCHEMA = %w[http https].freeze
       DEFAULT_TIMEOUT = ENV.fetch("FERRUM_DEFAULT_TIMEOUT", 5).to_i
+      DEFAULT_PROTOCOL_TIMEOUT = ENV.fetch("FERRUM_PROTOCOL_TIMEOUT", 1).to_i
       PROCESS_TIMEOUT = ENV.fetch("FERRUM_PROCESS_TIMEOUT", 10).to_i
       DEBUG_MODE = !ENV.fetch("FERRUM_DEBUG", nil).nil?
 
@@ -22,7 +23,7 @@ module Ferrum
                   :url, :ws_url, :env, :process_timeout, :browser_name, :browser_path,
                   :save_path, :proxy, :port, :host, :headless, :incognito, :dockerize, :browser_options,
                   :ignore_default_browser_options, :xvfb, :flatten
-      attr_accessor :timeout, :default_user_agent
+      attr_accessor :timeout, :protocol_timeout, :default_user_agent
 
       def initialize(options = nil)
         @options = Hash(options&.dup)
@@ -30,6 +31,7 @@ module Ferrum
         @port = @options.fetch(:port, BROWSER_PORT)
         @host = @options.fetch(:host, BROWSER_HOST)
         @timeout = @options.fetch(:timeout, DEFAULT_TIMEOUT)
+        @protocol_timeout = @options.fetch(:protocol_timeout, DEFAULT_PROTOCOL_TIMEOUT)
         @window_size = @options.fetch(:window_size, WINDOW_SIZE)
         @js_errors = @options.fetch(:js_errors, false)
         @headless = @options.fetch(:headless, true)

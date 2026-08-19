@@ -44,7 +44,8 @@ module Ferrum
 
     attr_reader :client, :process, :contexts, :options
 
-    delegate %i[timeout timeout= base_url base_url= default_user_agent default_user_agent= extensions] => :options
+    delegate %i[timeout timeout= protocol_timeout protocol_timeout=
+                base_url base_url= default_user_agent default_user_agent= extensions] => :options
     delegate %i[command] => :client
 
     #
@@ -80,13 +81,18 @@ module Ferrum
     #   When present, debug output is written to this object.
     #
     # @option options [Integer, Float] :slowmo
-    #   Set a delay in seconds to wait before sending command.
-    #   Useful companion of headless option, so that you have time to see
+    #   Set a delay in seconds to wait before sending a command.
+    #   Useful companion of a headless option, so that you have time to see
     #   changes.
     #
     # @option options [Numeric] :timeout (5)
-    #   The number of seconds we'll wait for a response when communicating with
-    #   browser.
+    #   The number of seconds we'll wait for a response when communicating
+    #   with the browser: navigations, JS evaluation, DOM queries, dispatching input, etc.
+    #
+    # @option options [Numeric] :protocol_timeout (1)
+    #   The number of seconds we'll wait for an individual internal CDP
+    #   bookkeeping call to respond, e.g. `Target.createTarget`,
+    #   `Target.attachToTarget`. These normally resolve in milliseconds.
     #
     # @option options [Boolean] :js_errors
     #   When true, JavaScript errors get re-raised in Ruby.
