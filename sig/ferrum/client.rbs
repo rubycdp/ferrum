@@ -10,7 +10,7 @@ module Ferrum
 
     def initialize: (Client client, String session_id) -> void
 
-    def command: (String method, ?async: bool, **untyped params) -> (bool | Hash[String, untyped])
+    def command: (String method, ?async: bool, ?timeout: ::Numeric?, **untyped params) -> (bool | Hash[String, untyped])
 
     def on: (String event) { (Hash[String, untyped]) -> void } -> Integer
 
@@ -48,9 +48,9 @@ module Ferrum
 
     def initialize: ((String | ::Addressable::URI) ws_url, Browser::Options options) -> void
 
-    def command: (String method, ?async: bool, **untyped params) -> (bool | Hash[String, untyped])
+    def command: (String method, ?async: bool, ?timeout: ::Numeric?, **untyped params) -> (bool | Hash[String, untyped])
 
-    def send_message: (Hash[Symbol, untyped] message, async: bool) -> (bool | Hash[String, untyped])
+    def send_message: (Hash[Symbol, untyped] message, async: bool, ?timeout: ::Numeric?) -> (bool | Hash[String, untyped])
 
     def on: (String event) { (Hash[String, untyped]) -> void } -> Integer
 
@@ -66,9 +66,9 @@ module Ferrum
 
     def build_message: (String method, Hash[Symbol, untyped] params) -> Hash[Symbol, untyped]
 
-    def timeout: () -> ::Numeric
+    def protocol_timeout: () -> ::Numeric
 
-    def timeout=: (::Numeric value) -> ::Numeric
+    def protocol_timeout=: (::Numeric value) -> ::Numeric
 
     private
 
