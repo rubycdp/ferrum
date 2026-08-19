@@ -36,6 +36,7 @@
 - `Ferrum::PendingConnectionsError` and `Ferrum::TimeoutError` were swallowed even though it happens when a traffic iterator results in an empty array. [#583]
 - `webrick` is no longer a runtime dependency. It is only required by `Ferrum::Proxy`, so add `gem "webrick"` to your Gemfile if you use it.
 - Logger output for `Runtime.consoleAPICalled` now includes the console API type and stack trace call frames, not just the argument values [#605]
+- `Ferrum::Browser` option `:pending_connection_errors` is set to false by default
 
 ### Removed
 - `webrick` runtime dependency dropped from the gemspec. `Ferrum::Proxy` still needs it, so add `gem "webrick"` to your Gemfile if you use the proxy server.
