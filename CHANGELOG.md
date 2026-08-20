@@ -1,4 +1,15 @@
-## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.17.2...main) ##
+## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.18.0...main) ##
+
+### Added
+
+### Changed
+
+### Fixed
+
+### Removed
+
+
+## [0.18.0](https://github.com/rubycdp/ferrum/compare/v0.17.2...v0.18.0) (August 20, 2026) ##
 
 ### Added
 - `Ferrum::Browser` option `:protocol_timeout` bounds individual internal CDP bookkeeping calls, e.g.
