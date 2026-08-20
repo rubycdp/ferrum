@@ -1,8 +1,10 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.17.2...main) ##
 
 ### Added
-- `Ferrum::Browser` option `:protocol_timeout` (default 1s, independent of `:timeout`) bounds individual internal CDP
-  bookkeeping calls (`Target.createTarget`, `Target.attachToTarget`, etc.
+- `Ferrum::Browser` option `:protocol_timeout` bounds individual internal CDP bookkeeping calls, e.g.
+  `Target.createTarget`, `Target.attachToTarget`. It's a separate setting from `:timeout`: its default (5s) happens
+  to match `:timeout`'s own default, but passing `timeout:` to `Browser.new` does not change it -- set
+  `:protocol_timeout` (or the `FERRUM_PROTOCOL_TIMEOUT` env var) explicitly for a different value.
 - `Ferrum::Page#pdf`/`#screenshot` accept a `timeout:` argument (default 60s) for the CDP call itself. Generating a
   full-page screenshot or a large PDF is a known slow outlier among CDP commands.
 - `Ferrum::Frame#loader_id` provides a loader id when the frame navigates [#583]

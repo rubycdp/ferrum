@@ -89,7 +89,7 @@ module Ferrum
     #   The number of seconds we'll wait for a response when communicating
     #   with the browser: navigations, JS evaluation, DOM queries, dispatching input, etc.
     #
-    # @option options [Numeric] :protocol_timeout (1)
+    # @option options [Numeric] :protocol_timeout (5)
     #   The number of seconds we'll wait for an individual internal CDP
     #   bookkeeping call to respond, e.g. `Target.createTarget`,
     #   `Target.attachToTarget`. These normally resolve in milliseconds.
