@@ -23,6 +23,8 @@ module Ferrum
     class Process
       KILL_TIMEOUT = 2
       WAIT_KILLED = 0.05
+      REMOVE_DIR_RETRIES = 5
+      REMOVE_DIR_RETRY_DELAY = 0.1
 
       extend Forwardable
 
@@ -54,13 +56,13 @@ module Ferrum
             # Process.kill is unreliable on Windows
             ::Process.kill("KILL", pid) unless system("taskkill /f /t /pid #{pid} >NUL 2>NUL")
           else
-            ::Process.kill("USR1", pid)
+            send_signal(pid, "TERM")
             start = Utils::ElapsedTime.monotonic_time
             while ::Process.wait(pid, ::Process::WNOHANG).nil?
               sleep(WAIT_KILLED)
               next unless Utils::ElapsedTime.timeout?(start, KILL_TIMEOUT)
 
-              ::Process.kill("KILL", pid)
+              send_signal(pid, "KILL")
               ::Process.wait(pid)
               break
             end
@@ -68,6 +70,25 @@ module Ferrum
         rescue Errno::ESRCH, Errno::ECHILD
           # nop
         end
+      end
+
+      #
+      # Signals the whole process group Chrome was spawned into (it's spawned
+      # with `pgroup: true`), so its child processes (renderer, GPU, zygote,
+      # ...) are cleaned up too instead of being left orphaned. Falls back to
+      # signaling just the pid directly if there's no such process group to
+      # signal (e.g. Xvfb, which isn't spawned with `pgroup: true`) or the
+      # group can't be signaled.
+      #
+      # @param [Integer] pid
+      # @param [String] name
+      #
+      # @return [void]
+      #
+      def self.send_signal(pid, name)
+        ::Process.kill(name, -pid)
+      rescue Errno::EPERM, Errno::ESRCH
+        ::Process.kill(name, pid)
       end
 
       #
@@ -79,13 +100,38 @@ module Ferrum
       # @return [Proc]
       #
       def self.directory_remover(path)
-        proc {
-          begin
-            FileUtils.remove_entry(path)
-          rescue StandardError
-            Errno::ENOENT
-          end
-        }
+        proc { remove_directory(path) }
+      end
+
+      #
+      # Removes the given directory, retrying with exponential backoff on
+      # transient errors. Chrome can briefly hold file locks right after
+      # being killed, so the directory may not be removable on the first
+      # try; retrying avoids leaking temp directories in that case.
+      #
+      # @param [String] path
+      #   Directory to remove.
+      # @param [Integer] retries
+      #   Maximum number of removal attempts.
+      # @param [Float] delay
+      #   Base delay, in seconds, before the first retry; doubles on each
+      #   subsequent attempt.
+      #
+      # @return [void]
+      #
+      def self.remove_directory(path, retries: REMOVE_DIR_RETRIES, delay: REMOVE_DIR_RETRY_DELAY)
+        retries.times do |attempt|
+          FileUtils.remove_entry(path)
+          break
+        rescue Errno::ENOENT
+          break
+        rescue Errno::ENOTEMPTY, Errno::EBUSY, Errno::EACCES, Errno::EPERM => e
+          raise e if attempt == retries - 1
+
+          sleep(delay * (2**attempt))
+        end
+      rescue StandardError => e
+        warn("[Ferrum] Failed to remove user data dir #{path}: #{e.class}: #{e.message}")
       end
 
       attr_reader :host, :port, :ws_url, :pid, :command,
@@ -194,7 +240,7 @@ module Ferrum
       end
 
       def remove_user_data_dir
-        self.class.directory_remover(@user_data_dir).call
+        self.class.remove_directory(@user_data_dir)
         @user_data_dir = nil
       end
 

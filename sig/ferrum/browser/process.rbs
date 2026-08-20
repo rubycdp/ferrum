@@ -5,6 +5,10 @@ module Ferrum
 
       WAIT_KILLED: ::Float
 
+      REMOVE_DIR_RETRIES: ::Integer
+
+      REMOVE_DIR_RETRY_DELAY: ::Float
+
       attr_reader host: String?
 
       attr_reader port: ::Integer?
@@ -49,7 +53,11 @@ module Ferrum
 
       def self.process_killer: (::Integer pid) -> Proc
 
+      def self.send_signal: (::Integer pid, ::String name) -> void
+
       def self.directory_remover: (String path) -> Proc
+
+      def self.remove_directory: (::String path, ?retries: ::Integer, ?delay: ::Float) -> void
 
       def initialize: (Browser::Options options) -> void
 
