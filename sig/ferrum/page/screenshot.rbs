@@ -1,15 +1,13 @@
 module Ferrum
   class Page
     module Screenshot
-      DEFAULT_RENDER_TIMEOUT: ::Integer
-
       DEFAULT_PDF_OPTIONS: { landscape: false, paper_width: ::Float, paper_height: 11, scale: ::Float }
 
       PAPER_FORMATS: { letter: { width: ::Float, height: ::Float }, legal: { width: ::Float, height: ::Float }, tabloid: { width: ::Float, height: ::Float }, ledger: { width: ::Float, height: ::Float }, :A0 => { width: ::Float, height: ::Float }, :A1 => { width: ::Float, height: ::Float }, :A2 => { width: ::Float, height: ::Float }, :A3 => { width: ::Float, height: ::Float }, :A4 => { width: ::Float, height: ::Float }, :A5 => { width: ::Float, height: ::Float }, :A6 => { width: ::Float, height: ::Float } }
 
-      def screenshot: (?timeout: ::Numeric, **untyped opts) -> untyped
+      def screenshot: (**untyped opts) -> untyped
 
-      def pdf: (?timeout: ::Numeric, **untyped opts) -> untyped
+      def pdf: (**untyped opts) -> untyped
 
       def mhtml: (?path: untyped?) -> untyped
 
@@ -35,7 +33,7 @@ module Ferrum
 
       def to_camel_case: (untyped option) -> (:preferCSSPageSize | untyped)
 
-      def capture_screenshot: (untyped options, untyped full, untyped background_color, ::Numeric timeout) -> untyped
+      def capture_screenshot: (untyped options, untyped full, untyped background_color) -> untyped
 
       def maybe_resize_fullscreen: (untyped full) { () -> untyped } -> untyped
 

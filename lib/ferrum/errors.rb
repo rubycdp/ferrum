@@ -49,8 +49,7 @@ module Ferrum
       "Timed out waiting for response. It's possible that this happened " \
         "because something took a very long time (for example a page load " \
         "was slow). If so, setting the :timeout option to a higher value might " \
-        "help. If this happened on an internal protocol call instead, try " \
-        "raising :protocol_timeout."
+        "help."
     end
   end
 

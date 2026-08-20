@@ -426,28 +426,23 @@ module Ferrum
     #   Whether to sleep for `Browser::Options#slowmo` seconds before sending
     #   the command.
     #
-    # @param [Numeric, nil] timeout
-    #   Overrides the timeout this command's response is bound by. Defaults
-    #   to the page's `timeout`. Callers with their own budget (e.g. `#pdf`/
-    #   `#screenshot`) pass it explicitly.
-    #
     # @return [Hash{String => Object}]
     #
     # @example
     #   page.command("Page.navigate", url: "https://github.com/")
     #
-    def command(method, wait: 0, slowmoable: false, timeout: nil, **params)
+    def command(method, wait: 0, slowmoable: false, **params)
       iteration = @event.reset if wait.positive?
       sleep(@options.slowmo) if slowmoable && @options.slowmo.positive?
-      result = client.command(method, timeout: timeout || self.timeout, **params)
+      result = client.command(method, **params)
 
       if wait.positive?
         # Wait a bit after command and check if iteration has
-        #  changed, which means there was some network event for
+        # changed which means there was some network event for
         # the main frame, and it started to load new content.
         @event.wait(wait)
         if iteration != @event.iteration
-          set = @event.wait(self.timeout)
+          set = @event.wait(timeout)
           raise TimeoutError unless set
         end
       end

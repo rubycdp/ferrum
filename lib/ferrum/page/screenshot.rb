@@ -14,7 +14,6 @@ module Ferrum
 
       DEFAULT_SCREENSHOT_FORMAT = "png"
       SUPPORTED_SCREENSHOT_FORMAT = %w[png jpeg jpg webp].freeze
-      DEFAULT_RENDER_TIMEOUT = 60
 
       DEFAULT_PDF_OPTIONS = {
         landscape: false,
@@ -70,11 +69,6 @@ module Ferrum
       # @option opts [Ferrum::RGBA] :background_color
       #   Sets the background color.
       #
-      # @param [Numeric] timeout
-      #   How long to wait for the screenshot to be captured. Defaults to
-      #   {DEFAULT_RENDER_TIMEOUT} since a full-page capture is a known slow
-      #   outlier among CDP commands.
-      #
       # @example
       #   page.go_to("https://google.com/")
       #
@@ -93,10 +87,10 @@ module Ferrum
       # @example Save with specific background color:
       #   page.screenshot(background_color: Ferrum::RGBA.new(0, 0, 0, 0.0))
       #
-      def screenshot(timeout: DEFAULT_RENDER_TIMEOUT, **opts)
+      def screenshot(**opts)
         path, encoding = common_options(**opts)
         options = screenshot_options(path, **opts)
-        data = capture_screenshot(options, opts[:full], opts[:background_color], timeout)
+        data = capture_screenshot(options, opts[:full], opts[:background_color])
         return data if encoding == :base64
 
         bin = Base64.decode64(data)
@@ -134,20 +128,15 @@ module Ferrum
       #   See other [native options](https://chromedevtools.github.io/devtools-protocol/tot/Page#method-printToPDF) you
       #   can pass.
       #
-      # @param [Numeric] timeout
-      #   How long to wait for the PDF to be generated. Defaults to
-      #   {DEFAULT_RENDER_TIMEOUT} since large documents are a known slow
-      #   outlier among CDP commands.
-      #
       # @example
       #   page.go_to("https://google.com/")
       #   # Save to disk as a PDF
       #   page.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => true
       #
-      def pdf(timeout: DEFAULT_RENDER_TIMEOUT, **opts)
+      def pdf(**opts)
         path, encoding = common_options(**opts)
         options = pdf_options(**opts).merge(transferMode: "ReturnAsStream")
-        handle = command("Page.printToPDF", timeout: timeout, **options).fetch("stream")
+        handle = command("Page.printToPDF", **options).fetch("stream")
         stream_to(path: path, encoding: encoding, handle: handle)
       end
 
@@ -324,11 +313,11 @@ module Ferrum
         option.to_s.gsub(%r{(?:_|(/))([a-z\d]*)}) { "#{Regexp.last_match(1)}#{Regexp.last_match(2).capitalize}" }.to_sym
       end
 
-      def capture_screenshot(options, full, background_color, timeout)
+      def capture_screenshot(options, full, background_color)
         options = options.merge(captureBeyondViewport: true) if full
 
         with_background_color(background_color) do
-          command("Page.captureScreenshot", timeout: timeout, **options)
+          command("Page.captureScreenshot", **options)
         end.fetch("data")
       end
 
