@@ -80,7 +80,7 @@ module Ferrum
 
     def set_window_bounds: (Hash[Symbol, (::Integer | String)] bounds) -> Hash[String, untyped]
 
-    def command: (String method, ?wait: ::Numeric?, ?slowmoable: bool, **untyped) -> Hash[String, untyped]
+    def command: (String method, ?wait: ::Numeric?, ?slowmoable: bool, ?timeout: ::Numeric?, **untyped) -> Hash[String, untyped]
 
     def on: ((Symbol | String) event) ?{ (Hash[String, untyped]) -> void } -> Integer
 
