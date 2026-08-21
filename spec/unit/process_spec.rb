@@ -56,6 +56,36 @@ describe Ferrum::Browser::Process do
 
       subject.quit
     end
+
+    it "kills the whole process group, not just the leader, when a group member ignores TERM", if: Ferrum::Utils::Platform.mri? do
+      child_pid_path = File.join(Dir.tmpdir, "ferrum-process-spec-child-pid-#{Process.pid}")
+
+      script = <<~RUBY
+        pid = fork do
+          trap("TERM", "IGNORE")
+          sleep 30
+        end
+        Process.detach(pid)
+        File.write(#{child_pid_path.inspect}, pid.to_s)
+        sleep 30
+      RUBY
+      leader_pid = Process.spawn(RbConfig.ruby, "-e", script, pgroup: true)
+
+      begin
+        start = Ferrum::Utils::ElapsedTime.monotonic_time
+        sleep(0.05) until File.size?(child_pid_path) || Ferrum::Utils::ElapsedTime.timeout?(start, 5)
+        child_pid = File.read(child_pid_path).to_i
+
+        # A leader that dies promptly on TERM must not short-circuit the
+        # escalation to KILL for the rest of its process group.
+        Ferrum::Browser::Process.process_killer(leader_pid).call
+        sleep(0.2)
+
+        expect { Process.kill(0, child_pid) }.to raise_error(Errno::ESRCH)
+      ensure
+        File.delete(child_pid_path) if child_pid && File.exist?(child_pid_path)
+      end
+    end
   end
 
   context "env variables" do

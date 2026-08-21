@@ -55,6 +55,8 @@ module Ferrum
 
       def self.send_signal: (::Integer pid, ::String name) -> void
 
+      def self.process_group_alive?: (::Integer pid) -> bool
+
       def self.directory_remover: (String path) -> Proc
 
       def self.remove_directory: (::String path, ?retries: ::Integer, ?delay: ::Float) -> void

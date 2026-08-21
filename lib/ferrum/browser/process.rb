@@ -58,12 +58,21 @@ module Ferrum
           else
             send_signal(pid, "TERM")
             start = Utils::ElapsedTime.monotonic_time
-            while ::Process.wait(pid, ::Process::WNOHANG).nil?
+            leader_exited = false
+            loop do
+              # The leader (the pid we actually spawned and can #wait on) may
+              # exit well before the rest of its process group does -- e.g. a
+              # renderer/zygote that ignores TERM. Reaping the leader must not
+              # by itself end the loop, or that child is orphaned forever
+              # since KILL is only ever sent from the timeout branch below.
+              leader_exited ||= !::Process.wait(pid, ::Process::WNOHANG).nil?
+              break if leader_exited && !process_group_alive?(pid)
+
               sleep(WAIT_KILLED)
               next unless Utils::ElapsedTime.timeout?(start, KILL_TIMEOUT)
 
               send_signal(pid, "KILL")
-              ::Process.wait(pid)
+              ::Process.wait(pid) unless leader_exited
               break
             end
           end
@@ -89,6 +98,22 @@ module Ferrum
         ::Process.kill(name, -pid)
       rescue Errno::EPERM, Errno::ESRCH
         ::Process.kill(name, pid)
+      end
+
+      #
+      # Checks whether any process in pid's process group is still alive.
+      #
+      # @param [Integer] pid
+      #
+      # @return [Boolean]
+      #
+      def self.process_group_alive?(pid)
+        ::Process.kill(0, -pid)
+        true
+      rescue Errno::ESRCH
+        false
+      rescue Errno::EPERM
+        true
       end
 
       #
