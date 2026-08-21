@@ -8,6 +8,7 @@ require "forwardable"
 require "ferrum/browser/options/base"
 require "ferrum/browser/options/chrome"
 require "ferrum/browser/options/firefox"
+require "ferrum/browser/process/killer"
 require "ferrum/browser/command"
 require "ferrum/utils/elapsed_time"
 require "ferrum/utils/platform"
@@ -22,11 +23,6 @@ module Ferrum
     # stopping/restarting the process and cleaning up its user data directory.
     #
     class Process
-      KILL_TIMEOUT = 2
-      WAIT_KILLED = 0.05
-      REMOVE_DIR_RETRIES = 5
-      REMOVE_DIR_RETRY_DELAY = 0.1
-
       extend Forwardable
 
       delegate path: :command
@@ -41,123 +37,6 @@ module Ferrum
       #
       def self.start(*args)
         new(*args).tap(&:start)
-      end
-
-      #
-      # Builds a finalizer proc that kills the process with the given pid.
-      #
-      # @param [Integer] pid
-      #   Process id to kill.
-      #
-      # @return [Proc]
-      #
-      def self.process_killer(pid)
-        proc do
-          if Utils::Platform.windows?
-            # Process.kill is unreliable on Windows
-            ::Process.kill("KILL", pid) unless system("taskkill /f /t /pid #{pid} >NUL 2>NUL")
-          else
-            send_signal(pid, "TERM")
-            start = Utils::ElapsedTime.monotonic_time
-            leader_exited = false
-            loop do
-              # The leader (the pid we actually spawned and can #wait on) may
-              # exit well before the rest of its process group does -- e.g. a
-              # renderer/zygote that ignores TERM. Reaping the leader must not
-              # by itself end the loop, or that child is orphaned forever
-              # since KILL is only ever sent from the timeout branch below.
-              leader_exited ||= !::Process.wait(pid, ::Process::WNOHANG).nil?
-              break if leader_exited && !process_group_alive?(pid)
-
-              sleep(WAIT_KILLED)
-              next unless Utils::ElapsedTime.timeout?(start, KILL_TIMEOUT)
-
-              send_signal(pid, "KILL")
-              ::Process.wait(pid) unless leader_exited
-              break
-            end
-          end
-        rescue Errno::ESRCH, Errno::ECHILD
-          # nop
-        end
-      end
-
-      #
-      # Signals the whole process group Chrome was spawned into (it's spawned
-      # with `pgroup: true`), so its child processes (renderer, GPU, zygote,
-      # ...) are cleaned up too instead of being left orphaned. Falls back to
-      # signaling just the pid directly if there's no such process group to
-      # signal (e.g. Xvfb, which isn't spawned with `pgroup: true`) or the
-      # group can't be signaled.
-      #
-      # @param [Integer] pid
-      # @param [String] name
-      #
-      # @return [void]
-      #
-      def self.send_signal(pid, name)
-        ::Process.kill(name, -pid)
-      rescue Errno::EPERM, Errno::ESRCH
-        ::Process.kill(name, pid)
-      end
-
-      #
-      # Checks whether any process in pid's process group is still alive.
-      #
-      # @param [Integer] pid
-      #
-      # @return [Boolean]
-      #
-      def self.process_group_alive?(pid)
-        ::Process.kill(0, -pid)
-        true
-      rescue Errno::ESRCH
-        false
-      rescue Errno::EPERM
-        true
-      end
-
-      #
-      # Builds a finalizer proc that removes the directory at the given path.
-      #
-      # @param [String] path
-      #   Directory to remove.
-      #
-      # @return [Proc]
-      #
-      def self.directory_remover(path)
-        proc { remove_directory(path) }
-      end
-
-      #
-      # Removes the given directory, retrying with exponential backoff on
-      # transient errors. Chrome can briefly hold file locks right after
-      # being killed, so the directory may not be removable on the first
-      # try; retrying avoids leaking temp directories in that case.
-      #
-      # @param [String] path
-      #   Directory to remove.
-      # @param [Integer] retries
-      #   Maximum number of removal attempts.
-      # @param [Float] delay
-      #   Base delay, in seconds, before the first retry; doubles on each
-      #   subsequent attempt.
-      #
-      # @return [void]
-      #
-      def self.remove_directory(path, retries: REMOVE_DIR_RETRIES, delay: REMOVE_DIR_RETRY_DELAY)
-        retries.times do |attempt|
-          FileUtils.remove_entry(path)
-          break
-        rescue Errno::ENOENT
-          break
-        rescue Errno::ENOTEMPTY, Errno::EBUSY, Errno::EACCES, Errno::EPERM => e
-          raise e if attempt == retries - 1
-
-          sleep(delay * (2**attempt))
-        end
-      rescue StandardError => e
-        warn("[Ferrum] Failed to remove user data dir #{path}: #{e.class}: #{e.message}")
       end
 
       attr_reader :host, :port, :ws_url, :pid, :command,
@@ -180,7 +59,7 @@ module Ferrum
         @env = Hash(options.env)
 
         tmpdir = Dir.mktmpdir("ferrum_user_data_dir_")
-        ObjectSpace.define_finalizer(self, self.class.directory_remover(tmpdir))
+        ObjectSpace.define_finalizer(self, Killer.directory_remover(tmpdir))
         @user_data_dir = tmpdir
         @command = Command.build(options, tmpdir)
       end
@@ -202,12 +81,12 @@ module Ferrum
 
           if @command.xvfb?
             @xvfb = Xvfb.start(@command.options)
-            ObjectSpace.define_finalizer(self, self.class.process_killer(@xvfb.pid))
+            ObjectSpace.define_finalizer(self, Killer.process_killer(@xvfb.pid))
           end
 
           env = Hash(@xvfb&.to_env).merge(@env)
           @pid = ::Process.spawn(env, *@command.to_a, process_options)
-          ObjectSpace.define_finalizer(self, self.class.process_killer(@pid))
+          ObjectSpace.define_finalizer(self, Killer.process_killer(@pid))
 
           parse_ws_url(read_io, @process_timeout)
           parse_json_version(ws_url)
@@ -224,8 +103,8 @@ module Ferrum
       #   Whether to block until the process is confirmed dead and its user
       #   data directory removed (the default), or return immediately and
       #   run that cleanup on a background thread instead. Killing a
-      #   stubborn process group can block for up to {KILL_TIMEOUT} seconds,
-      #   plus retries removing its directory, which matters when quitting
+      #   stubborn process group can block for up to {Killer::KILL_TIMEOUT}
+      #   seconds, plus retries removing its directory, which matters when quitting
       #   many browsers in a hot path. `wait: false` is not used by
       #   {#restart}, which always waits so the old process is fully gone
       #   before the new one starts.
@@ -272,8 +151,8 @@ module Ferrum
 
       def sync_stop
         if @pid
-          kill(@pid)
-          kill(@xvfb.pid) if @xvfb&.pid
+          Killer.kill(@pid)
+          Killer.kill(@xvfb.pid) if @xvfb&.pid
           @pid = nil
         end
 
@@ -295,19 +174,15 @@ module Ferrum
         @pid = @user_data_dir = nil
 
         Utils::Thread.spawn(abort_on_exception: false) do
-          kill(pid) if pid
-          kill(xvfb_pid) if xvfb_pid
-          self.class.remove_directory(user_data_dir) if user_data_dir
+          Killer.kill(pid) if pid
+          Killer.kill(xvfb_pid) if xvfb_pid
+          Killer.remove_directory(user_data_dir) if user_data_dir
           ObjectSpace.undefine_finalizer(self)
         end
       end
 
-      def kill(pid)
-        self.class.process_killer(pid).call
-      end
-
       def remove_user_data_dir
-        self.class.remove_directory(@user_data_dir)
+        Killer.remove_directory(@user_data_dir)
         @user_data_dir = nil
       end
 

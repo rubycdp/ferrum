@@ -78,7 +78,7 @@ describe Ferrum::Browser::Process do
 
         # A leader that dies promptly on TERM must not short-circuit the
         # escalation to KILL for the rest of its process group.
-        Ferrum::Browser::Process.process_killer(leader_pid).call
+        Ferrum::Browser::Process::Killer.kill(leader_pid)
         sleep(0.2)
 
         expect { Process.kill(0, child_pid) }.to raise_error(Errno::ESRCH)

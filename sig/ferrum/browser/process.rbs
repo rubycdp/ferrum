@@ -1,14 +1,6 @@
 module Ferrum
   class Browser
     class Process
-      KILL_TIMEOUT: ::Integer
-
-      WAIT_KILLED: ::Float
-
-      REMOVE_DIR_RETRIES: ::Integer
-
-      REMOVE_DIR_RETRY_DELAY: ::Float
-
       attr_reader host: String?
 
       attr_reader port: ::Integer?
@@ -51,16 +43,6 @@ module Ferrum
 
       def self.start: (Browser::Options options) -> Browser::Process
 
-      def self.process_killer: (::Integer pid) -> Proc
-
-      def self.send_signal: (::Integer pid, ::String name) -> void
-
-      def self.process_group_alive?: (::Integer pid) -> bool
-
-      def self.directory_remover: (String path) -> Proc
-
-      def self.remove_directory: (::String path, ?retries: ::Integer, ?delay: ::Float) -> void
-
       def initialize: (Browser::Options options) -> void
 
       def start: () -> void
@@ -76,8 +58,6 @@ module Ferrum
       def sync_stop: () -> nil
 
       def async_stop: () -> Thread
-
-      def kill: (::Integer pid) -> void
 
       def remove_user_data_dir: () -> void
 
