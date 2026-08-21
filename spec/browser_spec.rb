@@ -379,6 +379,36 @@ describe Ferrum::Browser do
 
       expect { Process.kill(0, pid) }.to raise_error(Errno::ESRCH)
     end
+
+    it "returns immediately with wait: false, finishing cleanup once the returned thread is joined", skip: Ferrum::Utils::Platform.windows? do
+      browser = Ferrum::Browser.new
+      pid = browser.process.pid
+
+      start = Ferrum::Utils::ElapsedTime.monotonic_time
+      thread = browser.quit(wait: false)
+      elapsed = Ferrum::Utils::ElapsedTime.monotonic_time - start
+
+      expect(thread).to be_a(Thread)
+      expect(elapsed).to be < 1
+
+      thread.join
+
+      expect { Process.kill(0, pid) }.to raise_error(Errno::ESRCH)
+    end
+  end
+
+  describe "#restart" do
+    it "blocks until the old process is confirmed dead before returning", skip: Ferrum::Utils::Platform.windows? do
+      browser = Ferrum::Browser.new
+      old_pid = browser.process.pid
+
+      browser.restart
+
+      expect { Process.kill(0, old_pid) }.to raise_error(Errno::ESRCH)
+      expect(browser.process.pid).not_to eq(old_pid)
+    ensure
+      browser&.quit
+    end
   end
 
   describe "#resize" do

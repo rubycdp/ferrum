@@ -118,6 +118,18 @@ browser.reset
 browser.quit
 ```
 
+`#quit` blocks by default until the browser process is confirmed dead and its user data directory removed. Killing a
+stubborn process (one that ignores `TERM` and needs `KILL`) can take a couple of seconds, which matters if you're
+quitting many browsers in a hot path. Pass `wait: false` to return immediately and run that cleanup on a background
+thread instead:
+
+```ruby
+browser = Ferrum::Browser.new
+thread = browser.quit(wait: false)
+# ... do other work while the browser is killed and its directory removed in the background ...
+thread.join # only needed if you must wait for cleanup to finish, e.g. before reusing a fixed port
+```
+
 ## Thread safety
 
 Ferrum is fully thread-safe. You can create one browser or a few as you wish and

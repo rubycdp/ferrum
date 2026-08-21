@@ -238,14 +238,23 @@ module Ferrum
     #
     # Terminates the browser process and closes the client connection.
     #
-    def quit
+    # @param [Boolean] wait
+    #   Whether to block until the process is confirmed dead and its user
+    #   data directory removed (the default), or return immediately and run
+    #   that cleanup on a background thread instead. See {Process#stop}.
+    #
+    # @return [Thread, nil]
+    #   The background cleanup thread when `wait: false`, `nil` otherwise.
+    #
+    def quit(wait: true)
       return unless @client
 
       contexts.close_connections
 
       @client.close
-      @process.stop
+      thread = @process.stop(wait: wait)
       @client = @process = @contexts = nil
+      thread
     end
 
     #
