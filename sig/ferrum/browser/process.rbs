@@ -65,13 +65,17 @@ module Ferrum
 
       def start: () -> void
 
-      def stop: () -> void
+      def stop: (?wait: bool) -> Thread?
 
       def restart: () -> void
 
       def path: () -> String
 
       private
+
+      def sync_stop: () -> nil
+
+      def async_stop: () -> Thread
 
       def kill: (::Integer pid) -> void
 

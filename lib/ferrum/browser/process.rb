@@ -11,6 +11,7 @@ require "ferrum/browser/options/firefox"
 require "ferrum/browser/command"
 require "ferrum/utils/elapsed_time"
 require "ferrum/utils/platform"
+require "ferrum/utils/thread"
 
 module Ferrum
   class Browser
@@ -219,17 +220,26 @@ module Ferrum
       # Kills the browser process (and Xvfb, if running) and removes the user
       # data directory.
       #
-      # @return [void]
+      # @param [Boolean] wait
+      #   Whether to block until the process is confirmed dead and its user
+      #   data directory removed (the default), or return immediately and
+      #   run that cleanup on a background thread instead. Killing a
+      #   stubborn process group can block for up to {KILL_TIMEOUT} seconds,
+      #   plus retries removing its directory, which matters when quitting
+      #   many browsers in a hot path. `wait: false` is not used by
+      #   {#restart}, which always waits so the old process is fully gone
+      #   before the new one starts.
       #
-      def stop
-        if @pid
-          kill(@pid)
-          kill(@xvfb.pid) if @xvfb&.pid
-          @pid = nil
-        end
+      # @return [Thread, nil]
+      #   The background cleanup thread when `wait: false`; the caller can
+      #   `#join` it if they need cleanup to have finished, e.g. before
+      #   process exit or before reusing a fixed port. `nil` when `wait:
+      #   true`.
+      #
+      def stop(wait: true)
+        return sync_stop if wait
 
-        remove_user_data_dir if @user_data_dir
-        ObjectSpace.undefine_finalizer(self)
+        async_stop
       end
 
       #
@@ -259,6 +269,38 @@ module Ferrum
       end
 
       private
+
+      def sync_stop
+        if @pid
+          kill(@pid)
+          kill(@xvfb.pid) if @xvfb&.pid
+          @pid = nil
+        end
+
+        remove_user_data_dir if @user_data_dir
+        ObjectSpace.undefine_finalizer(self)
+        nil
+      end
+
+      #
+      # Snapshots what needs killing/removing, clears instance state so the
+      # object looks stopped right away, and does the actual work on a
+      # background thread. The finalizer is left in place as a backup until
+      # that thread finishes, in case the process exits before it does.
+      #
+      def async_stop
+        pid = @pid
+        xvfb_pid = @xvfb&.pid
+        user_data_dir = @user_data_dir
+        @pid = @user_data_dir = nil
+
+        Utils::Thread.spawn(abort_on_exception: false) do
+          kill(pid) if pid
+          kill(xvfb_pid) if xvfb_pid
+          self.class.remove_directory(user_data_dir) if user_data_dir
+          ObjectSpace.undefine_finalizer(self)
+        end
+      end
 
       def kill(pid)
         self.class.process_killer(pid).call

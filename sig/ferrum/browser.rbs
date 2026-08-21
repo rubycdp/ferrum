@@ -43,7 +43,7 @@ module Ferrum
 
     def restart: () -> void
 
-    def quit: () -> void
+    def quit: (?wait: bool) -> Thread?
 
     def crash: () -> Hash[String, untyped]
 
