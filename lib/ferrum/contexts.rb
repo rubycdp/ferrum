@@ -208,7 +208,7 @@ module Ferrum
       return if @manually_attached.delete(target.id)
 
       detach(session_id)
-    rescue BrowserError
+    rescue BrowserError, TimeoutError
       nil
     end
 
@@ -217,7 +217,7 @@ module Ferrum
     # only then resumes the debugger itself.
     def connect_worker(target)
       target.worker
-    rescue BrowserError
+    rescue BrowserError, TimeoutError
       nil
     end
 

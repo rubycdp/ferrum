@@ -5,6 +5,10 @@
 ### Changed
 
 ### Fixed
+- `Ferrum::Contexts#connect_worker`/`#detach_unless_manually_attached` only rescued `Ferrum::BrowserError`, not `Ferrum::TimeoutError`.
+  A worker's attach or service-worker detach that timed out (e.g. on a loaded CI runner) would escape unrescued
+  into `Client::Subscriber`'s dispatch thread and kill it, silently breaking further `Target.*` event delivery
+  for the rest of that browser's life, raising `Ferrum::NoSuchTargetError`
 
 ### Removed
 
