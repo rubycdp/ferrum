@@ -1,6 +1,10 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.18.0...main) ##
 
 ### Added
+- `Ferrum::Browser#quit`/`Ferrum::Browser::Process#stop` accept `wait: false` to return immediately and run process
+  killing and user-data-directory cleanup on a background thread instead of blocking; the call returns the `Thread`
+  so callers can `#join` it if they need cleanup to have finished, e.g. before process exit or before reusing a
+  fixed port. Default (`wait: true`) keeps the previous synchronous behavior; `#restart` always waits.
 
 ### Changed
 
@@ -9,6 +13,16 @@
   A worker's attach or service-worker detach that timed out (e.g. on a loaded CI runner) would escape unrescued
   into `Client::Subscriber`'s dispatch thread and kill it, silently breaking further `Target.*` event delivery
   for the rest of that browser's life, raising `Ferrum::NoSuchTargetError`
+- `Ferrum::Browser::Process` killed the browser's leader pid alone with `SIGUSR1`, a signal Chromium has no shutdown
+  handler for; it now sends `SIGTERM`, escalating to `SIGKILL`, to the whole process group, so renderer/GPU/zygote
+  child processes are no longer orphaned after `#quit`. A leader process that exited promptly on `TERM` used to
+  short-circuit escalation to `KILL` for the rest of its process group, so a child that ignored `TERM`
+  (e.g. a stuck renderer) was left running forever; termination now keeps polling the group until it's actually empty
+  or the timeout fires.
+- Removing the user data directory after `#quit` silently gave up on any error, potentially leaking the temp
+  directory forever with no indication; it now retries with exponential backoff on transient errors
+  (`Errno::ENOTEMPTY`/`EBUSY`/`EACCES`/`EPERM`, since Chrome can briefly hold file locks right after being killed)
+  and warns if it still can't be removed.
 
 ### Removed
 
