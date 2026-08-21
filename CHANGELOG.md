@@ -23,8 +23,14 @@
   directory forever with no indication; it now retries with exponential backoff on transient errors
   (`Errno::ENOTEMPTY`/`EBUSY`/`EACCES`/`EPERM`, since Chrome can briefly hold file locks right after being killed)
   and warns if it still can't be removed.
+- `:host` option is respected again when Ferrum spawns Chrome itself. Chrome dropped support for
+  `--remote-debugging-address` and always binds/logs `127.0.0.1`, so Ferrum now substitutes the requested
+  `:host` back into the address it uses to talk to Chrome (e.g. `Ferrum::Browser.new(host: "ferrum.localhost")`),
+  instead of always hitting `127.0.0.1` [#552]
+
 
 ### Removed
+- The now no-op `--remote-debugging-address` Chrome flag, which Chrome has stopped honoring [#552]
 
 
 ## [0.18.0](https://github.com/rubycdp/ferrum/compare/v0.17.2...v0.18.0) (August 20, 2026) ##

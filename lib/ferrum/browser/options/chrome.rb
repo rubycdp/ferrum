@@ -104,7 +104,6 @@ module Ferrum
         #
         def merge_required(flags, options, user_data_dir)
           flags = flags.merge("remote-debugging-port" => options.port,
-                              "remote-debugging-address" => options.host,
                               "window-size" => options.window_size&.join(","),
                               "user-data-dir" => user_data_dir)
 

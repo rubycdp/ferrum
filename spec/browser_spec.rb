@@ -155,12 +155,14 @@ describe Ferrum::Browser do
     it "supports :host argument", skip: ENV["BROWSER_TEST_HOST"].nil? do
       # Use custom host "pointing" to localhost in /etc/hosts or iptables for this.
       # https://superuser.com/questions/516208/how-to-change-ip-address-to-point-to-localhost
+      #
+      # Chrome no longer supports binding its remote debugging endpoint to a custom
+      # address (it always listens on 127.0.0.1), so this only verifies Ferrum talks
+      # to Chrome through the requested host, not that Chrome itself binds to it.
       browser = Ferrum::Browser.new(host: ENV.fetch("BROWSER_TEST_HOST"), port: 12_345)
       browser.go_to(base_url)
 
-      expect do
-        TCPServer.new(ENV.fetch("BROWSER_TEST_HOST"), 12_345)
-      end.to raise_error(Errno::EADDRINUSE)
+      expect(browser.process.host).to eq(ENV.fetch("BROWSER_TEST_HOST"))
     ensure
       browser&.quit
     end

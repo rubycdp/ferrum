@@ -33,6 +33,7 @@ module Ferrum
       @ws_url: String?
       @host: String?
       @port: ::Integer?
+      @requested_host: String?
       @default_user_agent: String?
       @browser_version: String?
       @protocol_version: String?
@@ -64,6 +65,8 @@ module Ferrum
       def parse_ws_url: (IO read_io, ::Integer timeout) -> String?
 
       def ws_url=: (String? url) -> void
+
+      def rewrite_host: (String url) -> String
 
       def parse_browser_versions: () -> void
 

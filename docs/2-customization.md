@@ -44,7 +44,9 @@ Ferrum::Browser.new(options)
       options you put in `:browser_options` will be passed to the browser,
       except required ones of course.
     * `:port` (Integer) - Remote debugging port for headless Chrome.
-    * `:host` (String) - Remote debugging address for headless Chrome.
+    * `:host` (String) - Host we communicate with when spawning browser, `127.0.0.1` by default.
+      Chrome always listens on `127.0.0.1` regardless of this option, so the host must resolve to `127.0.0.1` for
+      Ferrum to actually be able to connect.
     * `:url` (String) - URL for a running instance of Chrome. If this is set, a
       browser process will not be spawned.
     * `:ws_url` (String) - Websocket url for a running instance of Chrome. If this is set, a

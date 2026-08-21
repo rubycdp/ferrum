@@ -45,6 +45,7 @@ module Ferrum
 
       def initialize(options)
         @pid = @xvfb = @user_data_dir = nil
+        @requested_host = options.host
 
         if options.ws_url || options.url
           # `:ws_url` option is higher priority than `:url`, parse versions
@@ -198,7 +199,7 @@ module Ferrum
             read_io.wait_readable(max_time - now)
           else
             if output.match(regexp)
-              self.ws_url = output.match(regexp)[1].strip
+              self.ws_url = rewrite_host(output.match(regexp)[1].strip)
               break
             end
           end
@@ -214,6 +215,12 @@ module Ferrum
         @ws_url = Addressable::URI.parse(url)
         @host = @ws_url.host
         @port = @ws_url.port
+      end
+
+      def rewrite_host(url)
+        uri = Addressable::URI.parse(url)
+        uri.host = @requested_host
+        uri.to_s
       end
 
       def close_io(*ios)

@@ -88,6 +88,22 @@ describe Ferrum::Browser::Process do
     end
   end
 
+  context "when spawning Chrome itself" do
+    it "uses the requested :host instead of the address Chrome reports" do
+      subject = described_class.new(Ferrum::Browser::Options.new(host: "ferrum.localhost", port: 6001))
+      read_io, write_io = IO.pipe
+      write_io.write("DevTools listening on ws://127.0.0.1:6001/devtools/browser/" \
+                     "11111111-1111-1111-1111-111111111111\n")
+      write_io.close
+
+      subject.send(:parse_ws_url, read_io, 1)
+
+      expect(subject.host).to eq("ferrum.localhost")
+      expect(subject.port).to eq(6001)
+      expect(subject.ws_url.host).to eq("ferrum.localhost")
+    end
+  end
+
   context "env variables" do
     subject { Ferrum::Browser.new(env: { "LD_PRELOAD" => "some.so" }) }
 
