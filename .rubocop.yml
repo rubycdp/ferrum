@@ -6,6 +6,10 @@ AllCops:
 Layout/FirstArrayElementIndentation:
   EnforcedStyle: consistent
 
+Layout/LineLength:
+  Exclude:
+    - spec/**/*
+
 Naming/PredicateMethod:
   Enabled: false
 
