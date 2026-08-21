@@ -2,6 +2,12 @@
 
 module Ferrum
   class Browser
+    #
+    # Builds the OS-level command used to spawn the browser process: resolves
+    # the executable path and merges the browser-specific required/default
+    # flags (see {Options::Base}) with any user-supplied ones into a single
+    # argument list.
+    #
     class Command
       NOT_FOUND = "Could not find an executable for the browser. Try to make " \
                   "it available on the PATH or set environment variable for " \
@@ -35,14 +41,28 @@ module Ferrum
         merge_options
       end
 
+      # Whether the browser should be launched under Xvfb.
+      #
+      # @return [Boolean]
       def xvfb?
         !!options.xvfb
       end
 
+      #
+      # Command line arguments for spawning the browser process.
+      #
+      # @return [Array<String>]
+      #   The browser path followed by its CLI flags.
+      #
       def to_a
         [path] + @flags.map { |k, v| v.nil? ? "--#{k}" : "--#{k}=#{v}" }
       end
 
+      #
+      # String representation of the command used to spawn the browser process.
+      #
+      # @return [String]
+      #
       def to_s
         to_a.join(" \\ \n  ")
       end

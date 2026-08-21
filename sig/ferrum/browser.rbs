@@ -22,6 +22,10 @@ module Ferrum
 
     def timeout=: (::Numeric) -> ::Numeric
 
+    def protocol_timeout: () -> ::Numeric
+
+    def protocol_timeout=: (::Numeric) -> ::Numeric
+
     def default_user_agent: () -> String?
 
     def default_user_agent=: (String) -> String
@@ -39,7 +43,7 @@ module Ferrum
 
     def restart: () -> void
 
-    def quit: () -> void
+    def quit: (?wait: bool) -> Thread?
 
     def crash: () -> Hash[String, untyped]
 

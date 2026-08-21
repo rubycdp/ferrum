@@ -20,19 +20,23 @@ module Ferrum
 
     def pages: () -> ::Array[Page]
 
+    def workers: () -> ::Array[Worker]
+
+    def service_workers: () -> ::Array[Target]
+
     def windows: (?(:first | :last)?, ?::Integer) -> ::Array[Page]
 
     def create_page: (**untyped options) -> Page
 
     def create_target: () -> Target
 
-    def add_target: (params: Hash[String, untyped], ?session_id: String?) -> bool
+    def add_target: (params: Hash[String, untyped], ?session_id: String?) -> Target
 
     def update_target: (String target_id, Hash[String, untyped] params) -> void
 
     def delete_target: (String target_id) -> Target?
 
-    def attach_target: (String target_id) -> bool
+    def attach_target: (String target_id) -> true
 
     def find_target: () { (Target) -> bool } -> Target?
 

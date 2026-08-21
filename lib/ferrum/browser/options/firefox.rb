@@ -3,6 +3,11 @@
 module Ferrum
   class Browser
     class Options
+      #
+      # Firefox-specific default flags and binary locations. Provides the CLI
+      # flags required to drive Firefox over CDP (remote debugger address and
+      # profile directory) along with its (minimal) set of default flags.
+      #
       class Firefox < Base
         DEFAULT_OPTIONS = {
           "headless" => nil
@@ -22,10 +27,37 @@ module Ferrum
           linux: LINUX_BIN_PATH
         }.freeze
 
+        #
+        # Merges CLI flags required for Firefox to work with CDP.
+        #
+        # @param [Hash] flags
+        #   Flags to merge required ones into.
+        #
+        # @param [Ferrum::Browser::Options] options
+        #   Browser options.
+        #
+        # @param [String] user_data_dir
+        #   Path to the browser's profile directory.
+        #
+        # @return [Hash]
+        #   Merged flags.
+        #
         def merge_required(flags, options, user_data_dir)
           flags.merge("remote-debugger" => "#{options.host}:#{options.port}", "profile" => user_data_dir)
         end
 
+        #
+        # Merges Firefox's default flags with the given ones.
+        #
+        # @param [Hash] flags
+        #   Flags that take precedence over the defaults.
+        #
+        # @param [Ferrum::Browser::Options] options
+        #   Browser options.
+        #
+        # @return [Hash]
+        #   Merged flags.
+        #
         def merge_default(flags, options)
           defaults = except("headless") unless options.headless
 

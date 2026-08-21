@@ -3,15 +3,30 @@
 require "singleton"
 
 module Ferrum
+  #
+  # Placeholder object substituted for a JavaScript value that couldn't be
+  # fully serialized because it contains circular references. It exists
+  # only so that {#inspect} can report the situation instead of the
+  # evaluation raising or hanging.
+  #
   class CyclicObject
     include Singleton
 
+    # Debug representation of the singleton placeholder.
+    #
+    # @return [String]
     def inspect
       %(#<#{self.class} JavaScript object that cannot be represented in Ruby>)
     end
   end
 
   class Frame
+    #
+    # Evaluates and executes JavaScript in a frame's execution context via
+    # `Runtime.callFunctionOn`, converting arguments and return values
+    # between Ruby and JS, and resolving object/array/node results
+    # (including cyclic ones, via {CyclicObject}) into Ruby equivalents.
+    #
     module Runtime
       INTERMITTENT_ATTEMPTS = ENV.fetch("FERRUM_INTERMITTENT_ATTEMPTS", 6).to_i
       INTERMITTENT_SLEEP = ENV.fetch("FERRUM_INTERMITTENT_SLEEP", 0.1).to_f
@@ -86,10 +101,41 @@ module Ferrum
         true
       end
 
+      #
+      # Evaluates a raw JS function declaration (unlike {#evaluate}, which
+      # wraps the given expression in one), optionally on a specific remote
+      # object instead of the frame's global execution context.
+      #
+      # @param [String] expression
+      #   A JS function declaration, e.g. `"function(a, b) { return a + b }"`.
+      #
+      # @param [Array] args
+      #   Arguments to pass to the function.
+      #
+      # @param [Node, nil] on
+      #   Remote object to invoke the function on.
+      #
       def evaluate_func(expression, *args, on: nil)
         call(expression: expression, arguments: args, on: on)
       end
 
+      #
+      # Evaluates an expression against a given node's remote object (+this+
+      # refers to the node), returning the raw JS value rather than
+      # resolving it to a {Node}/Hash/Array.
+      #
+      # @param [Node] node
+      #   The node to evaluate the expression on.
+      #
+      # @param [String] expression
+      #   The JavaScript to evaluate.
+      #
+      # @param [Boolean] by_value
+      #   Whether to return the plain JS value instead of a handle.
+      #
+      # @param [Integer] wait
+      #   Passed through to the underlying `Runtime.callFunctionOn` command.
+      #
       def evaluate_on(node:, expression:, by_value: true, wait: 0)
         options = { handle: true }
         expression = format("function() { return %s }", expression)

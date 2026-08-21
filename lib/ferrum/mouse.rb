@@ -1,6 +1,12 @@
 # frozen_string_literal: true
 
 module Ferrum
+  #
+  # Simulates mouse input for a page via the CDP `Input.dispatchMouseEvent`
+  # command, and page scrolling via JavaScript. Keeps track of the current
+  # pointer position and pressed buttons so `move`, `down`, `up` and `click`
+  # can be composed while reporting consistent state to Chrome.
+  #
   class Mouse
     CLICK_WAIT = ENV.fetch("FERRUM_CLICK_WAIT", 0.1).to_f
     BUTTON_MASKS = {

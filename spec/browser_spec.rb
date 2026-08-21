@@ -155,12 +155,14 @@ describe Ferrum::Browser do
     it "supports :host argument", skip: ENV["BROWSER_TEST_HOST"].nil? do
       # Use custom host "pointing" to localhost in /etc/hosts or iptables for this.
       # https://superuser.com/questions/516208/how-to-change-ip-address-to-point-to-localhost
+      #
+      # Chrome no longer supports binding its remote debugging endpoint to a custom
+      # address (it always listens on 127.0.0.1), so this only verifies Ferrum talks
+      # to Chrome through the requested host, not that Chrome itself binds to it.
       browser = Ferrum::Browser.new(host: ENV.fetch("BROWSER_TEST_HOST"), port: 12_345)
       browser.go_to(base_url)
 
-      expect do
-        TCPServer.new(ENV.fetch("BROWSER_TEST_HOST"), 12_345)
-      end.to raise_error(Errno::EADDRINUSE)
+      expect(browser.process.host).to eq(ENV.fetch("BROWSER_TEST_HOST"))
     ensure
       browser&.quit
     end
@@ -241,9 +243,9 @@ describe Ferrum::Browser do
     end
 
     it "supports :pending_connection_errors argument" do
-      browser = Ferrum::Browser.new(base_url: base_url, pending_connection_errors: false, timeout: 0.5)
+      browser = Ferrum::Browser.new(base_url: base_url, pending_connection_errors: true, timeout: 0.5)
 
-      expect { browser.go_to("/really_slow") }.not_to raise_error
+      expect { browser.go_to("/really_slow") }.to raise_error(Ferrum::PendingConnectionsError)
     ensure
       browser&.quit
     end
@@ -378,6 +380,36 @@ describe Ferrum::Browser do
       browser.quit
 
       expect { Process.kill(0, pid) }.to raise_error(Errno::ESRCH)
+    end
+
+    it "returns immediately with wait: false, finishing cleanup once the returned thread is joined", skip: Ferrum::Utils::Platform.windows? do
+      browser = Ferrum::Browser.new
+      pid = browser.process.pid
+
+      start = Ferrum::Utils::ElapsedTime.monotonic_time
+      thread = browser.quit(wait: false)
+      elapsed = Ferrum::Utils::ElapsedTime.monotonic_time - start
+
+      expect(thread).to be_a(Thread)
+      expect(elapsed).to be < 1
+
+      thread.join
+
+      expect { Process.kill(0, pid) }.to raise_error(Errno::ESRCH)
+    end
+  end
+
+  describe "#restart" do
+    it "blocks until the old process is confirmed dead before returning", skip: Ferrum::Utils::Platform.windows? do
+      browser = Ferrum::Browser.new
+      old_pid = browser.process.pid
+
+      browser.restart
+
+      expect { Process.kill(0, old_pid) }.to raise_error(Errno::ESRCH)
+      expect(browser.process.pid).not_to eq(old_pid)
+    ensure
+      browser&.quit
     end
   end
 

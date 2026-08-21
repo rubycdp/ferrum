@@ -2,6 +2,11 @@
 
 module Ferrum
   class Page
+    #
+    # Starts and stops a live screencast of the page, streaming a sequence
+    # of frame images (a video-like feed) to a given block as the page
+    # renders.
+    #
     module Screencast
       # Starts sending frames to record screencast to the given block.
       #

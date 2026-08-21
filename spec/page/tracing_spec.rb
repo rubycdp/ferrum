@@ -92,21 +92,23 @@ describe Ferrum::Page::Tracing do
     end
 
     context "with screenshots enabled" do
-      it "fills file with screenshot data" do
-        page.tracing.record(path: file_path, screenshots: true) do
-          page.go_to("/grid")
+      def force_repaints
+        page.go_to("/grid")
+        3.times do
           sleep 0.1
+          page.evaluate("document.body.style.backgroundColor = document.body.style.backgroundColor ? '' : 'red'")
         end
+      end
+
+      it "fills file with screenshot data" do
+        page.tracing.record(path: file_path, screenshots: true) { force_repaints }
 
         expect(File.exist?(file_path)).to be(true)
         expect(content["traceEvents"].any? { |o| o["name"] == "Screenshot" }).to eq(true)
       end
 
       it "returns a buffer with screenshot data" do
-        trace = page.tracing.record(screenshots: true) do
-          page.go_to("/grid")
-          sleep 0.1
-        end
+        trace = page.tracing.record(screenshots: true) { force_repaints }
 
         expect(File.exist?(file_path)).to be(false)
         content = JSON.parse(trace)

@@ -2,6 +2,11 @@
 
 module Ferrum
   class Network
+    #
+    # Pairs a {Request} with its eventual {Response} or {Error} (and, if
+    # interception is enabled, its {InterceptedRequest}), representing the
+    # full lifecycle of a single network request.
+    #
     class Exchange
       # ID of the request.
       #
@@ -34,6 +39,11 @@ module Ferrum
       # @return Boolean
       attr_accessor :unknown
 
+      # The raw `Network.requestWillBeSentExtraInfo` params for the request,
+      # if it arrived before `request` was set.
+      #
+      # @return [Hash, nil]
+      #
       # @api private
       attr_accessor :request_extra_info
 

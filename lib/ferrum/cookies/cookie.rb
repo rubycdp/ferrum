@@ -123,6 +123,8 @@ module Ferrum
       end
 
       #
+      # Specifies whether the cookie is a first-party set cookie or not.
+      #
       # @return [Boolean]
       #
       def sameparty?
@@ -132,12 +134,16 @@ module Ferrum
       alias same_party? sameparty?
 
       #
+      # The scheme (`"Unset"`, `"NonSecure"`, `"Secure"`) that the cookie was set with.
+      #
       # @return [String]
       #
       def source_scheme
         @attributes["sourceScheme"]
       end
 
+      #
+      # The port that the cookie was set with, or `-1` if unknown.
       #
       # @return [Integer]
       #

@@ -9,6 +9,7 @@ require "ferrum/cookies"
 require "ferrum/dialog"
 require "ferrum/network"
 require "ferrum/accessibility"
+require "ferrum/interceptable"
 require "ferrum/downloads"
 require "ferrum/page/frames"
 require "ferrum/page/screencast"
@@ -18,6 +19,13 @@ require "ferrum/page/tracing"
 require "ferrum/page/stream"
 
 module Ferrum
+  #
+  # Represents a single browser tab (a CDP target of type `page`). Owns the
+  # tab's {Mouse}, {Keyboard}, {Network}, {Cookies}, {Headers}, {Downloads}
+  # and {Accessibility} helpers, as well as its frame tree (see the included
+  # {Page::Frames} module), and is the object that navigation, DOM search and
+  # JavaScript evaluation methods are ultimately delegated to from {Browser}.
+  #
   class Page
     GOTO_WAIT = ENV.fetch("FERRUM_GOTO_WAIT", 0.1).to_f
 
@@ -34,6 +42,7 @@ module Ferrum
     include Screenshot
     include Frames
     include Stream
+    include Interceptable
 
     attr_accessor :referrer
     attr_reader :context_id, :target_id, :event, :tracing
@@ -131,6 +140,14 @@ module Ferrum
     alias goto go_to
     alias go go_to
 
+    #
+    # Closes the page's target and its underlying client connection.
+    #
+    # @return [Boolean]
+    #
+    # @example
+    #   page.close # => true
+    #
     def close
       @headers.clear
       client.command("Target.closeTarget", async: true, targetId: @target_id)
@@ -139,6 +156,11 @@ module Ferrum
       true
     end
 
+    #
+    # Closes the underlying client connection only, without closing the
+    # target itself. Useful when you want to detach from a page without
+    # ending the browser tab it represents.
+    #
     def close_connection
       client&.close
     end
@@ -167,6 +189,26 @@ module Ferrum
       )
     end
 
+    #
+    # Resizes the window and emulates the viewport accordingly, optionally
+    # switching to fullscreen.
+    #
+    # @param [Integer, nil] width width value in pixels.
+    #
+    # @param [Integer, nil] height height value in pixels.
+    #
+    # @param [Boolean] fullscreen whether to put the window into fullscreen
+    #   mode. When `true`, `width` and `height` are read from
+    #   {#document_size} instead of the given arguments.
+    #
+    # @return [Hash{String => Object}]
+    #
+    # @example
+    #   page.resize(width: 1024, height: 768)
+    #
+    # @example
+    #   page.resize(fullscreen: true)
+    #
     def resize(width: nil, height: nil, fullscreen: false)
       if fullscreen
         width, height = document_size
@@ -321,6 +363,15 @@ module Ferrum
       history_navigate(delta: 1)
     end
 
+    #
+    # Blocks until the page reloads or the timeout is reached.
+    #
+    # @param [Numeric] timeout
+    #   Maximum time in seconds to wait for a reload event.
+    #
+    # @example
+    #   page.wait_for_reload
+    #
     def wait_for_reload(timeout = 1)
       @event.reset if @event.set?
       @event.wait(timeout)
@@ -360,74 +411,102 @@ module Ferrum
       true
     end
 
-    def command(method, wait: 0, slowmoable: false, **params)
+    #
+    # Sends a CDP command to the browser and optionally waits for network
+    # activity on the main frame to settle before returning.
+    #
+    # @param [String] method
+    #   The CDP method name, e.g. `"Page.navigate"`.
+    #
+    # @param [Numeric] wait
+    #   How many seconds to wait for a network event on the main frame after
+    #   the command is sent. `0` disables waiting.
+    #
+    # @param [Boolean] slowmoable
+    #   Whether to sleep for `Browser::Options#slowmo` seconds before sending
+    #   the command.
+    #
+    # @param [Numeric, nil] timeout
+    #   Overrides the timeout this command's response is bound by. Defaults
+    #   to the page's `timeout`. Callers with their own budget (e.g. `#pdf`/
+    #   `#screenshot`) pass it explicitly.
+    #
+    # @return [Hash{String => Object}]
+    #
+    # @example
+    #   page.command("Page.navigate", url: "https://github.com/")
+    #
+    def command(method, wait: 0, slowmoable: false, timeout: nil, **params)
       iteration = @event.reset if wait.positive?
       sleep(@options.slowmo) if slowmoable && @options.slowmo.positive?
-      result = client.command(method, **params)
+      result = client.command(method, timeout: timeout || self.timeout, **params)
 
       if wait.positive?
         # Wait a bit after command and check if iteration has
-        # changed which means there was some network event for
+        #  changed, which means there was some network event for
         # the main frame, and it started to load new content.
         @event.wait(wait)
         if iteration != @event.iteration
-          set = @event.wait(timeout)
+          set = @event.wait(self.timeout)
           raise TimeoutError unless set
         end
       end
       result
     end
 
+    # Subscribes to a CDP event, or to `:dialog`, `:request`, `:auth` (the
+    # latter two handled by {Interceptable}).
+    #
+    # @param [Symbol, String] name
+    #
+    # @return [Integer]
+    #   The subscription id, used to unsubscribe via {#off}.
     def on(name, &block)
-      case name
-      when :dialog
-        client.on("Page.javascriptDialogOpening") do |params, index, total|
-          dialog = Dialog.new(self, params)
-          block.call(dialog, index, total)
-        end
-      when :request
-        client.on("Fetch.requestPaused") do |params, index, total|
-          request = Network::InterceptedRequest.new(client, params)
-          exchange = network.select(request.network_id).last
-          exchange ||= network.build_exchange(request.network_id)
-          exchange.intercepted_request = request
-          block.call(request, index, total)
-        end
-      when :auth
-        client.on("Fetch.authRequired") do |params, index, total|
-          request = Network::AuthRequest.new(self, params)
-          block.call(request, index, total)
-        end
-      else
-        client.on(name, &block)
+      return super unless name == :dialog
+
+      client.on("Page.javascriptDialogOpening") do |params, index, total|
+        dialog = Dialog.new(self, params)
+        block.call(dialog, index, total)
       end
     end
 
+    # Unsubscribes a listener previously registered via {#on}.
+    #
+    # @param [Symbol, String] name
+    #
+    # @param [Integer] id
+    #   The subscription id returned by {#on}.
+    #
+    # @return [void]
     def off(name, id)
-      case name
-      when :dialog
-        client.off("Page.javascriptDialogOpening", id)
-      when :request
-        client.off("Fetch.requestPaused", id)
-      when :auth
-        client.off("Fetch.authRequired", id)
-      else
-        client.off(name, id)
-      end
+      return super unless name == :dialog
+
+      client.off("Page.javascriptDialogOpening", id)
     end
 
-    def subscribed?(event)
-      client.subscribed?(event)
-    end
-
+    # Whether the page is configured to use a proxy.
+    #
+    # @return [Boolean]
     def use_proxy?
       @proxy_host && @proxy_port
     end
 
+    # Whether the page is configured to use a proxy that requires authentication.
+    #
+    # @return [Boolean]
     def use_authorized_proxy?
       use_proxy? && @proxy_user && @proxy_password
     end
 
+    #
+    # Returns the node id of the document's root element.
+    #
+    # @param [Boolean] async
+    #   Whether to send the command without waiting for a response.
+    #
+    # @return [Integer, Boolean]
+    #   The root node id, or `true` when sent asynchronously.
+    #
     def document_node_id(async: false)
       return client.command("DOM.getDocument", async: true, depth: 0) if async
 

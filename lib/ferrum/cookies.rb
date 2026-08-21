@@ -4,6 +4,11 @@ require "yaml"
 require "ferrum/cookies/cookie"
 
 module Ferrum
+  #
+  # Manages a page's cookies via the CDP `Network` domain. Enumerable over
+  # the page's current {Cookies::Cookie}s, and provides methods to read,
+  # set, remove and clear them, as well as persist them to/from a YAML file.
+  #
   class Cookies
     include Enumerable
 

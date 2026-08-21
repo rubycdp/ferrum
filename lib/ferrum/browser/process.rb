@@ -8,54 +8,35 @@ require "forwardable"
 require "ferrum/browser/options/base"
 require "ferrum/browser/options/chrome"
 require "ferrum/browser/options/firefox"
+require "ferrum/browser/process/killer"
 require "ferrum/browser/command"
 require "ferrum/utils/elapsed_time"
 require "ferrum/utils/platform"
+require "ferrum/utils/thread"
 
 module Ferrum
   class Browser
+    #
+    # Spawns and manages the lifecycle of the browser OS process: builds the
+    # launch {Command}, starts it (optionally under {Xvfb} for headful mode),
+    # waits for the CDP WebSocket endpoint to become available, and handles
+    # stopping/restarting the process and cleaning up its user data directory.
+    #
     class Process
-      KILL_TIMEOUT = 2
-      WAIT_KILLED = 0.05
-
       extend Forwardable
 
       delegate path: :command
 
+      #
+      # Builds and starts a new browser process.
+      #
+      # @param [Array] args
+      #   Arguments forwarded to {#initialize}.
+      #
+      # @return [Process]
+      #
       def self.start(*args)
         new(*args).tap(&:start)
-      end
-
-      def self.process_killer(pid)
-        proc do
-          if Utils::Platform.windows?
-            # Process.kill is unreliable on Windows
-            ::Process.kill("KILL", pid) unless system("taskkill /f /t /pid #{pid} >NUL 2>NUL")
-          else
-            ::Process.kill("USR1", pid)
-            start = Utils::ElapsedTime.monotonic_time
-            while ::Process.wait(pid, ::Process::WNOHANG).nil?
-              sleep(WAIT_KILLED)
-              next unless Utils::ElapsedTime.timeout?(start, KILL_TIMEOUT)
-
-              ::Process.kill("KILL", pid)
-              ::Process.wait(pid)
-              break
-            end
-          end
-        rescue Errno::ESRCH, Errno::ECHILD
-          # nop
-        end
-      end
-
-      def self.directory_remover(path)
-        proc {
-          begin
-            FileUtils.remove_entry(path)
-          rescue StandardError
-            Errno::ENOENT
-          end
-        }
       end
 
       attr_reader :host, :port, :ws_url, :pid, :command,
@@ -64,6 +45,7 @@ module Ferrum
 
       def initialize(options)
         @pid = @xvfb = @user_data_dir = nil
+        @requested_host = options.host
 
         if options.ws_url || options.url
           # `:ws_url` option is higher priority than `:url`, parse versions
@@ -78,11 +60,16 @@ module Ferrum
         @env = Hash(options.env)
 
         tmpdir = Dir.mktmpdir("ferrum_user_data_dir_")
-        ObjectSpace.define_finalizer(self, self.class.directory_remover(tmpdir))
+        ObjectSpace.define_finalizer(self, Killer.directory_remover(tmpdir))
         @user_data_dir = tmpdir
         @command = Command.build(options, tmpdir)
       end
 
+      #
+      # Spawns the browser process and waits for it to become reachable over CDP.
+      #
+      # @return [void]
+      #
       def start
         # Don't do anything as browser is already running as external process.
         return if ws_url
@@ -95,12 +82,12 @@ module Ferrum
 
           if @command.xvfb?
             @xvfb = Xvfb.start(@command.options)
-            ObjectSpace.define_finalizer(self, self.class.process_killer(@xvfb.pid))
+            ObjectSpace.define_finalizer(self, Killer.process_killer(@xvfb.pid))
           end
 
           env = Hash(@xvfb&.to_env).merge(@env)
           @pid = ::Process.spawn(env, *@command.to_a, process_options)
-          ObjectSpace.define_finalizer(self, self.class.process_killer(@pid))
+          ObjectSpace.define_finalizer(self, Killer.process_killer(@pid))
 
           parse_ws_url(read_io, @process_timeout)
           parse_json_version(ws_url)
@@ -109,22 +96,47 @@ module Ferrum
         end
       end
 
-      def stop
-        if @pid
-          kill(@pid)
-          kill(@xvfb.pid) if @xvfb&.pid
-          @pid = nil
-        end
+      #
+      # Kills the browser process (and Xvfb, if running) and removes the user
+      # data directory.
+      #
+      # @param [Boolean] wait
+      #   Whether to block until the process is confirmed dead and its user
+      #   data directory removed (the default), or return immediately and
+      #   run that cleanup on a background thread instead. Killing a
+      #   stubborn process group can block for up to {Killer::KILL_TIMEOUT}
+      #   seconds, plus retries removing its directory, which matters when quitting
+      #   many browsers in a hot path. `wait: false` is not used by
+      #   {#restart}, which always waits so the old process is fully gone
+      #   before the new one starts.
+      #
+      # @return [Thread, nil]
+      #   The background cleanup thread when `wait: false`; the caller can
+      #   `#join` it if they need cleanup to have finished, e.g. before
+      #   process exit or before reusing a fixed port. `nil` when `wait:
+      #   true`.
+      #
+      def stop(wait: true)
+        return sync_stop if wait
 
-        remove_user_data_dir if @user_data_dir
-        ObjectSpace.undefine_finalizer(self)
+        async_stop
       end
 
+      #
+      # Stops and starts the browser process again.
+      #
+      # @return [void]
+      #
       def restart
         stop
         start
       end
 
+      #
+      # Custom inspection that omits noisy internal command details.
+      #
+      # @return [String]
+      #
       def inspect
         "#<#{self.class} " \
           "@user_data_dir=#{@user_data_dir.inspect} " \
@@ -138,12 +150,40 @@ module Ferrum
 
       private
 
-      def kill(pid)
-        self.class.process_killer(pid).call
+      def sync_stop
+        if @pid
+          Killer.kill(@pid)
+          Killer.kill(@xvfb.pid) if @xvfb&.pid
+          @pid = nil
+        end
+
+        remove_user_data_dir if @user_data_dir
+        ObjectSpace.undefine_finalizer(self)
+        nil
+      end
+
+      #
+      # Snapshots what needs killing/removing, clears instance state so the
+      # object looks stopped right away, and does the actual work on a
+      # background thread. The finalizer is left in place as a backup until
+      # that thread finishes, in case the process exits before it does.
+      #
+      def async_stop
+        pid = @pid
+        xvfb_pid = @xvfb&.pid
+        user_data_dir = @user_data_dir
+        @pid = @user_data_dir = nil
+
+        Utils::Thread.spawn(abort_on_exception: false) do
+          Killer.kill(pid) if pid
+          Killer.kill(xvfb_pid) if xvfb_pid
+          Killer.remove_directory(user_data_dir) if user_data_dir
+          ObjectSpace.undefine_finalizer(self)
+        end
       end
 
       def remove_user_data_dir
-        self.class.directory_remover(@user_data_dir).call
+        Killer.remove_directory(@user_data_dir)
         @user_data_dir = nil
       end
 
@@ -159,7 +199,7 @@ module Ferrum
             read_io.wait_readable(max_time - now)
           else
             if output.match(regexp)
-              self.ws_url = output.match(regexp)[1].strip
+              self.ws_url = rewrite_host(output.match(regexp)[1].strip)
               break
             end
           end
@@ -175,6 +215,12 @@ module Ferrum
         @ws_url = Addressable::URI.parse(url)
         @host = @ws_url.host
         @port = @ws_url.port
+      end
+
+      def rewrite_host(url)
+        uri = Addressable::URI.parse(url)
+        uri.host = @requested_host
+        uri.to_s
       end
 
       def close_io(*ios)

@@ -1,0 +1,27 @@
+module Ferrum
+  class Browser
+    class Process
+      module Killer
+        KILL_TIMEOUT: ::Integer
+
+        WAIT_KILLED: ::Float
+
+        REMOVE_DIR_RETRIES: ::Integer
+
+        REMOVE_DIR_RETRY_DELAY: ::Float
+
+        def self.kill: (::Integer pid) -> void
+
+        def self.process_killer: (::Integer pid) -> Proc
+
+        def self.send_signal: (::Integer pid, ::String name) -> void
+
+        def self.process_group_alive?: (::Integer pid) -> bool
+
+        def self.remove_directory: (::String path, ?retries: ::Integer, ?delay: ::Float) -> void
+
+        def self.directory_remover: (::String path) -> Proc
+      end
+    end
+  end
+end

@@ -15,7 +15,9 @@ Ferrum::Browser.new(options)
     * `:incognito` (Boolean) - Create an incognito profile for the browser startup window, `true` by default.
     * `:dockerize` (Boolean) - Provide CLI flags to the browser to run it in a container, `false` by default.
     * `:xvfb` (Boolean) - Run browser in a virtual framebuffer, `false` by default.
-    * `:flatten` (Boolean) - Use one websocket connection to the browser and all the pages in flatten mode.
+    * `:flatten` (Boolean) - Use one websocket connection to the browser and all the pages in flatten mode,
+      `true` by default. When set to `false`, each page/target opens its own dedicated websocket connection instead
+      of sharing the browser's connection.
     * `:window_size` (Array) - The dimensions of the browser window in which to
       test, expressed as a 2-element array, e.g. [1024, 768]. Default: [1024, 768]
     * `:extensions` (Array[String | Hash]) - An array of paths to files or JS
@@ -29,7 +31,7 @@ Ferrum::Browser.new(options)
       communicating with browser. Default is 5.
     * `:js_errors` (Boolean) - When true, JavaScript errors get re-raised in Ruby.
     * `:pending_connection_errors` (Boolean) - Raise `PendingConnectionsError` when main frame is still waiting
-      for slow responses and timeout is reached. Default is true.
+      for slow responses and timeout is reached. Default is false.
     * `:browser_name` (Symbol) - `:chrome` by default, only experimental support
       for `:firefox` for now.
     * `:browser_path` (String) - Path to Chrome binary, you can also set ENV
@@ -42,7 +44,9 @@ Ferrum::Browser.new(options)
       options you put in `:browser_options` will be passed to the browser,
       except required ones of course.
     * `:port` (Integer) - Remote debugging port for headless Chrome.
-    * `:host` (String) - Remote debugging address for headless Chrome.
+    * `:host` (String) - Host we communicate with when spawning browser, `127.0.0.1` by default.
+      Chrome always listens on `127.0.0.1` regardless of this option, so the host must resolve to `127.0.0.1` for
+      Ferrum to actually be able to connect.
     * `:url` (String) - URL for a running instance of Chrome. If this is set, a
       browser process will not be spawned.
     * `:ws_url` (String) - Websocket url for a running instance of Chrome. If this is set, a

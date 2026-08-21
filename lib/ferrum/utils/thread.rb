@@ -2,9 +2,21 @@
 
 module Ferrum
   module Utils
+    #
+    # A helper for spawning threads with consistent exception-handling
+    # behavior (abort-on-exception and report-on-exception).
+    #
     module Thread
       module_function
 
+      #
+      # Spawns a new thread running the given block.
+      #
+      # @param [Boolean] abort_on_exception
+      #   Whether the thread aborts the process if it raises an unhandled exception.
+      #
+      # @return [Thread]
+      #
       def spawn(abort_on_exception: true)
         ::Thread.new(abort_on_exception) do |whether_abort_on_exception|
           ::Thread.current.abort_on_exception = whether_abort_on_exception

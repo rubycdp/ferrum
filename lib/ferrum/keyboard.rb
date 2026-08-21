@@ -3,6 +3,12 @@
 require "json"
 
 module Ferrum
+  #
+  # Simulates keyboard input for a page via the CDP `Input.dispatchKeyEvent`
+  # command. Provides low-level `down`/`up` for individual keys as well as
+  # `type` for typing a sequence of characters/keys, translating key names
+  # and modifier chords into the CDP key event parameters Chrome expects.
+  #
   class Keyboard
     KEYS = JSON.parse(File.read(File.expand_path("keyboard.json", __dir__)))
     MODIFIERS = { "alt" => 1, "ctrl" => 2, "control" => 2,

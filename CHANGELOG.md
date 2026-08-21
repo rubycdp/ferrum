@@ -1,30 +1,85 @@
-## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.17.2...main) ##
+## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.18.0...main) ##
 
 ### Added
-- `Ferrum::Frame#loader_id` provides a loader id when frame navigates [#583]
+- `Ferrum::Browser#quit`/`Ferrum::Browser::Process#stop` accept `wait: false` to return immediately and run process
+  killing and user-data-directory cleanup on a background thread instead of blocking; the call returns the `Thread`
+  so callers can `#join` it if they need cleanup to have finished, e.g. before process exit or before reusing a
+  fixed port. Default (`wait: true`) keeps the previous synchronous behavior; `#restart` always waits.
+
+### Changed
+- An `IO.close` failure is now propagated after a PDF or tracing stream has otherwise been read successfully.
+
+### Fixed
+- `Ferrum::Contexts#connect_worker`/`#detach_unless_manually_attached` only rescued `Ferrum::BrowserError`, not `Ferrum::TimeoutError`.
+  A worker's attach or service-worker detach that timed out (e.g. on a loaded CI runner) would escape unrescued
+  into `Client::Subscriber`'s dispatch thread and kill it, silently breaking further `Target.*` event delivery
+  for the rest of that browser's life, raising `Ferrum::NoSuchTargetError`
+- `Ferrum::Browser::Process` killed the browser's leader pid alone with `SIGUSR1`, a signal Chromium has no shutdown
+  handler for; it now sends `SIGTERM`, escalating to `SIGKILL`, to the whole process group, so renderer/GPU/zygote
+  child processes are no longer orphaned after `#quit`. A leader process that exited promptly on `TERM` used to
+  short-circuit escalation to `KILL` for the rest of its process group, so a child that ignored `TERM`
+  (e.g. a stuck renderer) was left running forever; termination now keeps polling the group until it's actually empty
+  or the timeout fires.
+- Removing the user data directory after `#quit` silently gave up on any error, potentially leaking the temp
+  directory forever with no indication; it now retries with exponential backoff on transient errors
+  (`Errno::ENOTEMPTY`/`EBUSY`/`EACCES`/`EPERM`, since Chrome can briefly hold file locks right after being killed)
+  and warns if it still can't be removed.
+- `:host` option is respected again when Ferrum spawns Chrome itself. Chrome dropped support for
+  `--remote-debugging-address` and always binds/logs `127.0.0.1`, so Ferrum now substitutes the requested
+  `:host` back into the address it uses to talk to Chrome (e.g. `Ferrum::Browser.new(host: "ferrum.localhost")`),
+  instead of always hitting `127.0.0.1` [#552]
+- CDP streams opened for `Ferrum::Browser#pdf` and `Ferrum::Page::Tracing#record` are now closed with `IO.close` after being read.
+
+
+### Removed
+- The now no-op `--remote-debugging-address` Chrome flag, which Chrome has stopped honoring [#552]
+
+
+## [0.18.0](https://github.com/rubycdp/ferrum/compare/v0.17.2...v0.18.0) (August 20, 2026) ##
+
+### Added
+- `Ferrum::Browser` option `:protocol_timeout` bounds individual internal CDP bookkeeping calls, e.g.
+  `Target.createTarget`, `Target.attachToTarget`. It's a separate setting from `:timeout`: its default (5s) happens
+  to match `:timeout`'s own default, but passing `timeout:` to `Browser.new` does not change it -- set
+  `:protocol_timeout` (or the `FERRUM_PROTOCOL_TIMEOUT` env var) explicitly for a different value.
+- `Ferrum::Page#pdf`/`#screenshot` accept a `timeout:` argument (default 60s) for the CDP call itself. Generating a
+  full-page screenshot or a large PDF is a known slow outlier among CDP commands.
+- `Ferrum::Frame#loader_id` provides a loader id when the frame navigates [#583]
 - `Ferrum::Frame#lifecycle_events` provides a list of frame's events like init, networkIdle, firstPaint, etc. [#583]
 - `Ferrum::Frame#idle?` whether frame was loaded [#583]
 - `page.accessibility` API and `Node#axnode` for reading the CDP accessibility tree
+- `--no-crashpad` is now included in the default Chrome flags, fully disabling the crashpad handler process [#610]
+- Support for dedicated/shared Workers and Service Workers [#391], [#388]:
+  - `Ferrum::Worker` -- a lightweight connection to a Worker's single execution context, with its own `#network`,
+    `#evaluate`/`#evaluate_async`/`#execute`, and `#on(:request)`/`#on(:auth)` for interception.
+  - Dedicated and shared workers spawned by a page are discovered and connected to automatically and are reachable
+    through `Browser#workers`/ `Context#workers`.
+  - Service workers are discovered too, through `Browser#service_workers`/`Context#service_workers`, but aren't
+    connected to by default. Attaching to one keeps it alive forever, so that's opt-in via `Context#attach_target`,
+    then `target.worker`.
+  - `Ferrum::Target#worker?`, `#shared_worker?`, `#service_worker?`, and `#parent_id` for telling targets apart.
 
 ### Fixed
-- CDP streams opened for `Ferrum::Browser#pdf` and `Ferrum::Page::Tracing#record` are now closed with `IO.close` after being read.
+- `Ferrum::Client` command id generation and `Ferrum::Client::WebSocket`'s driver interactions were not thread-safe, allowing concurrent commands to collide on the same id or corrupt the frame stream; both are now serialized under a mutex [#602]
+- `Ferrum::Network` built duplicate `Exchange` objects for the same request when `Network.requestWillBeSent` (regular event thread) and `Fetch.requestPaused` (priority interruption thread) raced to look up/create the exchange for a request id; the find-or-build is now atomic, fixing intermittently `nil` `Exchange#request` on blocked/intercepted requests
 - `Ferrum::Node#type` / `Ferrum::Keyboard` now trigger the select-all editing shortcut (`Ctrl`/`Cmd`+`A`) by naming the CDP `commands` field, so selecting and replacing text in inputs and contenteditables works.
 - `Ferrum::Network::InterceptedRequest#match?` no longer coerces string blacklist/whitelist patterns containing regexp metacharacters
   (e.g. `?`, `.`) into regexps; string patterns are now compared literally instead. [#405], [#604]
 - `Ferrum::Network::AuthRequest#match?` and `Ferrum::Dialog#match?` received the same fix as [#604] above for consistency. String patterns
   now compare literally: exact-match for requests/auth requests, substring-match for dialog messages. [#405]
-
-### Changed
-- An `IO.close` failure is now propagated after a PDF or tracing stream has otherwise been read successfully.
-- `Ferrum::PendingConnectionsError` and `Ferrum::TimeoutError` were swallowed even though happening when traffic iterator results in empty array. [#583]
-- `webrick` is no longer a runtime dependency. It is only required by `Ferrum::Proxy`, so add `gem "webrick"` to your Gemfile if you use it.
-
-### Fixed
+- `Target.targetCreated` handler for an iframe target reusing an already-connected target raised `NoMethodError` on `Ferrum::Browser#new(flatten: false)`, since it read `session_id` off the target's underlying `Ferrum::Client`, which doesn't expose it in that mode; it now reads `Target#session_id` directly. [#539]
+- `Ferrum::Node#select_file` now uses the stable `backendNodeId` instead. [#568], [#611]
 - Full-page screenshots no longer resize the window, preventing focus steal on macOS [#580]
-- DOM.enable is now has `includeWhitespace: "all"` to keep track of new line nodes which previously were resolved to 0, and errored with NodeNotFoundError [#596]
-- `DOM.requestNode` call is moved to the node class and being done lazily, this reduces number of intermediate node ids sent by backend to frontend [#596]
+- DOM.enable is now has `includeWhitespace: "all"` to keep track of new line nodes, which previously were resolved to 0, and errored with NodeNotFoundError [#596]
+- `DOM.requestNode` call is moved to the node class and being done lazily, this reduces the number of intermediate node ids sent by backend to frontend [#596]
 - Fix `context` can be nilable in ensure Browser#create_page [#582]
 - `Ferrum::Page#idling?` no longer blocks on `loading="lazy"` iframes that Chrome never starts loading [#583]
+
+### Changed
+- `Ferrum::PendingConnectionsError` and `Ferrum::TimeoutError` were swallowed even though it happens when a traffic iterator results in an empty array. [#583]
+- `webrick` is no longer a runtime dependency. It is only required by `Ferrum::Proxy`, so add `gem "webrick"` to your Gemfile if you use it.
+- Logger output for `Runtime.consoleAPICalled` now includes the console API type and stack trace call frames, not just the argument values [#605]
+- `Ferrum::Browser` option `:pending_connection_errors` is set to false by default
 
 ### Removed
 - `webrick` runtime dependency dropped from the gemspec. `Ferrum::Proxy` still needs it, so add `gem "webrick"` to your Gemfile if you use the proxy server.

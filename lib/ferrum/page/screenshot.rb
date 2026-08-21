@@ -4,12 +4,17 @@ require "ferrum/rgba"
 
 module Ferrum
   class Page
+    #
+    # Captures screenshots, PDFs, and MHTML snapshots of the page, and
+    # exposes viewport/document size helpers used to compute capture areas.
+    #
     module Screenshot
       FULL_WARNING = "Ignoring :selector or :area in #screenshot since full: true was given at %s"
       AREA_WARNING = "Ignoring :area in #screenshot since selector: was given at %s"
 
       DEFAULT_SCREENSHOT_FORMAT = "png"
       SUPPORTED_SCREENSHOT_FORMAT = %w[png jpeg jpg webp].freeze
+      DEFAULT_RENDER_TIMEOUT = 60
 
       DEFAULT_PDF_OPTIONS = {
         landscape: false,
@@ -65,6 +70,11 @@ module Ferrum
       # @option opts [Ferrum::RGBA] :background_color
       #   Sets the background color.
       #
+      # @param [Numeric] timeout
+      #   How long to wait for the screenshot to be captured. Defaults to
+      #   {DEFAULT_RENDER_TIMEOUT} since a full-page capture is a known slow
+      #   outlier among CDP commands.
+      #
       # @example
       #   page.go_to("https://google.com/")
       #
@@ -83,10 +93,10 @@ module Ferrum
       # @example Save with specific background color:
       #   page.screenshot(background_color: Ferrum::RGBA.new(0, 0, 0, 0.0))
       #
-      def screenshot(**opts)
+      def screenshot(timeout: DEFAULT_RENDER_TIMEOUT, **opts)
         path, encoding = common_options(**opts)
         options = screenshot_options(path, **opts)
-        data = capture_screenshot(options, opts[:full], opts[:background_color])
+        data = capture_screenshot(options, opts[:full], opts[:background_color], timeout)
         return data if encoding == :base64
 
         bin = Base64.decode64(data)
@@ -124,15 +134,20 @@ module Ferrum
       #   See other [native options](https://chromedevtools.github.io/devtools-protocol/tot/Page#method-printToPDF) you
       #   can pass.
       #
+      # @param [Numeric] timeout
+      #   How long to wait for the PDF to be generated. Defaults to
+      #   {DEFAULT_RENDER_TIMEOUT} since large documents are a known slow
+      #   outlier among CDP commands.
+      #
       # @example
       #   page.go_to("https://google.com/")
       #   # Save to disk as a PDF
       #   page.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => true
       #
-      def pdf(**opts)
+      def pdf(timeout: DEFAULT_RENDER_TIMEOUT, **opts)
         path, encoding = common_options(**opts)
         options = pdf_options(**opts).merge(transferMode: "ReturnAsStream")
-        handle = command("Page.printToPDF", **options).fetch("stream")
+        handle = command("Page.printToPDF", timeout: timeout, **options).fetch("stream")
         stream_to(path: path, encoding: encoding, handle: handle)
       end
 
@@ -153,18 +168,46 @@ module Ferrum
         save_file(path, data)
       end
 
+      #
+      # Current viewport size.
+      #
+      # @return [(Integer, Integer)]
+      #   The width, height of the viewport.
+      #
+      # @example
+      #   page.viewport_size # => [1024, 768]
+      #
       def viewport_size
         evaluate <<~JS
           [window.innerWidth, window.innerHeight]
         JS
       end
 
+      #
+      # The ratio of the resolution in physical pixels to the resolution in
+      # CSS pixels for the current display device.
+      #
+      # @return [Float]
+      #
+      # @example
+      #   page.device_pixel_ratio # => 1.0
+      #
       def device_pixel_ratio
         evaluate <<~JS
           window.devicePixelRatio
         JS
       end
 
+      #
+      # Full size of the document, including the part that is not visible in
+      # the viewport.
+      #
+      # @return [(Integer, Integer)]
+      #   The scroll width, scroll height of the document.
+      #
+      # @example
+      #   page.document_size # => [1024, 4000]
+      #
       def document_size
         evaluate <<~JS
           [document.documentElement.scrollWidth,
@@ -281,11 +324,11 @@ module Ferrum
         option.to_s.gsub(%r{(?:_|(/))([a-z\d]*)}) { "#{Regexp.last_match(1)}#{Regexp.last_match(2).capitalize}" }.to_sym
       end
 
-      def capture_screenshot(options, full, background_color)
+      def capture_screenshot(options, full, background_color, timeout)
         options = options.merge(captureBeyondViewport: true) if full
 
         with_background_color(background_color) do
-          command("Page.captureScreenshot", **options)
+          command("Page.captureScreenshot", timeout: timeout, **options)
         end.fetch("data")
       end
 

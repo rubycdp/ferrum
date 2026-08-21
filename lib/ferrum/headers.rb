@@ -1,6 +1,12 @@
 # frozen_string_literal: true
 
 module Ferrum
+  #
+  # Manages the extra HTTP headers a page sends with its requests, via the
+  # CDP `Network.setExtraHTTPHeaders` command. Setting a `User-Agent` or
+  # `Accept-Language` header also updates the corresponding navigator
+  # override so JavaScript sees consistent values.
+  #
   class Headers
     def initialize(page)
       @page = page

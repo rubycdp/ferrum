@@ -4,6 +4,12 @@ require "ferrum/frame/dom"
 require "ferrum/frame/runtime"
 
 module Ferrum
+  #
+  # Represents a frame (the main document or a nested `iframe`) within a
+  # {Page}. Each frame has its own execution context for JavaScript and its
+  # own lifecycle state, tracked via {#state}. DOM search and JS evaluation
+  # methods are provided by the included {DOM} and {Runtime} modules.
+  #
   class Frame
     include DOM
     include Runtime
@@ -58,6 +64,15 @@ module Ferrum
       @execution_id = Concurrent::MVar.new
     end
 
+    # Sets the frame's state, validating it's one of {STATE_VALUES}.
+    #
+    # @param [Symbol] value
+    #   One of `:started_loading`, `:navigated`, `:stopped_loading`,
+    #   `:canceled`.
+    #
+    # @return [Symbol]
+    #
+    # @raise [ArgumentError]
     def state=(value)
       raise ArgumentError unless STATE_VALUES.include?(value)
 
@@ -190,6 +205,15 @@ module Ferrum
       value
     end
 
+    #
+    # Sets the execution context id, or clears it if +nil+ is given (e.g.
+    # when the context is torn down mid-navigation and hasn't been
+    # replaced yet).
+    #
+    # @param [Integer, nil] value
+    #
+    # @return [Integer, nil]
+    #
     def execution_id=(value)
       if value.nil?
         @execution_id.try_take!
@@ -198,6 +222,11 @@ module Ferrum
       end
     end
 
+    #
+    # Debug representation of the frame, including its internal state.
+    #
+    # @return [String]
+    #
     def inspect
       "#<#{self.class} " \
         "@id=#{@id.inspect} " \

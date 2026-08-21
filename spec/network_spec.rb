@@ -30,6 +30,35 @@ describe Ferrum::Network do
       browser.go_to("/with_js")
       expect(browser.network.traffic.length).to eq(4)
     end
+
+    it "keeps track of service workers" do
+      page.go_to("/service_worker")
+
+      # Workers are discovered and connected to asynchronously, so give it
+      # a moment to show up.
+      start = Ferrum::Utils::ElapsedTime.monotonic_time
+      worker_target = nil
+      until worker_target
+        worker_target = browser.targets.values.find { |t| t.worker? && t.connected? }
+        raise Ferrum::TimeoutError if Ferrum::Utils::ElapsedTime.timeout?(start, browser.timeout)
+
+        sleep 0.05
+      end
+
+      worker_target.worker.network.wait_for_idle
+
+      traffic = browser.targets.values.flat_map do |t|
+        next [] unless t.connected?
+
+        (t.worker? ? t.worker : t.page).network.traffic
+      end.select(&:request)
+      urls = traffic.map { |e| e.request.url }.reject { |u| u.end_with?("/favicon.ico") }
+
+      expect(urls.size).to eq(3)
+      expect(urls.grep(%r{/service_worker$}).size).to eq(1)
+      expect(urls.grep(%r{/one.png$}).size).to eq(1)
+      expect(urls.grep(/^blob:/).size).to eq(1)
+    end
   end
 
   describe "#wait_for_idle" do

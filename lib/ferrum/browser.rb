@@ -3,6 +3,7 @@
 require "base64"
 require "forwardable"
 require "ferrum/page"
+require "ferrum/worker"
 require "ferrum/client"
 require "ferrum/contexts"
 require "ferrum/browser/xvfb"
@@ -12,11 +13,21 @@ require "ferrum/browser/binary"
 require "ferrum/browser/version_info"
 
 module Ferrum
+  #
+  # The main entry point of the library. Instantiating it spawns (or connects
+  # to) a browser process and opens a CDP connection to it, exposing a single
+  # default {Page} that most of the top-level methods (`go_to`, `at_css`,
+  # `screenshot`, etc.) are delegated to for convenience.
+  #
+  # @note A `Browser` can host multiple {Context}s (like incognito profiles)
+  #   and multiple {Page}s within each of them, reachable through {#contexts}
+  #   and {#create_page}.
+  #
   class Browser
     extend Forwardable
 
     delegate %i[default_context] => :contexts
-    delegate %i[targets create_target page pages windows] => :default_context
+    delegate %i[targets create_target page pages windows workers service_workers attach_target] => :default_context
     delegate %i[go_to goto go back forward refresh reload stop wait_for_reload
                 at_css at_xpath css xpath current_url current_title url title
                 body doctype content=
@@ -33,7 +44,8 @@ module Ferrum
 
     attr_reader :client, :process, :contexts, :options
 
-    delegate %i[timeout timeout= base_url base_url= default_user_agent default_user_agent= extensions] => :options
+    delegate %i[timeout timeout= protocol_timeout protocol_timeout=
+                base_url base_url= default_user_agent default_user_agent= extensions] => :options
     delegate %i[command] => :client
 
     #
@@ -69,13 +81,18 @@ module Ferrum
     #   When present, debug output is written to this object.
     #
     # @option options [Integer, Float] :slowmo
-    #   Set a delay in seconds to wait before sending command.
-    #   Useful companion of headless option, so that you have time to see
+    #   Set a delay in seconds to wait before sending a command.
+    #   Useful companion of a headless option, so that you have time to see
     #   changes.
     #
     # @option options [Numeric] :timeout (5)
-    #   The number of seconds we'll wait for a response when communicating with
-    #   browser.
+    #   The number of seconds we'll wait for a response when communicating
+    #   with the browser: navigations, JS evaluation, DOM queries, dispatching input, etc.
+    #
+    # @option options [Numeric] :protocol_timeout (5)
+    #   The number of seconds we'll wait for an individual internal CDP
+    #   bookkeeping call to respond, e.g. `Target.createTarget`,
+    #   `Target.attachToTarget`. These normally resolve in milliseconds.
     #
     # @option options [Boolean] :js_errors
     #   When true, JavaScript errors get re-raised in Ruby.
@@ -210,19 +227,34 @@ module Ferrum
       contexts.reset
     end
 
+    #
+    # Restarts the browser process, keeping the same options.
+    #
     def restart
       quit
       start
     end
 
-    def quit
+    #
+    # Terminates the browser process and closes the client connection.
+    #
+    # @param [Boolean] wait
+    #   Whether to block until the process is confirmed dead and its user
+    #   data directory removed (the default), or return immediately and run
+    #   that cleanup on a background thread instead. See {Process#stop}.
+    #
+    # @return [Thread, nil]
+    #   The background cleanup thread when `wait: false`, `nil` otherwise.
+    #
+    def quit(wait: true)
       return unless @client
 
       contexts.close_connections
 
       @client.close
-      @process.stop
+      thread = @process.stop(wait: wait)
       @client = @process = @contexts = nil
+      thread
     end
 
     #

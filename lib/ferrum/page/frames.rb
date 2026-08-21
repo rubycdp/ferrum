@@ -4,6 +4,12 @@ require "ferrum/frame"
 
 module Ferrum
   class Page
+    #
+    # Tracks the page's frame tree and keeps it in sync with the browser by
+    # subscribing to the relevant `Page.*`, `Network.*`, and `Runtime.*` CDP
+    # events. Exposes lookups over the tracked {Frame} objects and reports
+    # when the tree has settled into an idle state.
+    #
     module Frames
       # The page's main frame, the top of the tree and the parent of all frames.
       #

@@ -215,6 +215,7 @@ describe Ferrum::Page::Screenshot do
         allow(browser.page).to receive(:command).and_call_original
         expect(browser.page).to receive(:command)
           .with("Page.captureScreenshot",
+                timeout: Ferrum::Page::Screenshot::DEFAULT_RENDER_TIMEOUT,
                 format: "png", clip: { x: 0, y: 0, width: 1280, height: 1024, scale: 1.0 },
                 captureBeyondViewport: true)
           .and_raise(StandardError)

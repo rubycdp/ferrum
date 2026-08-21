@@ -19,6 +19,12 @@
 # details (DOM.describeNode).
 module Ferrum
   class Frame
+    #
+    # Evaluates and executes JavaScript to query and manipulate a frame's
+    # DOM: reading the URL, title, doctype, and HTML, finding nodes by
+    # XPath or CSS selector, and injecting `<script>`, `<style>`, and
+    # `<link>` tags.
+    #
     module DOM
       SCRIPT_SRC_TAG = <<~JS
         const script = document.createElement("script");
@@ -77,6 +83,17 @@ module Ferrum
         evaluate("window.top.document.title")
       end
 
+      #
+      # Returns current document's doctype declaration.
+      #
+      # @return [String, nil]
+      #   The serialized `<!DOCTYPE ...>` declaration, or +nil+ if the
+      #   document has none.
+      #
+      # @example
+      #   browser.go_to("https://example.com")
+      #   browser.doctype # => "<!DOCTYPE html>"
+      #
       def doctype
         evaluate("document.doctype && new XMLSerializer().serializeToString(document.doctype)")
       end

@@ -1,6 +1,11 @@
 # frozen_string_literal: true
 
 module Ferrum
+  #
+  # Represents an RGBA color, validating that the red/green/blue components
+  # are integers between 0 and 255 and that alpha is a float between 0.0 and
+  # 1.0. Used e.g. as the background color option for screenshots.
+  #
   class RGBA
     def initialize(red, green, blue, alpha)
       self.red = red
@@ -11,6 +16,11 @@ module Ferrum
       validate
     end
 
+    #
+    # Converts the color to a Hash.
+    #
+    # @return [Hash{Symbol => Integer, Float}]
+    #
     def to_h
       { r: red, g: green, b: blue, a: alpha }
     end

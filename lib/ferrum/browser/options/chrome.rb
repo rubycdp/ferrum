@@ -3,6 +3,12 @@
 module Ferrum
   class Browser
     class Options
+      #
+      # Chrome/Chromium-specific default flags and binary locations. Provides
+      # the CLI flags required to drive Chrome over CDP as well as the
+      # hardened defaults (disabling background networking, extensions,
+      # infobars, etc.) applied unless the user opts out.
+      #
       class Chrome < Base
         DEFAULT_OPTIONS = {
           "allow-pre-commit-input" => nil,
@@ -55,6 +61,7 @@ module Ferrum
           "metrics-recording-only" => nil,
           "mute-audio" => nil,
           "no-crash-upload" => nil,
+          "no-crashpad" => nil,
           "no-default-browser-check" => nil,
           "no-first-run" => nil,
           "no-startup-window" => nil,
@@ -80,9 +87,23 @@ module Ferrum
           linux: LINUX_BIN_PATH
         }.freeze
 
+        #
+        # Merges CLI flags required for Chrome to work with CDP.
+        #
+        # @param [Hash] flags
+        #   Flags to merge required ones into.
+        #
+        # @param [Ferrum::Browser::Options] options
+        #   Browser options.
+        #
+        # @param [String] user_data_dir
+        #   Path to the browser's user data directory.
+        #
+        # @return [Hash]
+        #   Merged flags.
+        #
         def merge_required(flags, options, user_data_dir)
           flags = flags.merge("remote-debugging-port" => options.port,
-                              "remote-debugging-address" => options.host,
                               "window-size" => options.window_size&.join(","),
                               "user-data-dir" => user_data_dir)
 
@@ -94,6 +115,19 @@ module Ferrum
           flags
         end
 
+        #
+        # Merges Chrome's default flags with the given ones, unless the browser
+        # is configured to ignore default browser options.
+        #
+        # @param [Hash] flags
+        #   Flags that take precedence over the defaults.
+        #
+        # @param [Ferrum::Browser::Options] options
+        #   Browser options.
+        #
+        # @return [Hash]
+        #   Merged flags.
+        #
         def merge_default(flags, options)
           defaults = options.headless == false ? except("headless", "disable-gpu") : DEFAULT_OPTIONS.dup
           defaults.delete("no-startup-window") if options.incognito == false

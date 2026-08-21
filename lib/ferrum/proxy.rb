@@ -11,7 +11,24 @@ rescue LoadError
 end
 
 module Ferrum
+  #
+  # A local WEBrick-based proxy server, useful for injecting HTTP Basic-Auth
+  # credentials into requests or forwarding to (and rotating between)
+  # upstream proxies, cases the browser's own proxy support can't handle
+  # directly.
+  #
+  # @note Requires the `webrick` gem, which isn't a hard dependency of
+  #   Ferrum; add it to your Gemfile to use this class.
+  #
   class Proxy
+    #
+    # Builds a new proxy server and starts it.
+    #
+    # @param [Hash] args
+    #   Keyword arguments forwarded to {#initialize}.
+    #
+    # @return [Proxy]
+    #
     def self.start(**args)
       new(**args).tap(&:start)
     end
@@ -26,6 +43,11 @@ module Ferrum
       @password = password
     end
 
+    #
+    # Starts the WEBrick proxy server.
+    #
+    # @return [void]
+    #
     def start
       options = {
         ProxyURI: nil, ServerType: Thread,
@@ -51,12 +73,34 @@ module Ferrum
       @port = @server.config[:Port]
     end
 
+    #
+    # Changes the upstream proxy the server forwards connections to.
+    #
+    # @param [String] host
+    #   Address of the upstream proxy.
+    #
+    # @param [Integer] port
+    #   Port of the upstream proxy.
+    #
+    # @param [String, nil] user
+    #   Username for upstream proxy authentication.
+    #
+    # @param [String, nil] password
+    #   Password for upstream proxy authentication.
+    #
+    # @return [void]
+    #
     def rotate(host:, port:, user: nil, password: nil)
       credentials = "#{user}:#{password}@" if user && password
       proxy_uri = "schema://#{credentials}#{host}:#{port}"
       @server.config[:ProxyURI] = URI.parse(proxy_uri)
     end
 
+    #
+    # Stops the proxy server and removes the htpasswd file.
+    #
+    # @return [void]
+    #
     def stop
       @file&.close(true)
       @server.shutdown

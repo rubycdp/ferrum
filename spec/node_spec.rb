@@ -861,6 +861,17 @@ describe Ferrum::Node do
     end
   end
 
+  describe "#select_file" do
+    it "selects a file" do
+      browser.go_to("/form")
+      input = browser.at_css("#form_image")
+
+      input.select_file(File.expand_path(__FILE__))
+
+      expect(input.value).to eq("C:\\fakepath\\node_spec.rb")
+    end
+  end
+
   describe "#drag_to", skip: true do
     before { browser.go_to("/drag") }
 

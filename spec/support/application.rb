@@ -189,6 +189,12 @@ module Ferrum
       render_view :with_ajax_connection_refused, closed_port: port
     end
 
+    get "/sw.js" do
+      content_type :js
+      "self.addEventListener('install', () => self.skipWaiting());" \
+        "self.addEventListener('activate', () => self.clients.claim());"
+    end
+
     get "/:view" do |view|
       render_view view
     end

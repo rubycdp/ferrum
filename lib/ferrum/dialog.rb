@@ -1,6 +1,12 @@
 # frozen_string_literal: true
 
 module Ferrum
+  #
+  # Represents a JavaScript dialog (`alert`, `confirm`, `prompt` or
+  # `beforeunload`) shown by the page. Instances are yielded to blocks
+  # registered with `page.on(:dialog)`, and can be accepted (optionally with
+  # a prompt's text) or dismissed.
+  #
   class Dialog
     attr_reader :message, :default_prompt
 
@@ -51,6 +57,14 @@ module Ferrum
       @page.command("Page.handleJavaScriptDialog", slowmoable: true, accept: false)
     end
 
+    #
+    # Whether the dialog's message matches the given pattern.
+    #
+    # @param [Regexp, String] pattern
+    #   A regexp matched against the message, or a string checked for inclusion in it.
+    #
+    # @return [Boolean]
+    #
     def match?(pattern)
       return message.match?(pattern) if pattern.is_a?(Regexp)
 

@@ -81,12 +81,16 @@ module Ferrum
       build(@page.command("Accessibility.getFullAXTree", **params)["nodes"]).first
     end
 
+    # Enables the Accessibility domain, activating live AX tree change events.
+    #
     # @return [self]
     def enable
       @page.command("Accessibility.enable")
       self
     end
 
+    # Disables the Accessibility domain.
+    #
     # @return [self]
     def disable
       @page.command("Accessibility.disable")
