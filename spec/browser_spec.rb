@@ -397,6 +397,20 @@ describe Ferrum::Browser do
     end
   end
 
+  describe "#restart" do
+    it "blocks until the old process is confirmed dead before returning", skip: Ferrum::Utils::Platform.windows? do
+      browser = Ferrum::Browser.new
+      old_pid = browser.process.pid
+
+      browser.restart
+
+      expect { Process.kill(0, old_pid) }.to raise_error(Errno::ESRCH)
+      expect(browser.process.pid).not_to eq(old_pid)
+    ensure
+      browser&.quit
+    end
+  end
+
   describe "#resize" do
     it "allows the viewport to be resized" do
       browser.go_to
