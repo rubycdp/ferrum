@@ -30,6 +30,12 @@
   `:host` back into the address it uses to talk to Chrome (e.g. `Ferrum::Browser.new(host: "ferrum.localhost")`),
   instead of always hitting `127.0.0.1` [#552]
 - CDP streams opened for `Ferrum::Browser#pdf` and `Ferrum::Page::Tracing#record` are now closed with `IO.close` after being read.
+- `Ferrum::Frame::Runtime#call` no longer retries `Ferrum::NodeNotFoundError`/`Ferrum::NoExecutionContextError` when
+  evaluating on an existing node (`on:`, e.g. `#evaluate_on`/`#evaluate_func`). Chrome reporting that a resolved
+  node/object id is gone can't be fixed by retrying the same command, so the retry only added up to
+  `INTERMITTENT_ATTEMPTS * INTERMITTENT_SLEEP` of dead time per stale node before raising anyway; this showed up as
+  flaky/slow Capybara specs that queried collections of nodes shortly after the DOM replaced them, since Capybara's
+  own retry loop (which re-finds nodes) already handles this case correctly one layer up [#360]
 
 
 ### Removed

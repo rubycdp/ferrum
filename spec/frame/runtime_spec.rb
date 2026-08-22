@@ -206,12 +206,18 @@ describe Ferrum::Frame::Runtime do
 
   describe "#evaluate_on" do
     it "does not retry if node is not around anymore" do
-      browser.go_to("/ferrum/table")
+      stub_const("Ferrum::Frame::Runtime::INTERMITTENT_SLEEP", 5)
+
+      browser.go_to("/table")
       node = browser.at_xpath(".//td")
 
-      browser.go_to("/ferrum/table")
-      expect(Ferrum::Utils::Attempt).to receive(:with_retry).with(hash_including(errors: [])).and_call_original
+      browser.go_to("/table")
+
+      started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       expect { browser.evaluate_on(node: node, expression: "this.textContent") }.to raise_error(Ferrum::NodeNotFoundError)
+      elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
+
+      expect(elapsed).to be < Ferrum::Frame::Runtime::INTERMITTENT_SLEEP
     end
   end
 
