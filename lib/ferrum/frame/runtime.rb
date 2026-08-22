@@ -186,7 +186,7 @@ module Ferrum
         end
       end
 
-      def handle_response(response)
+      def handle_response(response, check_cyclic: true)
         case response["type"]
         when "boolean", "number", "string"
           response["value"]
@@ -202,10 +202,10 @@ module Ferrum
             description = @page.command("DOM.describeNode", objectId: object_id)["node"]
             Node.new(self, @page.target_id, description, object_id: object_id)
           when "array"
-            reduce_props(object_id, []) do |memo, key, value|
+            reduce_props(object_id, [], check_cyclic: check_cyclic) do |memo, key, value|
               next(memo) unless Integer(key, exception: false)
 
-              value = value["objectId"] ? handle_response(value) : value["value"]
+              value = value["objectId"] ? handle_response(value, check_cyclic: false) : value["value"]
               memo.insert(key.to_i, value)
             end.compact
           when "date"
@@ -213,8 +213,8 @@ module Ferrum
           when "null"
             nil
           else
-            reduce_props(object_id, {}) do |memo, key, value|
-              value = value["objectId"] ? handle_response(value) : value["value"]
+            reduce_props(object_id, {}, check_cyclic: check_cyclic) do |memo, key, value|
+              value = value["objectId"] ? handle_response(value, check_cyclic: false) : value["value"]
               memo.merge(key => value)
             end
           end
@@ -234,8 +234,8 @@ module Ferrum
         end
       end
 
-      def reduce_props(object_id, to)
-        if cyclic?(object_id).dig("result", "value")
+      def reduce_props(object_id, to, check_cyclic: true)
+        if check_cyclic && cyclic?(object_id).dig("result", "value")
           to.is_a?(Array) ? [cyclic_object] : cyclic_object
         else
           props = @page.command("Runtime.getProperties", ownProperties: true, objectId: object_id)

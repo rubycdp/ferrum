@@ -15,6 +15,17 @@
 - `Ferrum::Page::Stream#stream` now attempts to close the CDP stream handle (`IO.close`) once it's been fully read.
 
 ### Fixed
+- `#evaluate`/`#evaluate_on`/etc. resolved an object/array result by making two CDP round trips
+  (`Runtime.callFunctionOn` to check for a cyclic reference, then `Runtime.getProperties`) per nested
+  object or array, recursively — even though the cyclic check already walks the *entire* reachable
+  object graph from wherever it's invoked in a single round trip, making every check below the top one
+  provably redundant. An expression returning an array of 1,000 small objects (each with one nested
+  object, as in [#528]) therefore issued about 4,000 CDP round trips instead of 2,000, each one a
+  chance to trip the per-command timeout while the browser was still working through the backlog;
+  once the websocket happened to already be closed at that point, the timeout surfaced as
+  `Ferrum::DeadBrowserError` instead of `Ferrum::TimeoutError`. The cyclic check now runs once, at the
+  top level of the result, and that answer is reused for every nested object/array instead of
+  rechecking each one.
 - `Ferrum::Contexts#connect_worker`/`#detach_unless_manually_attached` only rescued `Ferrum::BrowserError`, not `Ferrum::TimeoutError`.
   A worker's attach or service-worker detach that timed out (e.g. on a loaded CI runner) would escape unrescued
   into `Client::Subscriber`'s dispatch thread and kill it, silently breaking further `Target.*` event delivery

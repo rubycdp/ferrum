@@ -157,6 +157,23 @@ describe Ferrum::Frame::Runtime do
       it "backtracks what it has seen" do
         expect(browser.evaluate("(function() { var a = {}; return [a, a] })()")).to eq([{}, {}])
       end
+
+      it "only checks for a cycle once for the whole result tree, not once per nested object" do
+        frame = browser.main_frame
+        original_cyclic = frame.method(:cyclic?)
+        calls = 0
+        allow(frame).to receive(:cyclic?) do |*args|
+          calls += 1
+          original_cyclic.call(*args)
+        end
+
+        result = browser.evaluate(<<~JS)
+          Array.from({ length: 50 }, (_, i) => ({ i: i, nested: { j: i * 2 } }))
+        JS
+
+        expect(result.size).to eq(50)
+        expect(calls).to eq(1)
+      end
     end
   end
 
