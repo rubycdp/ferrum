@@ -420,4 +420,67 @@ describe Ferrum::Frame do
       expect(frame.at_css("button#click_me_123")).not_to be_nil
     end
   end
+
+  describe "#wait_for_selector" do
+    it "returns the node immediately when it's already present" do
+      page.go_to("/with_js")
+
+      expect(page.wait_for_selector(css: "p#remove_me")).not_to be_nil
+    end
+
+    it "waits for a css selector to appear" do
+      page.go_to("/with_js")
+      page.execute <<-JS
+        setTimeout(function () {
+          var div = document.createElement("div");
+          div.id = "appears_later";
+          document.body.appendChild(div);
+        }, 300);
+      JS
+
+      expect(page.wait_for_selector(css: "div#appears_later", timeout: 2)).not_to be_nil
+    end
+
+    it "waits for an xpath selector to appear" do
+      page.go_to("/with_js")
+      page.execute <<-JS
+        setTimeout(function () {
+          var div = document.createElement("div");
+          div.id = "appears_later";
+          document.body.appendChild(div);
+        }, 300);
+      JS
+
+      expect(page.wait_for_selector(xpath: "//div[@id='appears_later']", timeout: 2)).not_to be_nil
+    end
+
+    it "returns nil once timeout elapses without a match" do
+      page.go_to("/with_js")
+
+      started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      node = page.wait_for_selector(css: "div#never_appears", timeout: 0.3, interval: 0.05)
+      elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
+
+      expect(node).to be_nil
+      expect(elapsed).to be >= 0.3
+    end
+
+    it "supports within" do
+      page.go_to("/with_js")
+      p = page.at_css("p#with_content")
+
+      link = page.wait_for_selector(css: "a", within: p)
+
+      expect(link).not_to be_nil
+      expect(link.attribute(:id)).to eq("open-match")
+    end
+
+    it "raises when neither css nor xpath is given" do
+      expect { page.wait_for_selector }.to raise_error(ArgumentError)
+    end
+
+    it "raises when both css and xpath are given" do
+      expect { page.wait_for_selector(css: "a", xpath: "//a") }.to raise_error(ArgumentError)
+    end
+  end
 end

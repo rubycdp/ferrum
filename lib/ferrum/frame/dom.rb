@@ -244,6 +244,54 @@ module Ferrum
       end
 
       #
+      # Finds a node by using a CSS path or XPath selector, retrying until
+      # it appears or `timeout` elapses. Pass exactly one of `css`/`xpath`;
+      # each attempt delegates to {#at_css}/{#at_xpath} respectively, so it
+      # matches their behavior exactly.
+      #
+      # @param [String, nil] css
+      #   The CSS path selector. Mutually exclusive with `xpath`.
+      #
+      # @param [String, nil] xpath
+      #   The XPath selector. Mutually exclusive with `css`.
+      #
+      # @param [Node, nil] within
+      #   The parent node to search within.
+      #
+      # @param [Float, Integer] timeout
+      #   How long to keep retrying, in seconds.
+      #
+      # @param [Float, Integer] interval
+      #   How long to sleep between attempts, in seconds.
+      #
+      # @return [Node, nil]
+      #   The matching node, or `nil` if `timeout` elapses without a match.
+      #
+      # @raise [ArgumentError]
+      #   If neither or both of `css`/`xpath` are given.
+      #
+      # @example
+      #   browser.go_to("https://github.com/")
+      #   browser.wait_for_selector(css: "a[aria-label='Issues you created']") # => Node
+      #
+      def wait_for_selector(css: nil, xpath: nil, within: nil, timeout: @page.timeout, interval: 0.05)
+        raise ArgumentError, "pass either `css:` or `xpath:`" if css && xpath
+
+        selector, method_name = css ? [css, :at_css] : [xpath, :at_xpath]
+        raise ArgumentError, "pass either `css:` or `xpath:`" unless selector
+
+        start = Utils::ElapsedTime.monotonic_time
+
+        until (node = send(method_name, selector, within: within))
+          return nil if Utils::ElapsedTime.timeout?(start, timeout)
+
+          sleep(interval)
+        end
+
+        node
+      end
+
+      #
       # Adds a `<script>` tag to the document.
       #
       # @param [String, nil] url

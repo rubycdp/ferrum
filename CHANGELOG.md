@@ -1,6 +1,9 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.18.0...main) ##
 
 ### Added
+- `Ferrum::Frame#wait_for_selector` (also reachable from `Page`/`Browser`), which waits for an element to show up
+  in the DOM. It retries `at_css`/`at_xpath` every `interval` until a match is found or time runs out, returning `nil`
+  on timeout [#82]
 - `Ferrum::Page#on(:response)`/`Ferrum::Worker#on(:response)`, a callback fired once a request's response has fully
   loaded (on CDP's `Network.loadingFinished`, not `Network.responseReceived`, so `exchange.response.body` is always
   available), yielding the request's `Network::Exchange`. Doesn't require `network.intercept` to be set up, and is

@@ -25,6 +25,8 @@ module Ferrum
 
       def at_css: (untyped selector, ?within: untyped?) -> untyped
 
+      def wait_for_selector: (?css: untyped?, ?xpath: untyped?, ?within: untyped?, ?timeout: untyped, ?interval: untyped) -> untyped
+
       def add_script_tag: (?url: untyped?, ?path: untyped?, ?content: untyped?, ?type: ::String) -> untyped
 
       def add_style_tag: (?url: untyped?, ?path: untyped?, ?content: untyped?) -> untyped
