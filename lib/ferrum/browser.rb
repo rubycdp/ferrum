@@ -36,7 +36,8 @@ module Ferrum
                 screenshot pdf mhtml viewport_size device_pixel_ratio
                 start_screencast stop_screencast
                 frames frame_by main_frame
-                evaluate evaluate_on evaluate_async execute evaluate_func
+                evaluate evaluate_handle execute evaluate_in
+                evaluate_on evaluate_async evaluate_func
                 add_script_tag add_style_tag bypass_csp
                 on position position=
                 playback_rate playback_rate=

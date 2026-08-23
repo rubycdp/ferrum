@@ -1,0 +1,13 @@
+module Ferrum
+  module Utils
+    module Deprecate
+      MODE: ::String
+
+      self.@seen: Concurrent::Set[::String]
+
+      def self?.warn: (::String old, ::String new) -> void
+
+      def self?.reset!: () -> void
+    end
+  end
+end
