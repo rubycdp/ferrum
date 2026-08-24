@@ -13,6 +13,9 @@
   so callers can `#join` it if they need cleanup to have finished, e.g. before process exit or before reusing a
   fixed port. Default (`wait: true`) keeps the previous synchronous behavior; `#restart` always waits.
 - `Ferrum::Page::Stream#close_stream`, a public method that releases a CDP `IO` stream handle (`IO.close`).
+- `Ferrum::Page#set_viewport`'s `mobile:` option now also enables touch emulation
+  (`Emulation.setTouchEmulationEnabled`), alongside the existing device metrics override, so it fully emulates a
+  mobile device's viewport and touch support together. [#94]
 
 ### Changed
 - `Ferrum::Page::Stream#stream` now closes the CDP stream handle (`IO.close`) once it's been fully read, so streams
