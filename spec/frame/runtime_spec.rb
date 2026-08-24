@@ -349,8 +349,8 @@ describe Ferrum::Frame::Runtime do
     end
 
     it "honours a timeout longer than the page timeout" do
-      expect(browser.timeout).to be < 10
-      expect(browser.evaluate("new Promise(resolve => setTimeout(() => resolve(1), 100))", timeout: 10)).to eq(1)
+      script = "new Promise(resolve => setTimeout(() => resolve(1), 100))"
+      expect(browser.evaluate(script, timeout: browser.timeout + 5)).to eq(1)
     end
   end
 
