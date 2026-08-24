@@ -68,7 +68,7 @@ module Ferrum
         [paths, exts]
       end
 
-      # rubocop:disable Style/CollectionCompact
+      # rubocop:disable-next Style/CollectionCompact
       def lazy_find(cmds)
         cmds.lazy.map do |cmd, path, ext|
           absolute_path = File.absolute_path(cmd)
@@ -81,7 +81,6 @@ module Ferrum
           cmd
         end.reject(&:nil?) # .compact isn't defined on Enumerator::Lazy
       end
-      # rubocop:enable Style/CollectionCompact
     end
   end
 end

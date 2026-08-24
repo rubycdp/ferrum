@@ -32,9 +32,9 @@ module Ferrum
         A1: { width: 23.40, height: 33.10 },
         A2: { width: 16.54, height: 23.40 },
         A3: { width: 11.70, height: 16.54 },
-        A4: { width:  8.27, height: 11.70 },
-        A5: { width:  5.83, height:  8.27 },
-        A6: { width:  4.13, height:  5.83 }
+        A4: { width: 8.27, height: 11.70 },
+        A5: { width: 5.83, height: 8.27 },
+        A6: { width: 4.13, height: 5.83 }
       }.freeze
 
       #
