@@ -176,9 +176,15 @@ module Ferrum
     #
     # @param [Float] scale_factor device scale factor value. 0 disables the override
     #
-    # @param [Boolean] mobile whether to emulate mobile device
+    # @param [Boolean] mobile whether to emulate mobile device and enable touch
     #
-    def set_viewport(width:, height:, scale_factor: 0, mobile: false)
+    def set_viewport(width: 0, height: 0, scale_factor: 0, mobile: false)
+      command(
+        "Emulation.setTouchEmulationEnabled",
+        enabled: mobile,
+        maxTouchPoints: 1
+      )
+
       command(
         "Emulation.setDeviceMetricsOverride",
         slowmoable: true,

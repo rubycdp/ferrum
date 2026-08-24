@@ -198,6 +198,32 @@ describe Ferrum::Page do
       expect(page.viewport_size).to eq([500, 300])
       expect(page.device_pixel_ratio).to eq(2)
     end
+
+    def is_mobile?
+      page.evaluate("'ontouchstart' in window || navigator.maxTouchPoints > 0")
+    end
+
+    context "when mobile is true" do
+      it "enables touch/mobile emulation without changing the window size" do
+        page.go_to("/")
+
+        expect do
+          page.set_viewport(mobile: true)
+          page.reload
+        end.to change { is_mobile? }.to(true)
+      end
+    end
+
+    context "when mobile is false" do
+      it "does not enable touch/mobile emulation" do
+        page.go_to("/")
+
+        expect do
+          page.set_viewport(mobile: false)
+          page.reload
+        end.not_to(change { is_mobile? })
+      end
+    end
   end
 
   describe "#on" do

@@ -53,6 +53,8 @@ module Ferrum
 
     def close_connection: () -> void
 
+    def set_viewport: (?width: ::Integer, ?height: ::Integer, ?scale_factor: ::Float, ?mobile: bool) -> Hash[String, untyped]
+
     def resize: (?width: ::Numeric?, ?height: ::Numeric?, ?fullscreen: bool) -> Hash[String, untyped]
 
     def position: () -> Hash[String, ::Integer]
