@@ -60,6 +60,78 @@ Ferrum::Browser.new(options)
     * `:save_path` (String) - Path to save attachments with [Content-Disposition](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition) header.
     * `:env` (Hash) - Environment variables you'd like to pass through to the process
 
+## The crashpad handler
+
+Chrome starts two `chrome_crashpad_handler` processes per browser on Linux. Their only job is to collect and upload
+crash reports, which no automated browser has any use for, but **Ferrum does not disable them**, because there is no
+safe way to.
+
+Handlers Chrome starts on Linux:
+
+| Chrome | `--headless` | `--headless=new` | headful |
+|---|---|---|---|
+| 127 and older | 0 | 2 | 2 |
+| 128 and newer | 2 | 2 | 2 |
+
+New headless always starts them. What changed in 128 is what bare `--headless` *means*: before it, that selected old
+headless, a separate lightweight shell with no crash handler; from 128 on it selects new headless, which is full
+Chrome. Headful has always behaved like new headless.
+
+### No flag turns them off safely
+
+| Flag | What it does |
+|---|---|
+| `--disable-breakpad` | Stops crash *reporting*, not the handler process |
+| `--disable-crash-reporter` | Same |
+| `--no-crashpad` | Not a Chromium switch at all, so Chrome ignores it |
+| `--disable-crashpad-for-testing` | Real, and it does stop them — but it breaks the browser |
+
+:::danger
+Do not pass `--disable-crashpad-for-testing`. It is named `for-testing` because it is meant for Chromium's own test
+harness, where the process tree is fully controlled. In a normally launched browser, child processes die at startup
+with `Crashing due to FD ownership violation`, and the network service crash-loops.
+
+The failure is near-invisible: the browser process survives, so it starts normally and CDP answers every command.
+There is simply no network service behind it, so every navigation returns `net::ERR_ABORTED` and the document stays
+`about:blank`.
+:::
+
+Ferrum shipped `--no-crashpad` as a default from 0.18.0 in an attempt at this. It never did anything, and has been
+removed.
+
+### Operating system differences
+
+On macOS one handler starts rather than two, and it exits when the browser does, so nothing accumulates.
+
+It is also invisible to `pstree`, because it double-forks and reparents to launchd and is therefore never a
+descendant of the process that started Chrome. Look for it globally instead:
+
+```console
+$ ps -Ao pid=,ppid=,comm= | grep crashpad
+13270     1 .../Helpers/chrome_crashpad_handler
+```
+
+`ppid` is `1`, and the pid usually lands just after Chrome's own.
+
+### Why this matters most in Docker
+
+The handler is not a problem outside a container, and killing the browser is not what deals with it. The handler is
+independent of Chrome's process group, so the signal Ferrum sends during teardown never reaches it — and does not
+need to. The handler watches the browser and exits by itself once Chrome is gone. Verified by sending `TERM` and
+`KILL` to the process group, and `KILL` and `SIGUSR1` to the browser pid directly: in every case it terminated on its
+own within a second.
+
+What is left behind is an exit status. Because the handler double-forks away from Chrome, its parent is pid 1, and
+pid 1 is what reaps it — systemd or launchd, silently, so nothing is left over and no cleanup is needed.
+
+In a container your own process is usually pid 1, and it does not wait on children it never spawned. Nothing reaps
+the handlers, so every browser leaves two more `<defunct>` entries behind, and they are never reclaimed.
+**They accumulate, until the process table fills up.**
+
+Run the container with an init — `docker run --init`, `init: true` in Compose, or tini as the entrypoint. It is worth
+doing regardless, since every other process in the image has the same problem, and there is no flag that avoids the
+need for it.
+
 ## Examples
 
 ```ruby
