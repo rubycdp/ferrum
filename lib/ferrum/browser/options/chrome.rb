@@ -61,7 +61,6 @@ module Ferrum
           "metrics-recording-only" => nil,
           "mute-audio" => nil,
           "no-crash-upload" => nil,
-          "no-crashpad" => nil,
           "no-default-browser-check" => nil,
           "no-first-run" => nil,
           "no-startup-window" => nil,

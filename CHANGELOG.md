@@ -23,6 +23,14 @@
   the browser; a failed `IO.close` is raised to the caller.
 
 ### Fixed
+- `--no-crashpad`, added to the default Chrome flags in 0.18.0 to stop `chrome_crashpad_handler` from spawning, is
+  not a Chromium switch at all, so Chrome silently ignored it and two handler processes kept starting per browser.
+  Removed. There is no replacement: the only switch that does stop them, `--disable-crashpad-for-testing`, is meant
+  for Chromium's own test harness and breaks a normally launched browser — child processes die at startup with
+  `Crashing due to FD ownership violation` and the network service crash-loops, while the browser process itself
+  survives and answers CDP, so every navigation returns `net::ERR_ABORTED` against an `about:blank` document.
+  Reap the handlers with an init in the container instead (`docker run --init`, `init: true`, or tini); Chrome's
+  crashpad behaviour is now documented under "The crashpad handler" in the customization docs [#610]
 - `#evaluate`/`#evaluate_on`/etc. resolved an object/array result by making two CDP round trips
   (`Runtime.callFunctionOn` to check for a cyclic reference, then `Runtime.getProperties`) per nested
   object or array, recursively — even though the cyclic check already walks the *entire* reachable
