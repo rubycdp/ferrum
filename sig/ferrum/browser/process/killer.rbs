@@ -6,11 +6,15 @@ module Ferrum
 
         WAIT_KILLED: ::Float
 
+        REAP_TIMEOUT: ::Float
+
         REMOVE_DIR_RETRIES: ::Integer
 
         REMOVE_DIR_RETRY_DELAY: ::Float
 
         def self.kill: (::Integer pid) -> void
+
+        def self.wait_reaped: (::Integer pid, ?timeout: ::Float) -> ::Integer?
 
         def self.process_killer: (::Integer pid) -> Proc
 

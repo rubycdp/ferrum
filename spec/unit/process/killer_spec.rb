@@ -57,6 +57,32 @@ describe Ferrum::Browser::Process::Killer do
     end
   end
 
+  describe ".wait_reaped", if: Ferrum::Utils::Platform.mri? && !Ferrum::Utils::Platform.windows? do
+    it "returns the pid once the process has exited" do
+      pid = Process.spawn("true")
+
+      expect(described_class.wait_reaped(pid)).to eq(pid)
+    end
+
+    it "returns nil for a process that was never ours" do
+      expect(described_class.wait_reaped(1, timeout: 0.1)).to be_nil
+    end
+
+    # #kill is installed as an ObjectSpace finalizer, so it can run while the
+    # interpreter is shutting down. A blocking Process.wait there never
+    # returns and the process hangs instead of exiting -- cuprite#231.
+    it "gives up rather than blocking forever on a process that won't exit" do
+      pid = Process.spawn("sleep 30")
+      start = Ferrum::Utils::ElapsedTime.monotonic_time
+
+      expect(described_class.wait_reaped(pid, timeout: 0.2)).to be_nil
+      expect(Ferrum::Utils::ElapsedTime.monotonic_time - start).to be < 5
+    ensure
+      Process.kill("KILL", pid)
+      Process.wait(pid)
+    end
+  end
+
   describe ".process_group_alive?", if: Ferrum::Utils::Platform.mri? do
     it "returns true while the process group has a live member" do
       pid = Process.spawn("sleep 30", pgroup: true)
