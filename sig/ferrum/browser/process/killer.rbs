@@ -16,15 +16,13 @@ module Ferrum
 
         def self.wait_reaped: (::Integer pid, ?timeout: ::Float) -> ::Integer?
 
-        def self.process_killer: (::Integer pid) -> Proc
+        def self.finalizer: (Array[::Integer] | ::Integer | nil pids, ::String? path) -> Proc
 
         def self.send_signal: (::Integer pid, ::String name) -> void
 
         def self.process_group_alive?: (::Integer pid) -> bool
 
         def self.remove_directory: (::String path, ?retries: ::Integer, ?delay: ::Float) -> void
-
-        def self.directory_remover: (::String path) -> Proc
       end
     end
   end
