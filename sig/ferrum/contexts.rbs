@@ -47,6 +47,8 @@ module Ferrum
 
     def handle_attach: (Target? target, String session_id, Hash[String, untyped] params) -> void
 
+    def detach_untracked: (String session_id) -> void
+
     def detach_unless_manually_attached: (Target target, String session_id) -> void
 
     def connect_worker: (Target target) -> void

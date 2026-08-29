@@ -135,7 +135,7 @@ module Ferrum
     def subscribe_attached_target(client)
       client.on("Target.attachedToTarget") do |params|
         info, session_id = params.values_at("targetInfo", "sessionId")
-        next unless ALLOWED_TARGET_TYPES.include?(info["type"])
+        next detach_untracked(session_id) unless ALLOWED_TARGET_TYPES.include?(info["type"])
 
         context_id = info["browserContextId"]
         add_context(context_id)
@@ -199,6 +199,16 @@ module Ferrum
       elsif params["waitingForDebugger"]
         resume(session_id)
       end
+    end
+
+    # Auto-attach pauses every target it attaches to, including the types
+    # we don't track: Chrome's own `browser_ui` targets, for instance. We
+    # never resume those, so left alone they stay attached and paused for
+    # the lifetime of the browser. Resume them and drop the session.
+    def detach_untracked(session_id)
+      detach(session_id)
+    rescue BrowserError, TimeoutError
+      nil
     end
 
     # Attaching keeps a service worker alive forever, so unless the caller
