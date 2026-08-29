@@ -23,6 +23,8 @@
   the browser; a failed `IO.close` is raised to the caller.
 
 ### Fixed
+- Targets of a type `Ferrum::Contexts` doesn't track were left attached and paused by auto-attach for the lifetime
+  of the browser; Chrome opens two `browser_ui` ones per browser context. They're now resumed and detached from
 - `Ferrum::Browser::Process::Killer.kill` waited on the browser's leader pid with a blocking, unbounded
   `Process.wait` after escalating to `KILL`. That method is installed as an `ObjectSpace` finalizer, so it can run
   while the interpreter is shutting down, where a blocking wait risks hanging the process instead of letting it
