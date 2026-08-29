@@ -33,16 +33,7 @@ gem "ferrum"
 
 ## Docker
 
-:::note
-When running in docker as root
-:::
-
-```ruby
-Ferrum::Browser.new(dockerize: true)
-```
-
-Essentially it just sets CLI flags for a browser to make it start. On CI, you can just set `FERRUM_CHROME_DOCKERIZE=true` environment variable, and it will be
-passed to all browser instances.
+See [Docker](/docs/ferrum/docker).
 
 ## Quick Start
 

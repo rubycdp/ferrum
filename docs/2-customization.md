@@ -96,9 +96,6 @@ There is simply no network service behind it, so every navigation returns `net::
 `about:blank`.
 :::
 
-Ferrum shipped `--no-crashpad` as a default from 0.18.0 in an attempt at this. It never did anything, and has been
-removed.
-
 ### Operating system differences
 
 On macOS one handler starts rather than two, and it exits when the browser does, so nothing accumulates.
@@ -115,22 +112,11 @@ $ ps -Ao pid=,ppid=,comm= | grep crashpad
 
 ### Why this matters most in Docker
 
-The handler is not a problem outside a container, and killing the browser is not what deals with it. The handler is
-independent of Chrome's process group, so the signal Ferrum sends during teardown never reaches it — and does not
-need to. The handler watches the browser and exits by itself once Chrome is gone. Verified by sending `TERM` and
-`KILL` to the process group, and `KILL` and `SIGUSR1` to the browser pid directly: in every case it terminated on its
-own within a second.
-
-What is left behind is an exit status. Because the handler double-forks away from Chrome, its parent is pid 1, and
-pid 1 is what reaps it — systemd or launchd, silently, so nothing is left over and no cleanup is needed.
-
-In a container your own process is usually pid 1, and it does not wait on children it never spawned. Nothing reaps
-the handlers, so every browser leaves two more `<defunct>` entries behind, and they are never reclaimed.
-**They accumulate, until the process table fills up.**
-
-Run the container with an init — `docker run --init`, `init: true` in Compose, or tini as the entrypoint. It is worth
-doing regardless, since every other process in the image has the same problem, and there is no flag that avoids the
-need for it.
+The handler is harmless outside a container. It is not in Chrome's process group, so the signal Ferrum sends on
+teardown never reaches it — and does not need to: it watches the browser and exits by itself once Chrome is gone.
+What is left behind is an exit status, and because the handler double-forks away from Chrome its parent is pid 1.
+Collecting it is PID 1's job which doesn't exist in a container, so the handlers pile up as `<defunct>` entries.
+See [Docker](/docs/ferrum/docker).
 
 ## Examples
 
