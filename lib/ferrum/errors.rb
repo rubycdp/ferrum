@@ -77,6 +77,18 @@ module Ferrum
     end
   end
 
+  # Raised when connecting to an already running browser, but its
+  # `/json/version` endpoint doesn't answer with the websocket url.
+  class NoWebSocketUrlError < Error
+    attr_reader :url
+
+    def initialize(url)
+      @url = url
+      super("Couldn't get a websocket url out of #{url}, `/json/version` there didn't answer with JSON. " \
+            "Check the browser is reachable at that url and that any credentials it needs are part of it")
+    end
+  end
+
   # Raised when trying to interact with a browser process that has died or
   # a window that has already been closed.
   class DeadBrowserError < Error

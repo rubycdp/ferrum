@@ -44,6 +44,12 @@ module Ferrum
     def initialize: (::Numeric timeout, String output) -> void
   end
 
+  class NoWebSocketUrlError < Error
+    attr_reader url: String
+
+    def initialize: (String url) -> void
+  end
+
   class DeadBrowserError < Error
     def initialize: (?::String message) -> void
   end
