@@ -25,6 +25,9 @@
 ### Fixed
 - Targets of a type `Ferrum::Contexts` doesn't track were left attached and paused by auto-attach for the lifetime
   of the browser; Chrome opens two `browser_ui` ones per browser context. They're now resumed and detached from
+- `Ferrum::Browser::Process` registered two `ObjectSpace` finalizers on the same object, a directory remover and
+  a process killer. Ruby runs them FIFO so directory could have been deleted before process dead, and browser could
+  have restored its content on exit.
 - `Ferrum::Browser::Process::Killer.kill` waited on the browser's leader pid with a blocking, unbounded
   `Process.wait` after escalating to `KILL`. That method is installed as an `ObjectSpace` finalizer, so it can run
   while the interpreter is shutting down, where a blocking wait risks hanging the process instead of letting it

@@ -69,7 +69,7 @@ module Ferrum
         # Waits for `pid` to become reapable, giving up after `timeout`.
         #
         # Deliberately a bounded poll rather than a blocking `Process.wait`.
-        # {#process_killer} installs {#kill} as an `ObjectSpace` finalizer, so
+        # {#finalizer} installs {#kill} as an `ObjectSpace` finalizer, so
         # it can run while the interpreter is shutting down, and a blocking
         # wait there never returns.
         #
@@ -93,15 +93,28 @@ module Ferrum
         end
 
         #
-        # Builds a finalizer proc that kills the process with the given pid.
+        # Builds the proc registered as a browser's `ObjectSpace` finalizer,
+        # cleaning up after a browser nobody quit.
         #
-        # @param [Integer] pid
-        #   Process id to kill.
+        # Kills every pid first and removes the directory afterwards. That
+        # order is the whole point of this being one finalizer instead of
+        # two: Ruby runs an object's finalizers in registration order, and
+        # removing the user data directory while the browser is still alive
+        # means Chrome recreates it on the way out, leaking it for good.
+        #
+        # @param [Array<Integer>, Integer, nil] pids
+        #   Process ids to kill, e.g. the browser and Xvfb.
+        # @param [String, nil] path
+        #   User data directory to remove once they are dead.
         #
         # @return [Proc]
         #
-        def process_killer(pid)
-          proc { kill(pid) }
+        def finalizer(pids, path)
+          pids = Array(pids).compact
+          proc do
+            pids.each { |pid| kill(pid) }
+            remove_directory(path) if path
+          end
         end
 
         #
@@ -168,19 +181,6 @@ module Ferrum
           end
         rescue StandardError => e
           warn("[Ferrum] Failed to remove user data dir #{path}: #{e.class}: #{e.message}")
-        end
-
-        #
-        # Builds a finalizer proc that removes the directory at the given
-        # path.
-        #
-        # @param [String] path
-        #   Directory to remove.
-        #
-        # @return [Proc]
-        #
-        def directory_remover(path)
-          proc { remove_directory(path) }
         end
       end
     end
