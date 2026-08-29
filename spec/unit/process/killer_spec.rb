@@ -83,6 +83,63 @@ describe Ferrum::Browser::Process::Killer do
     end
   end
 
+  describe ".finalizer", if: Ferrum::Utils::Platform.mri? && !Ferrum::Utils::Platform.windows? do
+    def reaped?(pid)
+      Process.waitpid(pid, Process::WNOHANG)
+      false
+    rescue Errno::ECHILD
+      true
+    end
+
+    it "kills the process before removing its directory" do
+      dir = Dir.mktmpdir
+      # Stands in for Chrome, which writes to its profile on the way out: a
+      # directory removed while it is still alive comes straight back.
+      pid = Process.spawn(RbConfig.ruby, "-e", <<~RUBY, dir, pgroup: true)
+        require "fileutils"
+        trap("TERM") do
+          FileUtils.mkdir_p(ARGV[0])
+          File.write(File.join(ARGV[0], "lock"), "x")
+          exit!
+        end
+        FileUtils.mkdir_p(ARGV[0])
+        File.write(File.join(ARGV[0], "lock"), "x")
+        loop { sleep 0.05 }
+      RUBY
+      start = Ferrum::Utils::ElapsedTime.monotonic_time
+      sleep(0.02) until File.exist?(File.join(dir, "lock")) ||
+                        Ferrum::Utils::ElapsedTime.timeout?(start, 5)
+
+      described_class.finalizer(pid, dir).call
+      sleep(0.2)
+
+      expect(Dir.exist?(dir)).to be false
+    ensure
+      begin
+        Process.kill("KILL", pid) if pid
+      rescue Errno::ESRCH
+        nil
+      end
+      FileUtils.remove_entry(dir) if Dir.exist?(dir.to_s)
+    end
+
+    it "kills every pid it was given" do
+      pids = Array.new(2) { Process.spawn("sleep 30", pgroup: true) }
+
+      described_class.finalizer(pids, nil).call
+
+      expect(pids.map { |pid| reaped?(pid) }).to all(be true)
+    end
+
+    it "removes the directory when there is nothing to kill" do
+      dir = Dir.mktmpdir
+
+      described_class.finalizer(nil, dir).call
+
+      expect(Dir.exist?(dir)).to be false
+    end
+  end
+
   describe ".process_group_alive?", if: Ferrum::Utils::Platform.mri? do
     it "returns true while the process group has a live member" do
       pid = Process.spawn("sleep 30", pgroup: true)
@@ -100,28 +157,6 @@ describe Ferrum::Browser::Process::Killer do
       Process.wait(pid)
 
       expect(described_class.process_group_alive?(pid)).to be false
-    end
-  end
-
-  describe ".process_killer" do
-    it "builds a proc that kills the given pid when called", if: Ferrum::Utils::Platform.mri? do
-      pid = Process.spawn("sleep 30", pgroup: true)
-      expect(described_class).to receive(:kill).with(pid)
-
-      described_class.process_killer(pid).call
-    ensure
-      Process.kill("KILL", -pid)
-      Process.wait(pid)
-    end
-  end
-
-  describe ".directory_remover" do
-    it "builds a proc that removes the given directory when called" do
-      dir = Dir.mktmpdir
-
-      described_class.directory_remover(dir).call
-
-      expect(Dir.exist?(dir)).to be false
     end
   end
 end

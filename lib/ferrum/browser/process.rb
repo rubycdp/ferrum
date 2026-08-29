@@ -59,10 +59,8 @@ module Ferrum
         @process_timeout = options.process_timeout
         @env = Hash(options.env)
 
-        tmpdir = Dir.mktmpdir("ferrum_user_data_dir_")
-        ObjectSpace.define_finalizer(self, Killer.directory_remover(tmpdir))
-        @user_data_dir = tmpdir
-        @command = Command.build(options, tmpdir)
+        @user_data_dir = Dir.mktmpdir("ferrum_user_data_dir_")
+        @command = Command.build(options, @user_data_dir)
       end
 
       #
@@ -80,14 +78,11 @@ module Ferrum
           process_options[:pgroup] = true unless Utils::Platform.windows?
           process_options[:out] = process_options[:err] = write_io
 
-          if @command.xvfb?
-            @xvfb = Xvfb.start(@command.options)
-            ObjectSpace.define_finalizer(self, Killer.process_killer(@xvfb.pid))
-          end
+          @xvfb = Xvfb.start(@command.options) if @command.xvfb?
 
           env = Hash(@xvfb&.to_env).merge(@env)
           @pid = ::Process.spawn(env, *@command.to_a, process_options)
-          ObjectSpace.define_finalizer(self, Killer.process_killer(@pid))
+          ObjectSpace.define_finalizer(self, Killer.finalizer([@pid, @xvfb&.pid], @user_data_dir))
 
           parse_ws_url(read_io, @process_timeout)
           parse_json_version(ws_url)
