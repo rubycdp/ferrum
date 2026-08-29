@@ -22,6 +22,7 @@ module Ferrum
 
         KILL_TIMEOUT = 2
         WAIT_KILLED = 0.05
+        REAP_TIMEOUT = 0.5
         REMOVE_DIR_RETRIES = 5
         REMOVE_DIR_RETRY_DELAY = 0.1
 
@@ -57,11 +58,38 @@ module Ferrum
             next unless Utils::ElapsedTime.timeout?(start, KILL_TIMEOUT)
 
             send_signal(pid, "KILL")
-            ::Process.wait(pid) unless leader_exited
+            wait_reaped(pid) unless leader_exited
             break
           end
         rescue Errno::ESRCH, Errno::ECHILD
           # nop
+        end
+
+        #
+        # Waits for `pid` to become reapable, giving up after `timeout`.
+        #
+        # Deliberately a bounded poll rather than a blocking `Process.wait`.
+        # {#process_killer} installs {#kill} as an `ObjectSpace` finalizer, so
+        # it can run while the interpreter is shutting down, and a blocking
+        # wait there never returns.
+        #
+        # @param [Integer] pid
+        # @param [Float] timeout
+        #
+        # @return [Integer, nil]
+        #   The reaped pid, or `nil` if it didn't exit in time or wasn't ours.
+        #
+        def wait_reaped(pid, timeout: REAP_TIMEOUT)
+          start = Utils::ElapsedTime.monotonic_time
+          loop do
+            reaped = ::Process.wait(pid, ::Process::WNOHANG)
+            return reaped if reaped
+            return nil if Utils::ElapsedTime.timeout?(start, timeout)
+
+            sleep(WAIT_KILLED)
+          end
+        rescue Errno::ECHILD, Errno::ESRCH
+          nil
         end
 
         #

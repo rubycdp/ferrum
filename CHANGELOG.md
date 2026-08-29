@@ -23,6 +23,10 @@
   the browser; a failed `IO.close` is raised to the caller.
 
 ### Fixed
+- `Ferrum::Browser::Process::Killer.kill` waited on the browser's leader pid with a blocking, unbounded
+  `Process.wait` after escalating to `KILL`. That method is installed as an `ObjectSpace` finalizer, so it can run
+  while the interpreter is shutting down, where a blocking wait risks hanging the process instead of letting it
+  exit.
 - `--no-crashpad`, added to the default Chrome flags in 0.18.0 to stop `chrome_crashpad_handler` from spawning, is
   not a Chromium switch at all, so Chrome silently ignored it and two handler processes kept starting per browser.
   Removed. There is no replacement: the only switch that does stop them, `--disable-crashpad-for-testing`, is meant
