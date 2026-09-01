@@ -22,6 +22,7 @@ module Ferrum
       @client = client
       @contexts = Concurrent::Map.new
       @manually_attached = Concurrent::Map.new
+      @default_context = find_implicit_context
       subscribe
       auto_attach
       discover
@@ -33,7 +34,9 @@ module Ferrum
       @manually_attached[target_id] = true
     end
 
-    # The browser's first context, created lazily.
+    # The context we work in unless told otherwise: the browser's implicit
+    # context when it came up with a startup window (see {#find_implicit_context}),
+    # otherwise one of our own, created lazily.
     #
     # @return [Context]
     def default_context
@@ -84,14 +87,16 @@ module Ferrum
       context
     end
 
-    # Disposes a browser context and all of its targets.
+    # Disposes a browser context and all of its targets. The browser's implicit
+    # context is not ours to dispose, see {Context#implicit?}.
     #
     # @param [String] context_id
     #
-    # @return [Boolean]
+    # @return [Boolean, nil]
     def dispose(context_id)
       context = @contexts[context_id]
       return unless context
+      return if context.implicit?
 
       context.close_targets_connection
       @client.command("Target.disposeBrowserContext", browserContextId: context.id)
@@ -251,9 +256,29 @@ module Ferrum
     def add_context(context_id)
       return if @contexts[context_id]
 
-      context = Context.new(@client, self, context_id)
-      @contexts[context_id] = context
-      @default_context ||= context # rubocop:disable Naming/MemoizedInstanceVariableName
+      @contexts[context_id] = Context.new(@client, self, context_id)
+    end
+
+    # The browser's implicit context, the context Chrome uses for its startup window.
+    # We register it so events for that window are routed to it.
+    # `Target.getBrowserContexts` reports every context created with
+    # `Target.createBrowserContext`, ours and those of anyone else driving the same
+    # browser, so the context holding targets that it doesn't report is the implicit
+    # one. Chrome also reports its id as `defaultBrowserContextId`, but only since
+    # 145 and only as an experimental field, so we don't rely on it.
+    #
+    # Returns nil if the browser has no startup window, which happens when it is
+    # launched with `--no-startup-window` (used for `incognito: true`). In that case,
+    # we create our own context instead.
+    #
+    # @return [Context, nil]
+    def find_implicit_context
+      created_ids = @client.command("Target.getBrowserContexts")["browserContextIds"]
+      target_infos = @client.command("Target.getTargets")["targetInfos"]
+      implicit_id = (target_infos.filter_map { |t| t["browserContextId"] } - created_ids).first
+      return unless implicit_id
+
+      @contexts[implicit_id] = Context.new(@client, self, implicit_id, implicit: true)
     end
   end
 end

@@ -23,4 +23,49 @@ describe Ferrum::Contexts do
     browser.client.off("Target.attachedToTarget", attached_id)
     browser.client.off("Target.detachedFromTarget", detached_id)
   end
+
+  describe "#default_context" do
+    it "works in the browser's startup window when it came up with one" do
+      with_external_browser(incognito: false) do |url|
+        remote = Ferrum::Browser.new(url: url)
+
+        expect(remote.contexts.default_context).to be_implicit
+        expect { remote.create_page }.not_to raise_error
+      ensure
+        remote&.quit
+      end
+    end
+
+    it "creates a context of its own when the browser has no startup window" do
+      with_external_browser do |url|
+        remote = Ferrum::Browser.new(url: url)
+        remote.create_page
+
+        expect(remote.contexts.default_context).not_to be_implicit
+
+        remote.reset
+
+        expect(remote.contexts.size).to be_zero
+      ensure
+        remote&.quit
+      end
+    end
+
+    it "ignores contexts another client created in the same browser" do
+      with_external_browser do |url|
+        first = Ferrum::Browser.new(url: url)
+        context = first.contexts.create
+        context.create_page
+
+        second = Ferrum::Browser.new(url: url)
+
+        expect(second.contexts.default_context).not_to be_implicit
+        expect(second.contexts.default_context.id).not_to eq(context.id)
+        expect { second.create_page }.not_to raise_error
+      ensure
+        second&.quit
+        first&.quit
+      end
+    end
+  end
 end

@@ -15,12 +15,23 @@ module Ferrum
 
     attr_reader :id, :targets
 
-    def initialize(client, contexts, id)
+    def initialize(client, contexts, id, implicit: false)
       @id = id
+      @implicit = implicit
       @client = client
       @contexts = contexts
       @targets = Concurrent::Map.new
       @pendings = Concurrent::Map.new
+    end
+
+    # Whether this is the browser's implicit context, the one it puts its
+    # startup window in. We didn't create it, so we can't dispose it, and
+    # Chrome doesn't let us address it by id either: targets are created in
+    # it by omitting `browserContextId` altogether.
+    #
+    # @return [Boolean]
+    def implicit?
+      @implicit
     end
 
     # The context's first known target, creating one via
@@ -92,7 +103,8 @@ module Ferrum
     #
     # @raise [NoSuchTargetError]
     def create_target
-      target_id = @client.command("Target.createTarget", browserContextId: @id, url: "about:blank")["targetId"]
+      options = { browserContextId: @id } unless implicit?
+      target_id = @client.command("Target.createTarget", url: "about:blank", **Hash(options))["targetId"]
 
       new_pending = Concurrent::IVar.new
       pending = @pendings.put_if_absent(target_id, new_pending) || new_pending
@@ -184,9 +196,10 @@ module Ferrum
       end
     end
 
-    # Disposes this browser context and all of its targets.
+    # Disposes this browser context and all of its targets. The browser's
+    # implicit context cannot be disposed, see {#implicit?}.
     #
-    # @return [Boolean]
+    # @return [Boolean, nil]
     def dispose
       @contexts.dispose(@id)
     end
