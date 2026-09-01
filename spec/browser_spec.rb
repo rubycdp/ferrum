@@ -139,6 +139,90 @@ describe Ferrum::Browser do
       end
     end
 
+    def with_token_authenticated_proxy(browser_url, token:)
+      browser_url = Addressable::URI.parse(browser_url)
+      server = TCPServer.new("127.0.0.1", 0)
+      port = server.addr[1]
+
+      acceptor = Thread.new do
+        loop { Thread.new(server.accept) { |socket| proxy_request(socket, browser_url, token, port) } }
+      rescue IOError, Errno::EBADF
+        nil
+      end
+
+      yield "http://127.0.0.1:#{port}?token=#{token}"
+    ensure
+      acceptor&.kill
+      server&.close
+    end
+
+    def proxy_request(socket, browser_url, token, port)
+      request = socket.gets.to_s
+
+      if !request.include?("token=#{token}")
+        socket.print(proxy_unauthorized)
+      elsif request.start_with?("GET /json/version")
+        socket.print(proxy_json_version(browser_url, port))
+      else
+        proxy_tunnel(socket, request, browser_url)
+      end
+    ensure
+      socket.close unless socket.closed?
+    end
+
+    def proxy_unauthorized
+      body = "<html>401 Unauthorized</html>"
+      "HTTP/1.1 401 Unauthorized\r\nContent-Length: #{body.bytesize}\r\nConnection: close\r\n\r\n#{body}"
+    end
+
+    def proxy_json_version(browser_url, port)
+      version = JSON.parse(Net::HTTP.get(URI(browser_url.join("/json/version").to_s)))
+      path = Addressable::URI.parse(version["webSocketDebuggerUrl"]).path
+      body = version.merge("webSocketDebuggerUrl" => "ws://0.0.0.0:#{port}#{path}").to_json
+      "HTTP/1.1 200 OK\r\nContent-Length: #{body.bytesize}\r\nConnection: close\r\n\r\n#{body}"
+    end
+
+    def proxy_tunnel(socket, request, browser_url)
+      upstream = TCPSocket.new(browser_url.host, browser_url.port)
+      upstream.print(request.sub(/\?token=[^ ]*/, ""))
+
+      [[socket, upstream], [upstream, socket]].map do |from, to|
+        Thread.new do
+          IO.copy_stream(from, to)
+        rescue IOError, Errno::ECONNRESET, Errno::EPIPE
+          nil
+        end
+      end.each(&:join)
+    ensure
+      upstream&.close
+    end
+
+    it "supports :url argument with a query string" do
+      with_external_browser do |url, _process|
+        with_token_authenticated_proxy(url, token: "secret") do |proxy_url|
+          browser = Ferrum::Browser.new(url: proxy_url)
+          browser.go_to(base_url)
+
+          expect(browser.body).to include("Hello world!")
+          expect(browser.process.ws_url.authority).to eq(Addressable::URI.parse(proxy_url).authority)
+          expect(browser.process.ws_url.query).to eq("token=secret")
+        ensure
+          browser&.quit
+        end
+      end
+    end
+
+    it "raises when :url doesn't answer with a websocket url" do
+      with_external_browser do |url, _process|
+        with_token_authenticated_proxy(url, token: "secret") do |proxy_url|
+          unauthorized = proxy_url.sub("secret", "wrong")
+
+          expect { Ferrum::Browser.new(url: unauthorized) }
+            .to raise_error(Ferrum::NoWebSocketUrlError, /#{Regexp.escape(unauthorized)}/)
+        end
+      end
+    end
+
     it "supports :ws_url argument" do
       with_external_browser do |url, process|
         browser = Ferrum::Browser.new(ws_url: web_socket_debugger_url(url))

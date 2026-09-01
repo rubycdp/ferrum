@@ -1,6 +1,12 @@
 module Ferrum
   class Browser
     class Process
+      HTTP_SCHEMES: ::Hash[String, String]
+
+      WS_SCHEMES: ::Hash[String, String]
+
+      LOCAL_HOSTS: ::Array[String]
+
       attr_reader host: String?
 
       attr_reader port: ::Integer?
@@ -73,6 +79,10 @@ module Ferrum
       def parse_json_version: (Addressable::URI | String url) -> Hash[String, untyped]?
 
       def close_io: (*IO ios) -> void
+
+      def json_version_url: (Addressable::URI | String url) -> Addressable::URI
+
+      def reachable_ws_url: (String? ws_url, Addressable::URI | String endpoint) -> String?
     end
   end
 end

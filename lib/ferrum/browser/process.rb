@@ -25,6 +25,10 @@ module Ferrum
     class Process
       extend Forwardable
 
+      HTTP_SCHEMES = { "ws" => "http", "wss" => "https" }.freeze
+      WS_SCHEMES = { "http" => "ws", "https" => "wss" }.freeze
+      LOCAL_HOSTS = %w[0.0.0.0 :: 127.0.0.1 ::1 localhost].freeze
+
       delegate path: :command
 
       #
@@ -50,8 +54,12 @@ module Ferrum
         if options.ws_url || options.url
           # `:ws_url` option is higher priority than `:url`, parse versions
           # and use it as a ws_url, otherwise use what has been parsed.
-          response = parse_json_version(options.ws_url || options.url)
-          self.ws_url = options.ws_url || response&.[]("webSocketDebuggerUrl")
+          endpoint = options.ws_url || options.url
+          response = parse_json_version(endpoint)
+          ws_url = options.ws_url || reachable_ws_url(response&.[]("webSocketDebuggerUrl"), endpoint)
+          raise NoWebSocketUrlError, endpoint unless ws_url
+
+          self.ws_url = ws_url
           return
         end
 
@@ -227,18 +235,7 @@ module Ferrum
       end
 
       def parse_json_version(url)
-        url = URI.join(url, "/json/version")
-
-        if %w[wss ws].include?(url.scheme)
-          url.scheme = case url.scheme
-                       when "ws"
-                         "http"
-                       when "wss"
-                         "https"
-                       end
-        end
-
-        response = JSON.parse(::Net::HTTP.get(URI(url.to_s)))
+        response = JSON.parse(::Net::HTTP.get(URI(json_version_url(url).to_s)))
 
         @v8_version = response["V8-Version"]
         @browser_version = response["Browser"]
@@ -249,6 +246,25 @@ module Ferrum
         response
       rescue JSON::ParserError
         # nop
+      end
+
+      def json_version_url(url)
+        url = Addressable::URI.parse(url).dup
+        url.scheme = HTTP_SCHEMES.fetch(url.scheme, url.scheme)
+        url.path = "/json/version"
+        url
+      end
+
+      def reachable_ws_url(ws_url, endpoint)
+        return unless ws_url
+
+        ws_url = Addressable::URI.parse(ws_url)
+        return ws_url.to_s unless LOCAL_HOSTS.include?(ws_url.host)
+
+        url = Addressable::URI.parse(endpoint).dup
+        url.scheme = WS_SCHEMES.fetch(url.scheme, url.scheme)
+        url.path = ws_url.path
+        url.to_s
       end
     end
   end
