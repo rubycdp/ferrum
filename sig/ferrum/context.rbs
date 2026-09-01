@@ -6,13 +6,16 @@ module Ferrum
     attr_reader targets: ::Concurrent::Map[String, Target]
 
     @id: String
+    @implicit: bool
     @client: Client
     @contexts: Contexts
     @targets: ::Concurrent::Map[String, Target]
     @pendings: ::Concurrent::Map[String, ::Concurrent::IVar]
     @default_target: Target?
 
-    def initialize: (Client, Contexts, String) -> void
+    def initialize: (Client, Contexts, String, ?implicit: bool) -> void
+
+    def implicit?: () -> bool
 
     def default_target: () -> Target
 
@@ -42,7 +45,7 @@ module Ferrum
 
     def close_targets_connection: () -> void
 
-    def dispose: () -> bool
+    def dispose: () -> bool?
 
     def target?: (String target_id) -> bool
 

@@ -23,6 +23,10 @@
   the browser; a failed `IO.close` is raised to the caller.
 
 ### Fixed
+- `create_page` raised `Failed to find browser context with id` against a browser that came up with its own startup
+  window (browserless). That window lives in the browser's implicit context, which Chrome below 145
+  won't address by id. Ferrum now detects it and exposes as `Ferrum::Context#implicit?`. It's never
+  disposed, so `#reset` won't clear such a browser. [#578] [#627]
 - Targets of a type `Ferrum::Contexts` doesn't track were left attached and paused by auto-attach for the lifetime
   of the browser; Chrome opens two `browser_ui` ones per browser context. They're now resumed and detached from
 - `Ferrum::Browser::Process` registered two `ObjectSpace` finalizers on the same object, a directory remover and

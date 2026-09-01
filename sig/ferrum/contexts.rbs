@@ -27,7 +27,7 @@ module Ferrum
 
     def create: (**untyped options) -> Context
 
-    def dispose: (String context_id) -> bool
+    def dispose: (String context_id) -> bool?
 
     def close_connections: () -> void
 
@@ -62,5 +62,7 @@ module Ferrum
     def auto_attach: () -> void
 
     def add_context: (String? context_id) -> Context?
+
+    def find_implicit_context: () -> Context?
   end
 end
