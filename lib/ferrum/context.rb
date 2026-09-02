@@ -126,7 +126,7 @@ module Ferrum
     #
     # @return [Target]
     def add_target(params:, session_id: nil)
-      new_target = Target.new(@client, session_id, params)
+      new_target = Target.new(@client, session_id, params, implicit: implicit?)
       # `put_if_absent` returns nil if added a new value or existing if there was one already
       target = @targets.put_if_absent(new_target.id, new_target) || new_target
       # on first iteration session_id may be nil, then if session is present here we must set it to the target

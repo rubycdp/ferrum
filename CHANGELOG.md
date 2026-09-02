@@ -27,6 +27,10 @@
   window (browserless). That window lives in the browser's implicit context, which Chrome below 145
   won't address by id. Ferrum now detects it and exposes as `Ferrum::Context#implicit?`. It's never
   disposed, so `#reset` won't clear such a browser. [#578] [#627]
+- `Browser.setDownloadBehavior` raised `Failed to find browser context for id` for a page in the browser's implicit
+  context, so connecting to a browser that came up with its own startup window and passing `:save_path` died on the
+  first page. `Ferrum::Target#context_id`, and with it `Ferrum::Page#context_id`, is now `nil` for that context,
+  which is how Chrome wants it addressed, by omitting `browserContextId` [#546]
 - Connecting to a remote browser with `:url` drops query string when probing `/json/version`, endpoint might answer
   401 and Ferrum died with `undefined method 'host' for nil`. in case of parse issues `Ferrum::NoWebSocketUrlError` is raised.
 - Targets of a type `Ferrum::Contexts` doesn't track were left attached and paused by auto-attach for the lifetime

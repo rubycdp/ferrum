@@ -70,6 +70,24 @@ describe Ferrum::Downloads do
       end
     end
 
+    context "with the browser's implicit context" do
+      it "saves an attachment" do
+        with_external_browser(incognito: false) do |url|
+          remote = Ferrum::Browser.new(url: url, base_url: base_url, save_path: save_path)
+          remote_page = remote.create_page
+
+          expect(remote_page.context_id).to be_nil
+
+          remote_page.downloads.wait { remote_page.go_to("/#{filename}") }
+
+          expect(File.exist?("#{save_path}/#{filename}")).to be true
+        ensure
+          remote&.quit
+          FileUtils.rm_rf(save_path)
+        end
+      end
+    end
+
     context "with local path" do
       let(:save_path) { "spec/tmp" }
 
