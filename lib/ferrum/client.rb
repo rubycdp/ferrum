@@ -342,7 +342,12 @@ module Ferrum
             @pendings[message["id"]]&.set(message)
           end
         end
-
+      rescue StandardError => e
+        # Nothing delivers responses once this thread is gone, so the connection
+        # is done for. Close it rather than leave every command hanging.
+        warn("Ferrum: dispatch stopped, #{e.class}: #{e.message}\n  #{e.backtrace&.first}")
+        @ws.messages.close
+      ensure
         release_pendings
       end
     end

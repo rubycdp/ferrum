@@ -152,6 +152,10 @@ module Ferrum
             @driver_mutex.synchronize { @driver.parse(data) }
           end
         rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, IOError # rubocop:disable Lint/ShadowedException
+          # The browser went away, nothing to report.
+        rescue StandardError => e
+          warn("Ferrum: websocket reader stopped, #{e.class}: #{e.message}\n  #{e.backtrace&.first}")
+        ensure
           @messages.close
         end
       end

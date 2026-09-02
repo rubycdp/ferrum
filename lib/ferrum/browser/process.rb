@@ -177,7 +177,7 @@ module Ferrum
         user_data_dir = @user_data_dir
         @pid = @user_data_dir = nil
 
-        Utils::Thread.spawn(abort_on_exception: false) do
+        Utils::Thread.spawn do
           Killer.kill(pid) if pid
           Killer.kill(xvfb_pid) if xvfb_pid
           Killer.remove_directory(user_data_dir) if user_data_dir

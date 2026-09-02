@@ -25,6 +25,9 @@
   the browser; a failed `IO.close` is raised to the caller.
 
 ### Fixed
+- An error in the client or websocket thread was re-raised in the main thread wherever it happened to be, or took
+  the process down with it, since `Utils::Thread.spawn` defaulted to `abort_on_exception: true` and neither thread
+  rescued. Ferrum's threads no longer abort, they report to stderr and mark the connection dead [#470]
 - Commands in flight when the browser died waited out `:protocol_timeout` each before raising, so a dead browser
   turned into a long parade of slow failures. They're released as soon as the socket closes, and a command sent
   after that raises `Ferrum::DeadBrowserError` right away [#470]
