@@ -10,11 +10,12 @@ module Ferrum
     @worker: Worker?
     @session_id: String?
     @params: Hash[String, untyped]
+    @implicit: bool
     @browser_client: Client
     @options: Browser::Options
     @client: (Client | SessionClient)?
 
-    def initialize: (Client browser_client, ?String? session_id, ?Hash[String, untyped]? params) -> void
+    def initialize: (Client browser_client, ?String? session_id, ?Hash[String, untyped]? params, ?implicit: bool) -> void
 
     def update: (Hash[String, untyped] params) -> Hash[String, untyped]
 

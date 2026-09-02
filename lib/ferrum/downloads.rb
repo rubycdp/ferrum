@@ -62,8 +62,9 @@ module Ferrum
       raise ArgumentError unless VALID_BEHAVIOR.include?(behavior.to_sym)
       raise Error, "supply absolute path for `:save_path` option" unless Pathname.new(save_path.to_s).absolute?
 
+      options = { browserContextId: @page.context_id } if @page.context_id
       @page.command("Browser.setDownloadBehavior",
-                    browserContextId: @page.context_id,
+                    **Hash(options),
                     downloadPath: save_path,
                     behavior: behavior,
                     eventsEnabled: true)

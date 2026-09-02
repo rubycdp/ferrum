@@ -17,11 +17,12 @@ module Ferrum
     attr_reader :options
     attr_accessor :session_id
 
-    def initialize(browser_client, session_id = nil, params = nil)
+    def initialize(browser_client, session_id = nil, params = nil, implicit: false)
       @page = nil
       @worker = nil
       @session_id = session_id
       @params = params
+      @implicit = implicit
       @browser_client = browser_client
       @options = browser_client.options
     end
@@ -137,11 +138,14 @@ module Ferrum
       @params["parentId"]
     end
 
-    # The id of the browser context this target belongs to.
+    # The id of the browser context this target belongs to, `nil` for the
+    # browser's implicit context, which Chrome doesn't let us address by id,
+    # see {Context#implicit?}. Commands scoped to a browser context target it
+    # by omitting `browserContextId`.
     #
     # @return [String, nil]
     def context_id
-      @params["browserContextId"]
+      @params["browserContextId"] unless @implicit
     end
 
     # Whether this target is a window/tab, i.e. was opened via

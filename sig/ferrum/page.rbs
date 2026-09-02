@@ -12,7 +12,7 @@ module Ferrum
     include Interceptable
 
     attr_accessor referrer: String?
-    attr_reader context_id: String
+    attr_reader context_id: String?
     attr_reader target_id: String
     attr_reader event: Utils::Event
     attr_reader tracing: Page::Tracing
@@ -26,7 +26,7 @@ module Ferrum
     attr_reader client: (Client | SessionClient)
 
     @client: (Client | SessionClient)
-    @context_id: String
+    @context_id: String?
     @target_id: String
     @options: Browser::Options
     @frames: ::Concurrent::Map[String, Frame]
@@ -41,7 +41,7 @@ module Ferrum
     @downloads: Downloads
     @referrer: String?
 
-    def initialize: ((Client | SessionClient) client, context_id: String, target_id: String, ?proxy: { host: String, port: ::Integer, user: String?, password: String? }?) -> void
+    def initialize: ((Client | SessionClient) client, context_id: String?, target_id: String, ?proxy: { host: String, port: ::Integer, user: String?, password: String? }?) -> void
 
     def context: () -> Context?
 
