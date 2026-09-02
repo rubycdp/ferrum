@@ -1,6 +1,13 @@
 # frozen_string_literal: true
 
 describe Ferrum::Client do
+  describe "timeouts" do
+    it "names the command that timed out" do
+      expect { page.command("Page.navigate", timeout: 0.5, url: base_url("/really_slow")) }
+        .to raise_error(Ferrum::TimeoutError, /a response to Page.navigate \(session .+\)/)
+    end
+  end
+
   describe "event callbacks" do
     let(:remote) { Ferrum::Browser.new(base_url: base_url, timeout: 3, protocol_timeout: 3) }
 
