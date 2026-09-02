@@ -133,6 +133,11 @@ module Ferrum
         @on[event]&.each_with_index do |block, index|
           # In case of multiple callbacks we provide current index and total
           block.call(params, index, total)
+        rescue StandardError => e
+          # A raising callback used to terminate the dispatch thread, and with it every
+          # event for the rest of the browser's life: targets stopped being registered
+          # and any page created later raised `NoSuchTargetError`. Report and carry on.
+          warn("Ferrum: #{event} callback raised #{e.class}: #{e.message}\n  #{e.backtrace&.first}")
         end
       end
     end
