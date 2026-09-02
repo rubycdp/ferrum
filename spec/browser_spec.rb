@@ -63,6 +63,19 @@ describe Ferrum::Browser do
       browser&.quit
     end
 
+    it "supports :protocol_timeout argument" do
+      browser = Ferrum::Browser.new(base_url: base_url, timeout: 1)
+
+      expect(browser.timeout).to eq(1)
+      expect(browser.protocol_timeout).to eq(30)
+
+      browser.protocol_timeout = 2
+
+      expect(browser.protocol_timeout).to eq(2)
+    ensure
+      browser&.quit
+    end
+
     it "supports :process_timeout argument" do
       path = "#{PROJECT_ROOT}/spec/support/no_chrome"
 

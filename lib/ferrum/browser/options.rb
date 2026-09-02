@@ -14,7 +14,7 @@ module Ferrum
       WINDOW_SIZE = [1024, 768].freeze
       BASE_URL_SCHEMA = %w[http https].freeze
       DEFAULT_TIMEOUT = ENV.fetch("FERRUM_DEFAULT_TIMEOUT", 5).to_i
-      DEFAULT_PROTOCOL_TIMEOUT = ENV.fetch("FERRUM_PROTOCOL_TIMEOUT", DEFAULT_TIMEOUT).to_i
+      DEFAULT_PROTOCOL_TIMEOUT = ENV.fetch("FERRUM_PROTOCOL_TIMEOUT", 30).to_i
       PROCESS_TIMEOUT = ENV.fetch("FERRUM_PROCESS_TIMEOUT", 10).to_i
       DEBUG_MODE = !ENV.fetch("FERRUM_DEBUG", nil).nil?
 

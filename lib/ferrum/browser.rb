@@ -89,10 +89,12 @@ module Ferrum
     #   The number of seconds we'll wait for a response when communicating
     #   with the browser: navigations, JS evaluation, DOM queries, dispatching input, etc.
     #
-    # @option options [Numeric] :protocol_timeout (5)
+    # @option options [Numeric] :protocol_timeout (30)
     #   The number of seconds we'll wait for an individual internal CDP
     #   bookkeeping call to respond, e.g. `Target.createTarget`,
-    #   `Target.attachToTarget`. These normally resolve in milliseconds.
+    #   `Target.attachToTarget`. These normally resolve in milliseconds, the
+    #   budget is generous because exceeding it means the machine is loaded,
+    #   not that the browser is gone, that case is detected on its own.
     #
     # @option options [Boolean] :js_errors
     #   When true, JavaScript errors get re-raised in Ruby.

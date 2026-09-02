@@ -28,7 +28,12 @@ Ferrum::Browser.new(options)
     * `:slowmo` (Integer | Float) - Set a delay in seconds to wait before sending command.
       Useful companion of headless option, so that you have time to see changes.
     * `:timeout` (Numeric) - The number of seconds we'll wait for a response when
-      communicating with browser. Default is 5.
+      communicating with browser: navigations, JS evaluation, DOM queries,
+      dispatching input, etc. Default is 5.
+    * `:protocol_timeout` (Numeric) - The number of seconds we'll wait for an
+      internal CDP bookkeeping call to respond, e.g. `Target.createTarget`.
+      They normally resolve in milliseconds, so this only runs out when the
+      machine is heavily loaded. Default is 30.
     * `:js_errors` (Boolean) - When true, JavaScript errors get re-raised in Ruby.
     * `:pending_connection_errors` (Boolean) - Raise `PendingConnectionsError` when main frame is still waiting
       for slow responses and timeout is reached. Default is false.

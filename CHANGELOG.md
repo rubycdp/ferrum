@@ -18,6 +18,9 @@
   mobile device's viewport and touch support together. [#94]
 
 ### Changed
+- `:protocol_timeout` defaults to 30 seconds instead of following `:timeout`. Internal CDP calls resolve in
+  milliseconds, so the old default made `timeout: 1` shorten browser bookkeeping too and turned a loaded machine
+  into `Ferrum::TimeoutError` during page creation [#470]
 - `Ferrum::Page::Stream#stream` now closes the CDP stream handle (`IO.close`) once it's been fully read, so streams
   opened for `Ferrum::Browser#pdf` and `Ferrum::Page::Tracing#record` no longer keep their backing storage alive in
   the browser; a failed `IO.close` is raised to the caller.
