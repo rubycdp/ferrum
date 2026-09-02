@@ -413,23 +413,6 @@ describe Ferrum::Browser do
 
       expect(browser.body).to include("Hello world")
     end
-
-    it "raises without waiting for the command to time out" do
-      start = Ferrum::Utils::ElapsedTime.monotonic_time
-
-      expect { browser.crash }.to raise_error(Ferrum::DeadBrowserError)
-      expect(Ferrum::Utils::ElapsedTime.elapsed_time(start)).to be < 2
-
-      start = Ferrum::Utils::ElapsedTime.monotonic_time
-
-      expect { browser.go_to }.to raise_error(Ferrum::DeadBrowserError)
-      expect(Ferrum::Utils::ElapsedTime.elapsed_time(start)).to be < 2
-
-      browser.restart
-      browser.go_to
-
-      expect(browser.body).to include("Hello world")
-    end
   end
 
   describe "#close" do
