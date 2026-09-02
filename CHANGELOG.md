@@ -23,6 +23,9 @@
   the browser; a failed `IO.close` is raised to the caller.
 
 ### Fixed
+- A raising callback killed `Client::Subscriber`'s dispatch thread and with it every event for the rest of the
+  process: pages created later raised `NoSuchTargetError`, open ones lost their execution contexts. Callbacks are
+  now rescued one by one and reported to stderr [#470]
 - `create_page` raised `Failed to find browser context with id` against a browser that came up with its own startup
   window (browserless). That window lives in the browser's implicit context, which Chrome below 145
   won't address by id. Ferrum now detects it and exposes as `Ferrum::Context#implicit?`. It's never
