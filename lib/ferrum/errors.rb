@@ -40,17 +40,49 @@ module Ferrum
 
   # Raised when waiting for a response from the browser times out.
   class TimeoutError < Error
+    # The CDP method that didn't answer in time, `nil` when the wait wasn't for a command.
     #
-    # Explains that waiting for a response timed out.
+    # @return [String, nil]
+    attr_reader :command
+
+    # The session the command was sent to, `nil` for the browser-wide session.
+    #
+    # @return [String, nil]
+    attr_reader :session_id
+
+    #
+    # @param [String, nil] command
+    #   The CDP method that timed out.
+    #
+    # @param [String, nil] session_id
+    #   The session it was sent to.
+    #
+    def initialize(command = nil, session_id: nil)
+      @command = command
+      @session_id = session_id
+      super()
+    end
+
+    #
+    # Explains that waiting for a response timed out, naming the command when
+    # there was one.
     #
     # @return [String]
     #
     def message
-      "Timed out waiting for response. It's possible that this happened " \
+      "Timed out waiting for #{awaited}. It's possible that this happened " \
         "because something took a very long time (for example a page load " \
         "was slow). If so, setting the :timeout option to a higher value might " \
         "help. If this happened on an internal protocol call instead, try " \
         "raising :protocol_timeout."
+    end
+
+    private
+
+    def awaited
+      return "response" unless @command
+
+      @session_id ? "a response to #{@command} (session #{@session_id})" : "a response to #{@command}"
     end
   end
 

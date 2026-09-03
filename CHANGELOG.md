@@ -18,6 +18,8 @@
   mobile device's viewport and touch support together. [#94]
 
 ### Changed
+- `Ferrum::TimeoutError` names the CDP command and session it was waiting on, and exposes them as `#command` and
+  `#session_id`. Waits that aren't for a command keep the old message [#470]
 - `Ferrum::Page::Stream#stream` now closes the CDP stream handle (`IO.close`) once it's been fully read, so streams
   opened for `Ferrum::Browser#pdf` and `Ferrum::Page::Tracing#record` no longer keep their backing storage alive in
   the browser; a failed `IO.close` is raised to the caller.
