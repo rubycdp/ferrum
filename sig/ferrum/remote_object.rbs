@@ -1,0 +1,21 @@
+module Ferrum
+  class RemoteObject
+    attr_reader remote_id: ::String
+
+    attr_reader type: ::String
+
+    attr_reader subtype: ::String?
+
+    attr_reader description: ::String?
+
+    @page: Page
+
+    def initialize: (Page page, untyped result) -> void
+
+    def value: () -> untyped
+
+    def release: () -> nil
+
+    def inspect: () -> ::String
+  end
+end

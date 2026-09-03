@@ -60,12 +60,11 @@ describe Ferrum::Mouse do
     it "splits into steps" do
       browser.go_to("/simple")
       browser.mouse.move(x: 100, y: 100)
-      browser.evaluate_async(<<~JS, browser.timeout)
+      browser.execute(<<~JS)
         window.result = [];
         document.addEventListener("mousemove", e => {
           window.result.push([e.clientX, e.clientY]);
         });
-        arguments[0]();
       JS
 
       browser.mouse.move(x: 200, y: 300, steps: 5)
@@ -82,14 +81,13 @@ describe Ferrum::Mouse do
     it "sets buttons property" do
       browser.go_to("/simple")
       browser.mouse.move(x: 100, y: 100)
-      browser.evaluate_async(<<~JS, browser.timeout)
+      browser.execute(<<~JS)
         window.result = [];
         ["move", "up", "down"].forEach(type =>
           document.addEventListener(`mouse${type}`, e => {
             window.result.push([type, e.clientX, e.clientY, e.buttons]);
           })
         );
-        arguments[0]();
       JS
 
       browser.mouse

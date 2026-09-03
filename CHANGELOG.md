@@ -8,6 +8,23 @@
   loaded (on CDP's `Network.loadingFinished`, not `Network.responseReceived`, so `exchange.response.body` is always
   available), yielding the request's `Network::Exchange`. Doesn't require `network.intercept` to be set up, and is
   never fired for requests that fail to load [#294]
+- `Ferrum::Frame#evaluate` (and `Page`/`Browser`/`Node`) accept **named arguments**, which become the script's
+  function parameters in order, so scripts name what they receive instead of reaching into `arguments[0]`:
+  `page.evaluate("a + b", a: 1, b: 2)`. Each keyword is sent as its own protocol argument, so a `Ferrum::Node`
+  still arrives in JavaScript as the live element. When the script is a function declaration, values are bound
+  to its own parameter names rather than to hash order
+- `#evaluate`/`#execute`/`#evaluate_handle` accept either a bare expression, which is wrapped for you, or a
+  function/arrow declaration, which is used as-is. This folds `#evaluate_func` into `#evaluate` and is how you
+  run multi-statement scripts
+- Promises are now always awaited (`awaitPromise`), so `page.evaluate("await fetch(url)", url: "/x")` works and
+  there is no need for a separate asynchronous method. A `timeout:` keyword (seconds, defaulting to the page
+  timeout) bounds how long a script may take before `Ferrum::ScriptTimeoutError`; `0` disables it
+- `Ferrum::Frame#evaluate_handle` and `Ferrum::Node#evaluate_handle` return a `Ferrum::RemoteObject`, an opaque
+  reference to a browser-side value that can be passed straight back in as an argument without being serialized
+- `Ferrum::Node#execute` and `Ferrum::Node#evaluate_handle`, matching the page-level API but with `this` bound
+  to the node
+- `FERRUM_DEPRECATION_WARNINGS` controls the new deprecation warnings: `raise` turns them into errors while
+  migrating a suite, `0` silences them
 - `Ferrum::Browser#quit`/`Ferrum::Browser::Process#stop` accept `wait: false` to return immediately and run process
   killing and user-data-directory cleanup on a background thread instead of blocking; the call returns the `Thread`
   so callers can `#join` it if they need cleanup to have finished, e.g. before process exit or before reusing a
@@ -23,6 +40,15 @@
 - `Ferrum::Page::Stream#stream` now closes the CDP stream handle (`IO.close`) once it's been fully read, so streams
   opened for `Ferrum::Browser#pdf` and `Ferrum::Page::Tracing#record` no longer keep their backing storage alive in
   the browser; a failed `IO.close` is raised to the caller.
+- `Ferrum::Frame#evaluate_async`, `#evaluate_func` and `#evaluate_on` are deprecated and warn when called; so does
+  passing positional arguments to `#evaluate`/`#execute`. All of them keep working — `arguments[n]` is still
+  populated inside the generated function — and will be removed in the next major release. Replacements:
+  `evaluate_async(expr, wait, *args)` becomes `evaluate("await …", timeout: wait)`, `evaluate_func(fn, *args)`
+  becomes `evaluate(fn, name: value)`, and `evaluate_on(node:, expression:)` becomes `node.evaluate(expression)`
+- `Ferrum::Node#evaluate` resolves its result the same way `Page#evaluate` does, so `node.evaluate("this.parentNode")`
+  returns a `Ferrum::Node` instead of an empty hash. It previously ran with `returnByValue`, which flattened
+  every DOM result
+- `Ferrum::Frame#evaluate` now awaits a returned promise instead of serializing it to an empty object
 
 ### Fixed
 - An error in the client or websocket thread was re-raised in the main thread wherever it happened to be, or took
