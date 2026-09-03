@@ -23,6 +23,9 @@
   the browser; a failed `IO.close` is raised to the caller.
 
 ### Fixed
+- Commands in flight when the browser died waited out `:protocol_timeout` each before raising, so a dead browser
+  turned into a long parade of slow failures. They're released as soon as the socket closes, and a command sent
+  after that raises `Ferrum::DeadBrowserError` right away [#470]
 - A raising callback killed `Client::Subscriber`'s dispatch thread and with it every event for the rest of the
   process: pages created later raised `NoSuchTargetError`, open ones lost their execution contexts. Callbacks are
   now rescued one by one and reported to stderr [#470]

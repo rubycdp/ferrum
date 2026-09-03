@@ -219,6 +219,8 @@ module Ferrum
         @ws.send_message(message)
         true
       else
+        raise DeadBrowserError if @ws.messages.closed?
+
         pending = Concurrent::IVar.new
         @pendings[message[:id]] = pending
         @ws.send_message(message)
@@ -340,7 +342,15 @@ module Ferrum
             @pendings[message["id"]]&.set(message)
           end
         end
+
+        release_pendings
       end
+    end
+
+    # Nothing is going to answer the commands still in flight once the socket
+    # is gone, release them instead of making each wait out its timeout.
+    def release_pendings
+      @pendings.each_value { |pending| pending.try_set(nil) }
     end
 
     # Locked so two concurrent commands never share an id and read each
