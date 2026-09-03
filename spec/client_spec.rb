@@ -37,6 +37,16 @@ describe Ferrum::Client do
       expect { page.go_to("/") }.to raise_error(Ferrum::DeadBrowserError)
       expect(Ferrum::Utils::ElapsedTime.elapsed_time(start)).to be < 1
     end
+
+    it "reports an unexpected reader error instead of raising in the main thread" do
+      page = remote.create_page
+      driver = remote.client.instance_variable_get(:@ws).instance_variable_get(:@driver)
+      allow(driver).to receive(:parse).and_raise(Errno::ETIMEDOUT)
+
+      expect do
+        expect { page.go_to("/") }.to raise_error(Ferrum::DeadBrowserError)
+      end.to output(/websocket reader stopped, Errno::ETIMEDOUT/).to_stderr
+    end
   end
 
   describe "event callbacks" do

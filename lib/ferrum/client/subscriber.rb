@@ -106,7 +106,7 @@ module Ferrum
       private
 
       def start
-        @regular_thread = Utils::Thread.spawn(abort_on_exception: false) do
+        @regular_thread = Utils::Thread.spawn do
           loop do
             message = @regular.pop
             break unless message
@@ -115,7 +115,7 @@ module Ferrum
           end
         end
 
-        @priority_thread = Utils::Thread.spawn(abort_on_exception: false) do
+        @priority_thread = Utils::Thread.spawn do
           loop do
             message = @priority.pop
             break unless message
