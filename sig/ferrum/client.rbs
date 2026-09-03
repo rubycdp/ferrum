@@ -74,6 +74,8 @@ module Ferrum
 
     def start: () -> void
 
+    def release_pendings: () -> void
+
     def next_command_id: () -> ::Integer
 
     def raise_browser_error: (Hash[String, untyped] error) -> void
