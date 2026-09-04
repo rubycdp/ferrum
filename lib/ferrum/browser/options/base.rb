@@ -8,10 +8,9 @@ module Ferrum
     class Options
       #
       # Abstract base for browser-specific default option builders. Subclasses
-      # (e.g. {Options::Chrome}, {Options::Firefox}) declare their own
-      # `DEFAULT_OPTIONS` and `PLATFORM_PATH` constants and implement
-      # {#merge_required}/{#merge_default} to produce the final CLI flags used
-      # by {Command}.
+      # (e.g. {Options::Chrome}) declare their own `DEFAULT_OPTIONS` and
+      # `PLATFORM_PATH` constants and implement {#merge_required}/{#merge_default}
+      # to produce the final CLI flags used by {Command}.
       #
       class Base
         include Singleton
@@ -71,7 +70,7 @@ module Ferrum
         #
         # Merges the CLI flags that are always required to drive the browser
         # over CDP (e.g. remote debugging port, user data dir) into `flags`.
-        # Abstract; overridden by {Options::Chrome}/{Options::Firefox}.
+        # Abstract; overridden by {Options::Chrome}.
         #
         # @param [Hash{String => Object}] flags
         #   The flags accumulated so far.
@@ -92,7 +91,7 @@ module Ferrum
         #
         # Merges this browser's default CLI flags (see {#to_h}) into `flags`,
         # unless `options.ignore_default_browser_options` is set. Abstract;
-        # overridden by {Options::Chrome}/{Options::Firefox}.
+        # overridden by {Options::Chrome}.
         #
         # @param [Hash{String => Object}] flags
         #   The flags accumulated so far.

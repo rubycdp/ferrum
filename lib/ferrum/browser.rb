@@ -103,9 +103,8 @@ module Ferrum
     #   why you have slow responses and fix or block them rather than turn this
     #   setting off.
     #
-    # @option options [:chrome, :firefox] :browser_name (:chrome)
-    #   Sets the browser's name. **Note:** only experimental support for
-    #   `:firefox` for now.
+    # @option options [:chrome, :opera, :edge] :browser_name (:chrome)
+    #   Sets the browser's name.
     #
     # @option options [String] :browser_path
     #   Path to Chrome binary, you can also set ENV variable as

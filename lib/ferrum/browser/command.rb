@@ -17,8 +17,6 @@ module Ferrum
       # https://github.com/cyrus-and/chrome-remote-interface#implementations
       def self.build(options, user_data_dir)
         defaults = case options.browser_name
-                   when :firefox
-                     Options::Firefox.options
                    when :chrome, :opera, :edge, nil
                      Options::Chrome.options
                    else
