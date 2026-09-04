@@ -495,6 +495,20 @@ describe Ferrum::Browser do
     ensure
       browser&.quit
     end
+
+    it "recovers when a previous start died after the client was built" do
+      browser = Ferrum::Browser.new
+
+      allow(Ferrum::Contexts).to receive(:new).and_raise(Ferrum::DeadBrowserError)
+      expect { browser.restart }.to raise_error(Ferrum::DeadBrowserError)
+
+      allow(Ferrum::Contexts).to receive(:new).and_call_original
+
+      expect { browser.restart }.not_to raise_error
+      expect(browser.contexts).not_to be_nil
+    ensure
+      browser&.quit
+    end
   end
 
   describe "#resize" do
