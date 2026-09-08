@@ -248,7 +248,7 @@ module Ferrum
     def quit(wait: true)
       return unless @client
 
-      contexts.close_connections
+      contexts&.close_connections
 
       @client.close
       thread = @process.stop(wait: wait)
