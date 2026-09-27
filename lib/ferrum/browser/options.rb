@@ -19,7 +19,7 @@ module Ferrum
       DEBUG_MODE = !ENV.fetch("FERRUM_DEBUG", nil).nil?
 
       attr_reader :window_size, :logger, :ws_max_receive_size,
-                  :js_errors, :base_url, :slowmo, :pending_connection_errors,
+                  :js_errors, :ignore_js_errors, :base_url, :slowmo, :pending_connection_errors,
                   :url, :ws_url, :env, :process_timeout, :browser_name, :browser_path,
                   :save_path, :proxy, :port, :host, :headless, :incognito, :dockerize, :browser_options,
                   :ignore_default_browser_options, :xvfb, :flatten
@@ -34,6 +34,7 @@ module Ferrum
         @protocol_timeout = @options.fetch(:protocol_timeout, DEFAULT_PROTOCOL_TIMEOUT)
         @window_size = @options.fetch(:window_size, WINDOW_SIZE)
         @js_errors = @options.fetch(:js_errors, false)
+        @ignore_js_errors = validate_ignore_js_errors(@options.fetch(:ignore_js_errors, []))
         @headless = @options.fetch(:headless, true)
         @incognito = @options.fetch(:incognito, true)
         @dockerize = @options.fetch(:dockerize, false)
@@ -106,6 +107,38 @@ module Ferrum
         end
 
         options
+      end
+
+      #
+      # Validates the `:ignore_js_errors` option.
+      #
+      # @param [Array<Regexp>] patterns
+      #   The `:ignore_js_errors` option as passed to {#initialize}.
+      #
+      # @return [Array<Regexp>]
+      #   The same patterns, frozen.
+      #
+      # @raise [ArgumentError]
+      #   If `patterns` is not an `Array`, or holds anything but `Regexp`.
+      #
+      def validate_ignore_js_errors(patterns)
+        unless patterns.is_a?(Array) && patterns.all?(Regexp)
+          raise ArgumentError, "ignore_js_errors must be an Array of Regexp"
+        end
+
+        patterns.dup.freeze
+      end
+
+      #
+      # Whether a JavaScript error message matches any `:ignore_js_errors` pattern.
+      #
+      # @param [String] message
+      #   The error message, as {JavaScriptError#message} builds it.
+      #
+      # @return [Boolean]
+      #
+      def ignore_js_error?(message)
+        @ignore_js_errors.any? { |pattern| pattern.match?(message) }
       end
 
       #

@@ -534,8 +534,11 @@ module Ferrum
 
       if @options.js_errors
         on("Runtime.exceptionThrown") do |params|
+          error = JavaScriptError.new(params["exceptionDetails"])
+          next if @options.ignore_js_error?(error.message)
+
           # FIXME: https://jvns.ca/blog/2015/11/27/why-rubys-timeout-is-dangerous-and-thread-dot-raise-is-terrifying/
-          Thread.main.raise JavaScriptError, params["exceptionDetails"]
+          Thread.main.raise error
         end
       end
 

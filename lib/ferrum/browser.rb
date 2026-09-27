@@ -97,6 +97,10 @@ module Ferrum
     # @option options [Boolean] :js_errors
     #   When true, JavaScript errors get re-raised in Ruby.
     #
+    # @option options [Array<Regexp>] :ignore_js_errors ([])
+    #   JavaScript errors not re-raised even when `:js_errors` is true, matched
+    #   against the error message.
+    #
     # @option options [Boolean] :pending_connection_errors (true)
     #   When main frame is still waiting for slow responses while timeout is
     #   reached {PendingConnectionsError} is raised. It's better to figure out

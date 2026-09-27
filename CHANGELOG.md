@@ -1,6 +1,8 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.18.0...main) ##
 
 ### Added
+- `:ignore_js_errors` browser option, an `Array` of `Regexp` (empty by default) matched against the message of the
+  JavaScript errors `js_errors: true` would re-raise; a matching error is dropped instead
 - `Ferrum::Frame#wait_for_selector` (also reachable from `Page`/`Browser`), which waits for an element to show up
   in the DOM. It retries `at_css`/`at_xpath` every `interval` until a match is found or time runs out, returning `nil`
   on timeout [#82]

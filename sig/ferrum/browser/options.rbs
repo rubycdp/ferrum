@@ -31,6 +31,8 @@ module Ferrum
 
       attr_reader js_errors: bool
 
+      attr_reader ignore_js_errors: ::Array[Regexp]
+
       attr_reader base_url: ::Addressable::URI?
 
       attr_reader slowmo: ::Float
@@ -76,6 +78,7 @@ module Ferrum
       @protocol_timeout: ::Numeric
       @window_size: ::Array[::Integer]
       @js_errors: bool
+      @ignore_js_errors: ::Array[Regexp]
       @headless: bool
       @incognito: bool
       @flatten: bool
@@ -105,6 +108,10 @@ module Ferrum
       def extensions: () -> ::Array[String]
 
       def validate_proxy: (Hash[Symbol, (String | ::Integer)]? options) -> Hash[Symbol, (String | ::Integer)]?
+
+      def validate_ignore_js_errors: (::Array[Regexp] patterns) -> ::Array[Regexp]
+
+      def ignore_js_error?: (String message) -> bool
 
       def to_h: () -> Hash[Symbol, untyped]
 

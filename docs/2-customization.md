@@ -30,6 +30,8 @@ Ferrum::Browser.new(options)
     * `:timeout` (Numeric) - The number of seconds we'll wait for a response when
       communicating with browser. Default is 5.
     * `:js_errors` (Boolean) - When true, JavaScript errors get re-raised in Ruby.
+    * `:ignore_js_errors` (Array<Regexp>) - JavaScript errors that are not re-raised
+      even when `:js_errors` is true, matched against the error message. Default is `[]`.
     * `:pending_connection_errors` (Boolean) - Raise `PendingConnectionsError` when main frame is still waiting
       for slow responses and timeout is reached. Default is false.
     * `:browser_name` (Symbol) - `:chrome` by default, `:opera` and `:edge` are
@@ -129,6 +131,12 @@ Ferrum::Browser.new(url: "http://localhost:9222")
 
 # Enable JavaScript error raising
 Ferrum::Browser.new(js_errors: true)
+
+# Raise JavaScript errors except for known browser and library noise
+Ferrum::Browser.new(
+  js_errors: true,
+  ignore_js_errors: [/ResizeObserver loop completed with undelivered notifications\./, /^AbortError: /]
+)
 
 # Set custom timeout and slowmo for debugging
 Ferrum::Browser.new(timeout: 10, slowmo: 0.5)

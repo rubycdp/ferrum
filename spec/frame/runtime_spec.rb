@@ -74,6 +74,34 @@ describe Ferrum::Frame::Runtime do
         browser&.quit
       end
     end
+
+    context "with ignored javascript errors" do
+      let(:browser) do
+        Ferrum::Browser.new(base_url: base_url, js_errors: true,
+                            ignore_js_errors: [/ResizeObserver loop/, /ReferenceError: (omg|foo)/])
+      end
+
+      after { browser.quit }
+
+      it "does not propagate an error whose message matches an ignored pattern" do
+        browser.execute "setTimeout(function() { omg }, 0)"
+        sleep 0.1
+        expect(browser.evaluate("1+1")).to eq(2)
+      end
+
+      it "does not propagate an ignored error thrown during page load" do
+        browser.go_to("/js_error")
+        expect(browser.body).to include("hello")
+      end
+
+      it "propagates an error that matches no ignored pattern" do
+        expect do
+          browser.execute "setTimeout(function() { bar }, 0)"
+          sleep 0.01
+          browser.execute ""
+        end.to raise_error(Ferrum::JavaScriptError, /ReferenceError.*bar/)
+      end
+    end
   end
 
   describe "#evaluate" do
