@@ -30,6 +30,8 @@ module Ferrum
 
       def close: () -> void
 
+      def force_close: () -> void
+
       private
 
       def start: () -> void

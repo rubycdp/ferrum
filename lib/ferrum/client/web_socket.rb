@@ -141,6 +141,24 @@ module Ferrum
         @driver_mutex.synchronize { @driver.close }
       end
 
+      #
+      # Closes the underlying socket whether or not the close handshake ever
+      # completed.
+      #
+      # {#close} only sends a close frame; the socket itself is closed by
+      # {#on_close}, which runs when the browser answers with a close frame of
+      # its own. A browser that is already dead never answers, so without this
+      # the socket stays open until GC finalizes it -- long enough to exhaust
+      # the process's file descriptors when browsers are restarted in a loop.
+      #
+      # @return [void]
+      #
+      def force_close
+        @sock.close unless @sock.closed?
+      rescue IOError, SystemCallError
+        # nop
+      end
+
       private
 
       def start
