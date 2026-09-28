@@ -299,6 +299,7 @@ module Ferrum
       @pendings.clear
       @thread.kill unless @thread.join(1)
       @subscriber.close
+      @ws.force_close
     end
 
     #

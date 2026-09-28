@@ -38,6 +38,16 @@ describe Ferrum::Client do
       expect(Ferrum::Utils::ElapsedTime.elapsed_time(start)).to be < 1
     end
 
+    it "closes the socket when the browser dies before answering the close frame" do
+      remote.create_page
+      socket = remote.client.instance_variable_get(:@ws).instance_variable_get(:@sock)
+      Process.kill("KILL", -remote.process.pid)
+
+      remote.quit
+
+      expect(socket).to be_closed
+    end
+
     it "reports an unexpected reader error instead of raising in the main thread" do
       page = remote.create_page
       driver = remote.client.instance_variable_get(:@ws).instance_variable_get(:@driver)
