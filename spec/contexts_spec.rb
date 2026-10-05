@@ -24,6 +24,31 @@ describe Ferrum::Contexts do
     browser.client.off("Target.detachedFromTarget", detached_id)
   end
 
+  it "registers an out-of-process iframe while a worker is connected" do
+    isolated = Ferrum::Browser.new(base_url: base_url,
+                                   browser_options: { "disable-features" => "Translate", "site-per-process" => nil })
+    with_worker = isolated.create_page
+    with_worker.go_to
+    with_worker.execute <<~JS
+      new Worker(URL.createObjectURL(new Blob(["setInterval(() => {}, 1000)"], { type: "application/javascript" })))
+    JS
+    wait(5).for { isolated.targets.values.any? { |t| t.worker? && t.connected? } }.to be(true)
+
+    with_iframe = isolated.create_page
+    with_iframe.go_to
+
+    expect do
+      with_iframe.execute <<~JS
+        const iframe = document.createElement("iframe");
+        iframe.src = "http://localhost:#{server.port}/ferrum/simple";
+        document.body.appendChild(iframe);
+      JS
+      wait(5).for { isolated.targets.values.find(&:iframe?) }.not_to be_nil
+    end.not_to output(/callback raised/).to_stderr
+  ensure
+    isolated&.quit
+  end
+
   describe "#default_context" do
     it "works in the browser's startup window when it came up with one" do
       with_external_browser(incognito: false) do |url|
