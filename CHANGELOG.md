@@ -25,6 +25,9 @@
   the browser; a failed `IO.close` is raised to the caller.
 
 ### Fixed
+- A browser context whose `Target.disposeBrowserContext` timed out stayed registered, so every later `#reset` asked
+  again and raised `Disposal of browser context ... is already pending` for the rest of the process. It's now
+  forgotten either way, and `#reset` disposes the remaining contexts before raising the first error [#641]
 - An error in the client or websocket thread was re-raised in the main thread wherever it happened to be, or took
   the process down with it, since `Utils::Thread.spawn` defaulted to `abort_on_exception: true` and neither thread
   rescued. Ferrum's threads no longer abort, they report to stderr and mark the connection dead [#470]
