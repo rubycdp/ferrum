@@ -25,6 +25,8 @@
   the browser; a failed `IO.close` is raised to the caller.
 
 ### Fixed
+- An out-of-process iframe appearing while a web worker was connected made Ferrum build a `Page` for the worker,
+  raising `'Page.enable' wasn't found` in the event thread. Only pages and iframes are now searched for its parent [#640]
 - A browser context whose `Target.disposeBrowserContext` timed out stayed registered, so every later `#reset` asked
   again and raised `Disposal of browser context ... is already pending` for the rest of the process. It's now
   forgotten either way, and `#reset` disposes the remaining contexts before raising the first error [#641]

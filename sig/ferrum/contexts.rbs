@@ -43,6 +43,8 @@ module Ferrum
 
     def subscribe_target_created: () -> void
 
+    def find_frame_owner: (String? context_id, String frame_id) -> Target?
+
     def rearm_auto_attach: (String session_id, String type) -> void
 
     def handle_attach: (Target? target, String session_id, Hash[String, untyped] params) -> void
