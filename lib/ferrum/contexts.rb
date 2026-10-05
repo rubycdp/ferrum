@@ -90,17 +90,26 @@ module Ferrum
     # Disposes a browser context and all of its targets. The browser's implicit
     # context is not ours to dispose, see {Context#implicit?}.
     #
+    # The context is forgotten even if Chrome fails to dispose it in time: its
+    # targets are disconnected by then, and asking again only gets
+    # `Disposal of browser context ... is already pending` back.
+    #
     # @param [String] context_id
     #
     # @return [Boolean, nil]
+    #
+    # @raise [TimeoutError, BrowserError]
     def dispose(context_id)
       context = @contexts[context_id]
       return unless context
       return if context.implicit?
 
-      context.close_targets_connection
-      @client.command("Target.disposeBrowserContext", browserContextId: context.id)
-      @contexts.delete(context_id)
+      begin
+        context.close_targets_connection
+        @client.command("Target.disposeBrowserContext", browserContextId: context.id)
+      ensure
+        @contexts.delete(context_id)
+      end
       true
     end
 
@@ -112,13 +121,23 @@ module Ferrum
       @contexts.each_value(&:close_targets_connection)
     end
 
-    # Disposes every context still known to the browser.
+    # Disposes every context still known to the browser. A context that fails
+    # to dispose doesn't stop the others from being disposed; the first error
+    # is raised once all of them have been tried.
     #
     # @return [void]
+    #
+    # @raise [TimeoutError, BrowserError]
     def reset
+      error = nil
       context_ids = @client.command("Target.getBrowserContexts")["browserContextIds"]
       @default_context = nil if context_ids.include?(@default_context&.id)
-      @contexts.each_key { |id| dispose(id) if context_ids.include?(id) }
+      (@contexts.keys & context_ids).each do |id|
+        dispose(id)
+      rescue BrowserError, TimeoutError => e
+        error ||= e
+      end
+      raise error if error
     end
 
     # Number of known contexts.
