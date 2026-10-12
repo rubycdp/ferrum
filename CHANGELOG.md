@@ -25,6 +25,11 @@
   the browser; a failed `IO.close` is raised to the caller.
 
 ### Fixed
+- A browser that stopped reading its websocket (hung, or stopped with `SIGSTOP`) blocked the thread sending a
+  command forever, in a socket write the command's timeout didn't cover, while holding the lock every other command
+  needs to be sent: the whole client froze without an error. The write now gives up once the browser accepts no data
+  for the command's timeout, closes the connection and raises `Ferrum::DeadBrowserError`, and so do the commands
+  waiting behind it [#644]
 - A browser context whose `Target.disposeBrowserContext` timed out stayed registered, so every later `#reset` asked
   again and raised `Disposal of browser context ... is already pending` for the rest of the process. It's now
   forgotten either way, and `#reset` disposes the remaining contexts before raising the first error [#641]
