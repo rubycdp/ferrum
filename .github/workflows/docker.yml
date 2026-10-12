@@ -1,0 +1,151 @@
+name: Docker
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docker/**"
+      - ".github/workflows/docker.yml"
+  pull_request:
+    paths:
+      - "docker/**"
+      - ".github/workflows/docker.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build ${{ matrix.browser }} (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chrome, chromium]
+        arch: [amd64, arm64]
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/${{ matrix.browser }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: docker
+          platforms: linux/${{ matrix.arch }}
+          build-args: |
+            BROWSER=${{ matrix.browser }}
+            VERSION=${{ github.sha }}
+          load: true
+          tags: ${{ matrix.browser }}:test
+          cache-from: type=gha,scope=${{ matrix.browser }}-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.browser }}-${{ matrix.arch }}
+
+      - name: Smoke test
+        run: |
+          docker run -d --name smoke -p 3000:3000 ${{ matrix.browser }}:test
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:3000/json/version | grep -q webSocketDebuggerUrl && break
+            sleep 1
+          done
+          docker logs smoke
+          curl -sf http://localhost:3000/json/version | tee /dev/stderr | grep -q webSocketDebuggerUrl
+
+      - name: Detect browser version
+        run: |
+          mkdir -p /tmp/meta
+          docker run --rm --entrypoint sh ${{ matrix.browser }}:test -c '"$BROWSER_PATH" --version' \
+            | grep -oE '[0-9]+(\.[0-9]+){3}' | head -1 > "/tmp/meta/version-${{ matrix.arch }}"
+          cat "/tmp/meta/version-${{ matrix.arch }}"
+
+      - name: Push by digest
+        id: push
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@v6
+        with:
+          context: docker
+          platforms: linux/${{ matrix.arch }}
+          build-args: |
+            BROWSER=${{ matrix.browser }}
+            VERSION=${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.browser }}-${{ matrix.arch }}
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
+
+      - name: Export digest
+        if: github.event_name != 'pull_request'
+        run: |
+          mkdir -p /tmp/meta/digests
+          touch "/tmp/meta/digests/${DIGEST#sha256:}"
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+
+      - name: Upload metadata
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: meta-${{ matrix.browser }}-${{ matrix.arch }}
+          path: /tmp/meta
+          retention-days: 1
+
+  publish:
+    name: Publish ${{ matrix.browser }}
+    if: github.event_name != 'pull_request'
+    needs: build
+    strategy:
+      matrix:
+        browser: [chrome, chromium]
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/${{ matrix.browser }}
+    steps:
+      - name: Download metadata
+        uses: actions/download-artifact@v4
+        with:
+          pattern: meta-${{ matrix.browser }}-*
+          path: /tmp/meta
+          merge-multiple: true
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create multi-arch manifest
+        working-directory: /tmp/meta
+        run: |
+          tags=(-t "$IMAGE:latest")
+          amd64=$(cat version-amd64)
+          arm64=$(cat version-arm64)
+          if [ -n "$amd64" ] && [ "$amd64" = "$arm64" ]; then
+            tags+=(-t "$IMAGE:$amd64" -t "$IMAGE:${amd64%%.*}")
+          else
+            echo "::warning::Browser versions differ (amd64: $amd64, arm64: $arm64), publishing only latest"
+          fi
+          docker buildx imagetools create "${tags[@]}" $(printf "$IMAGE@sha256:%s " $(ls digests))
+          docker buildx imagetools inspect "$IMAGE:latest"
