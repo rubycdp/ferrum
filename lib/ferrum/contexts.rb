@@ -178,8 +178,7 @@ module Ferrum
         context_id = info["browserContextId"]
         add_context(context_id)
 
-        if info["type"] == "iframe" &&
-           (target = @contexts[context_id]&.find_target { |t| t.connected? && t.page.frame_by(id: info["targetId"]) })
+        if info["type"] == "iframe" && (target = find_frame_owner(context_id, info["targetId"]))
           @contexts[context_id]&.add_target(session_id: target.session_id, params: info)
         else
           @contexts[context_id]&.add_target(params: info)
@@ -202,6 +201,12 @@ module Ferrum
       @client.on("Target.targetCrashed") do |params|
         context = find_by(target_id: params["targetId"])
         context&.delete_target(params["targetId"])
+      end
+    end
+
+    def find_frame_owner(context_id, frame_id)
+      @contexts[context_id]&.find_target do |target|
+        (target.page? || target.iframe?) && target.connected? && target.page.frame_by(id: frame_id)
       end
     end
 
