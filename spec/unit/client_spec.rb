@@ -98,5 +98,16 @@ describe Ferrum::Client do
         client.send_message(message, async: false, timeout: 0.05)
       end.to raise_error(Ferrum::TimeoutError)
     end
+
+    it "forgets a command whose send raised" do
+      client.instance_variable_set(:@options, Ferrum::Browser::Options.new)
+      ws = instance_double(Ferrum::Client::WebSocket, messages: Queue.new)
+      allow(ws).to receive(:send_message).and_raise(Ferrum::DeadBrowserError)
+      client.instance_variable_set(:@ws, ws)
+
+      message = client.build_message("Page.navigate", {})
+      expect { client.send_message(message, async: false) }.to raise_error(Ferrum::DeadBrowserError)
+      expect(client.instance_variable_get(:@pendings)).to be_empty
+    end
   end
 end
