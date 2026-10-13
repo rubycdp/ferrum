@@ -226,9 +226,12 @@ module Ferrum
 
         pending = Concurrent::IVar.new
         @pendings[message[:id]] = pending
-        @ws.send_message(message, timeout)
-        data = pending.value!(timeout)
-        @pendings.delete(message[:id])
+        begin
+          @ws.send_message(message, timeout)
+          data = pending.value!(timeout)
+        ensure
+          @pendings.delete(message[:id])
+        end
 
         raise DeadBrowserError if data.nil? && @ws.messages.closed?
         raise TimeoutError.new(message[:method], session_id: message[:sessionId]) unless data
