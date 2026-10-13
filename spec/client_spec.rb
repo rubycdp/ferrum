@@ -61,7 +61,7 @@ describe Ferrum::Client do
 
   describe "a browser that stops reading", skip: Ferrum::Utils::Platform.windows? do
     let(:remote) { Ferrum::Browser.new(base_url: base_url, timeout: 1, protocol_timeout: 1) }
-    let(:larger_than_socket_buffers) { "'#{'x' * (64 * 1024 * 1024)}'.length" }
+    let(:larger_than_socket_buffers) { "'#{'x' * (16 * 1024 * 1024)}'.length" }
 
     after do
       Process.kill("CONT", remote.process.pid)
