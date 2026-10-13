@@ -25,6 +25,8 @@
   the browser; a failed `IO.close` is raised to the caller.
 
 ### Fixed
+- An out-of-process iframe, e.g. Chrome's PDF viewer for an embedded PDF, appearing while a web worker was connected
+  raised `'Page.enable' wasn't found` in the event thread. Only pages and iframes are now searched for its parent [#640]
 - A browser that stopped reading its websocket (hung, or stopped with `SIGSTOP`) blocked the thread sending a
   command forever, in a socket write the command's timeout didn't cover, while holding the lock every other command
   needs to be sent: the whole client froze without an error. The write now gives up once the browser accepts no data
