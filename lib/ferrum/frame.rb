@@ -165,12 +165,11 @@ module Ferrum
     #   frame.body # => <html><head></head><body><p>lol</p></body></html>
     #
     def content=(html)
-      evaluate_async(%(
+      execute(<<~JS, html: html)
         document.open();
-        document.write(arguments[0]);
+        document.write(html);
         document.close();
-        arguments[1](true);
-      ), @page.timeout, html)
+      JS
       @page.document_node_id
     end
     alias set_content content=

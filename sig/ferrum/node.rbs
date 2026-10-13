@@ -67,7 +67,11 @@ module Ferrum
 
     def select: (*untyped values, ?by: ::Symbol) -> untyped
 
-    def evaluate: (untyped expression) -> untyped
+    def evaluate: (untyped expression, *untyped positional, ?timeout: Numeric?, ?args: ::Hash[untyped, untyped]?, **untyped named) -> untyped
+
+    def evaluate_handle: (untyped expression, *untyped positional, ?timeout: Numeric?, ?args: ::Hash[untyped, untyped]?, **untyped named) -> untyped
+
+    def execute: (untyped expression, *untyped positional, ?timeout: Numeric?, ?args: ::Hash[untyped, untyped]?, **untyped named) -> true
 
     def ==: (untyped other) -> (false | untyped)
 

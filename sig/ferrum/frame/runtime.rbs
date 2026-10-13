@@ -11,27 +11,65 @@ module Ferrum
 
       INTERMITTENT_SLEEP: untyped
 
-      def evaluate: (untyped expression, *untyped args) -> untyped
+      SCRIPT_TIMEOUT: ::String
 
-      def evaluate_async: (untyped expression, untyped wait, *untyped args) -> untyped
+      LEGACY_SCRIPT_TIMEOUT: ::String
 
-      def execute: (untyped expression, *untyped args) -> true
+      FUNCTION_DECLARATION: ::Regexp
 
-      def evaluate_func: (untyped expression, *untyped args, ?on: untyped?) -> untyped
+      ARROW_DECLARATION: ::Regexp
 
-      def evaluate_on: (node: untyped, expression: untyped, ?by_value: bool, ?wait: ::Integer) -> untyped
+      TRAILING_NOISE: ::Regexp
+
+      JS_IDENTIFIER: ::Regexp
+
+      PARAMETER_LISTS: ::Array[::Regexp]
+
+      PUBLIC_NAMES: ::Hash[::Symbol, ::String]
+
+      def evaluate: (untyped expression, *untyped positional, ?timeout: Numeric?, ?args: ::Hash[untyped, untyped]?, **untyped named) -> untyped
+
+      def evaluate_handle: (untyped expression, *untyped positional, ?timeout: Numeric?, ?args: ::Hash[untyped, untyped]?, **untyped named) -> untyped
+
+      def execute: (untyped expression, *untyped positional, ?timeout: Numeric?, ?args: ::Hash[untyped, untyped]?, **untyped named) -> true
+
+      def evaluate_in: (Node node, untyped expression, ::Array[untyped] positional, ::Hash[untyped, untyped] args, ?mode: ::Symbol, ?timeout: Numeric?) -> untyped
+
+      %a{deprecated} def evaluate_async: (untyped expression, untyped wait, *untyped args) -> untyped
+
+      %a{deprecated} def evaluate_func: (untyped expression, *untyped args, ?on: untyped?) -> untyped
+
+      %a{deprecated} def evaluate_on: (node: untyped, expression: untyped, ?by_value: bool, ?wait: ::Integer) -> untyped
 
       private
 
-      def call: (expression: untyped, ?arguments: untyped, ?on: untyped?, ?wait: ::Integer, ?handle: bool, **untyped options) -> untyped
+      def run: (untyped expression, ::Array[untyped] positional, ::Hash[untyped, untyped] args, ?mode: ::Symbol, ?timeout: Numeric?, ?on: Node?) -> untyped
+
+      def arguments_for: (untyped expression, ::Array[untyped] positional, ::Hash[untyped, untyped] args, ::Symbol mode) -> [::Array[::String], ::Array[untyped]]
+
+      def ordered_values: (untyped expression, ::Hash[untyped, untyped] hash) -> ::Array[untyped]
+
+      def declaration?: (untyped expression) -> bool
+
+      def declared_parameters: (untyped expression) -> ::Array[::String]?
+
+      def validate_parameter!: (untyped key) -> ::String
+
+      def wrap_expression: (untyped expression, ::Array[::String] params, Numeric timeout, returns: bool) -> ::String
+
+      def call: (untyped declaration, ?::Array[untyped] arguments, ?on: Node?, ?wait: ::Integer, ?mode: ::Symbol, ?timeout: Numeric?) -> untyped
+
+      def script_timeout: (Numeric? timeout) -> ::Float
 
       def handle_error: (untyped response) -> (nil | untyped)
 
-      def handle_response: (untyped response) -> untyped
+      def handle_remote_object: (untyped result) -> untyped
+
+      def handle_response: (untyped response, ?check_cyclic: bool) -> untyped
 
       def prepare_args: (untyped args) -> untyped
 
-      def reduce_props: (untyped object_id, untyped to) { (untyped, untyped, untyped) -> untyped } -> (::Array[untyped] | untyped | untyped)
+      def reduce_props: (untyped object_id, untyped to, ?check_cyclic: bool) { (untyped, untyped, untyped) -> untyped } -> (::Array[untyped] | untyped | untyped)
 
       def cyclic?: (untyped object_id) -> untyped
 

@@ -27,32 +27,38 @@ module Ferrum
     #
     module DOM
       SCRIPT_SRC_TAG = <<~JS
-        const script = document.createElement("script");
-        script.src = arguments[0];
-        script.type = arguments[1];
-        script.onload = arguments[2];
-        document.head.appendChild(script);
+        function(url, type) {
+          const script = document.createElement("script");
+          script.src = url;
+          script.type = type;
+          document.head.appendChild(script);
+          return new Promise(resolve => script.onload = resolve);
+        }
       JS
       SCRIPT_TEXT_TAG = <<~JS
-        const script = document.createElement("script");
-        script.text = arguments[0];
-        script.type = arguments[1];
-        document.head.appendChild(script);
-        arguments[2]();
+        function(content, type) {
+          const script = document.createElement("script");
+          script.text = content;
+          script.type = type;
+          document.head.appendChild(script);
+        }
       JS
       STYLE_TAG = <<~JS
-        const style = document.createElement("style");
-        style.type = "text/css";
-        style.appendChild(document.createTextNode(arguments[0]));
-        document.head.appendChild(style);
-        arguments[1]();
+        function(content) {
+          const style = document.createElement("style");
+          style.type = "text/css";
+          style.appendChild(document.createTextNode(content));
+          document.head.appendChild(style);
+        }
       JS
       LINK_TAG = <<~JS
-        const link = document.createElement("link");
-        link.rel = "stylesheet";
-        link.href = arguments[0];
-        link.onload = arguments[1];
-        document.head.appendChild(link);
+        function(url) {
+          const link = document.createElement("link");
+          link.rel = "stylesheet";
+          link.href = url;
+          document.head.appendChild(link);
+          return new Promise(resolve => link.onload = resolve);
+        }
       JS
 
       #
@@ -159,7 +165,7 @@ module Ferrum
           }
         JS
 
-        evaluate_func(expr, selector, within)
+        evaluate(expr, selector: selector, within: within)
       end
 
       #
@@ -186,7 +192,7 @@ module Ferrum
             return xpath.snapshotItem(0);
           }
         JS
-        evaluate_func(expr, selector, within)
+        evaluate(expr, selector: selector, within: within)
       end
 
       #
@@ -213,7 +219,7 @@ module Ferrum
           }
         JS
 
-        evaluate_func(expr, selector, within)
+        evaluate(expr, selector: selector, within: within)
       end
 
       #
@@ -240,7 +246,7 @@ module Ferrum
           }
         JS
 
-        evaluate_func(expr, selector, within)
+        evaluate(expr, selector: selector, within: within)
       end
 
       #
@@ -306,17 +312,17 @@ module Ferrum
       #   browser.add_script_tag(url: "http://example.com/stylesheet.css") # => true
       #
       def add_script_tag(url: nil, path: nil, content: nil, type: "text/javascript")
-        expr, *args = if url
-                        [SCRIPT_SRC_TAG, url, type]
-                      elsif path || content
-                        if path
-                          content = File.read(path)
-                          content += "\n//# sourceURL=#{path}"
-                        end
-                        [SCRIPT_TEXT_TAG, content, type]
-                      end
+        if url
+          evaluate(SCRIPT_SRC_TAG, url: url, type: type)
+        elsif path || content
+          if path
+            content = File.read(path)
+            content += "\n//# sourceURL=#{path}"
+          end
+          evaluate(SCRIPT_TEXT_TAG, content: content, type: type)
+        end
 
-        evaluate_async(expr, @page.timeout, *args)
+        true
       end
 
       #
@@ -332,17 +338,17 @@ module Ferrum
       #   browser.add_style_tag(content: "h1 { font-size: 40px; }") # => true
       #
       def add_style_tag(url: nil, path: nil, content: nil)
-        expr, *args = if url
-                        [LINK_TAG, url]
-                      elsif path || content
-                        if path
-                          content = File.read(path)
-                          content += "\n//# sourceURL=#{path}"
-                        end
-                        [STYLE_TAG, content]
-                      end
+        if url
+          evaluate(LINK_TAG, url: url)
+        elsif path || content
+          if path
+            content = File.read(path)
+            content += "\n//# sourceURL=#{path}"
+          end
+          evaluate(STYLE_TAG, content: content)
+        end
 
-        evaluate_async(expr, @page.timeout, *args)
+        true
       end
     end
   end
