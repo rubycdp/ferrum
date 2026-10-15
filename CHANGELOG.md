@@ -1,4 +1,15 @@
-## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.18.0...main) ##
+## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.19.0...main) ##
+
+### Added
+
+### Changed
+
+### Fixed
+
+### Removed
+
+
+## [0.19.0](https://github.com/rubycdp/ferrum/compare/v0.18.0...v0.19.0) (October 15, 2026) ##
 
 ### Added
 - `Ferrum::Frame#wait_for_selector` (also reachable from `Page`/`Browser`), which waits for an element to show up
@@ -108,6 +119,7 @@
 
 ### Removed
 - The now no-op `--remote-debugging-address` Chrome flag, which Chrome has stopped honoring [#552]
+- Experimental Firefox support (`browser_name: :firefox`). Ferrum is Chrome/CDP only now
 
 
 ## [0.18.0](https://github.com/rubycdp/ferrum/compare/v0.17.2...v0.18.0) (August 20, 2026) ##
