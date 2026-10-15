@@ -6,7 +6,10 @@ sidebar_position: 1
 
 Ferrum is a high-level API to control Chrome in Ruby.
 
-![Ferrum Logo](https://raw.githubusercontent.com/rubycdp/ferrum/main/logo.svg?sanitize=true)
+<img align="right"
+     width="160" height="160"
+     alt="Ferrum logo"
+     src="https://raw.githubusercontent.com/rubycdp/ferrum/main/logo.svg?sanitize=true" />
 
 It is Ruby clean and high-level API to Chrome. Runs headless by default, but you
 can configure it to run in a headful mode. All you need is Ruby and [Chrome](https://www.google.com/chrome/) or [Chromium](https://www.chromium.org/).
@@ -15,6 +18,8 @@ Selenium/WebDriver/ChromeDriver dependency. The emphasis was made on a raw CDP
 protocol because Chrome allows you to do so many things that are barely
 supported by WebDriver because it should have consistent design with other
 browsers.
+
+<br clear="right" />
 
 ## Installation
 
