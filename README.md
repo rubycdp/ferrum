@@ -3,7 +3,7 @@
 ## [Documentation](https://docs.rubycdp.com/docs/ferrum/introduction)
 
 <img align="right"
-     width="320" height="241"
+     width="160" height="160"
      alt="Ferrum logo"
      src="https://raw.githubusercontent.com/rubycdp/ferrum/main/logo.svg?sanitize=true">
 
@@ -17,6 +17,8 @@ browsers.
 
 * [Cuprite](https://github.com/rubycdp/cuprite) is a pure Ruby driver for [Capybara](https://github.com/teamcapybara/capybara) based on Ferrum.
 * [Vessel](https://github.com/rubycdp/vessel) high-level web crawling framework based on Ferrum and Mechanize.
+
+<br clear="right">
 
 ## Install
 
