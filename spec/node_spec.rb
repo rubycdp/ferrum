@@ -47,6 +47,19 @@ describe Ferrum::Node do
       expect { node.text }.to raise_error(Ferrum::NodeNotFoundError)
     end
 
+    it "raises an error instead of focusing a node from the new document after reload" do
+      browser.go_to("/form")
+      node = browser.at_css("#customer_email")
+      node.focus
+
+      browser.refresh
+      browser.at_css("#customer_email").focus
+      browser.at_css("#customer_email").blur
+
+      expect { node.focus }.to raise_error(Ferrum::NodeNotFoundError)
+      expect(browser.evaluate("document.activeElement.id")).not_to eq("customer_email")
+    end
+
     it "raises an error if the element is not visible" do
       browser.go_to("/index")
 

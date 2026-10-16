@@ -6,6 +6,7 @@ module Ferrum
 
     @node_id: untyped
     @object_id: untyped
+    @document_version: ::Integer
 
     attr_reader page: untyped
 

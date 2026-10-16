@@ -23,13 +23,17 @@ module Ferrum
       @tag_name = description["nodeName"].downcase
       @object_id = object_id
       @node_id = node_id
+      @document_version = @page.document_version
     end
 
     # Frontend node id is resolved lazily, on first actual need (focus, click, scroll_into_view, etc.)
     # We can try to subscribe to `DOM.childNodeRemoved` and `DOM.childNodeInserted` in the future
     # to keep track of nodes.
     def node_id
-      @node_id ||= begin
+      return @node_id if @node_id && @document_version == page.document_version
+
+      @document_version = page.document_version
+      @node_id = begin
         id = page.command("DOM.requestNode", objectId: @object_id)["nodeId"]
         raise NodeNotFoundError, "node is not trackable" if id.zero?
 
