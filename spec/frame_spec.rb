@@ -234,13 +234,20 @@ describe Ferrum::Frame do
 
   context "#frame_element" do
     it "gets the frame element" do
-      page.go_to("/frames")
+      page.go_to("/frame_parent")
 
       frame_element = page.at_xpath("//iframe")
       frame = frame_element.frame
       expect(frame.frame_element).to eq(frame_element)
       expect(frame.frame_element.frame_id).to eq frame.id
-      expect(frame.frame_element.attribute(:src)).to end_with("/slow")
+      expect(frame.frame_element.attribute(:src)).to eq("/frame_child")
+    end
+
+    it "returns nil for a cross-origin frame" do
+      page.go_to("/frames")
+
+      frame = page.at_xpath("//iframe").frame
+      expect(frame.frame_element).to be_nil
     end
 
     it "returns nil if main frame" do

@@ -3,6 +3,9 @@
 ### Added
 
 ### Changed
+- `--disable-web-security` is no longer among the default Chrome flags, so pages keep the same-origin policy and an
+  untrusted page can't read local files with `<iframe src="file:///etc/passwd">`. `Frame#frame_element` returns `nil`
+  for a cross-origin frame now. Pass `browser_options: { "disable-web-security" => nil }` for the old behavior [#472]
 
 ### Fixed
 - A paused request with a binary body, e.g. a `Blob` upload with `blacklist=`/`whitelist=` set, hung forever: Chrome
