@@ -15,7 +15,7 @@ gem "rbs", "~> 3.10"
 gem "redcarpet", require: false, platform: :mri
 gem "rspec", "~> 3.8"
 gem "rspec-wait"
-gem "rubocop", "~> 1.22"
+gem "rubocop", "~> 1.92"
 gem "rubocop-rake", require: false
 gem "sinatra", "~> 4.0"
 gem "webrick", "~> 1.7", require: false
