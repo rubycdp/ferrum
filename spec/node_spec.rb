@@ -57,6 +57,7 @@ describe Ferrum::Node do
       browser.at_css("#customer_email").blur
 
       expect { node.focus }.to raise_error(Ferrum::NodeNotFoundError, "node is not trackable")
+      expect { node.focus }.to raise_error(Ferrum::NodeNotFoundError, "node is not trackable")
       expect(browser.evaluate("document.activeElement.id")).not_to eq("customer_email")
     end
 
