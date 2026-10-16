@@ -55,12 +55,29 @@ describe Ferrum::Browser do
     end
 
     it "supports :ignore_default_browser_options argument" do
-      defaults = Ferrum::Browser::Options::Chrome.options.except("disable-web-security")
+      defaults = Ferrum::Browser::Options::Chrome.options.except("mute-audio")
       browser = Ferrum::Browser.new(ignore_default_browser_options: true,
                                     browser_options: defaults.merge("no-sandbox" => nil))
       browser.go_to(base_url("/console_log"))
+
+      flags = browser.process.command.to_a
+      expect(flags).not_to include("--mute-audio")
+      expect(flags).to include("--no-sandbox")
+      expect(flags).to include(a_string_starting_with("--remote-debugging-port="))
+      expect(flags).to include(a_string_starting_with("--user-data-dir="))
     ensure
       browser&.quit
+    end
+
+    it "keeps the same-origin policy by default" do
+      browser.go_to("/frames")
+
+      result = browser.evaluate_async(<<~JS, browser.timeout)
+        fetch("http://localhost:" + location.port + "/headers")
+          .then(() => arguments[0]("read"), () => arguments[0]("blocked"))
+      JS
+
+      expect(result).to eq("blocked")
     end
 
     it "supports :process_timeout argument" do

@@ -116,7 +116,8 @@ module Ferrum
       # Returns the element in which the window is embedded.
       #
       # @return [Node, nil]
-      #   The element in which the window is embedded.
+      #   The element in which the window is embedded, `nil` for the main frame
+      #   and for a frame from a different origin than its parent.
       #
       # @example
       #   browser.go_to("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")

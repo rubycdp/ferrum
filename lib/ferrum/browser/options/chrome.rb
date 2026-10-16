@@ -48,7 +48,6 @@ module Ferrum
           "disable-smooth-scrolling" => nil,
           "disable-sync" => nil,
           "disable-translate" => nil,
-          "disable-web-security" => nil,
           "enable-automation" => nil,
           "enable-features" => %w[
             NetworkService

@@ -55,7 +55,9 @@ Parent frame if this one is nested in another one.
 
 #### frame_element : `Node | nil`
 
-Returns the element in which the window is embedded.
+Returns the element in which the window is embedded. It's `nil` for the main
+frame and for a frame from a different origin than its parent, since the
+same-origin policy hides `window.frameElement` from a cross-origin frame.
 
 #### execution_id : `Integer`
 
