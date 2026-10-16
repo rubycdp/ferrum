@@ -35,11 +35,11 @@ module Ferrum
       @document_version = page.document_version
       @node_id = begin
         id = page.command("DOM.requestNode", objectId: @object_id)["nodeId"]
-        raise NodeNotFoundError, "node is not trackable" if id.zero?
+        raise NodeNotFoundError, { "message" => "node is not trackable" } if id.zero?
 
         id
       rescue NoExecutionContextError
-        raise NodeNotFoundError, "node is not trackable"
+        raise NodeNotFoundError, { "message" => "node is not trackable" }
       end
     end
 
