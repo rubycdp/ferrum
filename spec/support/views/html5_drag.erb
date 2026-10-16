@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+    <title>ferrum html5 drag and drop</title>
+    <link rel="icon" href="data:,">
+    <style>
+      #source, #target { position: fixed; top: 0; width: 100px; height: 100px; }
+      #source { left: 0; background: red; }
+      #target { left: 200px; background: blue; }
+    </style>
+    <script>
+      window.events = [];
+      document.addEventListener("DOMContentLoaded", () => {
+        const source = document.getElementById("source");
+        const target = document.getElementById("target");
+        for (const type of ["dragstart", "dragend"]) {
+          source.addEventListener(type, () => window.events.push(type));
+        }
+        for (const type of ["dragover", "drop"]) {
+          target.addEventListener(type, event => {
+            event.preventDefault();
+            if (!window.events.includes(type)) window.events.push(type);
+          });
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <div id="source" draggable="true"></div>
+    <div id="target"></div>
+  </body>
+</html>

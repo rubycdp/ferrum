@@ -57,27 +57,12 @@ describe Ferrum::Mouse do
   end
 
   describe "#move" do
-    it "preserves the pressed button for drag interception" do
-      browser.go_to("/simple")
-      browser.execute(<<~JS)
-        const source = document.createElement("div");
-        source.draggable = true;
-        source.style.cssText = "position:fixed;left:0;top:0;width:100px;height:100px";
-        document.body.appendChild(source);
-      JS
+    it "drags and drops with a button held" do
+      browser.go_to("/html5_drag")
 
-      intercepted = Queue.new
-      browser.page.on("Input.dragIntercepted") { |params| intercepted << params }
-      browser.page.command("Input.setInterceptDrags", enabled: true)
+      browser.mouse.move(x: 10, y: 10).down.move(x: 250, y: 50, steps: 10).up
 
-      browser.mouse.move(x: 10, y: 10)
-             .down(button: :left)
-             .move(x: 80, y: 80, steps: 5)
-
-      expect(intercepted.pop(timeout: 1)).not_to be_nil
-    ensure
-      browser&.mouse&.up(button: :left)
-      browser&.page&.command("Input.setInterceptDrags", enabled: false)
+      expect(browser.evaluate("window.events")).to eq(%w[dragstart dragover drop dragend])
     end
 
     it "splits into steps" do
