@@ -57,6 +57,14 @@ describe Ferrum::Mouse do
   end
 
   describe "#move" do
+    it "drags and drops with a button held" do
+      browser.go_to("/html5_drag")
+
+      browser.mouse.move(x: 10, y: 10).down.move(x: 250, y: 50, steps: 10).up
+
+      expect(browser.evaluate("window.events")).to eq(%w[dragstart dragover drop dragend])
+    end
+
     it "splits into steps" do
       browser.go_to("/simple")
       browser.mouse.move(x: 100, y: 100)
