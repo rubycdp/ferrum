@@ -5,6 +5,10 @@
 ### Changed
 
 ### Fixed
+- Passing a node resolved on the previous page to `evaluate`, e.g. when the page navigates while Cuprite searches
+  within an element, raised `Ferrum::BrowserError: Argument should belong to the same JavaScript world as target
+  object`. It's `Ferrum::NodeNotFoundError` now, so callers can treat the node as stale and find it again
+  [rubycdp/cuprite#233]
 
 ### Removed
 
