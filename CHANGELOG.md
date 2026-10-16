@@ -5,6 +5,10 @@
 ### Changed
 
 ### Fixed
+- A paused request with a binary body, e.g. a `Blob` upload with `blacklist=`/`whitelist=` set, hung forever: Chrome
+  sends the body with lone UTF-16 surrogates that the `json` gem rejects, and the fallback that unescaped them broke
+  the message further, so `Fetch.requestPaused` was dropped and the request was never continued. Lone surrogates are
+  now replaced with U+FFFD, so broken text from the page reads as `�` instead of `???` [rubycdp/cuprite#308]
 - Passing a node resolved on the previous page to `evaluate`, e.g. when the page navigates while Cuprite searches
   within an element, raised `Ferrum::BrowserError: Argument should belong to the same JavaScript world as target
   object`. It's `Ferrum::NodeNotFoundError` now, so callers can treat the node as stale and find it again

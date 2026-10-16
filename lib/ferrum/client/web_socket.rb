@@ -16,6 +16,7 @@ module Ferrum
       WEBSOCKET_BUG_SLEEP = 0.05
       DEFAULT_PORTS = { "ws" => 80, "wss" => 443 }.freeze
       SKIP_LOGGING_SCREENSHOTS = !ENV["FERRUM_LOGGING_SCREENSHOTS"]
+      ESCAPE_OR_LONE_SURROGATE = /\\u[dD][89abAB]\h{2}\\u[dD][c-fC-F]\h{2}|\\u([dD][89a-fA-F]\h{2})|\\./
 
       attr_reader :url, :messages
 
@@ -223,14 +224,12 @@ module Ferrum
       rescue JSON::NestingError
         # nop
       rescue JSON::ParserError
-        safely_parse_escaped_json(data)
+        safely_parse_lone_surrogates(data)
       end
 
-      def safely_parse_escaped_json(data)
-        unescaped_unicode =
-          data.gsub(/\\u([\da-fA-F]{4})/) { |_| [::Regexp.last_match(1)].pack("H*").unpack("n*").pack("U*") }
-        escaped_data = unescaped_unicode.encode("UTF-8", "UTF-8", undef: :replace, invalid: :replace, replace: "?")
-        JSON.parse(escaped_data, max_nesting: false)
+      def safely_parse_lone_surrogates(data)
+        replaced = data.gsub(ESCAPE_OR_LONE_SURROGATE) { |escape| ::Regexp.last_match(1) ? "\\ufffd" : escape }
+        JSON.parse(replaced, max_nesting: false)
       rescue JSON::ParserError
         # nop
       end

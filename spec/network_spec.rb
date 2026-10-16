@@ -227,6 +227,18 @@ describe Ferrum::Network do
       expect(page.body).not_to include("Disappearing header")
     end
 
+    it "continues requests with a binary body" do
+      network.blacklist = /jquery/
+      page.go_to("/")
+
+      size = page.evaluate_async(<<~JS, page.timeout)
+        const bytes = new Uint8Array([0x22, 0x5c, 0x00, 0x0a, 0xed, 0xa0, 0x80, 0x41]);
+        fetch("/upload", { method: "PUT", body: new Blob([bytes]) }).then((r) => r.text()).then(arguments[0]);
+      JS
+
+      expect(size).to eq("8")
+    end
+
     it "blocks with single pattern" do
       network.blacklist = /jquery/
 
