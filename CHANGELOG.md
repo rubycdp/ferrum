@@ -25,8 +25,8 @@
   the browser; a failed `IO.close` is raised to the caller.
 
 ### Fixed
-- Mouse moves sent while a button is held now include the active `button` value, allowing Chrome to start drag sessions
-  and emit `Input.dragIntercepted` [#635]
+- `Mouse#move` with a button held didn't send which button, so Chrome never started a drag. Native HTML5 drag and drop
+  now works with `down`, `move` and `up`, and `Input.dragIntercepted` fires when drags are intercepted [#635]
 - An out-of-process iframe, e.g. Chrome's PDF viewer for an embedded PDF, appearing while a web worker was connected
   raised `'Page.enable' wasn't found` in the event thread. Only pages and iframes are now searched for its parent [#640]
 - A browser that stopped reading its websocket froze the whole client: a large command blocked in a socket write
