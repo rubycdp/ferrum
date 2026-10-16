@@ -236,6 +236,18 @@ describe Ferrum::Frame::Runtime do
 
       expect(elapsed).to be < Ferrum::Frame::Runtime::INTERMITTENT_SLEEP
     end
+
+    it "raises NodeNotFoundError for a node resolved on the previous page" do
+      browser.go_to("/table")
+      node = browser.at_xpath(".//td")
+      object_id = browser.page.command("DOM.resolveNode", nodeId: node.node_id).dig("object", "objectId")
+
+      browser.go_to("/table")
+
+      expect do
+        browser.evaluate("arguments[0].textContent", { "objectId" => object_id })
+      end.to raise_error(Ferrum::NodeNotFoundError, /same JavaScript world/)
+    end
   end
 
   describe "#add_script_tag" do
