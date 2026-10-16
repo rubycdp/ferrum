@@ -88,6 +88,10 @@ module Ferrum
       "Current host is #{request.scheme}://#{request.host}:#{request.port}"
     end
 
+    put "/upload" do
+      request.body.read.bytesize.to_s
+    end
+
     get "/unicode" do
       File.read("#{FERRUM_VIEWS}/unicode.html")
     end

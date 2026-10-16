@@ -482,7 +482,7 @@ describe Ferrum::Node do
       browser.go_to("/unicode")
       node = browser.at_css("#invalid")
 
-      expect(node.text).to eq("Havregrynskake med marengs og nøtter ???")
+      expect(node.text).to eq("Havregrynskake med marengs og nøtter \uFFFD")
     end
 
     it "works with curly utf8" do
