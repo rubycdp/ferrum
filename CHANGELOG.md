@@ -1,4 +1,15 @@
-## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.19.0...main) ##
+## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.19.1...main) ##
+
+### Added
+
+### Changed
+
+### Fixed
+
+### Removed
+
+
+## [0.19.1](https://github.com/rubycdp/ferrum/compare/v0.19.0...v0.19.1) (October 16, 2026) ##
 
 ### Added
 
@@ -8,6 +19,8 @@
   for a cross-origin frame now. Pass `browser_options: { "disable-web-security" => nil }` for the old behavior [#472]
 
 ### Fixed
+- `Mouse#move` with a button held didn't send which button, so Chrome never started a drag. Native HTML5 drag and drop
+  now works with `down`, `move` and `up`, and `Input.dragIntercepted` fires when drags are intercepted [#635]
 - A paused request with a binary body, e.g. a `Blob` upload with `blacklist=`/`whitelist=` set, hung forever: Chrome
   sends the body with lone UTF-16 surrogates that the `json` gem rejects, and the fallback that unescaped them broke
   the message further, so `Fetch.requestPaused` was dropped and the request was never continued. Lone surrogates are
@@ -47,8 +60,6 @@
   the browser; a failed `IO.close` is raised to the caller.
 
 ### Fixed
-- `Mouse#move` with a button held didn't send which button, so Chrome never started a drag. Native HTML5 drag and drop
-  now works with `down`, `move` and `up`, and `Input.dragIntercepted` fires when drags are intercepted [#635]
 - An out-of-process iframe, e.g. Chrome's PDF viewer for an embedded PDF, appearing while a web worker was connected
   raised `'Page.enable' wasn't found` in the event thread. Only pages and iframes are now searched for its parent [#640]
 - A browser that stopped reading its websocket froze the whole client: a large command blocked in a socket write
