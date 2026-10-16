@@ -29,6 +29,8 @@ module Ferrum
 
     def validate_button: (Symbol button) -> String
 
+    def pressed_button: () -> String
+
     def register_event_button: (String type, String button) -> ::Integer
   end
 end

@@ -152,11 +152,11 @@ module Ferrum
       from_y = @y
       @x = x
       @y = y
+      button = pressed_button
 
       steps.times do |i|
         new_x = from_x + ((@x - from_x) * ((i + 1) / steps.to_f))
         new_y = from_y + ((@y - from_y) * ((i + 1) / steps.to_f))
-        button = BUTTON_MASKS.find { |_name, mask| mask.positive? && @buttons.anybits?(mask) }&.first || "none"
 
         @page.command("Input.dispatchMouseEvent",
                       slowmoable: true,
@@ -185,6 +185,10 @@ module Ferrum
       raise "Invalid button: #{button}" unless BUTTON_MASKS.key?(button)
 
       button
+    end
+
+    def pressed_button
+      BUTTON_MASKS.find { |_name, mask| mask.positive? && @buttons.anybits?(mask) }&.first || "none"
     end
 
     def register_event_button(type, button)
