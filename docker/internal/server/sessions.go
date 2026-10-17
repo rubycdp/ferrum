@@ -78,13 +78,13 @@ func (s *Sessions) Start(ctx context.Context, options browser.Options) (*browser
 	s.mu.Unlock()
 
 	if s.isClosed() {
-		s.Stop(b)
+		s.Stop(b, "shutdown")
 		return nil, ErrClosed
 	}
 
 	go func() {
 		<-b.Done()
-		s.Stop(b)
+		s.Stop(b, "browser exited")
 	}()
 
 	return b, nil
@@ -97,8 +97,7 @@ func (s *Sessions) Reserve(b *browser.Browser, query string) {
 
 	time.AfterFunc(s.claimTimeout, func() {
 		if s.Claim(b.ID) != nil {
-			slog.Warn("browser was never claimed, stopping", "id", b.ID, "timeout", s.claimTimeout)
-			s.Stop(b)
+			s.Stop(b, "never claimed")
 		}
 	})
 }
@@ -139,7 +138,7 @@ func (s *Sessions) Browsers() []*browser.Browser {
 	return browsers
 }
 
-func (s *Sessions) Stop(b *browser.Browser) {
+func (s *Sessions) Stop(b *browser.Browser, reason string) {
 	s.mu.Lock()
 	_, running := s.browsers[b.ID]
 	delete(s.browsers, b.ID)
@@ -152,6 +151,7 @@ func (s *Sessions) Stop(b *browser.Browser) {
 
 	b.Stop()
 	s.release()
+	slog.Info("session ended", "id", b.ID, "reason", reason)
 }
 
 func (s *Sessions) StopAll() {
@@ -159,7 +159,7 @@ func (s *Sessions) StopAll() {
 
 	var wg sync.WaitGroup
 	for _, b := range s.Browsers() {
-		wg.Go(func() { s.Stop(b) })
+		wg.Go(func() { s.Stop(b, "shutdown") })
 	}
 	wg.Wait()
 }

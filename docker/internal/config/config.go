@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"time"
 )
 
 var (
@@ -15,6 +16,7 @@ var (
 	Address     string
 	Concurrent  int
 	Queued      int
+	Timeout     time.Duration
 )
 
 func Load() error {
@@ -39,6 +41,12 @@ func Load() error {
 	if Queued < 0 {
 		return fmt.Errorf("QUEUED must not be negative, got %d", Queued)
 	}
+
+	timeout, err := intEnv("TIMEOUT", 0)
+	if err != nil {
+		return err
+	}
+	Timeout = time.Duration(max(timeout, 0)) * time.Millisecond
 
 	return nil
 }

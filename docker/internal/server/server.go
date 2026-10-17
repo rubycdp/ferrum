@@ -9,19 +9,26 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/rubycdp/ferrum/docker/internal/browser"
 )
 
 const retryAfter = "5"
 
-type Server struct {
-	sessions *Sessions
+type Config struct {
+	Timeout time.Duration
 }
 
-func New(sessions *Sessions) http.Handler {
-	s := &Server{sessions: sessions}
+type Server struct {
+	sessions *Sessions
+	config   Config
+}
+
+func New(sessions *Sessions, config Config) http.Handler {
+	s := &Server{sessions: sessions, config: config}
 
 	mux := http.NewServeMux()
 	handle(mux, "/health", s.health)
@@ -48,6 +55,9 @@ func (s *Server) version(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	if _, ok := s.sessionTimeout(w, r); !ok {
+		return
+	}
 
 	b, err := s.sessions.Start(r.Context(), options)
 	if err != nil {
@@ -58,7 +68,7 @@ func (s *Server) version(w http.ResponseWriter, r *http.Request) {
 	info, err := fetchVersion(b)
 	if err != nil {
 		slog.Error("cannot fetch browser version", "id", b.ID, "error", err)
-		s.sessions.Stop(b)
+		s.sessions.Stop(b, "version failed")
 		http.Error(w, "cannot fetch browser version", http.StatusBadGateway)
 		return
 	}
@@ -82,7 +92,7 @@ func (s *Server) claim(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.serve(w, r, b)
+	s.serve(w, r, b, s.config.Timeout)
 }
 
 func (s *Server) connect(w http.ResponseWriter, r *http.Request) {
@@ -95,6 +105,10 @@ func (s *Server) connect(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	timeout, ok := s.sessionTimeout(w, r)
+	if !ok {
+		return
+	}
 
 	b, err := s.sessions.ClaimOrStart(r.Context(), r.URL.RawQuery, options)
 	if err != nil {
@@ -102,15 +116,33 @@ func (s *Server) connect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.serve(w, r, b)
+	s.serve(w, r, b, timeout)
 }
 
-func (s *Server) serve(w http.ResponseWriter, r *http.Request, b *browser.Browser) {
-	defer s.sessions.Stop(b)
+func (s *Server) serve(w http.ResponseWriter, r *http.Request, b *browser.Browser, timeout time.Duration) {
+	if timeout > 0 {
+		timer := time.AfterFunc(timeout, func() { s.sessions.Stop(b, "timeout") })
+		defer timer.Stop()
+	}
 
-	slog.Info("session opened", "id", b.ID, "client", r.RemoteAddr)
+	slog.Info("session opened", "id", b.ID, "client", r.RemoteAddr, "timeout", timeout)
 	proxyTo(b).ServeHTTP(w, r)
-	slog.Info("session closed", "id", b.ID, "client", r.RemoteAddr)
+	s.sessions.Stop(b, "connection closed")
+}
+
+func (s *Server) sessionTimeout(w http.ResponseWriter, r *http.Request) (time.Duration, bool) {
+	value := r.URL.Query().Get("timeout")
+	if value == "" {
+		return s.config.Timeout, true
+	}
+
+	ms, err := strconv.Atoi(value)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("invalid timeout %q", value), http.StatusBadRequest)
+		return 0, false
+	}
+
+	return time.Duration(max(ms, 0)) * time.Millisecond, true
 }
 
 func startError(w http.ResponseWriter, err error) {
