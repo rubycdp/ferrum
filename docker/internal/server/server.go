@@ -1,7 +1,9 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -11,6 +13,8 @@ import (
 
 	"github.com/rubycdp/ferrum/docker/internal/browser"
 )
+
+const retryAfter = "5"
 
 type Server struct {
 	sessions *Sessions
@@ -45,10 +49,9 @@ func (s *Server) version(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b, err := s.sessions.Start(options)
+	b, err := s.sessions.Start(r.Context(), options)
 	if err != nil {
-		slog.Error("cannot start browser", "error", err)
-		http.Error(w, "cannot start browser", http.StatusServiceUnavailable)
+		startError(w, err)
 		return
 	}
 
@@ -93,10 +96,9 @@ func (s *Server) connect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b, err := s.sessions.ClaimOrStart(r.URL.RawQuery, options)
+	b, err := s.sessions.ClaimOrStart(r.Context(), r.URL.RawQuery, options)
 	if err != nil {
-		slog.Error("cannot start browser", "error", err)
-		http.Error(w, "cannot start browser", http.StatusServiceUnavailable)
+		startError(w, err)
 		return
 	}
 
@@ -109,6 +111,18 @@ func (s *Server) serve(w http.ResponseWriter, r *http.Request, b *browser.Browse
 	slog.Info("session opened", "id", b.ID, "client", r.RemoteAddr)
 	proxyTo(b).ServeHTTP(w, r)
 	slog.Info("session closed", "id", b.ID, "client", r.RemoteAddr)
+}
+
+func startError(w http.ResponseWriter, err error) {
+	switch {
+	case errors.Is(err, ErrQueueFull):
+		w.Header().Set("Retry-After", retryAfter)
+		http.Error(w, err.Error(), http.StatusTooManyRequests)
+	case errors.Is(err, context.Canceled):
+	default:
+		slog.Error("cannot start browser", "error", err)
+		http.Error(w, "cannot start browser", http.StatusServiceUnavailable)
+	}
 }
 
 func proxyTo(b *browser.Browser) *httputil.ReverseProxy {

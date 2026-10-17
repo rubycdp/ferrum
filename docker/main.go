@@ -33,6 +33,8 @@ Environment:
   BROWSER_PATH     Chrome or Chromium binary (set by the image)
   HOST             address to listen on (default 0.0.0.0)
   PORT             port to listen on (default 3000)
+  CONCURRENT       running sessions at most (default: number of CPUs)
+  QUEUED           connections waiting for a free session, the rest get 429 (default 10)
 
 Endpoints:
   GET /json/version                start a Chrome, return its webSocketDebuggerUrl
@@ -73,12 +75,16 @@ func main() {
 		return
 	}
 
-	if config.BrowserPath == "" {
-		slog.Error("BROWSER_PATH is not set")
+	if err := config.Load(); err != nil {
+		slog.Error("invalid configuration", "error", err)
 		os.Exit(1)
 	}
 
-	sessions := server.NewSessions(config.BrowserPath)
+	sessions := server.NewSessions(server.SessionsConfig{
+		Binary:     config.BrowserPath,
+		Concurrent: config.Concurrent,
+		Queued:     config.Queued,
+	})
 	srv := &http.Server{
 		Addr:              config.Address,
 		Handler:           server.New(sessions),
@@ -97,7 +103,8 @@ func main() {
 		srv.Shutdown(shutdownCtx)
 	}()
 
-	slog.Info("listening", "address", config.Address, "browser", config.BrowserPath, "version", config.Version)
+	slog.Info("listening", "address", config.Address, "browser", config.BrowserPath, "version", config.Version,
+		"concurrent", config.Concurrent, "queued", config.Queued)
 	if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("server failed", "error", err)
 		os.Exit(1)
