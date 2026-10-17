@@ -105,25 +105,11 @@ func TestVersionAndClaim(t *testing.T) {
 	eventually(t, func() bool { return len(srv.sessions.Browsers()) == 0 })
 }
 
-func TestConnectRoutes(t *testing.T) {
-	srv := newServer(t, SessionsConfig{}, Config{})
-
-	for _, path := range []string{"/", "/chrome", "/chrome/", "/chromium", "/chromium/"} {
-		t.Run(path, func(t *testing.T) {
-			conn, resp := dial(t, srv.addr(), path)
-			if resp.StatusCode != http.StatusSwitchingProtocols {
-				t.Fatalf("status = %d", resp.StatusCode)
-			}
-			conn.roundTrip(t, "hello")
-		})
-	}
-}
-
 func TestConnectClaimsTheBrowserStartedByVersion(t *testing.T) {
 	srv := newServer(t, SessionsConfig{}, Config{})
 
 	srv.version(t, "?launch=%7B%7D")
-	conn, _ := dial(t, srv.addr(), "/chrome?launch=%7B%7D")
+	conn, _ := dial(t, srv.addr(), "/?launch=%7B%7D")
 	conn.roundTrip(t, "hello")
 
 	if n := len(srv.sessions.Browsers()); n != 1 {
@@ -155,7 +141,8 @@ func TestBadRequests(t *testing.T) {
 	for path, status := range map[string]int{
 		"/json/version?launch=%7Bbroken":  http.StatusBadRequest,
 		"/json/version?timeout=soon":      http.StatusBadRequest,
-		"/chrome":                         http.StatusUpgradeRequired,
+		"/":                               http.StatusUpgradeRequired,
+		"/chrome":                         http.StatusNotFound,
 		"/devtools/browser/missing":       http.StatusUpgradeRequired,
 		"/devtools/page/missing":          http.StatusUpgradeRequired,
 		"/unknown":                        http.StatusNotFound,
@@ -210,7 +197,7 @@ func TestQueueLimit(t *testing.T) {
 		t.Error("missing Retry-After")
 	}
 
-	_, resp = dial(t, srv.addr(), "/chrome")
+	_, resp = dial(t, srv.addr(), "/")
 	if resp.StatusCode != http.StatusTooManyRequests {
 		t.Fatalf("websocket status = %d, want 429", resp.StatusCode)
 	}
