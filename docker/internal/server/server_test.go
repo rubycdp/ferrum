@@ -43,6 +43,17 @@ func (s *testServer) get(t *testing.T, path string) *http.Response {
 	return resp
 }
 
+func (s *testServer) body(t *testing.T, path string) string {
+	t.Helper()
+
+	body, err := io.ReadAll(s.get(t, path).Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return string(body)
+}
+
 func (s *testServer) version(t *testing.T, query string) map[string]any {
 	t.Helper()
 
@@ -141,7 +152,6 @@ func TestBadRequests(t *testing.T) {
 	for path, status := range map[string]int{
 		"/json/version?launch=%7Bbroken":  http.StatusBadRequest,
 		"/json/version?timeout=soon":      http.StatusBadRequest,
-		"/":                               http.StatusUpgradeRequired,
 		"/chrome":                         http.StatusNotFound,
 		"/devtools/browser/missing":       http.StatusUpgradeRequired,
 		"/devtools/page/missing":          http.StatusUpgradeRequired,
@@ -377,4 +387,36 @@ func TestProtocolWithoutASession(t *testing.T) {
 	if n := len(srv.sessions.Browsers()); n != 0 {
 		t.Fatalf("browsers = %d, want 0", n)
 	}
+}
+
+func TestDashboard(t *testing.T) {
+	srv := newServer(t, SessionsConfig{}, Config{})
+
+	if body := srv.body(t, "/"); !strings.Contains(body, "No running sessions.") {
+		t.Fatalf("body = %s", body)
+	}
+
+	conn, _ := dial(t, srv.addr(), "/")
+	conn.roundTrip(t, "hello")
+
+	b := srv.sessions.Browsers()[0]
+	body := srv.body(t, "/")
+	if !strings.Contains(body, `id="`+b.ID+`"`) {
+		t.Errorf("session %s missing in %s", b.ID, body)
+	}
+	if want := srv.URL + "/devtools/inspector.html?ws=" + srv.addr() + "/devtools/page/page-"; !strings.Contains(body, want) {
+		t.Errorf("DevTools link %s missing in %s", want, body)
+	}
+
+	t.Run("behind a proxy", func(t *testing.T) {
+		external, _ := url.Parse("https://proxy.example.com/chrome")
+		srv := newServer(t, SessionsConfig{}, Config{External: external})
+		conn, _ := dial(t, srv.addr(), "/")
+		conn.roundTrip(t, "hello")
+
+		want := "https://proxy.example.com/chrome/devtools/inspector.html?wss=proxy.example.com/chrome/devtools/page/page-"
+		if body := srv.body(t, "/"); !strings.Contains(body, want) {
+			t.Errorf("DevTools link %s missing in %s", want, body)
+		}
+	})
 }

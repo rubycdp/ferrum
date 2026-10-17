@@ -55,7 +55,7 @@ func New(sessions *Sessions, config Config) http.Handler {
 	handle(mux, "GET", "/devtools/browser/{id}", s.connect)
 	handle(mux, "GET", "/devtools/page/{id}", s.page)
 	mux.HandleFunc("GET /devtools/{path...}", s.frontend)
-	mux.HandleFunc("GET /{$}", s.connect)
+	mux.HandleFunc("GET /{$}", s.root)
 
 	return mux
 }
@@ -124,7 +124,7 @@ func (s *Server) connect(w http.ResponseWriter, r *http.Request) {
 		defer timer.Stop()
 	}
 
-	slog.Info("session opened", "id", b.ID, "client", r.RemoteAddr, "timeout", timeout)
+	slog.Info("session opened", "id", b.ID, "client", r.RemoteAddr, "timeout", timeout, "dashboard", s.httpURL(r, "/")+"#"+b.ID)
 	proxy(b, b.WSPath, "").ServeHTTP(w, r)
 	s.sessions.Stop(b, "connection closed")
 }

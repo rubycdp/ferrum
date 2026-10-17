@@ -3,10 +3,10 @@
 > Better than browserless, not equal to it.
 
 A small Go binary that runs as the entrypoint of a Docker container and gives each client its own Chrome over CDP.
-It replaces browserless with minimal changes: usually swap the image and connect to `/`. It doesn't copy
+It replaces browserless with minimal changes: usually swap the image and connect. It doesn't copy
 browserless, though: where browserless gets in the way, the driver does it differently. There's no Puppeteer,
 and nothing touches the client's targets: bytes go through unchanged. It's self-hosted only (local machines, CI,
-your own servers) and Docker only.
+your own servers) at least for now.
 
 ## Why
 
@@ -95,6 +95,7 @@ The driver serves everything through `net/http`, and WebSocket upgrades go throu
 | `GET /json/protocol` | Chrome's protocol description, cached. Starts a short-lived Chrome only when none runs |
 | WS `/devtools/page/<id>` | Connects to one target of whichever session owns it. Closing it doesn't end the session |
 | `GET /devtools/*` | The DevTools frontend, served by a running Chrome |
+| `GET /` | A dashboard of running sessions and their pages, each linking to DevTools. Refreshes every 3 seconds |
 | `GET /health` | Driver liveness. Never starts a Chrome |
 
 Every route also accepts a trailing slash: `/json/version/` works like `/json/version`.
@@ -116,8 +117,8 @@ Details:
 - **Host header.** Requests forwarded to Chrome carry `Host: 127.0.0.1:<port>`, because Chrome rejects any other
   host on its HTTP endpoint.
 - **DevTools URLs.** In the `devtoolsFrontendUrl` returned by `/json`, the `ws=` parameter is rewritten to the
-  driver's host. Ferrum's `debug_url` and the browser's DevTools then give a live, clickable view of the session.
-  That's our answer to browserless's debug viewer.
+  driver's host. The dashboard at `/` links each page to the DevTools frontend served by its Chrome, a live view
+  of the running test. That's our answer to browserless's debug viewer.
 
 ### Zero-copy tunnel (potential)
 
@@ -228,6 +229,7 @@ Done:
   shuts down.
 - Launch options (`args`, `defaultViewport`, `ignoreDefaultArgs`, `headless`) and `timeout` in the URL.
 - The DevTools routes.
+- The dashboard at `/`, linked from each "session opened" log line.
 - `/health` and the image's `HEALTHCHECK`, trailing-slash routes, `driver --help` and `--version`.
 - A graceful shutdown stops every Chrome.
 - Go tests (`go test ./...`), with the test binary acting as a fake Chrome, run in CI before any image is built.
