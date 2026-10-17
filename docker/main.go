@@ -35,6 +35,7 @@ Environment:
   PORT             port to listen on (default 3000)
   CONCURRENT       running sessions at most (default: number of CPUs)
   QUEUED           connections waiting for a free session, the rest get 429 (default 10)
+  TIMEOUT          session timeout in milliseconds (default 0, no timeout)
 
 Endpoints:
   GET /json/version                start a Chrome, return its webSocketDebuggerUrl
@@ -47,6 +48,7 @@ Launch options (per connection, in the URL of /json/version or the WebSocket):
     args               extra Chrome flags, a flag with a default's name replaces it
     defaultViewport    {"width":1280,"height":720}, becomes --window-size
     ignoreDefaultArgs  true, or a list of default flags to drop
+  timeout=<ms>         session timeout for this connection, overrides TIMEOUT
   Other launch keys and query params (token, blockAds) are ignored.
   --remote-debugging-port and --user-data-dir are managed by the driver.
 
@@ -87,7 +89,7 @@ func main() {
 	})
 	srv := &http.Server{
 		Addr:              config.Address,
-		Handler:           server.New(sessions),
+		Handler:           server.New(sessions, server.Config{Timeout: config.Timeout}),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 
@@ -104,7 +106,7 @@ func main() {
 	}()
 
 	slog.Info("listening", "address", config.Address, "browser", config.BrowserPath, "version", config.Version,
-		"concurrent", config.Concurrent, "queued", config.Queued)
+		"concurrent", config.Concurrent, "queued", config.Queued, "timeout", config.Timeout)
 	if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("server failed", "error", err)
 		os.Exit(1)
