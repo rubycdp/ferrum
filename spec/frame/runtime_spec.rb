@@ -16,7 +16,7 @@ describe Ferrum::Frame::Runtime do
 
       after { browser.quit }
 
-      it "propagates a Javascript error to a ruby exception" do
+      it "propagates a Javascript error to a ruby exception", local_browser: true do
         expect do
           browser.execute(%(throw new Error("zomg")))
         end.to raise_error(Ferrum::JavaScriptError) { |e|
@@ -24,7 +24,7 @@ describe Ferrum::Frame::Runtime do
         }
       end
 
-      it "propagates an asynchronous Javascript error on the page to a ruby exception" do
+      it "propagates an asynchronous Javascript error on the page to a ruby exception", local_browser: true do
         expect do
           browser.execute "setTimeout(function() { omg }, 0)"
           sleep 0.01
@@ -32,13 +32,13 @@ describe Ferrum::Frame::Runtime do
         end.to raise_error(Ferrum::JavaScriptError, /ReferenceError.*omg/)
       end
 
-      it "propagates a synchronous Javascript error on the page to a ruby exception" do
+      it "propagates a synchronous Javascript error on the page to a ruby exception", local_browser: true do
         expect do
           browser.execute "omg"
         end.to raise_error(Ferrum::JavaScriptError, /ReferenceError.*omg/)
       end
 
-      it "does not re-raise a Javascript error if it is rescued" do
+      it "does not re-raise a Javascript error if it is rescued", local_browser: true do
         expect do
           browser.execute "setTimeout(function() { omg }, 0)"
           sleep 0.01
@@ -49,11 +49,11 @@ describe Ferrum::Frame::Runtime do
         expect(browser.evaluate("1+1")).to eq(2)
       end
 
-      it "propagates a Javascript error during page load to a ruby exception" do
+      it "propagates a Javascript error during page load to a ruby exception", local_browser: true do
         expect { browser.go_to("/js_error") }.to raise_error(Ferrum::JavaScriptError)
       end
 
-      it "does not propagate a Javascript error to ruby if error raising disabled" do
+      it "does not propagate a Javascript error to ruby if error raising disabled", local_browser: true do
         browser = Ferrum::Browser.new(base_url: base_url, js_errors: false)
         browser.go_to("/js_error")
         browser.execute "setTimeout(function() { omg }, 0)"
@@ -63,7 +63,7 @@ describe Ferrum::Frame::Runtime do
         browser&.quit
       end
 
-      it "does not propagate a Javascript error to ruby if error raising disabled and client restarted" do
+      it "does not propagate a Javascript error to ruby if error raising disabled and client restarted", local_browser: true do
         browser = Ferrum::Browser.new(base_url: base_url, js_errors: false)
         browser.restart
         browser.go_to("/js_error")

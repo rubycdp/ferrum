@@ -23,11 +23,17 @@ require "support/global_helpers"
 ENV["FERRUM_NEW_WINDOW_WAIT"] ||= "0.8" if ENV["CI"]
 
 puts ""
-command = Ferrum::Browser::Command.build(Ferrum::Browser::Options.new, nil)
-puts `#{Shellwords.escape(command.path)} --version`
+remote_url = ENV.fetch("FERRUM_URL", nil)
+if remote_url
+  puts "Remote browser at #{remote_url}"
+else
+  command = Ferrum::Browser::Command.build(Ferrum::Browser::Options.new, nil)
+  puts `#{Shellwords.escape(command.path)} --version`
+end
 puts ""
 
 RSpec.configure do |config|
+  config.filter_run_excluding local_browser: true if remote_url
   config.wait_timeout = 1
   config.wait_delay = 0.2
 
@@ -41,6 +47,7 @@ RSpec.configure do |config|
   config.before(:all) do
     base_url = Ferrum::Server.server.base_url
     options = { base_url: base_url }
+    options.merge!(url: ENV["FERRUM_URL"]) if ENV["FERRUM_URL"]
     options.merge!(headless: false) if ENV["HEADLESS"] == "false"
     options.merge!(slowmo: ENV["SLOWMO"].to_f) if ENV["SLOWMO"].to_f > 0
 

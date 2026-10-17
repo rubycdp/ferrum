@@ -25,7 +25,7 @@ describe Ferrum::Contexts do
   end
 
   describe "#default_context" do
-    it "works in the browser's startup window when it came up with one" do
+    it "works in the browser's startup window when it came up with one", local_browser: true do
       with_external_browser(incognito: false) do |url|
         remote = Ferrum::Browser.new(url: url)
 
@@ -36,7 +36,7 @@ describe Ferrum::Contexts do
       end
     end
 
-    it "creates a context of its own when the browser has no startup window" do
+    it "creates a context of its own when the browser has no startup window", local_browser: true do
       with_external_browser do |url|
         remote = Ferrum::Browser.new(url: url)
         remote.create_page
@@ -51,7 +51,7 @@ describe Ferrum::Contexts do
       end
     end
 
-    it "ignores contexts another client created in the same browser" do
+    it "ignores contexts another client created in the same browser", local_browser: true do
       with_external_browser do |url|
         first = Ferrum::Browser.new(url: url)
         context = first.contexts.create
