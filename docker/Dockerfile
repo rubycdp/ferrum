@@ -58,18 +58,22 @@ COPY deploy/fonts.conf /etc/fonts/local.conf
 RUN fc-cache -f
 
 FROM base AS chromium
+ARG BROWSER_VERSION
 RUN apt-get update && apt-get install -y chromium \
     && rm -rf /var/lib/apt/lists/*
 ENV BROWSER_PATH=/usr/bin/chromium
 
 FROM base AS chrome
 ARG TARGETARCH
+ARG BROWSER_VERSION
 RUN curl -fsSL --retry 5 --retry-all-errors -o /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_${TARGETARCH}.deb \
     && apt-get update && apt-get install -y /tmp/chrome.deb \
     && rm -rf /var/lib/apt/lists/* /tmp/chrome.deb
 ENV BROWSER_PATH=/usr/bin/google-chrome
 
 FROM ${BROWSER}
+ARG VERSION=dev
+LABEL org.opencontainers.image.revision=${VERSION}
 
 RUN mkdir -p /home/driver /tmp/.X11-unix && chmod 1777 /home/driver /tmp/.X11-unix \
     && useradd --uid 999 --home-dir /home/driver --no-create-home --shell /usr/sbin/nologin driver
