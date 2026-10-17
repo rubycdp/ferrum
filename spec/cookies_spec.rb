@@ -217,7 +217,7 @@ describe Ferrum::Cookies do
       expect(browser.body).to include("127.0.0.1")
     end
 
-    it "sets cookies correctly with :domain option when base_url isn't set" do
+    it "sets cookies correctly with :domain option when base_url isn't set", local_browser: true do
       browser = Ferrum::Browser.new
       browser.cookies.set(name: "stealth", value: "123456", domain: "localhost")
 

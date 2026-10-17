@@ -27,7 +27,7 @@ describe Ferrum::Browser::Options::Chrome do
   end
 
   describe ".version" do
-    it "returns an executable version" do
+    it "returns an executable version", local_browser: true do
       expect(described_class.version).to match(/(Chromium|Chrome)(?: for Testing)? \d/)
     end
   end
