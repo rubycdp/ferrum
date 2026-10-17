@@ -13,8 +13,35 @@ on:
   workflow_dispatch:
 
 jobs:
+  test:
+    name: Go tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: docker
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: docker/go.mod
+          cache: false
+
+      - name: Check formatting
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test -race ./...
+
   build:
     name: Build ${{ matrix.browser }} (${{ matrix.arch }})
+    needs: test
     strategy:
       fail-fast: false
       matrix:
