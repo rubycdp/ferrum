@@ -55,6 +55,7 @@ Launch options (per connection, in the URL of /json/version or the WebSocket):
     args               extra Chrome flags, a flag with a default's name replaces it
     defaultViewport    {"width":1280,"height":720}, becomes --window-size
     ignoreDefaultArgs  true, or a list of default flags to drop
+    headless           false runs Chrome with a window, under its own Xvfb
   timeout=<ms>         session timeout for this connection, overrides TIMEOUT
   Other launch keys and query params (token, blockAds) are ignored.
   --remote-debugging-port and --user-data-dir are managed by the driver.
