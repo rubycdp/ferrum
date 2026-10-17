@@ -18,6 +18,8 @@ describe Ferrum::Browser do
       end
 
       it "supports custom chrome path" do
+        skip "needs a local browser" if ENV["FERRUM_URL"]
+
         original_path = "#{PROJECT_ROOT}/spec/support/chrome_path"
         File.write(original_path, browser.process.path)
 
