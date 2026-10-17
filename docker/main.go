@@ -49,6 +49,7 @@ Endpoints:
   WS  /devtools/page/<id>          connect to one target, e.g. from DevTools
   GET /devtools/*                  the DevTools frontend of a running session
   GET /health                      liveness, never starts a Chrome
+  GET /                            dashboard: running sessions with DevTools links
 
 Launch options (per connection, in the URL of /json/version or the WebSocket):
   launch=<JSON or base64 JSON>
