@@ -42,7 +42,7 @@ Environment:
 Endpoints:
   GET /json/version                start a Chrome, return its webSocketDebuggerUrl
   WS  /devtools/browser/<id>       connect to the Chrome started by /json/version
-  WS  /, /chrome, /chromium        connect to a new Chrome
+  WS  /                            connect to a new Chrome
   GET /json, /json/list            targets of every running session
   PUT /json/new?<url>              open a target, when exactly one session runs
   GET /json/protocol               the CDP protocol description
@@ -61,7 +61,7 @@ Launch options (per connection, in the URL of /json/version or the WebSocket):
   --remote-debugging-port and --user-data-dir are managed by the driver.
 
   http://localhost:3000?launch={"args":["--accept-lang=de-DE"]}&timeout=60000
-  ws://localhost:3000/chrome?launch={"defaultViewport":{"width":1280,"height":720}}
+  ws://localhost:3000?launch={"defaultViewport":{"width":1280,"height":720}}
 
 Default Chrome flags:
 %s
@@ -71,7 +71,7 @@ Examples:
   BROWSER_PATH=/usr/bin/chromium PORT=9222 driver
 
   Ferrum::Browser.new(url: "http://localhost:3000")
-  Ferrum::Browser.new(ws_url: "ws://localhost:3000/chrome")
+  Ferrum::Browser.new(ws_url: "ws://localhost:3000")
 `
 
 func main() {

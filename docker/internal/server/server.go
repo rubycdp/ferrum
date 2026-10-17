@@ -54,8 +54,6 @@ func New(sessions *Sessions, config Config) http.Handler {
 	handle(mux, "GET", "/json/new", s.newTarget)
 	handle(mux, "GET", "/devtools/browser/{id}", s.connect)
 	handle(mux, "GET", "/devtools/page/{id}", s.page)
-	handle(mux, "GET", "/chrome", s.connect)
-	handle(mux, "GET", "/chromium", s.connect)
 	mux.HandleFunc("GET /devtools/{path...}", s.frontend)
 	mux.HandleFunc("GET /{$}", s.connect)
 

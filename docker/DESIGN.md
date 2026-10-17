@@ -57,6 +57,7 @@ These are browserless features the driver doesn't have and won't add, because Fe
 over CDP themselves and files go through bind mounts:
 
 - the REST APIs (`/screenshot`, `/pdf`, `/content`, `/function`, `/download`, `/scrape`, `/performance`);
+- the `/chrome` and `/chromium` paths: an image has one browser, so connect to `/`;
 - Playwright endpoints, and Firefox, WebKit and Edge images;
 - token auth, CORS, `ALLOW_GET` and `ALLOW_FILE_PROTOCOL`;
 - the sessions, metrics, pressure and config endpoints, the debugger UI and the alert webhooks;
@@ -88,7 +89,7 @@ The driver serves everything through `net/http`, and WebSocket upgrades go throu
 |---|---|
 | `GET /json/version` | Starts the session's Chrome, proxies Chrome's real `/json/version`, and rewrites `webSocketDebuggerUrl` to `ws(s)://<Host>/devtools/browser/<id>?<original query>` |
 | WS `/devtools/browser/<id>` | Attaches to the Chrome started by `/json/version`. If another connection took it, falls back like `/` |
-| WS `/`, `/chrome`, `/chromium` | Claims a pending Chrome started with the same query, or starts a new one. For `ws_url:` clients and browserless URLs |
+| WS `/` | Claims a pending Chrome started with the same query, or starts a new one. For `ws_url:` clients |
 | `GET /json`, `/json/list` | Targets of every running session, with URLs pointing at the driver |
 | `PUT /json/new?<url>` | Opens a target, only while exactly one session runs (`409` otherwise) |
 | `GET /json/protocol` | Chrome's protocol description, cached. Starts a short-lived Chrome only when none runs |
