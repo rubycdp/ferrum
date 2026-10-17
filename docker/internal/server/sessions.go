@@ -34,8 +34,8 @@ func NewSessions(binary string) *Sessions {
 	}
 }
 
-func (s *Sessions) Start() (*browser.Browser, error) {
-	b, err := browser.Start(s.binary, startTimeout)
+func (s *Sessions) Start(options browser.Options) (*browser.Browser, error) {
+	b, err := browser.Start(s.binary, options, startTimeout)
 	if err != nil {
 		return nil, err
 	}
@@ -75,10 +75,10 @@ func (s *Sessions) Claim(id string) *browser.Browser {
 	return r.browser
 }
 
-func (s *Sessions) ClaimOrStart(options string) (*browser.Browser, error) {
+func (s *Sessions) ClaimOrStart(query string, options browser.Options) (*browser.Browser, error) {
 	s.mu.Lock()
 	for id, r := range s.pending {
-		if r.options == options {
+		if r.options == query {
 			delete(s.pending, id)
 			s.mu.Unlock()
 			return r.browser, nil
@@ -86,7 +86,7 @@ func (s *Sessions) ClaimOrStart(options string) (*browser.Browser, error) {
 	}
 	s.mu.Unlock()
 
-	return s.Start()
+	return s.Start(options)
 }
 
 func (s *Sessions) Stop(b *browser.Browser) {

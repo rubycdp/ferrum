@@ -9,9 +9,11 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
+	"github.com/rubycdp/ferrum/docker/internal/browser"
 	"github.com/rubycdp/ferrum/docker/internal/config"
 	"github.com/rubycdp/ferrum/docker/internal/server"
 )
@@ -38,6 +40,19 @@ Endpoints:
   WS  /, /chrome, /chromium        connect to a new Chrome
   GET /health                      liveness, never starts a Chrome
 
+Launch options (per connection, in the URL of /json/version or the WebSocket):
+  launch=<JSON or base64 JSON>
+    args               extra Chrome flags, a flag with a default's name replaces it
+    defaultViewport    {"width":1280,"height":720}, becomes --window-size
+    ignoreDefaultArgs  true, or a list of default flags to drop
+  Other launch keys and query params (token, blockAds) are ignored.
+  --remote-debugging-port and --user-data-dir are managed by the driver.
+
+  http://localhost:3000?launch={"args":["--accept-lang=de-DE"]}
+  ws://localhost:3000/chrome?launch={"defaultViewport":{"width":1280,"height":720}}
+
+Default Chrome flags:
+%s
 Examples:
   docker run --rm -p 3000:3000 ghcr.io/rubycdp/chrome
   docker run --rm -p 3000:3000 -v "$PWD:$PWD" ghcr.io/rubycdp/chromium
@@ -50,7 +65,7 @@ Examples:
 func main() {
 	showVersion := flag.Bool("version", false, "")
 	flag.BoolVar(showVersion, "v", false, "")
-	flag.Usage = func() { fmt.Fprint(flag.CommandLine.Output(), usage) }
+	flag.Usage = func() { fmt.Fprintf(flag.CommandLine.Output(), usage, defaultFlags()) }
 	flag.Parse()
 
 	if *showVersion {
@@ -89,4 +104,13 @@ func main() {
 	}
 
 	sessions.StopAll()
+}
+
+func defaultFlags() string {
+	var b strings.Builder
+	for _, flag := range browser.Defaults() {
+		b.WriteString("  " + flag + "\n")
+	}
+
+	return b.String()
 }

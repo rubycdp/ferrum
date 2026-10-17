@@ -81,14 +81,16 @@ CDP traffic.
 The query string from `/json/version` or the WebSocket URL accepts the same parameters as browserless v2:
 
 - `launch`: JSON or base64-encoded JSON, in v2's (Puppeteer launch) format. Supported keys:
-  - `args`: extra Chrome flags, e.g. `--proxy-server=…` or `--lang=…`;
-  - `headless`: `false` starts Chrome under Xvfb;
+  - `args`: extra Chrome flags, e.g. `--proxy-server=…` or `--accept-lang=…`. A flag with the same name as a
+    default replaces it;
   - `defaultViewport` `{width, height}`: becomes `--window-size`;
-  - `ignoreDefaultArgs`: `true`, or a list of default flags to drop.
-- `timeout`: the session timeout in milliseconds.
+  - `ignoreDefaultArgs`: `true`, or a list of default flags to drop, by full flag or by name.
+  - later: `headless: false` starts Chrome under Xvfb.
+- `timeout` (later): the session timeout in milliseconds.
 
-Other parameters (`token`, `blockAds`, `blockAdsInclude`) and other `launch` keys are ignored, so existing
-browserless URLs keep working.
+`--remote-debugging-port` and `--user-data-dir` are always set by the driver. An invalid `launch` gets `400`
+before any Chrome starts. Other parameters (`token`, `blockAds`, `blockAdsInclude`) and other `launch` keys are
+ignored, so existing browserless URLs keep working. `driver --help` lists the launch options and default flags.
 
 Anyone who can connect can pass flags like `--renderer-cmd-prefix` and run commands in the container. There's no
 authentication, so never publish the port beyond localhost or a private network.
@@ -178,14 +180,16 @@ Done:
 - `/health`.
 - A graceful shutdown stops every Chrome.
 - Trailing-slash routes (`/chrome/`, `/chromium/`, `/json/version/`), as in v2.
+- The `launch` query parameter (`args`, `defaultViewport`, `ignoreDefaultArgs`).
+- `driver --help` and `--version`.
 
 With `ws_url:`, Ferrum still calls `/json/version` before connecting to `/`. Pending Chromes are therefore matched
 by query string, so a connection to `/` claims the one that call started, instead of starting a second.
 
 Not done yet:
 - `CONCURRENT`, `QUEUED` and `TIMEOUT`, plus `EXTERNAL`;
-- the `launch` and `timeout` query parameters;
+- the `timeout` query parameter and `launch.headless`;
 - the DevTools proxy (`/json/list`, `/json/new`, `/json/protocol`, `/devtools/*`);
 - cleaned-up default flags;
 - a `HEALTHCHECK` in the image;
-- Go tests.
+- Go tests beyond the launch options, and a Go job in CI.

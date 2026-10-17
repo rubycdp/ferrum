@@ -2,6 +2,8 @@ package browser
 
 import (
 	"fmt"
+	"slices"
+	"strings"
 )
 
 const (
@@ -47,17 +49,44 @@ var (
 		"--safebrowsing-disable-auto-update",
 		"--password-store=basic",
 		"--no-startup-window",
+		fmt.Sprintf("%s=%s", chromeWindowSizeFlag, chromeResolution),
 	}
+
+	reserved = []string{chromeDebuggingPortFlag, chromeUserDataDirFlag}
 )
 
-func Flags(dir string) []string {
-	f := make([]string, len(flags))
-	copy(f, flags)
-	f = append(f, []string{
-		fmt.Sprintf("%s=%s", chromeDebuggingPortFlag, "0"),
-		fmt.Sprintf("%s=%s", chromeWindowSizeFlag, chromeResolution),
-		fmt.Sprintf("%s=%s", chromeUserDataDirFlag, dir),
-	}...)
+func Defaults() []string {
+	return slices.Clone(flags)
+}
 
-	return f
+func Flags(dir string, options Options) []string {
+	f := slices.DeleteFunc(slices.Clone(flags), options.IgnoreDefaultArgs.ignores)
+
+	extra := slices.Clone(options.Args)
+	if v := options.DefaultViewport; v != nil {
+		extra = append(extra, fmt.Sprintf("%s=%d,%d", chromeWindowSizeFlag, v.Width, v.Height))
+	}
+
+	for _, flag := range extra {
+		name := flagName(flag)
+		if slices.Contains(reserved, name) {
+			continue
+		}
+
+		if i := slices.IndexFunc(f, func(d string) bool { return flagName(d) == name }); i >= 0 {
+			f[i] = flag
+		} else {
+			f = append(f, flag)
+		}
+	}
+
+	return append(f,
+		fmt.Sprintf("%s=%s", chromeDebuggingPortFlag, "0"),
+		fmt.Sprintf("%s=%s", chromeUserDataDirFlag, dir),
+	)
+}
+
+func flagName(flag string) string {
+	name, _, _ := strings.Cut(flag, "=")
+	return name
 }
