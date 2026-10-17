@@ -1,9 +1,12 @@
 # Design
 
+> Better than browserless, not equal to it.
+
 A small Go binary that runs as the entrypoint of a Docker container and gives each client its own Chrome over CDP.
-It looks like browserless v2 (checked against v2.57.0) from the outside, but works differently inside. There's no Puppeteer, and nothing
-touches the client's targets: bytes go through unchanged. It's self-hosted only (local machines, CI, your own
-servers) and Docker only.
+It replaces browserless with minimal changes: usually swap the image and connect to `/`. It doesn't copy
+browserless, though: where browserless gets in the way, the driver does it differently. There's no Puppeteer,
+and nothing touches the client's targets: bytes go through unchanged. It's self-hosted only (local machines, CI,
+your own servers) and Docker only.
 
 ## Why
 
@@ -18,6 +21,48 @@ Most remote-Chrome bugs Ferrum and Cuprite users report come from browserless be
 - `quit` doesn't end the session (ferrum#418), and orphaned Chrome trees pile up (ferrum#505).
 - Zombie processes pile up when the main process is PID 1 (ferrum#364), and there's no native arm64 image (ferrum#270).
 
+## Compared to browserless v2
+
+Moving from browserless usually means swapping the image and nothing else, but check the differences below.
+
+### Shared conventions
+
+Kept so moving over takes minimal changes:
+
+- Port 3000, uid 999 and dumb-init.
+- Env: `PORT`, `HOST`, `CONCURRENT`, `QUEUED`, `TIMEOUT` and `EXTERNAL` / `PROXY_URL`.
+- Query: `launch` (Puppeteer's launch format, JSON or base64) and `timeout`.
+
+### What's different
+
+| | browserless v2 | driver |
+|---|---|---|
+| Runtime | A TypeScript app on Node, using Puppeteer and Playwright | One static Go binary |
+| Base image | Ubuntu | `debian:trixie-slim` |
+| Browser | Installed by Playwright's installer | Debian's `chromium` package or Google's `.deb` |
+| Image size | About 3 GB, 1 GB compressed | About 1 GB, under 500 MB compressed |
+| Architectures | `chromium`: amd64 and arm64; `chrome`: amd64 only | Both images on amd64 and arm64 |
+| Client's targets | Its own Puppeteer connection sets the viewport and the download folder | Nothing besides the client talks to Chrome |
+| Session timeout | 30s by default | None by default |
+| `/json/version` | A Chrome started once at boot, with cached metadata and a generic URL without path or query | The session's own Chrome, real metadata, a URL the client can reach, with the query kept |
+| `headless: false` | One shared Xvfb `:99` at 1024x768x16, started with the container | One Xvfb per session, sized to the window |
+| PID 1 | A bash script; dumb-init runs only the Node process | dumb-init, reaping every orphan |
+| `--user <uid>` | `HOME` belongs to `blessuser` | `HOME` is world-writable, any uid works |
+| Default flags | Puppeteer's plus browserless's | Ferrum's |
+| Auth | `TOKEN` | None, so never publish the port |
+
+### What's left out
+
+These are browserless features the driver doesn't have and won't add, because Ferrum and Cuprite drive Chrome
+over CDP themselves and files go through bind mounts:
+
+- the REST APIs (`/screenshot`, `/pdf`, `/content`, `/function`, `/download`, `/scrape`, `/performance`);
+- Playwright endpoints, and Firefox, WebKit and Edge images;
+- token auth, CORS, `ALLOW_GET` and `ALLOW_FILE_PROTOCOL`;
+- the sessions, metrics, pressure and config endpoints, the debugger UI and the alert webhooks;
+- ad blocking, stealth, recording, reconnecting to a kept-alive browser;
+- the file workspace, `DATA_DIR` and `DOWNLOAD_DIR`.
+
 ## Process model
 
 - The container runs dumb-init as PID 1, then `driver`, then one Chrome per session. dumb-init reaps orphans,
@@ -30,12 +75,10 @@ Most remote-Chrome bugs Ferrum and Cuprite users report come from browserless be
   - Both proxy directions are then torn down.
   - The whole process group gets TERM, then KILL after a grace period, and the profile directory is deleted.
   - Go's default TCP keepalive on accepted connections catches a client that vanished without closing.
-- `CONCURRENT` limits running sessions and defaults to the number of CPUs. Up to `QUEUED` extra connections wait
+- `CONCURRENT` limits running sessions and defaults to the number of CPUs. Up to `QUEUED` (default 10) extra connections wait
   for a free slot. Beyond that they get `429` with `Retry-After`, as a plain HTTP response sent before the
-  WebSocket upgrade, never bytes on a live socket. The names match browserless v2, so its compose files work
-  unchanged.
-- There's no session timeout by default; browserless v2 defaults to 30s. `TIMEOUT` (env) or `?timeout=` (query),
-  both in milliseconds, set one. The driver logs why each session ended, so `docker logs` shows it.
+  WebSocket upgrade, never bytes on a live socket.
+- There's no session timeout by default; browserless v2 defaults to 30s. `TIMEOUT` and `?timeout=`, both in milliseconds, set one. The driver logs why each session ended, so `docker logs` shows it.
 
 ## HTTP surface
 
@@ -44,22 +87,30 @@ The driver serves everything through `net/http`, and WebSocket upgrades go throu
 | Route | Behavior |
 |---|---|
 | `GET /json/version` | Starts the session's Chrome, proxies Chrome's real `/json/version`, and rewrites `webSocketDebuggerUrl` to `ws(s)://<Host>/devtools/browser/<id>?<original query>` |
-| WS `/devtools/browser/<id>` | Attaches to the Chrome started by `/json/version`, `404` if there's none (as in v2) |
+| WS `/devtools/browser/<id>` | Attaches to the Chrome started by `/json/version`. If another connection took it, falls back like `/` |
 | WS `/`, `/chrome`, `/chromium` | Claims a pending Chrome started with the same query, or starts a new one. For `ws_url:` clients and browserless URLs |
-| `GET /json/list`, `/json/new`, `/json/protocol`, `/devtools/*`, WS `/devtools/page/<id>` | Forwarded to the Chrome that owns the target, for the DevTools viewer (v2 has the same routes) |
+| `GET /json`, `/json/list` | Targets of every running session, with URLs pointing at the driver |
+| `PUT /json/new?<url>` | Opens a target, only while exactly one session runs (`409` otherwise) |
+| `GET /json/protocol` | Chrome's protocol description, cached. Starts a short-lived Chrome only when none runs |
+| WS `/devtools/page/<id>` | Connects to one target of whichever session owns it. Closing it doesn't end the session |
+| `GET /devtools/*` | The DevTools frontend, served by a running Chrome |
 | `GET /health` | Driver liveness. Never starts a Chrome |
 
-Like v2, every route also accepts a trailing slash: `/chrome/` works like `/chrome`.
+Every route also accepts a trailing slash: `/json/version/` works like `/json/version`.
 
 `/json/version` is answered on the fly, so the client gets real `Browser`, `User-Agent` and protocol data, with no
-Chrome started at boot or just for discovery. This differs from v2 on purpose. v2 starts a throwaway Chrome once,
-caches its metadata, and always returns its generic address (`EXTERNAL`, or `HOST:PORT`) with no path and no
-query, so the client connects to `/`. Clients work against either. Details:
+Chrome started at boot or just for discovery. browserless v2 instead starts a throwaway Chrome once, caches its
+metadata, and always returns its generic address (`EXTERNAL`, or `HOST:PORT`) with no path and no query.
+Details:
 
+- **Taken ids.** With `ws_url:`, Ferrum calls `/json/version` and then connects to `/`, which claims any pending
+  Chrome with the same query. With parallel clients that can be the Chrome another client's `/json/version`
+  started, so `/devtools/browser/<id>` falls back the same way instead of answering `404`. Chromes started with
+  the same query are interchangeable.
 - **Unclaimed sessions.** A Chrome started by `/json/version` is pending until a WebSocket claims it. If none
   arrives within 30 seconds, for example from a stray `curl` or a misconfigured healthcheck, it's killed.
 - **Reachable URL.** The URL is built from `Host` / `X-Forwarded-Host` / `X-Forwarded-Proto`, so it's always
-  reachable from the client (no `0.0.0.0`), and the query string is kept. `EXTERNAL` (or `PROXY_URL`, as in v2)
+  reachable from the client (no `0.0.0.0`), and the query string is kept. `EXTERNAL` (or `PROXY_URL`)
   overrides the scheme and host when the driver sits behind a proxy that rewrites them.
 - **Host header.** Requests forwarded to Chrome carry `Host: 127.0.0.1:<port>`, because Chrome rejects any other
   host on its HTTP endpoint.
@@ -78,33 +129,25 @@ CDP traffic.
 
 ## Launch options
 
-The query string from `/json/version` or the WebSocket URL accepts the same parameters as browserless v2:
+The query string from `/json/version` or the WebSocket URL accepts:
 
-- `launch`: JSON or base64-encoded JSON, in v2's (Puppeteer launch) format. Supported keys:
+- `launch`: JSON or base64-encoded JSON, in Puppeteer's launch format. Supported keys:
   - `args`: extra Chrome flags, e.g. `--proxy-server=…` or `--accept-lang=…`. A flag with the same name as a
     default replaces it;
   - `defaultViewport` `{width, height}`: becomes `--window-size`;
-  - `ignoreDefaultArgs`: `true`, or a list of default flags to drop, by full flag or by name.
-  - later: `headless: false` starts Chrome under Xvfb.
-- `timeout` (later): the session timeout in milliseconds.
+  - `ignoreDefaultArgs`: `true`, or a list of default flags to drop, by full flag or by name;
+  - `headless: false`: Chrome runs with a window on its own Xvfb display, sized to the window and stopped with
+    the session. Without Xvfb in `PATH` (e.g. on a desktop), Chrome opens a real window.
+- `timeout`: the session timeout in milliseconds, overriding `TIMEOUT`. `0` turns it off.
 
 `--remote-debugging-port` and `--user-data-dir` are always set by the driver. An invalid `launch` gets `400`
-before any Chrome starts. Other parameters (`token`, `blockAds`, `blockAdsInclude`) and other `launch` keys are
-ignored, so existing browserless URLs keep working. `driver --help` lists the launch options and default flags.
+before any Chrome starts. Other parameters and other `launch` keys are ignored. `driver --help` lists the launch options and default flags.
 
 Anyone who can connect can pass flags like `--renderer-cmd-prefix` and run commands in the container. There's no
 authentication, so never publish the port beyond localhost or a private network.
 
-Default flags:
-
-- headless;
-- `--no-startup-window`, so no implicit context;
-- `--no-sandbox`, since the container is the boundary;
-- `--disable-dev-shm-usage`;
-- `--disable-features=site-per-process`, which makes ferrum#640 less likely.
-
-Never added: `--disable-web-security`, `--disable-crashpad-for-testing` (the network service crash-loops), or
-`NetworkServiceInProcess`.
+Default flags are Ferrum's, the same as `Ferrum::Browser.new(dockerize: true)` locally, window size included
+(`driver --help` lists them). The one exception is `--remote-allow-origins`: the driver strips `Origin` instead.
 
 ## Files
 
@@ -127,25 +170,26 @@ under it, which crashpad needs (ferrum#541, #544). Downloads then belong to the 
 - Two images, `ghcr.io/rubycdp/chrome` (Google's `.deb`) and `ghcr.io/rubycdp/chromium` (Debian's package), each
   for amd64 and arm64. Tags: `latest`, the browser's major version (`155`) and its full version (`155.0.8059.39`).
 - The Go binary is cross-compiled in a build stage, so the image has no Node, Playwright or npm.
-- `.github/workflows/docker.yml` builds each browser and architecture pair on a native runner, never through
-  QEMU, which crashes Chrome (ferrum#270). It smoke-tests every image and merges the architectures into one
-  multi-arch tag by digest.
+- `.github/workflows/docker.yml` runs the Go tests, then builds each browser and architecture pair on a native
+  runner, never through QEMU, which crashes Chrome (ferrum#270).
+  - It smoke-tests every image.
+  - On amd64, it runs the Ferrum suite against the image, with `FERRUM_URL` pointing at the driver.
+  - It merges the architectures into one multi-arch tag by digest.
 - Fonts: Debian's font packages plus open substitutes for Microsoft fonts. Selawik replaces Segoe UI, Carlito
   replaces Calibri, Caladea replaces Cambria, and DejaVu replaces Tahoma.
-- Later: the Ferrum suite run against each image before it's published.
-- Env, with names matching browserless v2:
+- Env:
   - `PORT` (default 3000) and `HOST` (default `0.0.0.0`);
   - `CONCURRENT`, `QUEUED` and `TIMEOUT`;
   - `EXTERNAL` / `PROXY_URL`;
   - plus `BROWSER_PATH`, which the image sets.
-- A healthcheck on `/health`, so compose can use `condition: service_healthy`.
+- A `HEALTHCHECK` on `/health` (it follows `PORT`), so compose can use `condition: service_healthy`.
 
 ## Usage with Cuprite in compose
 
 This follows the Evil Martians "System of a test" setup:
 
-- **The `chrome` service.** Use this image instead of `browserless/chrome`. `CONNECTION_TIMEOUT` and the
-  M1-specific tag aren't needed, and `depends_on` can use `service_healthy`.
+- **The `chrome` service.** Use `ghcr.io/rubycdp/chrome` or `chromium`. One tag works on amd64 and arm64, and
+  `depends_on` can use `service_healthy`.
 - **Connecting.** `url: ENV["CHROME_URL"]` (`http://chrome:3333`) works as is: one `/json/version`, then the
   WebSocket. The TCP availability check with fallback to a local Chrome also works as is.
 - **Sessions.** Cuprite opens one connection per test process and calls `reset` between tests, so it's one Chrome
@@ -155,7 +199,7 @@ This follows the Evil Martians "System of a test" setup:
   `extra_hosts: ["host.docker.internal:host-gateway"]` on Linux.
 - **WebMock and VCR.** Allow the `chrome` host, because `/json/version` goes through `Net::HTTP`.
 - **Launch flags.** `browser_options: {"no-sandbox" => nil}` isn't needed. Ferrum doesn't send launch flags to a
-  remote browser anyway.
+  remote browser, so put them in the URL instead, e.g. `?launch={"defaultViewport":{"width":1400,"height":1400}}`.
 - **GitHub Actions.** Service containers start before checkout, so start the driver with `docker run` in a step
   after checkout when uploads need the workspace mounted.
 
@@ -166,30 +210,29 @@ This follows the Evil Martians "System of a test" setup:
 2. `Browser#debug` in remote mode prints the DevTools URL instead of `Process.spawn(process.path, …)`, which
    fails because the path is nil.
 3. Never look for a local binary when `url` or `ws_url` is set (ferrum#554).
-4. Optionally, send `window_size` and `browser_options` in v2's `launch` query parameter (`defaultViewport` and
+4. Optionally, send `window_size` and `browser_options` in the `launch` query parameter (`defaultViewport` and
    `args`) when connecting remotely.
 
 ## Status
 
 Done:
-- Config is `BROWSER_PATH`, `HOST` and `PORT`.
+- Config: `BROWSER_PATH`, `HOST`, `PORT`, `CONCURRENT`, `QUEUED`, `TIMEOUT`, `EXTERNAL` / `PROXY_URL`. Invalid
+  values stop the driver at startup.
 - One Chrome per connection, on `--remote-debugging-port=0`, with the endpoint read from stderr.
-- `/json/version` is answered on the fly, with a claim timeout.
+- `/json/version` is answered on the fly, with a claim timeout and a fallback for taken ids.
 - The WebSocket goes through `ReverseProxy`.
-- The process group gets TERM, then KILL, and the profile is removed when the connection ends.
-- `/health`.
+- The process group gets TERM, then KILL, and the profile is removed when the connection ends. Each session logs
+  why it ended: `connection closed`, `browser exited`, `timeout`, `never claimed` or `shutdown`.
+- Session limits with `429` and `Retry-After`; queued connections give up when the client leaves or the driver
+  shuts down.
+- Launch options (`args`, `defaultViewport`, `ignoreDefaultArgs`, `headless`) and `timeout` in the URL.
+- The DevTools routes.
+- `/health` and the image's `HEALTHCHECK`, trailing-slash routes, `driver --help` and `--version`.
 - A graceful shutdown stops every Chrome.
-- Trailing-slash routes (`/chrome/`, `/chromium/`, `/json/version/`), as in v2.
-- The `launch` query parameter (`args`, `defaultViewport`, `ignoreDefaultArgs`).
-- `driver --help` and `--version`.
-
-With `ws_url:`, Ferrum still calls `/json/version` before connecting to `/`. Pending Chromes are therefore matched
-by query string, so a connection to `/` claims the one that call started, instead of starting a second.
+- Go tests (`go test ./...`), with the test binary acting as a fake Chrome, run in CI before any image is built.
+- The Ferrum suite runs against the amd64 images in CI.
 
 Not done yet:
-- `CONCURRENT`, `QUEUED` and `TIMEOUT`, plus `EXTERNAL`;
-- the `timeout` query parameter and `launch.headless`;
-- the DevTools proxy (`/json/list`, `/json/new`, `/json/protocol`, `/devtools/*`);
-- cleaned-up default flags;
-- a `HEALTHCHECK` in the image;
-- Go tests beyond the launch options, and a Go job in CI.
+- the Ferrum suite on arm64, whose runner has no local Chrome for the specs that start one;
+- the zero-copy tunnel;
+- the Ferrum changes above.

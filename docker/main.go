@@ -22,7 +22,7 @@ const shutdownTimeout = 10 * time.Second
 
 const usage = `Usage: driver [options]
 
-Serves one Chrome per CDP connection, compatible with browserless v2 clients.
+Serves one Chrome per CDP connection.
 Each WebSocket gets a fresh Chrome that is killed when the client disconnects.
 
 Options:
@@ -57,10 +57,10 @@ Launch options (per connection, in the URL of /json/version or the WebSocket):
     ignoreDefaultArgs  true, or a list of default flags to drop
     headless           false runs Chrome with a window, under its own Xvfb
   timeout=<ms>         session timeout for this connection, overrides TIMEOUT
-  Other launch keys and query params (token, blockAds) are ignored.
+  Other launch keys and query params are ignored.
   --remote-debugging-port and --user-data-dir are managed by the driver.
 
-  http://localhost:3000?launch={"args":["--accept-lang=de-DE"]}
+  http://localhost:3000?launch={"args":["--accept-lang=de-DE"]}&timeout=60000
   ws://localhost:3000/chrome?launch={"defaultViewport":{"width":1280,"height":720}}
 
 Default Chrome flags:
