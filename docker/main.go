@@ -43,6 +43,11 @@ Endpoints:
   GET /json/version                start a Chrome, return its webSocketDebuggerUrl
   WS  /devtools/browser/<id>       connect to the Chrome started by /json/version
   WS  /, /chrome, /chromium        connect to a new Chrome
+  GET /json, /json/list            targets of every running session
+  PUT /json/new?<url>              open a target, when exactly one session runs
+  GET /json/protocol               the CDP protocol description
+  WS  /devtools/page/<id>          connect to one target, e.g. from DevTools
+  GET /devtools/*                  the DevTools frontend of a running session
   GET /health                      liveness, never starts a Chrome
 
 Launch options (per connection, in the URL of /json/version or the WebSocket):
