@@ -35,7 +35,7 @@ func New(sessions *Sessions, config Config) http.Handler {
 	mux := http.NewServeMux()
 	handle(mux, "/health", s.health)
 	handle(mux, "/json/version", s.version)
-	handle(mux, "/devtools/browser/{id}", s.claim)
+	handle(mux, "/devtools/browser/{id}", s.connect)
 	handle(mux, "/chrome", s.connect)
 	handle(mux, "/chromium", s.connect)
 	mux.HandleFunc("GET /{$}", s.connect)
@@ -82,21 +82,6 @@ func (s *Server) version(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(info)
 }
 
-func (s *Server) claim(w http.ResponseWriter, r *http.Request) {
-	if !isUpgrade(r) {
-		http.Error(w, "websocket upgrade required", http.StatusUpgradeRequired)
-		return
-	}
-
-	b := s.sessions.Claim(r.PathValue("id"))
-	if b == nil {
-		http.Error(w, "browser not found", http.StatusNotFound)
-		return
-	}
-
-	s.serve(w, r, b, s.config.Timeout)
-}
-
 func (s *Server) connect(w http.ResponseWriter, r *http.Request) {
 	if !isUpgrade(r) {
 		http.Error(w, "websocket upgrade required", http.StatusUpgradeRequired)
@@ -112,7 +97,7 @@ func (s *Server) connect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b, err := s.sessions.ClaimOrStart(r.Context(), r.URL.RawQuery, options)
+	b, err := s.sessions.ClaimOrStart(r.Context(), r.PathValue("id"), r.URL.RawQuery, options)
 	if err != nil {
 		startError(w, err)
 		return

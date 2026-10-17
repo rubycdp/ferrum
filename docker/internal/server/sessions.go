@@ -112,7 +112,11 @@ func (s *Sessions) Claim(id string) *browser.Browser {
 	return r.browser
 }
 
-func (s *Sessions) ClaimOrStart(ctx context.Context, query string, options browser.Options) (*browser.Browser, error) {
+func (s *Sessions) ClaimOrStart(ctx context.Context, id, query string, options browser.Options) (*browser.Browser, error) {
+	if b := s.Claim(id); b != nil {
+		return b, nil
+	}
+
 	s.mu.Lock()
 	for id, r := range s.pending {
 		if r.query == query {
