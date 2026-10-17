@@ -138,38 +138,25 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.browser }}-${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=${{ matrix.browser }}-${{ matrix.arch }}
 
-      - name: Smoke test
-        run: |
-          docker run -d --name smoke -p 3000:3000 ${{ matrix.browser }}:test
-          for i in $(seq 1 30); do
-            curl -sf http://localhost:3000/json/version | grep -q webSocketDebuggerUrl && break
-            sleep 1
-          done
-          docker logs smoke
-          curl -sf http://localhost:3000/json/version | tee /dev/stderr | grep -q webSocketDebuggerUrl
-
       - name: Setup Ruby
-        if: matrix.arch == 'amd64'
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.4"
           bundler-cache: true
 
       - name: Run the Ferrum suite against the image
-        if: matrix.arch == 'amd64'
         timeout-minutes: 20
         env:
           FERRUM_DEFAULT_TIMEOUT: 15
           FERRUM_PROCESS_TIMEOUT: 25
         run: |
-          docker rm -f smoke
           docker run -d --name suite --network host --user "$(id -u):$(id -g)" -e CONCURRENT=4 \
             -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -v /tmp:/tmp ${{ matrix.browser }}:test
           for i in $(seq 1 30); do curl -sf http://127.0.0.1:3000/health && break; sleep 1; done
           FERRUM_URL=http://127.0.0.1:3000 bundle exec rspec --exclude-pattern "spec/unit/**/*_spec.rb"
 
       - name: Driver logs
-        if: always() && matrix.arch == 'amd64'
+        if: always()
         run: docker logs suite 2>&1 | grep -v "browser stderr" | tail -200 || true
 
       - name: Detect browser version

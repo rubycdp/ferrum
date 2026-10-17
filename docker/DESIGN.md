@@ -175,8 +175,8 @@ under it, which crashpad needs (ferrum#541, #544). Downloads then belong to the 
 - The Go binary is cross-compiled in a build stage, so the image has no Node, Playwright or npm.
 - `.github/workflows/docker.yml` runs the Go tests, then builds each browser and architecture pair on a native
   runner, never through QEMU, which crashes Chrome (ferrum#270).
-  - It smoke-tests every image.
-  - On amd64, it runs the Ferrum suite against the image, with `FERRUM_URL` pointing at the driver.
+  - It runs the Ferrum suite against every image, with `FERRUM_URL` pointing at the driver. Specs tagged
+    `local_browser`, which start their own Chrome, are skipped.
   - It merges the architectures into one multi-arch tag by digest. A failed build or suite publishes nothing, so
     `latest` stays where it was.
 - Builds happen on driver changes pushed to `main` and on a daily check for new browser versions: Google's apt
@@ -241,9 +241,8 @@ Done:
 - `/health` and the image's `HEALTHCHECK`, trailing-slash routes, `driver --help` and `--version`.
 - A graceful shutdown stops every Chrome.
 - Go tests (`go test ./...`), with the test binary acting as a fake Chrome, run in CI before any image is built.
-- The Ferrum suite runs against the amd64 images in CI, and a daily check builds new browser versions.
+- The Ferrum suite runs against every image in CI, and a daily check builds new browser versions.
 
 Not done yet:
-- the Ferrum suite on arm64, whose runner has no local Chrome for the specs that start one;
 - the zero-copy tunnel;
 - the Ferrum changes above.
