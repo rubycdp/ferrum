@@ -11,6 +11,12 @@ type Options struct {
 	Args              []string    `json:"args"`
 	DefaultViewport   *Viewport   `json:"defaultViewport"`
 	IgnoreDefaultArgs IgnoredArgs `json:"ignoreDefaultArgs"`
+	Headless          any         `json:"headless"`
+}
+
+func (o Options) Headful() bool {
+	headless, ok := o.Headless.(bool)
+	return ok && !headless
 }
 
 type Viewport struct {

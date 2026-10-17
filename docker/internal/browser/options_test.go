@@ -114,3 +114,38 @@ func TestFlags(t *testing.T) {
 		}
 	})
 }
+
+func TestHeadful(t *testing.T) {
+	for launch, headful := range map[string]bool{
+		`{}`:                   false,
+		`{"headless":true}`:    false,
+		`{"headless":"new"}`:   false,
+		`{"headless":"shell"}`: false,
+		`{"headless":false}`:   true,
+	} {
+		options, err := ParseOptions(launch)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if options.Headful() != headful {
+			t.Errorf("%s: headful = %v, want %v", launch, options.Headful(), headful)
+		}
+
+		if f := Flags("/tmp/profile", options); slices.Contains(f, "--headless") == headful {
+			t.Errorf("%s: flags = %v", launch, f)
+		}
+	}
+}
+
+func TestWindowSize(t *testing.T) {
+	if w, h := windowSize(Flags("/tmp/profile", Options{})); w != 1024 || h != 768 {
+		t.Errorf("default = %dx%d", w, h)
+	}
+	if w, h := windowSize(Flags("/tmp/profile", Options{DefaultViewport: &Viewport{Width: 800, Height: 600}})); w != 800 || h != 600 {
+		t.Errorf("viewport = %dx%d", w, h)
+	}
+	if w, h := windowSize([]string{"--window-size=bogus"}); w != 1024 || h != 768 {
+		t.Errorf("invalid = %dx%d", w, h)
+	}
+}

@@ -26,6 +26,7 @@ type Browser struct {
 	WSPath string
 
 	cmd      *exec.Cmd
+	xvfb     *xvfb
 	dir      string
 	done     chan struct{}
 	stopOnce sync.Once
@@ -37,25 +38,35 @@ func Start(binary string, options Options, timeout time.Duration) (*Browser, err
 		return nil, fmt.Errorf("create user data dir: %w", err)
 	}
 
-	stderr, writer, err := os.Pipe()
-	if err != nil {
-		os.RemoveAll(dir)
-		return nil, fmt.Errorf("create stderr pipe: %w", err)
+	flags := Flags(dir, options)
+	cmd := exec.Command(binary, flags...)
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+
+	var x *xvfb
+	if needsXvfb(options) {
+		if x, err = startXvfb(windowSize(flags)); err != nil {
+			os.RemoveAll(dir)
+			return nil, err
+		}
+		cmd.Env = append(os.Environ(), "DISPLAY="+x.display)
 	}
 
-	cmd := exec.Command(binary, Flags(dir, options)...)
+	stderr, writer, err := os.Pipe()
+	if err != nil {
+		cleanup(x, dir)
+		return nil, fmt.Errorf("create stderr pipe: %w", err)
+	}
 	cmd.Stderr = writer
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
 	err = cmd.Start()
 	writer.Close()
 	if err != nil {
 		stderr.Close()
-		os.RemoveAll(dir)
+		cleanup(x, dir)
 		return nil, fmt.Errorf("start browser: %w", err)
 	}
 
-	b := &Browser{cmd: cmd, dir: dir, done: make(chan struct{})}
+	b := &Browser{cmd: cmd, xvfb: x, dir: dir, done: make(chan struct{})}
 	go b.wait()
 
 	wsURL := make(chan string, 1)
@@ -100,12 +111,23 @@ func (b *Browser) Stop() {
 		syscall.Kill(-pgid, syscall.SIGKILL)
 		<-b.done
 
+		if b.xvfb != nil {
+			b.xvfb.stop()
+		}
+
 		if err := os.RemoveAll(b.dir); err != nil {
 			slog.Warn("cannot remove user data dir", "dir", b.dir, "error", err)
 		}
 
 		slog.Info("browser stopped", "pid", pgid, "id", b.ID)
 	})
+}
+
+func cleanup(x *xvfb, dir string) {
+	if x != nil {
+		x.stop()
+	}
+	os.RemoveAll(dir)
 }
 
 func (b *Browser) wait() {

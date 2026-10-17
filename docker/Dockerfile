@@ -71,7 +71,7 @@ ENV BROWSER_PATH=/usr/bin/google-chrome
 
 FROM ${BROWSER}
 
-RUN mkdir -p /home/driver && chmod 1777 /home/driver \
+RUN mkdir -p /home/driver /tmp/.X11-unix && chmod 1777 /home/driver /tmp/.X11-unix \
     && useradd --uid 999 --home-dir /home/driver --no-create-home --shell /usr/sbin/nologin driver
 
 ENV HOME=/home/driver \

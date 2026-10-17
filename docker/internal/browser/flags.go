@@ -3,11 +3,13 @@ package browser
 import (
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 )
 
 const (
 	chromeDebuggingPortFlag = "--remote-debugging-port"
+	chromeHeadlessFlag      = "--headless"
 	chromeWindowSizeFlag    = "--window-size"
 	chromeUserDataDirFlag   = "--user-data-dir"
 	defaultWidth            = 1024
@@ -46,7 +48,7 @@ var (
 		"--enable-automation",
 		"--enable-features=NetworkService,NetworkServiceInProcess",
 		"--force-color-profile=srgb",
-		"--headless",
+		chromeHeadlessFlag,
 		"--hide-scrollbars",
 		"--keep-alive-for-test",
 		"--metrics-recording-only",
@@ -71,7 +73,9 @@ func Defaults() []string {
 }
 
 func Flags(dir string, options Options) []string {
-	f := slices.DeleteFunc(slices.Clone(flags), options.IgnoreDefaultArgs.ignores)
+	f := slices.DeleteFunc(slices.Clone(flags), func(flag string) bool {
+		return options.IgnoreDefaultArgs.ignores(flag) || (options.Headful() && flagName(flag) == chromeHeadlessFlag)
+	})
 
 	extra := slices.Clone(options.Args)
 	if v := options.DefaultViewport; v != nil {
@@ -95,6 +99,24 @@ func Flags(dir string, options Options) []string {
 		fmt.Sprintf("%s=%s", chromeDebuggingPortFlag, "0"),
 		fmt.Sprintf("%s=%s", chromeUserDataDirFlag, dir),
 	)
+}
+
+func windowSize(flags []string) (int, int) {
+	for _, flag := range slices.Backward(flags) {
+		name, value, _ := strings.Cut(flag, "=")
+		if name != chromeWindowSizeFlag {
+			continue
+		}
+
+		w, h, _ := strings.Cut(value, ",")
+		width, errW := strconv.Atoi(strings.TrimSpace(w))
+		height, errH := strconv.Atoi(strings.TrimSpace(h))
+		if errW == nil && errH == nil && width > 0 && height > 0 {
+			return width, height
+		}
+	}
+
+	return defaultWidth, defaultHeight
 }
 
 func flagName(flag string) string {
