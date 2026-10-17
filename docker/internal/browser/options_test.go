@@ -74,7 +74,7 @@ func TestFlags(t *testing.T) {
 	t.Run("args replace defaults by name and add the rest", func(t *testing.T) {
 		f := Flags("/tmp/profile", Options{Args: []string{"--window-size=800,600", "--accept-lang=de-DE"}})
 
-		if !slices.Contains(f, "--window-size=800,600") || slices.Contains(f, "--window-size=1920,1080") {
+		if !slices.Contains(f, "--window-size=800,600") || slices.Contains(f, "--window-size=1024,768") {
 			t.Errorf("window size not replaced: %v", f)
 		}
 		if !slices.Contains(f, "--accept-lang=de-DE") {
@@ -85,7 +85,7 @@ func TestFlags(t *testing.T) {
 	t.Run("defaultViewport becomes the window size", func(t *testing.T) {
 		f := Flags("/tmp/profile", Options{DefaultViewport: &Viewport{Width: 1280, Height: 720}})
 
-		if !slices.Contains(f, "--window-size=1280,720") || slices.Contains(f, "--window-size=1920,1080") {
+		if !slices.Contains(f, "--window-size=1280,720") || slices.Contains(f, "--window-size=1024,768") {
 			t.Errorf("window size not replaced: %v", f)
 		}
 	})
