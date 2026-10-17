@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -16,7 +18,46 @@ import (
 
 const shutdownTimeout = 10 * time.Second
 
+const usage = `Usage: driver [options]
+
+Serves one Chrome per CDP connection, compatible with browserless v2 clients.
+Each WebSocket gets a fresh Chrome that is killed when the client disconnects.
+
+Options:
+  -h, --help       show this help
+  -v, --version    print the version
+
+Environment:
+  BROWSER_PATH     Chrome or Chromium binary (set by the image)
+  HOST             address to listen on (default 0.0.0.0)
+  PORT             port to listen on (default 3000)
+
+Endpoints:
+  GET /json/version                start a Chrome, return its webSocketDebuggerUrl
+  WS  /devtools/browser/<id>       connect to the Chrome started by /json/version
+  WS  /, /chrome, /chromium        connect to a new Chrome
+  GET /health                      liveness, never starts a Chrome
+
+Examples:
+  docker run --rm -p 3000:3000 ghcr.io/rubycdp/chrome
+  docker run --rm -p 3000:3000 -v "$PWD:$PWD" ghcr.io/rubycdp/chromium
+  BROWSER_PATH=/usr/bin/chromium PORT=9222 driver
+
+  Ferrum::Browser.new(url: "http://localhost:3000")
+  Ferrum::Browser.new(ws_url: "ws://localhost:3000/chrome")
+`
+
 func main() {
+	showVersion := flag.Bool("version", false, "")
+	flag.BoolVar(showVersion, "v", false, "")
+	flag.Usage = func() { fmt.Fprint(flag.CommandLine.Output(), usage) }
+	flag.Parse()
+
+	if *showVersion {
+		fmt.Println(config.Version)
+		return
+	}
+
 	if config.BrowserPath == "" {
 		slog.Error("BROWSER_PATH is not set")
 		os.Exit(1)
