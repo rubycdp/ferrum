@@ -19,6 +19,8 @@ import (
 
 const retryAfter = "5"
 
+var requestTimeout = 10 * time.Second
+
 type Config struct {
 	Timeout  time.Duration
 	External *url.URL
@@ -27,10 +29,15 @@ type Config struct {
 type Server struct {
 	sessions *Sessions
 	config   Config
+	client   *http.Client
 }
 
 func New(sessions *Sessions, config Config) http.Handler {
-	s := &Server{sessions: sessions, config: config}
+	s := &Server{
+		sessions: sessions,
+		config:   config,
+		client:   &http.Client{Timeout: requestTimeout},
+	}
 
 	mux := http.NewServeMux()
 	handle(mux, "/health", s.health)
@@ -67,8 +74,8 @@ func (s *Server) version(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	info, err := fetchVersion(b)
-	if err != nil {
+	var info map[string]any
+	if err := s.getJSON(b, "/json/version", &info); err != nil {
 		slog.Error("cannot fetch browser version", "id", b.ID, "error", err)
 		s.sessions.Stop(b, "version failed")
 		http.Error(w, "cannot fetch browser version", http.StatusBadGateway)
@@ -172,23 +179,31 @@ func launchOptions(w http.ResponseWriter, r *http.Request) (browser.Options, boo
 	return options, true
 }
 
-func fetchVersion(b *browser.Browser) (map[string]any, error) {
-	resp, err := http.Get("http://" + b.Addr + "/json/version")
+func (s *Server) getJSON(b *browser.Browser, path string, v any) error {
+	req, err := http.NewRequest(http.MethodGet, "http://"+b.Addr+path, nil)
 	if err != nil {
-		return nil, err
+		return err
+	}
+
+	return s.doJSON(req, v)
+}
+
+func (s *Server) doJSON(req *http.Request, v any) error {
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status %s", resp.Status)
+		return fmt.Errorf("unexpected status %s", resp.Status)
 	}
 
-	var info map[string]any
-	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
-		return nil, fmt.Errorf("decode: %w", err)
+	if err := json.NewDecoder(resp.Body).Decode(v); err != nil {
+		return fmt.Errorf("decode: %w", err)
 	}
 
-	return info, nil
+	return nil
 }
 
 func (s *Server) publicURL(r *http.Request, wsPath, query string) string {
