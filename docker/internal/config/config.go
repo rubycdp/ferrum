@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"net"
+	"net/url"
 	"os"
 	"runtime"
 	"strconv"
@@ -17,6 +18,7 @@ var (
 	Concurrent  int
 	Queued      int
 	Timeout     time.Duration
+	External    *url.URL
 )
 
 func Load() error {
@@ -48,6 +50,10 @@ func Load() error {
 	}
 	Timeout = time.Duration(max(timeout, 0)) * time.Millisecond
 
+	if External, err = externalURL(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -71,4 +77,18 @@ func intEnv(key string, fallback int) (int, error) {
 	}
 
 	return n, nil
+}
+
+func externalURL() (*url.URL, error) {
+	value := env("EXTERNAL", env("PROXY_URL", ""))
+	if value == "" {
+		return nil, nil
+	}
+
+	u, err := url.Parse(value)
+	if err != nil || u.Host == "" {
+		return nil, fmt.Errorf("EXTERNAL must be an absolute URL, got %q", value)
+	}
+
+	return u, nil
 }

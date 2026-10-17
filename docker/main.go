@@ -36,6 +36,8 @@ Environment:
   CONCURRENT       running sessions at most (default: number of CPUs)
   QUEUED           connections waiting for a free session, the rest get 429 (default 10)
   TIMEOUT          session timeout in milliseconds (default 0, no timeout)
+  EXTERNAL         public URL of the driver behind a proxy, e.g. https://chrome.example.com
+                   (PROXY_URL works too)
 
 Endpoints:
   GET /json/version                start a Chrome, return its webSocketDebuggerUrl
@@ -89,7 +91,7 @@ func main() {
 	})
 	srv := &http.Server{
 		Addr:              config.Address,
-		Handler:           server.New(sessions, server.Config{Timeout: config.Timeout}),
+		Handler:           server.New(sessions, server.Config{Timeout: config.Timeout, External: config.External}),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 

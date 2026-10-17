@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -19,7 +20,8 @@ import (
 const retryAfter = "5"
 
 type Config struct {
-	Timeout time.Duration
+	Timeout  time.Duration
+	External *url.URL
 }
 
 type Server struct {
@@ -73,7 +75,7 @@ func (s *Server) version(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	info["webSocketDebuggerUrl"] = publicURL(r, b.WSPath)
+	info["webSocketDebuggerUrl"] = s.publicURL(r, b.WSPath, r.URL.RawQuery)
 	s.sessions.Reserve(b, r.URL.RawQuery)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -204,7 +206,17 @@ func fetchVersion(b *browser.Browser) (map[string]any, error) {
 	return info, nil
 }
 
-func publicURL(r *http.Request, wsPath string) string {
+func (s *Server) publicURL(r *http.Request, wsPath, query string) string {
+	if external := s.config.External; external != nil {
+		scheme := "ws"
+		if external.Scheme == "https" || external.Scheme == "wss" {
+			scheme = "wss"
+		}
+
+		u := url.URL{Scheme: scheme, Host: external.Host, Path: path.Join("/", external.Path, wsPath), RawQuery: query}
+		return u.String()
+	}
+
 	scheme := "ws"
 	if r.TLS != nil || strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https") {
 		scheme = "wss"
@@ -215,7 +227,7 @@ func publicURL(r *http.Request, wsPath string) string {
 		host = r.Host
 	}
 
-	u := url.URL{Scheme: scheme, Host: host, Path: wsPath, RawQuery: r.URL.RawQuery}
+	u := url.URL{Scheme: scheme, Host: host, Path: wsPath, RawQuery: query}
 	return u.String()
 }
 
