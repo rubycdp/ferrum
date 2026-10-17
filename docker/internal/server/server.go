@@ -40,7 +40,12 @@ func (s *Server) health(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (s *Server) version(w http.ResponseWriter, r *http.Request) {
-	b, err := s.sessions.Start()
+	options, ok := launchOptions(w, r)
+	if !ok {
+		return
+	}
+
+	b, err := s.sessions.Start(options)
 	if err != nil {
 		slog.Error("cannot start browser", "error", err)
 		http.Error(w, "cannot start browser", http.StatusServiceUnavailable)
@@ -83,7 +88,12 @@ func (s *Server) connect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b, err := s.sessions.ClaimOrStart(r.URL.RawQuery)
+	options, ok := launchOptions(w, r)
+	if !ok {
+		return
+	}
+
+	b, err := s.sessions.ClaimOrStart(r.URL.RawQuery, options)
 	if err != nil {
 		slog.Error("cannot start browser", "error", err)
 		http.Error(w, "cannot start browser", http.StatusServiceUnavailable)
@@ -117,6 +127,16 @@ func proxyTo(b *browser.Browser) *httputil.ReverseProxy {
 			http.Error(w, "browser unavailable", http.StatusBadGateway)
 		},
 	}
+}
+
+func launchOptions(w http.ResponseWriter, r *http.Request) (browser.Options, bool) {
+	options, err := browser.ParseOptions(r.URL.Query().Get("launch"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return options, false
+	}
+
+	return options, true
 }
 
 func fetchVersion(b *browser.Browser) (map[string]any, error) {

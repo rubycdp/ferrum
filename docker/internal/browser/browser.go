@@ -31,7 +31,7 @@ type Browser struct {
 	stopOnce sync.Once
 }
 
-func Start(binary string, timeout time.Duration) (*Browser, error) {
+func Start(binary string, options Options, timeout time.Duration) (*Browser, error) {
 	dir, err := os.MkdirTemp("", "chrome-")
 	if err != nil {
 		return nil, fmt.Errorf("create user data dir: %w", err)
@@ -43,7 +43,7 @@ func Start(binary string, timeout time.Duration) (*Browser, error) {
 		return nil, fmt.Errorf("create stderr pipe: %w", err)
 	}
 
-	cmd := exec.Command(binary, Flags(dir)...)
+	cmd := exec.Command(binary, Flags(dir, options)...)
 	cmd.Stderr = writer
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
