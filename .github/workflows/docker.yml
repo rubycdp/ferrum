@@ -10,7 +10,13 @@ on:
     paths:
       - "docker/**"
       - ".github/workflows/docker.yml"
+  schedule:
+    - cron: "0 6 * * *"
   workflow_dispatch:
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test:
@@ -39,13 +45,57 @@ jobs:
       - name: Test
         run: go test -race ./...
 
+  versions:
+    name: Browser versions
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      packages: read
+    outputs:
+      versions: ${{ steps.versions.outputs.versions }}
+      browsers: ${{ steps.versions.outputs.browsers }}
+    steps:
+      - name: Login to registry
+        if: github.event_name == 'schedule'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Find the newest versions
+        id: versions
+        env:
+          OWNER: ${{ github.repository_owner }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          chrome=$(curl -fsS https://dl.google.com/linux/chrome/deb/dists/stable/main/binary-amd64/Packages \
+            | awk '/^Package: google-chrome-stable$/ { found = 1 } found && /^Version:/ { print $2; exit }' | sed 's/-.*//')
+          chromium=$(docker run --rm debian:trixie-slim sh -c 'apt-get update -qq && apt-cache policy chromium' \
+            | awk '/Candidate:/ { print $2 }' | sed 's/-.*//')
+          echo "chrome $chrome, chromium $chromium"
+
+          browsers=()
+          for browser in chrome chromium; do
+            version=${!browser}
+            if [ "$EVENT" = "schedule" ] && docker manifest inspect "ghcr.io/$OWNER/$browser:$version" > /dev/null 2>&1; then
+              echo "$browser $version is already published"
+            else
+              browsers+=("\"$browser\"")
+            fi
+          done
+
+          echo "versions={\"chrome\":\"$chrome\",\"chromium\":\"$chromium\"}" >> "$GITHUB_OUTPUT"
+          echo "browsers=[$(IFS=,; echo "${browsers[*]}")]" >> "$GITHUB_OUTPUT"
+
   build:
     name: Build ${{ matrix.browser }} (${{ matrix.arch }})
-    needs: test
+    needs: [test, versions]
+    if: needs.versions.outputs.browsers != '[]'
     strategy:
       fail-fast: false
       matrix:
-        browser: [chrome, chromium]
+        browser: ${{ fromJSON(needs.versions.outputs.browsers) }}
         arch: [amd64, arm64]
         include:
           - arch: amd64
@@ -81,6 +131,7 @@ jobs:
           platforms: linux/${{ matrix.arch }}
           build-args: |
             BROWSER=${{ matrix.browser }}
+            BROWSER_VERSION=${{ fromJSON(needs.versions.outputs.versions)[matrix.browser] }}
             VERSION=${{ github.sha }}
           load: true
           tags: ${{ matrix.browser }}:test
@@ -137,6 +188,7 @@ jobs:
           platforms: linux/${{ matrix.arch }}
           build-args: |
             BROWSER=${{ matrix.browser }}
+            BROWSER_VERSION=${{ fromJSON(needs.versions.outputs.versions)[matrix.browser] }}
             VERSION=${{ github.sha }}
           cache-from: type=gha,scope=${{ matrix.browser }}-${{ matrix.arch }}
           outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
@@ -160,10 +212,10 @@ jobs:
   publish:
     name: Publish ${{ matrix.browser }}
     if: github.event_name != 'pull_request'
-    needs: build
+    needs: [versions, build]
     strategy:
       matrix:
-        browser: [chrome, chromium]
+        browser: ${{ fromJSON(needs.versions.outputs.browsers) }}
     runs-on: ubuntu-latest
     permissions:
       packages: write
