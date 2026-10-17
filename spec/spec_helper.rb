@@ -33,6 +33,7 @@ end
 puts ""
 
 RSpec.configure do |config|
+  config.filter_run_excluding local_browser: true if remote_url
   config.wait_timeout = 1
   config.wait_delay = 0.2
 

@@ -17,7 +17,7 @@ describe Ferrum::Client do
       remote.client.instance_variable_get(:@ws).messages
     end
 
-    it "releases the commands in flight" do
+    it "releases the commands in flight", local_browser: true do
       page = remote.create_page
       Thread.new do
         sleep(0.2)
@@ -29,7 +29,7 @@ describe Ferrum::Client do
       expect(Ferrum::Utils::ElapsedTime.elapsed_time(start)).to be < 5
     end
 
-    it "fails the commands that follow without waiting" do
+    it "fails the commands that follow without waiting", local_browser: true do
       page = remote.create_page
       messages.close
       start = Ferrum::Utils::ElapsedTime.monotonic_time
@@ -38,7 +38,7 @@ describe Ferrum::Client do
       expect(Ferrum::Utils::ElapsedTime.elapsed_time(start)).to be < 1
     end
 
-    it "closes the socket when the browser dies before answering the close frame" do
+    it "closes the socket when the browser dies before answering the close frame", local_browser: true do
       remote.create_page
       socket = remote.client.instance_variable_get(:@ws).instance_variable_get(:@sock)
       Process.kill("KILL", -remote.process.pid)
@@ -48,7 +48,7 @@ describe Ferrum::Client do
       expect(socket).to be_closed
     end
 
-    it "reports an unexpected reader error instead of raising in the main thread" do
+    it "reports an unexpected reader error instead of raising in the main thread", local_browser: true do
       page = remote.create_page
       driver = remote.client.instance_variable_get(:@ws).instance_variable_get(:@driver)
       allow(driver).to receive(:parse).and_raise(Errno::ETIMEDOUT)
@@ -76,7 +76,7 @@ describe Ferrum::Client do
       end
     end
 
-    it "gives up on a command the browser doesn't take" do
+    it "gives up on a command the browser doesn't take", local_browser: true do
       page = remote.create_page
       Process.kill("STOP", remote.process.pid)
 
@@ -87,7 +87,7 @@ describe Ferrum::Client do
       expect(sender.value.message).to match(/accepted no data for 1s/)
     end
 
-    it "fails the commands waiting to be sent behind it" do
+    it "fails the commands waiting to be sent behind it", local_browser: true do
       page = remote.create_page
       Process.kill("STOP", remote.process.pid)
 
@@ -105,7 +105,7 @@ describe Ferrum::Client do
 
     after { remote.quit }
 
-    it "keeps dispatching events when a callback raises" do
+    it "keeps dispatching events when a callback raises", local_browser: true do
       page = remote.create_page
 
       expect do
