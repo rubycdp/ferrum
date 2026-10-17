@@ -1,0 +1,241 @@
+name: Docker
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docker/**"
+      - ".github/workflows/docker.yml"
+  pull_request:
+    paths:
+      - "docker/**"
+      - ".github/workflows/docker.yml"
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    name: Go tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: docker
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: docker/go.mod
+          cache: false
+
+      - name: Check formatting
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test -race ./...
+
+  versions:
+    name: Browser versions
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      packages: read
+    outputs:
+      versions: ${{ steps.versions.outputs.versions }}
+      browsers: ${{ steps.versions.outputs.browsers }}
+    steps:
+      - name: Login to registry
+        if: github.event_name == 'schedule'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Find the newest versions
+        id: versions
+        env:
+          OWNER: ${{ github.repository_owner }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          chrome=$(curl -fsS https://dl.google.com/linux/chrome/deb/dists/stable/main/binary-amd64/Packages \
+            | awk '/^Package: google-chrome-stable$/ { found = 1 } found && /^Version:/ { print $2; exit }' | sed 's/-.*//')
+          chromium=$(docker run --rm debian:trixie-slim sh -c 'apt-get update -qq && apt-cache policy chromium' \
+            | awk '/Candidate:/ { print $2 }' | sed 's/-.*//')
+          echo "chrome $chrome, chromium $chromium"
+
+          browsers=()
+          for browser in chrome chromium; do
+            version=${!browser}
+            if [ "$EVENT" = "schedule" ] && docker manifest inspect "ghcr.io/$OWNER/$browser:$version" > /dev/null 2>&1; then
+              echo "$browser $version is already published"
+            else
+              browsers+=("\"$browser\"")
+            fi
+          done
+
+          echo "versions={\"chrome\":\"$chrome\",\"chromium\":\"$chromium\"}" >> "$GITHUB_OUTPUT"
+          echo "browsers=[$(IFS=,; echo "${browsers[*]}")]" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build ${{ matrix.browser }} (${{ matrix.arch }})
+    needs: [test, versions]
+    if: needs.versions.outputs.browsers != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: ${{ fromJSON(needs.versions.outputs.browsers) }}
+        arch: [amd64, arm64]
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/${{ matrix.browser }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: docker
+          platforms: linux/${{ matrix.arch }}
+          build-args: |
+            BROWSER=${{ matrix.browser }}
+            BROWSER_VERSION=${{ fromJSON(needs.versions.outputs.versions)[matrix.browser] }}
+            VERSION=${{ github.sha }}
+          load: true
+          tags: ${{ matrix.browser }}:test
+          cache-from: type=gha,scope=${{ matrix.browser }}-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.browser }}-${{ matrix.arch }}
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - name: Run the Ferrum suite against the image
+        timeout-minutes: 20
+        env:
+          FERRUM_DEFAULT_TIMEOUT: 15
+          FERRUM_PROCESS_TIMEOUT: 25
+        run: |
+          docker run -d --name suite --network host --user "$(id -u):$(id -g)" -e CONCURRENT=4 \
+            -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -v /tmp:/tmp ${{ matrix.browser }}:test
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:3000/health && break; sleep 1; done
+          FERRUM_URL=http://127.0.0.1:3000 bundle exec rspec --exclude-pattern "spec/unit/**/*_spec.rb"
+
+      - name: Driver logs
+        if: always()
+        run: docker logs suite 2>&1 | grep -v "browser stderr" | tail -200 || true
+
+      - name: Detect browser version
+        run: |
+          mkdir -p /tmp/meta
+          docker run --rm --entrypoint sh ${{ matrix.browser }}:test -c '"$BROWSER_PATH" --version' \
+            | grep -oE '[0-9]+(\.[0-9]+){3}' | head -1 > "/tmp/meta/version-${{ matrix.arch }}"
+          cat "/tmp/meta/version-${{ matrix.arch }}"
+
+      - name: Push by digest
+        id: push
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@v6
+        with:
+          context: docker
+          platforms: linux/${{ matrix.arch }}
+          build-args: |
+            BROWSER=${{ matrix.browser }}
+            BROWSER_VERSION=${{ fromJSON(needs.versions.outputs.versions)[matrix.browser] }}
+            VERSION=${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.browser }}-${{ matrix.arch }}
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
+
+      - name: Export digest
+        if: github.event_name != 'pull_request'
+        run: |
+          mkdir -p /tmp/meta/digests
+          touch "/tmp/meta/digests/${DIGEST#sha256:}"
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+
+      - name: Upload metadata
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: meta-${{ matrix.browser }}-${{ matrix.arch }}
+          path: /tmp/meta
+          retention-days: 1
+
+  publish:
+    name: Publish ${{ matrix.browser }}
+    if: github.event_name != 'pull_request'
+    needs: [versions, build]
+    strategy:
+      matrix:
+        browser: ${{ fromJSON(needs.versions.outputs.browsers) }}
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/${{ matrix.browser }}
+    steps:
+      - name: Download metadata
+        uses: actions/download-artifact@v4
+        with:
+          pattern: meta-${{ matrix.browser }}-*
+          path: /tmp/meta
+          merge-multiple: true
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create multi-arch manifest
+        working-directory: /tmp/meta
+        run: |
+          tags=(-t "$IMAGE:latest")
+          amd64=$(cat version-amd64)
+          arm64=$(cat version-arm64)
+          if [ -n "$amd64" ] && [ "$amd64" = "$arm64" ]; then
+            tags+=(-t "$IMAGE:$amd64" -t "$IMAGE:${amd64%%.*}")
+          else
+            echo "::warning::Browser versions differ (amd64: $amd64, arm64: $arm64), publishing only latest"
+          fi
+          docker buildx imagetools create "${tags[@]}" $(printf "$IMAGE@sha256:%s " $(ls digests))
+          docker buildx imagetools inspect "$IMAGE:latest"
