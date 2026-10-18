@@ -221,13 +221,14 @@ module Ferrum
 
       def fetch_ws_url(url)
         response = ::Net::HTTP.get_response(URI(json_version_url(url).to_s))
+        status = "#{response.code} #{response.message}" unless response.is_a?(::Net::HTTPSuccess)
         ws_url = begin
           JSON.parse(response.body.to_s)["webSocketDebuggerUrl"]
         rescue JSON::ParserError
           nil
         end
 
-        reachable_ws_url(ws_url, url) || raise(NoWebSocketUrlError, url)
+        reachable_ws_url(ws_url, url) || raise(NoWebSocketUrlError.new(url, status))
       end
 
       def json_version_url(url)

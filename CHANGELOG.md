@@ -6,6 +6,8 @@
 - Browser details (user agent, versions) come from `Browser.getVersion` over CDP for every browser, local or remote.
   `/json/version` is only asked for the websocket url when `url:` is given, so `ws_url:` works against services
   without an HTTP endpoint and a local launch makes no HTTP call
+- `NoWebSocketUrlError` names the HTTP status `/json/version` answered with, e.g. `401 Unauthorized` for a missing token or
+  `429 Too Many Requests` for a full remote browser service, and exposes it as `#status`
 
 ### Fixed
 - Headers can be added on a remote browser whose `/json/version` has no `User-Agent`, such as browserless v2, instead of

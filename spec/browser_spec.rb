@@ -247,7 +247,7 @@ describe Ferrum::Browser do
           unauthorized = proxy_url.sub("secret", "wrong")
 
           expect { Ferrum::Browser.new(url: unauthorized) }
-            .to raise_error(Ferrum::NoWebSocketUrlError, /#{Regexp.escape(unauthorized)}/)
+            .to raise_error(Ferrum::NoWebSocketUrlError, /#{Regexp.escape(unauthorized)}.* answered 401 Unauthorized/)
         end
       end
     end
