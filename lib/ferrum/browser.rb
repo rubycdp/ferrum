@@ -309,9 +309,9 @@ module Ferrum
 
       begin
         @process.start
-        @options.default_user_agent = @process.default_user_agent
 
         @client = Client.new(@process.ws_url, options)
+        @options.default_user_agent = version.user_agent
         @contexts = Contexts.new(@client)
       rescue StandardError
         @process.stop

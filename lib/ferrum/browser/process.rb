@@ -42,23 +42,14 @@ module Ferrum
         new(*args).tap(&:start)
       end
 
-      attr_reader :host, :port, :ws_url, :pid, :command,
-                  :default_user_agent, :browser_version, :protocol_version,
-                  :v8_version, :webkit_version, :xvfb
+      attr_reader :host, :port, :ws_url, :pid, :command, :xvfb
 
       def initialize(options)
         @pid = @xvfb = @user_data_dir = nil
         @requested_host = options.host
 
         if options.ws_url || options.url
-          # `:ws_url` option is higher priority than `:url`, parse versions
-          # and use it as a ws_url, otherwise use what has been parsed.
-          endpoint = options.ws_url || options.url
-          response = parse_json_version(endpoint)
-          ws_url = options.ws_url || reachable_ws_url(response&.[]("webSocketDebuggerUrl"), endpoint)
-          raise NoWebSocketUrlError, endpoint unless ws_url
-
-          self.ws_url = ws_url
+          self.ws_url = options.ws_url || fetch_ws_url(options.url)
           return
         end
 
@@ -92,7 +83,6 @@ module Ferrum
           ObjectSpace.define_finalizer(self, Killer.finalizer([@pid, @xvfb&.pid], @user_data_dir))
 
           parse_ws_url(read_io, @process_timeout)
-          parse_json_version(ws_url)
         ensure
           close_io(read_io, write_io)
         end
@@ -143,11 +133,7 @@ module Ferrum
         "#<#{self.class} " \
           "@user_data_dir=#{@user_data_dir.inspect} " \
           "@command=#<#{@command.class}:#{@command.object_id}> " \
-          "@default_user_agent=#{@default_user_agent.inspect} " \
-          "@ws_url=#{@ws_url.inspect} " \
-          "@v8_version=#{@v8_version.inspect} " \
-          "@browser_version=#{@browser_version.inspect} " \
-          "@webkit_version=#{@webkit_version.inspect}>"
+          "@ws_url=#{@ws_url.inspect}>"
       end
 
       private
@@ -233,18 +219,15 @@ module Ferrum
         end
       end
 
-      def parse_json_version(url)
-        response = JSON.parse(::Net::HTTP.get(URI(json_version_url(url).to_s)))
+      def fetch_ws_url(url)
+        response = ::Net::HTTP.get_response(URI(json_version_url(url).to_s))
+        ws_url = begin
+          JSON.parse(response.body.to_s)["webSocketDebuggerUrl"]
+        rescue JSON::ParserError
+          nil
+        end
 
-        @v8_version = response["V8-Version"]
-        @browser_version = response["Browser"]
-        @webkit_version = response["WebKit-Version"]
-        @default_user_agent = response["User-Agent"]
-        @protocol_version = response["Protocol-Version"]
-
-        response
-      rescue JSON::ParserError
-        # nop
+        reachable_ws_url(ws_url, url) || raise(NoWebSocketUrlError, url)
       end
 
       def json_version_url(url)

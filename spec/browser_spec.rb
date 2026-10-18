@@ -142,27 +142,23 @@ describe Ferrum::Browser do
     end
 
     it "supports :url argument", local_browser: true do
-      with_external_browser do |url, process|
+      with_external_browser do |url, _process|
         browser = Ferrum::Browser.new(url: url)
         browser.go_to(base_url)
         expect(browser.body).to include("Hello world!")
-        expect(process.v8_version).not_to be_nil
-        expect(process.browser_version).not_to be_nil
-        expect(process.webkit_version).not_to be_nil
-        expect(process.default_user_agent).not_to be_nil
-        expect(process.protocol_version).not_to be_nil
+        expect(browser.default_user_agent).to include("Chrome")
       ensure
         browser&.quit
       end
     end
 
-    def with_token_authenticated_proxy(browser_url, token:)
+    def with_token_authenticated_proxy(browser_url, token:, json_version: :full)
       browser_url = Addressable::URI.parse(browser_url)
       server = TCPServer.new("127.0.0.1", 0)
       port = server.addr[1]
 
       acceptor = Thread.new do
-        loop { Thread.new(server.accept) { |socket| proxy_request(socket, browser_url, token, port) } }
+        loop { Thread.new(server.accept) { |socket| proxy_request(socket, browser_url, token, port, json_version) } }
       rescue IOError, Errno::EBADF
         nil
       end
@@ -173,13 +169,13 @@ describe Ferrum::Browser do
       server&.close
     end
 
-    def proxy_request(socket, browser_url, token, port)
+    def proxy_request(socket, browser_url, token, port, json_version)
       request = socket.gets.to_s
 
       if !request.include?("token=#{token}")
         socket.print(proxy_unauthorized)
       elsif request.start_with?("GET /json/version")
-        socket.print(proxy_json_version(browser_url, port))
+        socket.print(proxy_json_version(browser_url, port, json_version)) unless json_version == :missing
       else
         proxy_tunnel(socket, request, browser_url)
       end
@@ -192,8 +188,9 @@ describe Ferrum::Browser do
       "HTTP/1.1 401 Unauthorized\r\nContent-Length: #{body.bytesize}\r\nConnection: close\r\n\r\n#{body}"
     end
 
-    def proxy_json_version(browser_url, port)
+    def proxy_json_version(browser_url, port, json_version)
       version = JSON.parse(Net::HTTP.get(URI(browser_url.join("/json/version").to_s)))
+      version.delete("User-Agent") if json_version == :without_user_agent
       path = Addressable::URI.parse(version["webSocketDebuggerUrl"]).path
       body = version.merge("webSocketDebuggerUrl" => "ws://0.0.0.0:#{port}#{path}").to_json
       "HTTP/1.1 200 OK\r\nContent-Length: #{body.bytesize}\r\nConnection: close\r\n\r\n#{body}"
@@ -229,6 +226,21 @@ describe Ferrum::Browser do
       end
     end
 
+    it "adds headers when /json/version has no User-Agent", local_browser: true do
+      with_external_browser do |url, _process|
+        with_token_authenticated_proxy(url, token: "secret", json_version: :without_user_agent) do |proxy_url|
+          browser = Ferrum::Browser.new(url: proxy_url, base_url: base_url)
+          browser.headers.add({ "X-Custom" => "1" })
+          browser.go_to("/headers")
+
+          expect(browser.default_user_agent).to include("Chrome")
+          expect(browser.body).to include("X_CUSTOM: 1")
+        ensure
+          browser&.quit
+        end
+      end
+    end
+
     it "raises when :url doesn't answer with a websocket url", local_browser: true do
       with_external_browser do |url, _process|
         with_token_authenticated_proxy(url, token: "secret") do |proxy_url|
@@ -241,15 +253,29 @@ describe Ferrum::Browser do
     end
 
     it "supports :ws_url argument", local_browser: true do
-      with_external_browser do |url, process|
+      with_external_browser do |url, _process|
         browser = Ferrum::Browser.new(ws_url: web_socket_debugger_url(url))
-        expect(process.v8_version).not_to be_nil
-        expect(process.browser_version).not_to be_nil
-        expect(process.webkit_version).not_to be_nil
-        expect(process.default_user_agent).not_to be_nil
-        expect(process.protocol_version).not_to be_nil
+        browser.go_to(base_url)
+        expect(browser.body).to include("Hello world!")
+        expect(browser.default_user_agent).to include("Chrome")
       ensure
         browser&.quit
+      end
+    end
+
+    it "supports :ws_url argument without asking /json/version", local_browser: true do
+      with_external_browser do |url, _process|
+        with_token_authenticated_proxy(url, token: "secret", json_version: :missing) do |proxy_url|
+          path = Addressable::URI.parse(web_socket_debugger_url(url)).path
+          ws_url = Addressable::URI.parse(proxy_url).merge(scheme: "ws", path: path).to_s
+          browser = Ferrum::Browser.new(ws_url: ws_url, base_url: base_url)
+          browser.go_to("/")
+
+          expect(browser.body).to include("Hello world!")
+          expect(browser.default_user_agent).to include("Chrome")
+        ensure
+          browser&.quit
+        end
       end
     end
 
