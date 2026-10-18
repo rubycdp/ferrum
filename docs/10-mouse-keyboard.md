@@ -32,7 +32,8 @@ Click given coordinates, fires mouse move, down and up events.
     * :delay `Float` defaults to 0. Delay between mouse down and mouse up events
     * :button `Symbol` :left | :right, defaults to :left
     * :count `Integer` defaults to 1
-    * :modifiers `Integer` bitfield for key modifiers. See`keyboard.modifiers`
+    * :modifiers `Integer` bitfield for key modifiers. See `keyboard.modifiers`.
+      If omitted, uses the keys held by `keyboard.hold`, or none outside of it
 
 #### down(\*\*options) : `Mouse`
 
@@ -41,7 +42,8 @@ Mouse down for given coordinates.
 * options `Hash`
     * :button `Symbol` :left | :right, defaults to :left
     * :count `Integer` defaults to 1
-    * :modifiers `Integer` bitfield for key modifiers. See`keyboard.modifiers`
+    * :modifiers `Integer` bitfield for key modifiers. See `keyboard.modifiers`.
+      If omitted, uses the keys held by `keyboard.hold`, or none outside of it
 
 #### up(\*\*options) : `Mouse`
 
@@ -50,9 +52,10 @@ Mouse up for given coordinates.
 * options `Hash`
     * :button `Symbol` :left | :right, defaults to :left
     * :count `Integer` defaults to 1
-    * :modifiers `Integer` bitfield for key modifiers. See`keyboard.modifiers`
+    * :modifiers `Integer` bitfield for key modifiers. See `keyboard.modifiers`.
+      If omitted, uses the keys held by `keyboard.hold`, or none outside of it
 
-#### move(x:, y:, steps: 1) : `Mouse`
+#### move(x:, y:, steps: 1, modifiers: nil) : `Mouse`
 
 Mouse move to given x and y.
 
@@ -60,6 +63,8 @@ Mouse move to given x and y.
     * :x `Integer`
     * :y `Integer`
     * :steps `Integer` defaults to 1. Sends intermediate mousemove events.
+    * :modifiers `Integer` bitfield for key modifiers. See `keyboard.modifiers`.
+      If omitted, uses the keys held by `keyboard.hold`, or none outside of it
 
 ## Keyboard
 
@@ -69,13 +74,15 @@ Mouse move to given x and y.
 
 Dispatches a keydown event.
 
-* key `String` | `Symbol` Name of key such as "a", :enter, :backspace
+* key `String` | `Symbol` Name of key such as "a", :enter, :backspace. Raises `ArgumentError` for a modifier,
+  use `hold` instead
 
 #### up(key) : `Keyboard`
 
 Dispatches a keyup event.
 
-* key `String` | `Symbol` Name of key such as "b", :enter, :backspace
+* key `String` | `Symbol` Name of key such as "b", :enter, :backspace. Raises `ArgumentError` for a modifier,
+  use `hold` instead
 
 #### type(\*keys) : `Keyboard`
 
@@ -83,6 +90,27 @@ Sends a keydown, keypress/input, and keyup event for each character in the text.
 
 * text `String` | `Array<String> | Array<Symbol>` A text to type into a focused
   element, `[:Shift, "s"], "tring"`
+
+#### hold(\*keys) { } : `Object`
+
+Holds modifier keys down while the block runs. Every keyboard and mouse event inside the block carries them, and they
+are released when the block returns or raises. Returns the block's value.
+
+* keys `Symbol` :alt | :ctrl | :control | :meta | :command | :shift
+
+```ruby
+page.keyboard.hold(:shift) do
+  page.mouse.move(x: 10, y: 10).down.move(x: 200, y: 200, steps: 10).up
+end
+```
+
+#### held_modifiers : `Integer`
+
+Modifier keys currently pressed by `hold`, in the same format as `modifiers` returns. It's 0 outside a `hold` block.
+
+```ruby
+page.keyboard.hold(:shift) { page.keyboard.held_modifiers } # => 8
+```
 
 #### modifiers(keys) : `Integer`
 
@@ -103,7 +131,5 @@ page.keyboard.type("Hello World")
 page.keyboard.type(:Enter)
 
 # Use keyboard shortcuts
-page.keyboard.down(:Shift)
-page.keyboard.type("h", "e", "l", "l", "o")
-page.keyboard.up(:Shift)
+page.keyboard.hold(:shift) { page.keyboard.type("hello") }
 ```

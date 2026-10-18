@@ -5,6 +5,9 @@ module Ferrum
     KEYS_MAPPING: Hash[Symbol, String]
 
     @page: Page
+    @held_modifiers: ::Integer
+
+    attr_reader held_modifiers: ::Integer
 
     def initialize: (Page page) -> void
 
@@ -14,14 +17,28 @@ module Ferrum
 
     def type: (*(String | Symbol | ::Array[String | Symbol])) -> self
 
+    def hold: [T] (*(String | Symbol) keys) { () -> T } -> T
+
     def modifiers: (::Array[Symbol]) -> ::Integer
 
     private
+
+    def modifier_name: (String | Symbol key) -> String?
+
+    def reject_modifier: (String | Symbol | ::Array[String | Symbol] key) -> void
+
+    def press_modifier: (String name, ::Array[String] pressed) -> void
+
+    def release_modifiers: (::Array[String] pressed, ?quietly: bool) -> void
+
+    def dispatch_modifier: (String type, String name) -> void
 
     def normalize_keys: ((::Array[untyped] | Symbol | String) keys, ?::Array[::Array[String]] pressed_keys, ?::Array[Hash[Symbol, untyped]] memo) -> ::Array[Hash[Symbol, untyped]]
 
     def combine_strings: (::Array[untyped] keys) -> ::Array[untyped]
 
     def to_options: (Hash[String, untyped] hash) -> Hash[Symbol, untyped]
+
+    def editing_command: (::Integer mask, String char) -> String?
   end
 end

@@ -81,12 +81,13 @@ module Ferrum
     # @option options [Integer] :count (1)
     #
     # @option options [Integer] :modifiers
-    #   Bitfield for key modifiers. See`keyboard.modifiers`.
+    #   Bitfield for key modifiers. See `keyboard.modifiers`.
+    #   If omitted, uses the keys held by `keyboard.hold`, or none outside of it.
     #
     # @return [self]
     #
     def click(x:, y:, delay: 0, wait: CLICK_WAIT, **options)
-      move(x: x, y: y)
+      move(x: x, y: y, modifiers: options[:modifiers])
       down(**options)
       sleep(delay)
       # Potential wait because if some network event is triggered then we have
@@ -107,7 +108,8 @@ module Ferrum
     # @option options [Integer] :count (1)
     #
     # @option options [Integer] :modifiers
-    #   Bitfield for key modifiers. See`keyboard.modifiers`.
+    #   Bitfield for key modifiers. See `keyboard.modifiers`.
+    #   If omitted, uses the keys held by `keyboard.hold`, or none outside of it.
     #
     # @return [self]
     #
@@ -127,7 +129,8 @@ module Ferrum
     # @option options [Integer] :count (1)
     #
     # @option options [Integer] :modifiers
-    #   Bitfield for key modifiers. See`keyboard.modifiers`.
+    #   Bitfield for key modifiers. See `keyboard.modifiers`.
+    #   If omitted, uses the keys held by `keyboard.hold`, or none outside of it.
     #
     # @return [self]
     #
@@ -145,9 +148,13 @@ module Ferrum
     # @param [Integer] steps
     #   Sends intermediate mousemove events.
     #
+    # @param [Integer, nil] modifiers
+    #   Bitfield for key modifiers. See `keyboard.modifiers`.
+    #   If omitted, uses the keys held by `keyboard.hold`, or none outside of it.
+    #
     # @return [self]
     #
-    def move(x:, y:, steps: 1)
+    def move(x:, y:, steps: 1, modifiers: nil)
       from_x = @x
       from_y = @y
       @x = x
@@ -164,7 +171,8 @@ module Ferrum
                       x: new_x,
                       y: new_y,
                       button: button,
-                      buttons: @buttons)
+                      buttons: @buttons,
+                      modifiers: modifiers || @page.keyboard.held_modifiers)
       end
 
       self
@@ -175,8 +183,8 @@ module Ferrum
     def mouse_event(type:, button: :left, count: 1, modifiers: nil, wait: 0)
       button = validate_button(button)
       register_event_button(type, button)
-      options = { x: @x, y: @y, type: type, button: button, buttons: @buttons, clickCount: count }
-      options.merge!(modifiers: modifiers) if modifiers
+      options = { x: @x, y: @y, type: type, button: button, buttons: @buttons, clickCount: count,
+                  modifiers: modifiers || @page.keyboard.held_modifiers }
       @page.command("Input.dispatchMouseEvent", wait: wait, slowmoable: true, **options)
     end
 
