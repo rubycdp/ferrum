@@ -342,6 +342,35 @@ describe Ferrum::Browser do
         ensure
           browser&.quit
         end
+
+        it "lets requests be aborted", local_browser: true do
+          browser = Ferrum::Browser.new(
+            proxy: { host: proxy.host, port: proxy.port, **options }
+          )
+          browser.network.intercept
+          browser.on(:request) { |request| request.match?(/example\.com/) ? request.abort : request.continue }
+
+          expect { browser.go_to("https://example.com") }.to raise_error(
+            Ferrum::StatusError,
+            "Request to https://example.com failed (net::ERR_BLOCKED_BY_CLIENT)"
+          )
+        ensure
+          browser&.quit
+        end
+
+        it "supports blacklist", local_browser: true do
+          browser = Ferrum::Browser.new(
+            proxy: { host: proxy.host, port: proxy.port, **options }
+          )
+          browser.network.blacklist = [/example\.com/]
+
+          expect { browser.go_to("https://example.com") }.to raise_error(
+            Ferrum::StatusError,
+            "Request to https://example.com failed (net::ERR_BLOCKED_BY_CLIENT)"
+          )
+        ensure
+          browser&.quit
+        end
       end
 
       context "with rotation", skip: "Think how to make it working on CI" do

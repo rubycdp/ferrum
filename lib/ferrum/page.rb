@@ -569,8 +569,8 @@ module Ferrum
       if use_authorized_proxy?
         network.authorize(user: @proxy_user,
                           password: @proxy_password,
-                          type: :proxy) do |request, _index, _total|
-          request.continue
+                          type: :proxy) do |request, _index, total|
+          request.continue if total == 1
         end
       end
 
