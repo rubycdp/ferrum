@@ -133,6 +133,9 @@ Set request interception for given options. This method is only sets request
 interception, you should use `on` callback to catch requests and abort or
 continue them.
 
+Every paused request has to be continued, aborted or responded to by one of your `on(:request)` callbacks, including
+ones that only log or inspect it. A request nobody handles stays paused, and the page waits for it until it times out.
+
 * options `Hash`
     * :pattern `String` \* by default
     * :resource_type `Symbol` one of the [resource types](https://chromedevtools.github.io/devtools-protocol/tot/Network#type-ResourceType)
