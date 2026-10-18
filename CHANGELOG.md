@@ -22,6 +22,9 @@
 - A `Ferrum::Node` found before a navigation or reload kept its cached CDP node id, which Chrome reuses for the new
   document, so `focus`, `click`, `scroll_into_view` and friends silently hit another element. Node ids are now dropped
   on `DOM.documentUpdated` and such nodes raise `Ferrum::NodeNotFoundError` [#86]
+- Replacing an iframe's content with `frame.content=` or querying the whole page with `accessibility.query` broke every
+  node found before it with `Ferrum::NodeNotFoundError`, even though the nodes were still on the page. Their ids are
+  requested again now. A node used while the page is still loading a new document says so in its error [#650]
 - Behind a proxy with credentials, `request.abort` in `on(:request)` and `network.blacklist`/`whitelist` were ignored
   because Ferrum's own proxy handler continued every request first. It now only continues requests nobody else handles [#332]
 - `mouse.click(modifiers:)` sent its `mousemove` without the modifiers [#581]

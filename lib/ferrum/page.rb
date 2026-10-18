@@ -87,8 +87,8 @@ module Ferrum
     # @return [Downloads]
     attr_reader :downloads
 
-    # Bumped every time Chrome reports `DOM.documentUpdated`, which
-    # invalidates every node id handed out before it.
+    # Bumped every time Chrome reports `DOM.documentUpdated` and after every
+    # `DOM.getDocument`, both invalidate every node id handed out before them.
     #
     # @return [Integer]
     attr_reader :document_version
@@ -521,9 +521,13 @@ module Ferrum
     #   The root node id, or `true` when sent asynchronously.
     #
     def document_node_id(async: false)
-      return client.command("DOM.getDocument", async: true, depth: 0) if async
-
-      command("DOM.getDocument", depth: 0).dig("root", "nodeId")
+      result = if async
+                 client.command("DOM.getDocument", async: true, depth: 0)
+               else
+                 command("DOM.getDocument", depth: 0).dig("root", "nodeId")
+               end
+      @document_version += 1
+      result
     end
 
     private

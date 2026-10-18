@@ -35,7 +35,9 @@ module Ferrum
       document_version = page.document_version
       @node_id = begin
         id = page.command("DOM.requestNode", objectId: @object_id)["nodeId"]
-        raise NodeNotFoundError, { "message" => "node is not trackable" } if id.zero?
+        if id.zero?
+          raise NodeNotFoundError, { "message" => "node is not trackable, the page is still loading a new document" }
+        end
 
         id
       rescue NoExecutionContextError
