@@ -17,16 +17,6 @@ module Ferrum
 
       attr_reader command: Browser::Command?
 
-      attr_reader default_user_agent: String?
-
-      attr_reader browser_version: String?
-
-      attr_reader protocol_version: String?
-
-      attr_reader v8_version: String?
-
-      attr_reader webkit_version: String?
-
       attr_reader xvfb: Browser::Xvfb?
 
       @pid: ::Integer?
@@ -40,11 +30,6 @@ module Ferrum
       @host: String?
       @port: ::Integer?
       @requested_host: String?
-      @default_user_agent: String?
-      @browser_version: String?
-      @protocol_version: String?
-      @v8_version: String?
-      @webkit_version: String?
 
       extend Forwardable
 
@@ -74,9 +59,7 @@ module Ferrum
 
       def rewrite_host: (String url) -> String
 
-      def parse_browser_versions: () -> void
-
-      def parse_json_version: (Addressable::URI | String url) -> Hash[String, untyped]?
+      def fetch_ws_url: (Addressable::URI | String url) -> String
 
       def close_io: (*IO ios) -> void
 

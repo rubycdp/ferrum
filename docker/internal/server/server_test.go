@@ -116,33 +116,25 @@ func TestVersionAndClaim(t *testing.T) {
 	eventually(t, func() bool { return len(srv.sessions.Browsers()) == 0 })
 }
 
-func TestConnectClaimsTheBrowserStartedByVersion(t *testing.T) {
+func TestConnectLeavesPendingBrowsersAlone(t *testing.T) {
 	srv := newServer(t, SessionsConfig{}, Config{})
 
-	srv.version(t, "?launch=%7B%7D")
-	conn, _ := dial(t, srv.addr(), "/?launch=%7B%7D")
-	conn.roundTrip(t, "hello")
-
-	if n := len(srv.sessions.Browsers()); n != 1 {
-		t.Fatalf("browsers = %d, want 1", n)
-	}
-}
-
-func TestClaimFallsBackWhenTheIdWasTaken(t *testing.T) {
-	srv := newServer(t, SessionsConfig{}, Config{})
-
-	first := srv.version(t, "")
-	second := srv.version(t, "")
-
+	info := srv.version(t, "")
 	anonymous, _ := dial(t, srv.addr(), "/")
 	anonymous.roundTrip(t, "anonymous")
 
-	for _, info := range []map[string]any{first, second} {
-		conn, resp := dial(t, srv.addr(), wsPath(t, info["webSocketDebuggerUrl"]))
-		if resp.StatusCode != http.StatusSwitchingProtocols {
-			t.Fatalf("status = %d", resp.StatusCode)
-		}
-		conn.roundTrip(t, "hello")
+	if n := len(srv.sessions.Browsers()); n != 2 {
+		t.Fatalf("browsers = %d, want 2", n)
+	}
+
+	conn, resp := dial(t, srv.addr(), wsPath(t, info["webSocketDebuggerUrl"]))
+	if resp.StatusCode != http.StatusSwitchingProtocols {
+		t.Fatalf("status = %d", resp.StatusCode)
+	}
+	conn.roundTrip(t, "hello")
+
+	if n := len(srv.sessions.Browsers()); n != 2 {
+		t.Fatalf("browsers = %d, want 2", n)
 	}
 }
 

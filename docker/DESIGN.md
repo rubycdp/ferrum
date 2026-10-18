@@ -17,7 +17,9 @@ Most remote-Chrome bugs Ferrum and Cuprite users report come from browserless be
 - v2 kills sessions after 30s by default (ferrum#501).
 - v2 reports `0.0.0.0` as the WebSocket host (ferrum#501) and leaves `User-Agent` out of `/json/version` (cuprite#300).
 - `?token=` is lost on the way (ferrum#216, #439), and v2 needs a `/chrome` or `/chromium` path (ferrum#501).
-- The startup window's context can't be addressed or disposed (ferrum#578, #540).
+- The startup window's context can't be addressed or disposed (ferrum#578, #540). Ferrum adopts it as its default
+  context, so `reset` can't clean it and cookies and storage leak from one test to the next. Ferrum won't fix this:
+  the startup window belongs to whoever launched Chrome, and the driver launches with `--no-startup-window`.
 - `quit` doesn't end the session (ferrum#418), and orphaned Chrome trees pile up (ferrum#505).
 - Zombie processes pile up when the main process is PID 1 (ferrum#364), and there's no native arm64 image (ferrum#270).
 
@@ -88,8 +90,8 @@ The driver serves everything through `net/http`, and WebSocket upgrades go throu
 | Route | Behavior |
 |---|---|
 | `GET /json/version` | Starts the session's Chrome, proxies Chrome's real `/json/version`, and rewrites `webSocketDebuggerUrl` to `ws(s)://<Host>/devtools/browser/<id>?<original query>` |
-| WS `/devtools/browser/<id>` | Attaches to the Chrome started by `/json/version`. If another connection took it, falls back like `/` |
-| WS `/` | Claims a pending Chrome started with the same query, or starts a new one. For `ws_url:` clients |
+| WS `/devtools/browser/<id>` | Attaches to the Chrome started by `/json/version`, or starts a new one if it's no longer pending |
+| WS `/` | Starts a new Chrome. For `ws_url:` clients |
 | `GET /json`, `/json/list` | Targets of every running session, with URLs pointing at the driver |
 | `PUT /json/new?<url>` | Opens a target, only while exactly one session runs (`409` otherwise) |
 | `GET /json/protocol` | Chrome's protocol description, cached. Starts a short-lived Chrome only when none runs |
@@ -105,12 +107,10 @@ Chrome started at boot or just for discovery. browserless v2 instead starts a th
 metadata, and always returns its generic address (`EXTERNAL`, or `HOST:PORT`) with no path and no query.
 Details:
 
-- **Taken ids.** With `ws_url:`, Ferrum calls `/json/version` and then connects to `/`, which claims any pending
-  Chrome with the same query. With parallel clients that can be the Chrome another client's `/json/version`
-  started, so `/devtools/browser/<id>` falls back the same way instead of answering `404`. Chromes started with
-  the same query are interchangeable.
-- **Unclaimed sessions.** A Chrome started by `/json/version` is pending until a WebSocket claims it. If none
-  arrives within 30 seconds, for example from a stray `curl` or a misconfigured healthcheck, it's killed.
+- **Unclaimed sessions.** A Chrome started by `/json/version` is pending until a WebSocket claims it by its id. If
+  none arrives within 30 seconds, for example from a stray `curl` or a misconfigured healthcheck, it's killed, and
+  a late connection to its id gets a new Chrome. Only `url:` clients go through `/json/version`; `ws_url:` connects
+  to `/` directly.
 - **Reachable URL.** The URL is built from `Host` / `X-Forwarded-Host` / `X-Forwarded-Proto`, so it's always
   reachable from the client (no `0.0.0.0`), and the query string is kept. `EXTERNAL` (or `PROXY_URL`)
   overrides the scheme and host when the driver sits behind a proxy that rewrites them.
@@ -229,7 +229,7 @@ Done:
 - Config: `BROWSER_PATH`, `HOST`, `PORT`, `CONCURRENT`, `QUEUED`, `TIMEOUT`, `EXTERNAL` / `PROXY_URL`. Invalid
   values stop the driver at startup.
 - One Chrome per connection, on `--remote-debugging-port=0`, with the endpoint read from stderr.
-- `/json/version` is answered on the fly, with a claim timeout and a fallback for taken ids.
+- `/json/version` is answered on the fly, with a claim timeout.
 - The WebSocket goes through `ReverseProxy`.
 - The process group gets TERM, then KILL, and the profile is removed when the connection ends. Each session logs
   why it ended: `connection closed`, `browser exited`, `timeout`, `never claimed` or `shutdown`.

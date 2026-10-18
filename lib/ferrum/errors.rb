@@ -112,11 +112,13 @@ module Ferrum
   # Raised when connecting to an already running browser, but its
   # `/json/version` endpoint doesn't answer with the websocket url.
   class NoWebSocketUrlError < Error
-    attr_reader :url
+    attr_reader :url, :status
 
-    def initialize(url)
+    def initialize(url, status = nil)
       @url = url
-      super("Couldn't get a websocket url out of #{url}, `/json/version` there didn't answer with JSON. " \
+      @status = status
+      reason = status ? "answered #{status}" : "didn't answer with JSON"
+      super("Couldn't get a websocket url out of #{url}, `/json/version` there #{reason}. " \
             "Check the browser is reachable at that url and that any credentials it needs are part of it")
     end
   end

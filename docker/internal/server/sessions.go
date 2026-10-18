@@ -38,12 +38,7 @@ type Sessions struct {
 	mu       sync.Mutex
 	waiting  int
 	browsers map[string]*browser.Browser
-	pending  map[string]reservation
-}
-
-type reservation struct {
-	browser *browser.Browser
-	query   string
+	pending  map[string]*browser.Browser
 }
 
 func NewSessions(config SessionsConfig) *Sessions {
@@ -58,7 +53,7 @@ func NewSessions(config SessionsConfig) *Sessions {
 		slots:        make(chan struct{}, max(config.Concurrent, 1)),
 		closed:       make(chan struct{}),
 		browsers:     make(map[string]*browser.Browser),
-		pending:      make(map[string]reservation),
+		pending:      make(map[string]*browser.Browser),
 	}
 }
 
@@ -90,9 +85,9 @@ func (s *Sessions) Start(ctx context.Context, options browser.Options) (*browser
 	return b, nil
 }
 
-func (s *Sessions) Reserve(b *browser.Browser, query string) {
+func (s *Sessions) Reserve(b *browser.Browser) {
 	s.mu.Lock()
-	s.pending[b.ID] = reservation{browser: b, query: query}
+	s.pending[b.ID] = b
 	s.mu.Unlock()
 
 	time.AfterFunc(s.claimTimeout, func() {
@@ -106,26 +101,16 @@ func (s *Sessions) Claim(id string) *browser.Browser {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	r := s.pending[id]
+	b := s.pending[id]
 	delete(s.pending, id)
 
-	return r.browser
+	return b
 }
 
-func (s *Sessions) ClaimOrStart(ctx context.Context, id, query string, options browser.Options) (*browser.Browser, error) {
+func (s *Sessions) ClaimOrStart(ctx context.Context, id string, options browser.Options) (*browser.Browser, error) {
 	if b := s.Claim(id); b != nil {
 		return b, nil
 	}
-
-	s.mu.Lock()
-	for id, r := range s.pending {
-		if r.query == query {
-			delete(s.pending, id)
-			s.mu.Unlock()
-			return r.browser, nil
-		}
-	}
-	s.mu.Unlock()
 
 	return s.Start(ctx, options)
 }

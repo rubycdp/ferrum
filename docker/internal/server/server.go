@@ -93,7 +93,7 @@ func (s *Server) version(w http.ResponseWriter, r *http.Request) {
 	}
 
 	info["webSocketDebuggerUrl"] = s.publicURL(r, b.WSPath, r.URL.RawQuery)
-	s.sessions.Reserve(b, r.URL.RawQuery)
+	s.sessions.Reserve(b)
 
 	writeJSON(w, info)
 }
@@ -113,7 +113,7 @@ func (s *Server) connect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b, err := s.sessions.ClaimOrStart(r.Context(), r.PathValue("id"), r.URL.RawQuery, options)
+	b, err := s.sessions.ClaimOrStart(r.Context(), r.PathValue("id"), options)
 	if err != nil {
 		s.startError(w, err)
 		return

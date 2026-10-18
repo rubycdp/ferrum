@@ -58,8 +58,9 @@ module Ferrum
 
   class NoWebSocketUrlError < Error
     attr_reader url: String
+    attr_reader status: String?
 
-    def initialize: (String url) -> void
+    def initialize: (String url, ?String? status) -> void
   end
 
   class DeadBrowserError < Error
