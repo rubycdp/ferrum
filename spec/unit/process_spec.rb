@@ -3,11 +3,13 @@
 describe Ferrum::Browser::Process do
   subject { Ferrum::Browser.new(port: 6000, host: "127.0.0.1") }
 
+  let(:client) { double.as_null_object.tap { |client| allow(client).to receive(:command).and_return(client) } }
+
   unless Ferrum::Utils::Platform.windows?
     it "forcibly kills the child if it does not respond to SIGTERM" do
       allow(Process).to receive(:spawn).and_return(5678)
       allow(Process).to receive(:wait).and_return(nil)
-      allow(Ferrum::Client).to receive(:new).and_return(double.as_null_object)
+      allow(Ferrum::Client).to receive(:new).and_return(client)
 
       allow_any_instance_of(Ferrum::Browser::Process).to receive(:parse_ws_url)
 
@@ -22,7 +24,7 @@ describe Ferrum::Browser::Process do
     it "falls back to signaling the leader pid when the group can't be signaled" do
       allow(Process).to receive(:spawn).and_return(5678)
       allow(Process).to receive(:wait).and_return(nil)
-      allow(Ferrum::Client).to receive(:new).and_return(double.as_null_object)
+      allow(Ferrum::Client).to receive(:new).and_return(client)
 
       allow_any_instance_of(Ferrum::Browser::Process).to receive(:parse_ws_url)
 
@@ -40,7 +42,7 @@ describe Ferrum::Browser::Process do
       # e.g. Xvfb, which is spawned without `pgroup: true`
       allow(Process).to receive(:spawn).and_return(5678)
       allow(Process).to receive(:wait).and_return(nil)
-      allow(Ferrum::Client).to receive(:new).and_return(double.as_null_object)
+      allow(Ferrum::Client).to receive(:new).and_return(client)
 
       allow_any_instance_of(Ferrum::Browser::Process).to receive(:parse_ws_url)
 
@@ -106,7 +108,7 @@ describe Ferrum::Browser::Process do
 
     it "passes through env" do
       allow(Process).to receive(:wait).and_return(nil)
-      allow(Ferrum::Client).to receive(:new).and_return(double.as_null_object)
+      allow(Ferrum::Client).to receive(:new).and_return(client)
 
       allow(Process).to receive(:spawn).with({ "LD_PRELOAD" => "some.so" }, any_args).and_return(123_456_789)
 
