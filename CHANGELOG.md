@@ -12,6 +12,9 @@
 ### Fixed
 - Headers can be added on a remote browser whose `/json/version` has no `User-Agent`, such as browserless v2, instead of
   failing with `Invalid parameters` [rubycdp/cuprite#300]
+- A `Ferrum::Node` found before a navigation or reload kept its cached CDP node id, which Chrome reuses for the new
+  document, so `focus`, `click`, `scroll_into_view` and friends silently hit another element. Node ids are now dropped
+  on `DOM.documentUpdated` and such nodes raise `Ferrum::NodeNotFoundError` [#86]
 
 ### Removed
 - `Browser::Process#default_user_agent`, `#browser_version`, `#protocol_version`, `#v8_version` and `#webkit_version`,

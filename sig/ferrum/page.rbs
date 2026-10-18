@@ -23,6 +23,7 @@ module Ferrum
     attr_reader headers: Headers
     attr_reader cookies: Cookies
     attr_reader downloads: Downloads
+    attr_reader document_version: ::Integer
     attr_reader client: (Client | SessionClient)
 
     @client: (Client | SessionClient)
@@ -40,6 +41,7 @@ module Ferrum
     @tracing: Page::Tracing
     @downloads: Downloads
     @referrer: String?
+    @document_version: ::Integer
 
     def initialize: ((Client | SessionClient) client, context_id: String?, target_id: String, ?proxy: { host: String, port: ::Integer, user: String?, password: String? }?) -> void
 

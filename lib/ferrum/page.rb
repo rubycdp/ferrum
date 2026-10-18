@@ -87,6 +87,12 @@ module Ferrum
     # @return [Downloads]
     attr_reader :downloads
 
+    # Bumped every time Chrome reports `DOM.documentUpdated`, which
+    # invalidates every node id handed out before it.
+    #
+    # @return [Integer]
+    attr_reader :document_version
+
     def initialize(client, context_id:, target_id:, proxy: nil)
       @client = client
       @context_id = context_id
@@ -96,6 +102,7 @@ module Ferrum
       @frames = Concurrent::Map.new
       @main_frame = Frame.new(nil, self)
       @event = Utils::Event.new.tap(&:set)
+      @document_version = 0
       self.proxy = proxy
 
       @mouse = Mouse.new(self)
@@ -525,6 +532,8 @@ module Ferrum
       frames_subscribe
       network.subscribe
       downloads.subscribe
+
+      on("DOM.documentUpdated") { @document_version += 1 }
 
       if @options.logger
         on("Runtime.consoleAPICalled") do |params|
