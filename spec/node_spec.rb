@@ -61,6 +61,30 @@ describe Ferrum::Node do
       expect(browser.evaluate("document.activeElement.id")).not_to eq("customer_email")
     end
 
+    it "keeps working after an iframe's content is replaced" do
+      browser.go_to("/form")
+      node = browser.at_css("#customer_email")
+      node.focus
+      node.blur
+
+      browser.frame_by(name: "frame").content = "<p>new</p>"
+      node.focus
+
+      expect(browser.evaluate("document.activeElement.id")).to eq("customer_email")
+    end
+
+    it "keeps working after an accessibility query of the whole page" do
+      browser.go_to("/form")
+      node = browser.at_css("#customer_email")
+      node.focus
+      node.blur
+
+      browser.accessibility.query(role: "textbox")
+      node.focus
+
+      expect(browser.evaluate("document.activeElement.id")).to eq("customer_email")
+    end
+
     it "raises an error if the element is not visible" do
       browser.go_to("/index")
 
