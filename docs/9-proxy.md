@@ -34,6 +34,25 @@ browser.create_page(proxy: { host: "y.y.y.y", port: 31337, user: "user", passwor
 end
 ```
 
+## Intercepting requests behind a proxy
+
+A proxy with `:user` and `:password` is authorized through request interception, so Ferrum continues every request
+for you as long as nothing else subscribes to `on(:request)`. Once you subscribe, or set `network.blacklist` or
+`network.whitelist`, your code takes over and has to continue or abort every request:
+
+```ruby
+browser = Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800", user: "user", password: "pa$$" })
+browser.network.intercept
+browser.on(:request) do |request|
+  if request.resource_type == "Image"
+    request.abort
+  else
+    request.continue
+  end
+end
+browser.go_to("https://github.com/")
+```
+
 ## Built-in proxy server
 
 Ferrum also ships a small forwarding proxy server, `Ferrum::Proxy`, which is handy

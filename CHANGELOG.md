@@ -3,6 +3,9 @@
 ### Added
 
 ### Changed
+- Behind a proxy with `:user` and `:password`, Ferrum stops continuing intercepted requests once you subscribe to
+  `on(:request)`, like it already does without a proxy: your callbacks have to continue or abort every request, or it
+  stays paused until the page times out [#332]
 - Browser details (user agent, versions) come from `Browser.getVersion` over CDP for every browser, local or remote.
   `/json/version` is only asked for the websocket url when `url:` is given, so `ws_url:` works against services
   without an HTTP endpoint and a local launch makes no HTTP call
@@ -15,6 +18,8 @@
 - A `Ferrum::Node` found before a navigation or reload kept its cached CDP node id, which Chrome reuses for the new
   document, so `focus`, `click`, `scroll_into_view` and friends silently hit another element. Node ids are now dropped
   on `DOM.documentUpdated` and such nodes raise `Ferrum::NodeNotFoundError` [#86]
+- Behind a proxy with credentials, `request.abort` in `on(:request)` and `network.blacklist`/`whitelist` were ignored
+  because Ferrum's own proxy handler continued every request first. It now only continues requests nobody else handles [#332]
 
 ### Removed
 - `Browser::Process#default_user_agent`, `#browser_version`, `#protocol_version`, `#v8_version` and `#webkit_version`,
