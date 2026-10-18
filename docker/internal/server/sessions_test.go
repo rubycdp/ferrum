@@ -66,7 +66,7 @@ func TestSessionsClaim(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s.Reserve(b, "q=1")
+	s.Reserve(b)
 
 	if got := s.Claim(b.ID); got != b {
 		t.Fatalf("claim = %v, want %v", got, b)
@@ -84,10 +84,20 @@ func TestSessionsClaimOrStart(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s.Reserve(pending, "q=1")
+	s.Reserve(pending)
 
-	t.Run("claims a pending browser with the same query", func(t *testing.T) {
-		b, err := s.ClaimOrStart(ctx, "", "q=1", browser.Options{})
+	t.Run("starts a browser without an id", func(t *testing.T) {
+		b, err := s.ClaimOrStart(ctx, "", browser.Options{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if b == pending {
+			t.Fatal("claimed a pending browser without its id")
+		}
+	})
+
+	t.Run("claims the pending browser by id", func(t *testing.T) {
+		b, err := s.ClaimOrStart(ctx, pending.ID, browser.Options{})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -96,29 +106,13 @@ func TestSessionsClaimOrStart(t *testing.T) {
 		}
 	})
 
-	t.Run("falls back when the id was already claimed", func(t *testing.T) {
-		other, err := s.Start(ctx, browser.Options{})
-		if err != nil {
-			t.Fatal(err)
-		}
-		s.Reserve(other, "q=1")
-
-		b, err := s.ClaimOrStart(ctx, pending.ID, "q=1", browser.Options{})
-		if err != nil {
-			t.Fatal(err)
-		}
-		if b != other {
-			t.Fatal("expected the other pending browser")
-		}
-	})
-
-	t.Run("starts a browser for another query", func(t *testing.T) {
-		b, err := s.ClaimOrStart(ctx, "", "q=2", browser.Options{})
+	t.Run("starts a browser when the id is no longer pending", func(t *testing.T) {
+		b, err := s.ClaimOrStart(ctx, pending.ID, browser.Options{})
 		if err != nil {
 			t.Fatal(err)
 		}
 		if b == pending {
-			t.Fatal("claimed a browser with other options")
+			t.Fatal("claimed the same browser twice")
 		}
 	})
 }
@@ -130,7 +124,7 @@ func TestSessionsUnclaimedBrowserIsStopped(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s.Reserve(b, "")
+	s.Reserve(b)
 
 	eventually(t, func() bool { return len(s.Browsers()) == 0 })
 	<-b.Done()
