@@ -44,11 +44,12 @@ describe Ferrum::Page::Tracing do
       page.tracing.record(path: file_path) do
         page.go_to
 
+        another = browser.create_page
         expect do
-          another = browser.create_page
           another.tracing.record(path: file_path2) { another.go_to }
         end.to raise_exception(Ferrum::BrowserError, "Tracing has already been started (possibly in another tab).")
         expect(File.exist?(file_path2)).to be(false)
+        another.close
       end
 
       expect(File.exist?(file_path)).to be(true)
