@@ -17,7 +17,9 @@ Most remote-Chrome bugs Ferrum and Cuprite users report come from browserless be
 - v2 kills sessions after 30s by default (ferrum#501).
 - v2 reports `0.0.0.0` as the WebSocket host (ferrum#501) and leaves `User-Agent` out of `/json/version` (cuprite#300).
 - `?token=` is lost on the way (ferrum#216, #439), and v2 needs a `/chrome` or `/chromium` path (ferrum#501).
-- The startup window's context can't be addressed or disposed (ferrum#578, #540).
+- The startup window's context can't be addressed or disposed (ferrum#578, #540). Ferrum adopts it as its default
+  context, so `reset` can't clean it and cookies and storage leak from one test to the next. Ferrum won't fix this:
+  the startup window belongs to whoever launched Chrome, and the driver launches with `--no-startup-window`.
 - `quit` doesn't end the session (ferrum#418), and orphaned Chrome trees pile up (ferrum#505).
 - Zombie processes pile up when the main process is PID 1 (ferrum#364), and there's no native arm64 image (ferrum#270).
 
