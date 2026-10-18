@@ -1,8 +1,12 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.19.1...main) ##
 
 ### Added
+- `keyboard.hold(:shift) { }` holds modifiers for every keyboard and mouse event in the block, e.g. a shift+drag, and
+  releases them afterwards. `mouse.move` accepts `modifiers:` like `down` and `up` [#581]
 
 ### Changed
+- `keyboard.down` and `keyboard.up` raise `ArgumentError` for a modifier such as `:shift` and point to `hold`. `down`
+  used to crash with `NoMethodError`, `up` sent an empty keyup event [#581]
 - Behind a proxy with `:user` and `:password`, Ferrum stops continuing intercepted requests once you subscribe to
   `on(:request)`, like it already does without a proxy: your callbacks have to continue or abort every request, or it
   stays paused until the page times out [#332]
@@ -20,6 +24,7 @@
   on `DOM.documentUpdated` and such nodes raise `Ferrum::NodeNotFoundError` [#86]
 - Behind a proxy with credentials, `request.abort` in `on(:request)` and `network.blacklist`/`whitelist` were ignored
   because Ferrum's own proxy handler continued every request first. It now only continues requests nobody else handles [#332]
+- `mouse.click(modifiers:)` sent its `mousemove` without the modifiers [#581]
 
 ### Removed
 - `Browser::Process#default_user_agent`, `#browser_version`, `#protocol_version`, `#v8_version` and `#webkit_version`,

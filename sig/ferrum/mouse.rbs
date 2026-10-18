@@ -21,7 +21,7 @@ module Ferrum
 
     def up: (?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer, ?wait: ::Numeric) -> self
 
-    def move: (x: ::Numeric, y: ::Numeric, ?steps: ::Integer) -> self
+    def move: (x: ::Numeric, y: ::Numeric, ?steps: ::Integer, ?modifiers: ::Integer?) -> self
 
     private
 
