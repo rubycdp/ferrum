@@ -35,6 +35,17 @@ Add this to your `Gemfile` and run `bundle install`.
 gem "ferrum"
 ```
 
+Or skip installing Chrome and run it in a container with our images, see
+[Docker](https://docs.rubycdp.com/docs/ferrum/docker#our-images-recommended):
+
+```shell
+docker run --rm -p 3000:3000 ghcr.io/rubycdp/chromium
+```
+
+```ruby
+browser = Ferrum::Browser.new(url: "http://localhost:3000")
+```
+
 ## Quick Start
 
 Navigate to a website and save a screenshot:
