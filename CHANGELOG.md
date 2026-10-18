@@ -20,7 +20,7 @@
   on `DOM.documentUpdated` and such nodes raise `Ferrum::NodeNotFoundError` [#86]
 - Replacing an iframe's content with `frame.content=` or querying the whole page with `accessibility.query` broke every
   node found before it with `Ferrum::NodeNotFoundError`, even though the nodes were still on the page. Their ids are
-  requested again now [#650]
+  requested again now. A node used while the page is still loading a new document says so in its error [#650]
 - Behind a proxy with credentials, `request.abort` in `on(:request)` and `network.blacklist`/`whitelist` were ignored
   because Ferrum's own proxy handler continued every request first. It now only continues requests nobody else handles [#332]
 
