@@ -38,7 +38,9 @@ gem "ferrum"
 
 ## Docker
 
-See [Docker](/docs/ferrum/docker).
+To skip installing Chrome, run it in a container with our images, `ghcr.io/rubycdp/chrome` or
+`ghcr.io/rubycdp/chromium`, and connect with `Ferrum::Browser.new(url: "http://localhost:3000")`. See
+[Docker](/docs/ferrum/docker) for that and for running Chrome in your own container.
 
 ## Quick Start
 
