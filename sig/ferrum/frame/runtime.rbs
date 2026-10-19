@@ -7,27 +7,51 @@ module Ferrum
 
   class Frame
     module Runtime
+      include Legacy
+
       INTERMITTENT_ATTEMPTS: untyped
 
       INTERMITTENT_SLEEP: untyped
 
-      def evaluate: (untyped expression, *untyped args) -> untyped
+      UNDEFINED: ::Object
 
-      def evaluate_async: (untyped expression, untyped wait, *untyped args) -> untyped
+      def evaluate: (untyped expression, *untyped positional, **untyped keywords) -> untyped
 
-      def execute: (untyped expression, *untyped args) -> true
+      def evaluate_handle: (untyped expression, *untyped positional, **untyped keywords) -> untyped
 
-      def evaluate_func: (untyped expression, *untyped args, ?on: untyped?) -> untyped
+      def execute: (untyped expression, *untyped positional, **untyped keywords) -> true
 
-      def evaluate_on: (node: untyped, expression: untyped, ?by_value: bool, ?wait: ::Integer) -> untyped
+      def evaluate_in: (Node | RemoteObject object, untyped expression, ::Array[untyped] positional, ::Hash[::Symbol, untyped] keywords, ?mode: ::Symbol) -> untyped
 
       private
 
-      def call: (expression: untyped, ?arguments: untyped, ?on: untyped?, ?wait: ::Integer, ?handle: bool, **untyped options) -> untyped
+      def run: (untyped expression, ::Array[untyped] positional, ::Hash[::Symbol, untyped] keywords, mode: ::Symbol, ?on: (Node | RemoteObject)?) -> untyped
 
-      def handle_error: (untyped response) -> (nil | untyped)
+      def arguments_for: (Script script, ::Array[untyped] positional, ::Hash[untyped, untyped] named, ::Symbol mode) -> [::Array[::String], ::Array[untyped]]
 
-      def handle_response: (untyped response) -> untyped
+      def named_arguments: (untyped args, ::Hash[untyped, untyped] named) -> ::Hash[untyped, untyped]
+
+      def bind_to_parameters: (Script script, ::Hash[untyped, untyped] named) -> ::Array[untyped]
+
+      def validate_parameter!: (untyped key) -> ::String
+
+      def function?: (Script script, ::Symbol mode) -> bool
+
+      def wrap: (Script script, ::Array[::String] params, ::Symbol mode) -> ::String
+
+      def script_timeout: (Numeric? timeout) -> ::Float
+
+      def call: (::String declaration, ::Array[untyped] values, on: (Node | RemoteObject)?, mode: ::Symbol, timeout: ::Float) -> untyped
+
+      def call_function: (::String declaration, ::Array[untyped] values, ::Hash[::Symbol, untyped] target, ::Float timeout) -> untyped
+
+      def call_target: ((Node | RemoteObject)? on) -> ::Hash[::Symbol, untyped]
+
+      def handle_error: (untyped response) -> void
+
+      def handle_remote_object: (untyped result) -> untyped
+
+      def handle_response: (untyped response, ?check_cyclic: bool) -> untyped
 
       def resolve_node: (Node node) -> String
 
@@ -35,7 +59,7 @@ module Ferrum
 
       def prepare_args: (untyped args) -> untyped
 
-      def reduce_props: (untyped object_id, untyped to) { (untyped, untyped, untyped) -> untyped } -> (::Array[untyped] | untyped | untyped)
+      def reduce_props: (untyped object_id, untyped to, ?check_cyclic: bool) { (untyped, untyped, untyped) -> untyped } -> (::Array[untyped] | untyped | untyped)
 
       def cyclic?: (untyped object_id) -> untyped
 

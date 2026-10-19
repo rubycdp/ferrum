@@ -87,7 +87,7 @@ module Ferrum
   end
 
   # Raised when an evaluated script takes too long to return a value.
-  class ScriptTimeoutError < Error
+  class ScriptTimeoutError < TimeoutError
     #
     # Explains that the evaluated script timed out.
     #
@@ -216,7 +216,7 @@ module Ferrum
 
     def initialize(response)
       @class_name, @message = response["exception"]&.values_at("className", "description")
-      @message ||= response["text"]
+      @message ||= [response["text"], response.dig("exception", "value")&.inspect].compact.join(" ")
       @stack_trace = response["stackTrace"]
       super(response.merge("message" => @message))
     end

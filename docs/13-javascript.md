@@ -4,42 +4,83 @@ sidebar_position: 13
 
 # JavaScript
 
-#### evaluate(expression, \*args)
+#### evaluate(expression, \*args, timeout: nil, \*\*named)
 
-Evaluate and return result for given JS expression
+Evaluate JavaScript and return the result, converted to Ruby.
 
-* expression `String` should be valid JavaScript
-* args `Object` you can pass arguments, though it should be a valid `Node` or a
-  simple value.
-
-```ruby
-page.evaluate("[window.scrollX, window.scrollY]")
-```
-
-#### evaluate_async(expression, wait_time, \*args)
-
-Evaluate asynchronous expression and return result
-
-* expression `String` should be valid JavaScript
-* wait_time How long we should wait for Promise to resolve or reject
-* args `Object` you can pass arguments, though it should be a valid `Node` or a
-  simple value.
+* expression `String` a JavaScript expression, or a function/arrow declaration, which is used as-is and is how you
+  run more than one statement
+* args positional arguments, reachable as `arguments[0]` and up. Can't be mixed with named ones
+* timeout `Numeric` seconds to wait for the script and any promise it returns, defaults to the page timeout, `0`
+  waits for as long as it takes. Raises `Ferrum::ScriptTimeoutError`, a `Ferrum::TimeoutError`, when exceeded
+* named named arguments, which become the script's parameters. A `Ferrum::Node` arrives as the live element. Use
+  `args: { timeout: 1 }` for a parameter named `timeout` or `args`
 
 ```ruby
-page.evaluate_async(%(arguments[0]({foo: "bar"})), 5) # => { "foo" => "bar" }
+page.evaluate("[window.scrollX, window.scrollY]") # => [0, 0]
+page.evaluate("a + b", a: 1, b: 2) # => 3
+page.evaluate("el.getAttribute(name)", el: page.at_css("a"), name: "href")
+page.evaluate("await fetch(url).then(r => r.status)", url: "/") # => 200
+page.evaluate(<<~JS, c: 3) # => 9
+  function(c) {
+    const sum = 1 + 2;
+    return sum * c;
+  }
+JS
 ```
 
-#### execute(expression, \*args)
+#### evaluate_handle(expression, \*args, timeout: nil, \*\*named) : `Ferrum::RemoteObject`
 
-Execute expression. Doesn't return the result
-
-* expression `String` should be valid JavaScript
-* args `Object` you can pass arguments, though it should be a valid `Node` or a
-  simple value.
+Same as `evaluate`, but keeps the value in the browser and returns a reference you can pass back in as an argument.
+Call `#value` to convert it to Ruby, and `#release` to free it.
 
 ```ruby
-page.execute(%(1 + 1)) # => true
+list = page.evaluate_handle("document.querySelectorAll('li')")
+page.evaluate("Array.from(nodes).map(n => n.textContent)", nodes: list)
 ```
+
+#### execute(expression, \*args, timeout: nil, \*\*named) : `Boolean`
+
+Run JavaScript for its side effects. The script is used as a function body, so statements need no wrapping.
+
+```ruby
+page.execute("window.scrollBy(0, 100)") # => true
+```
+
+`Ferrum::Node` has the same three methods, with `this` bound to the element. Arrow functions don't get `this`, so use a
+`function` declaration when you need it.
+
+```ruby
+page.at_css("input").evaluate("this.value")
+page.at_css("input").execute("this.value = text", text: "hello")
+```
+
+#### Upgrading to 0.21
+
+Scripts written for the old API run exactly as before, and Ferrum warns, pointing at your code, about any whose result
+will change. Calls that only the new API can make, e.g. with named arguments, already run the new way.
+
+* 0.20 runs old-style scripts the old way and warns. Set `FERRUM_JS_API=new` to try the new way.
+* 0.21 runs every script the new way. Set `FERRUM_JS_API=legacy` to go back while migrating.
+* 0.22 removes the old way, along with `evaluate_async`, `evaluate_func` and `evaluate_on`.
+
+Set `FERRUM_DEPRECATION_WARNINGS=raise` to turn the warnings into errors while migrating, or `0` to silence them. A
+library built on Ferrum can't know which way its users chose, so it should pass named arguments or a function
+declaration, which run the new way either way.
+
+| Warning | Old way | New way | Rewrite |
+|---|---|---|---|
+| Keyword arguments read through `arguments` | one object in `arguments[0]` | named parameters | `evaluate("options.foo", options: { foo: 1 })` |
+| Mixing positional and keyword arguments | keywords appended as an object | `ArgumentError` | pass the object in braces, or name every argument |
+| More than one expression, `"a(); b"` | returns `a()`, skips the rest | `SyntaxError` | `evaluate("function() { a(); return b }")` |
+| Never runs, a line break before the script | `nil`, nothing runs | runs and returns its value | check it's safe to run, or remove it |
+| Returns a promise | `{}`, not awaited | awaited, raises if rejected | prefix with `void` to keep it from waiting |
+| Returns an object with a `then` method | the object | awaited like a promise | wrap it, `({ value: object })` |
+| Throws something that isn't an `Error` | the thrown value | `Ferrum::JavaScriptError` | return the value instead |
+| `Node#evaluate` returns a node, nodes or a `Date` | `{}` | `Ferrum::Node`, or the date's string | check the code using the result |
+| `evaluate_async(expression, wait, *args)` | deprecated | removed in 0.22 | `evaluate("await …", timeout: wait)` |
+| `evaluate_func(function, *args, on:)` | deprecated | removed in 0.22 | `evaluate(function, a: 1)`, or `node.evaluate(function)` |
+| `evaluate_on(node:, expression:)` | deprecated | removed in 0.22 | `node.evaluate(expression)` |
 
 #### evaluate_on_new_document(source, \*\*options) : `String`
 
@@ -62,7 +103,7 @@ JS
 #### isolated_world(name) : `IsolatedWorld`
 
 Returns the frame's isolated world with this name, its own JavaScript globals over the frame's DOM, so the page's
-scripts can't see or override what runs there. It has `evaluate`, `evaluate_async`, `execute` and `evaluate_func`,
+scripts can't see or override what runs there. It has `evaluate`, `evaluate_handle` and `execute`,
 takes and returns nodes, and comes back empty in every new document. On a page it's the main frame's world, use
 `frame.isolated_world(name)` for an iframe. It's the same world `evaluate_on_new_document` runs in with
 `world_name:`.
