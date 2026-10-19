@@ -166,25 +166,5 @@ describe Ferrum::Mouse do
     it "can click an element inside an svg" do
       expect { browser.at_css("#myrect").click }.not_to raise_error
     end
-
-    context "with image maps", skip: true do
-      before { browser.go_to("/image_map") }
-
-      it "can click" do
-        browser.at_css("map[name=testmap] area[shape=circle]").click
-        expect(browser).to have_css("#log", text: "circle clicked")
-        browser.at_css("map[name=testmap] area[shape=rect]").click
-        expect(browser).to have_css("#log", text: "rect clicked")
-      end
-
-      it "doesn't click if the associated img is hidden" do
-        expect do
-          browser.at_css("map[name=testmap2] area[shape=circle]").click
-        end.to raise_error(Ferrum::ElementNotFound)
-        expect do
-          browser.at_css("map[name=testmap2] area[shape=circle]", visible: false).click
-        end.to raise_error(Ferrum::MouseEventFailed)
-      end
-    end
   end
 end
