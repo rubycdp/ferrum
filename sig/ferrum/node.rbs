@@ -82,7 +82,7 @@ module Ferrum
 
     private
 
-    def bounding_rect_coordinates: () -> untyped
+    def bounding_rect_coordinates: () -> [Numeric, Numeric]
 
     def content_quads: () -> untyped
 

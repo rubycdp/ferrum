@@ -46,6 +46,9 @@
 - Behind a proxy with credentials, `request.abort` in `on(:request)` and `network.blacklist`/`whitelist` were ignored
   because Ferrum's own proxy handler continued every request first. It now only continues requests nobody else handles [#332]
 - `mouse.click(modifiers:)` sent its `mousemove` without the modifiers [#581]
+- When Chrome can't compute an element's content quads, `node.click` falls back to its bounding rect, but it added the
+  page scroll offset and missed the element on a scrolled page. It clicks in viewport coordinates now
+- `Proxy#rotate` to an upstream proxy failed every HTTPS request with `ERR_TUNNEL_CONNECTION_FAILED`
 
 ### Removed
 - `Browser::Process#default_user_agent`, `#browser_version`, `#protocol_version`, `#v8_version` and `#webkit_version`,

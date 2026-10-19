@@ -531,8 +531,8 @@ module Ferrum
 
     def bounding_rect_coordinates
       evaluate <<~JS
-        [this.getBoundingClientRect().left + window.pageXOffset + (this.offsetWidth / 2),
-         this.getBoundingClientRect().top + window.pageYOffset + (this.offsetHeight / 2)]
+        [this.getBoundingClientRect().left + (this.offsetWidth / 2),
+         this.getBoundingClientRect().top + (this.offsetHeight / 2)]
       JS
     end
 

@@ -164,15 +164,22 @@ describe Ferrum::Network do
   end
 
   it "#request" do
-    skip
+    page.go_to("/with_js")
+
+    expect(network.request.url).to eq(base_url("/with_js"))
   end
 
   it "#response" do
-    skip
+    page.go_to("/with_js")
+
+    expect(network.response.url).to eq(base_url("/with_js"))
+    expect(network.response.status).to eq(200)
   end
 
   it "#status" do
-    skip
+    page.go_to("/arbitrary_path/404/missing")
+
+    expect(network.status).to eq(404)
   end
 
   describe "#clear" do
@@ -585,13 +592,13 @@ describe Ferrum::Network do
     end
   end
 
-  it "#emulate_network_conditions", skip: "doesn't work for now" do
+  it "#emulate_network_conditions" do
     page.network.emulate_network_conditions(latency: 500)
 
     start = Ferrum::Utils::ElapsedTime.monotonic_time
     page.go_to("/with_js")
 
-    expect(Ferrum::Utils::ElapsedTime.elapsed_time(start)).to eq(2000)
+    expect(Ferrum::Utils::ElapsedTime.elapsed_time(start)).to be >= 0.5
   end
 
   it "#offline_mode" do

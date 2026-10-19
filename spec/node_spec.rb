@@ -20,14 +20,28 @@ describe Ferrum::Node do
       expect(browser.network.traffic.length).to be <= 5
     end
 
-    it "does not run into content quads error" do
-      browser.go_to("/index")
+    context "when content quads can't be computed" do
+      before do
+        allow_any_instance_of(described_class).to receive(:content_quads)
+          .and_raise(Ferrum::CoordinatesNotFoundError, "Could not compute content quads")
+      end
 
-      allow_any_instance_of(Ferrum::Node).to receive(:content_quads)
-        .and_raise(Ferrum::CoordinatesNotFoundError, "Could not compute content quads")
+      it "clicks the element by its bounding rect" do
+        browser.go_to("/index")
 
-      browser.at_xpath("//a[text() = 'JS redirect']").click
-      expect(browser.body).to include("Hello world")
+        browser.at_xpath("//a[text()='JS redirect']").click
+
+        expect(browser.body).to include("Hello world")
+      end
+
+      it "clicks the element by its bounding rect on a scrolled page" do
+        browser.go_to("/long_page")
+        link = browser.at_xpath("//a[text() = 'Phasellus blandit velit']").scroll_into_view
+
+        link.click
+
+        expect(browser.current_url).to eq(base_url("/"))
+      end
     end
 
     it "synchronizes page loads properly" do
@@ -105,12 +119,6 @@ describe Ferrum::Node do
     context "when the element is not in the viewport" do
       before do
         browser.go_to("/with_js")
-      end
-
-      it "raises a MouseEventFailed error", skip: "needs fix" do
-        expect do
-          browser.at_xpath("//a[text() = 'O hai']").click
-        end.to raise_error(Ferrum::MouseEventFailed)
       end
 
       it "clicks properly when then brought in with animate" do
@@ -458,7 +466,7 @@ describe Ferrum::Node do
     end
   end
 
-  context "whitespace stripping tests", skip: true do
+  context "with whitespace" do
     before do
       browser.go_to("/filter_text_test")
     end
@@ -467,16 +475,16 @@ describe Ferrum::Node do
       expect(browser.at_css("#foo").text).to eq "foo"
     end
 
-    it "gets text stripped whitespace" do
+    it "gets inner text with stripped whitespace" do
       expect(browser.at_css("#bar").inner_text).to eq "bar"
     end
 
-    it "gets text stripped whitespace and then converts nbsp to space" do
-      expect(browser.at_css("#baz").inner_text).to eq " baz    "
+    it "keeps non-breaking spaces in inner text" do
+      expect(browser.at_css("#baz").inner_text).to eq "\u00a0baz \u00a0 \u00a0"
     end
 
-    it "gets text stripped whitespace" do
-      expect(browser.at_css("#qux").text).to eq "  \u3000 qux \u3000  "
+    it "keeps all whitespace in text" do
+      expect(browser.at_css("#qux").text).to eq " \u00a0 \u3000 qux  \u3000 \u00a0 \u3000  "
     end
   end
 
@@ -787,7 +795,9 @@ describe Ferrum::Node do
         change_me.focus.type("Hello!")
       end
 
-      it "fires the change event", skip: true do
+      it "fires the change event on blur" do
+        change_me.blur
+
         expect(browser.at_css("#changes").text).to eq("Hello!")
       end
 
@@ -881,24 +891,6 @@ describe Ferrum::Node do
     end
   end
 
-  describe "#attach_file", skip: true do
-    it "handles obsolete node" do
-      browser.go_to("/attach_file")
-      browser.attach_file "file", __FILE__
-    end
-
-    it "attaches a file when passed a Pathname" do
-      filename = Pathname.new("spec/tmp/a_test_pathname").expand_path
-      File.write(filename, "text")
-
-      element = browser.at_css("#change_me_file")
-      element.set(filename)
-      expect(element.value).to eq("C:\\fakepath\\a_test_pathname")
-    ensure
-      FileUtils.rm_f(filename)
-    end
-  end
-
   describe "#select_file" do
     it "selects a file" do
       browser.go_to("/form")
@@ -907,33 +899,6 @@ describe Ferrum::Node do
       input.select_file(File.expand_path(__FILE__))
 
       expect(input.value).to eq("C:\\fakepath\\node_spec.rb")
-    end
-  end
-
-  describe "#drag_to", skip: true do
-    before { browser.go_to("/drag") }
-
-    it "supports drag_to" do
-      draggable = browser.at_css("#drag_to #draggable")
-      droppable = browser.at_css("#drag_to #droppable")
-
-      draggable.drag_to(droppable)
-      expect(droppable).to have_content("Dropped")
-    end
-
-    it "supports drag_by on native element" do
-      draggable = browser.at_css("#drag_by .draggable")
-
-      top_before = browser.evaluate(%($("#drag_by .draggable").position().top))
-      left_before = browser.evaluate(%($("#drag_by .draggable").position().left))
-
-      draggable.native.drag_by(15, 15)
-
-      top_after = browser.evaluate(%($("#drag_by .draggable").position().top))
-      left_after = browser.evaluate(%($("#drag_by .draggable").position().left))
-
-      expect(top_after).to eq(top_before + 15)
-      expect(left_after).to eq(left_before + 15)
     end
   end
 
