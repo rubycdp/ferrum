@@ -152,32 +152,20 @@ describe Ferrum::Frame do
     end
   end
 
-  it "supports clicking in a frame", skip: true do
-    page.go_to
-    page.execute <<-JS
-      document.body.innerHTML += "<iframe src='/click_test' name='frame'>"
-    JS
-    sleep 0.5
-    frame = page.at_xpath("//iframe[@name = 'frame']").frame
-
-    log = frame.at_css("#log")
-    frame.at_css("#one").click
-    expect(log.text).to eq("one")
-  end
-
-  it "supports clicking in a frame with padding", skip: true do
+  it "supports clicking in a frame with padding" do
     page.go_to
     page.execute <<-JS
       document.body.innerHTML += "<iframe src='/click_test' name='padded_frame' style='padding:100px;'>"
     JS
+    sleep 0.5
     frame = page.at_xpath("//iframe[@name = 'padded_frame']").frame
 
     log = frame.at_css("#log")
-    frame.at_css("#one").click
+    frame.at_css("#one").scroll_into_view.click
     expect(log.text).to eq("one")
   end
 
-  it "supports clicking in a frame nested in a frame", skip: true do
+  it "supports clicking in a frame nested in a frame" do
     page.go_to
 
     # The padding on the frame here is to differ the sizes of the two
@@ -193,7 +181,7 @@ describe Ferrum::Frame do
 
     inner_frame = page.frame_by(name: "inner_frame")
     log = inner_frame.at_css("#log")
-    inner_frame.at_css("#one").click
+    inner_frame.at_css("#one").scroll_into_view.click
     expect(log.text).to eq("one")
   end
 
