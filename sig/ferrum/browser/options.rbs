@@ -15,8 +15,6 @@ module Ferrum
 
       PROCESS_TIMEOUT: ::Integer
 
-      DEBUG_MODE: bool
-
       attr_reader window_size: ::Array[::Integer]
 
       attr_accessor timeout: ::Numeric
@@ -25,7 +23,8 @@ module Ferrum
 
       attr_accessor default_user_agent: String?
 
-      attr_reader logger: (IO | StringIO | nil)
+      attr_reader logger: untyped
+      attr_reader log: Log?
 
       attr_reader ws_max_receive_size: ::Integer?
 
@@ -90,7 +89,8 @@ module Ferrum
       @ws_max_receive_size: ::Integer?
       @ignore_default_browser_options: bool?
       @proxy: Hash[Symbol, (String | ::Integer)]?
-      @logger: (IO | nil)
+      @logger: untyped
+      @log: Log?
       @base_url: ::Addressable::URI?
       @url: String?
       @ws_url: String?
@@ -110,7 +110,7 @@ module Ferrum
 
       private
 
-      def parse_logger: ((IO | StringIO | bool | nil) logger) -> (IO | StringIO | nil)
+      def parse_logger: (untyped logger) -> [untyped, Log?]
 
       def parse_base_url: (String value) -> ::Addressable::URI
     end

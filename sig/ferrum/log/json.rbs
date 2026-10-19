@@ -1,0 +1,11 @@
+module Ferrum
+  class Log
+    class Json
+      def initialize: (**untyped) -> void
+
+      def sent: (Hash[Symbol, untyped] message, ::Float _elapsed) -> String
+
+      def received: (Hash[String, untyped]? message, String raw, ::Float _elapsed, ?[String, ::Float]? _command) -> String
+    end
+  end
+end

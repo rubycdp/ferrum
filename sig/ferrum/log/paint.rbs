@@ -1,0 +1,15 @@
+module Ferrum
+  class Log
+    module Paint
+      COLORS: Hash[Symbol, ::Integer]
+
+      @color: bool
+
+      def color?: () -> bool
+
+      private
+
+      def paint: (untyped text, Symbol? color) -> String
+    end
+  end
+end

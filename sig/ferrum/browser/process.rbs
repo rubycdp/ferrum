@@ -26,7 +26,7 @@ module Ferrum
       @pid: ::Integer?
       @xvfb: Browser::Xvfb?
       @user_data_dir: String?
-      @logger: (IO | nil)
+      @log: Log?
       @output: Output
       @process_timeout: ::Integer
       @env: Hash[String, String]

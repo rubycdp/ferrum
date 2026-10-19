@@ -5,15 +5,16 @@ module Ferrum
     class Process
       #
       # What the browser process wrote to stdout and stderr: keeps the last
-      # {LIMIT} lines. Owns the pipe the process writes to, which is read on
-      # its own thread for as long as the process lives, so it never fills up
-      # and blocks the browser.
+      # {LIMIT} lines and writes each one to the `:browser` log channel. Owns
+      # the pipe the process writes to, which is read on its own thread for as
+      # long as the process lives, so it never fills up and blocks the browser.
       #
       class Output
         LIMIT = 100
         DRAIN_TIMEOUT = 0.5
 
-        def initialize
+        def initialize(log = nil)
+          @log = log
           @lines = []
           @partial = String.new(encoding: Encoding::BINARY)
           @mutex = Mutex.new
@@ -95,12 +96,15 @@ module Ferrum
         # @return [self]
         #
         def <<(chunk)
-          @mutex.synchronize do
+          lines = @mutex.synchronize do
             *complete, @partial = (@partial + chunk.b).split("\n", -1)
-            @lines.concat(complete.map { |line| utf8(line) })
+            complete.map! { |line| utf8(line) }
+            @lines.concat(complete)
             @lines.shift(@lines.size - LIMIT) if @lines.size > LIMIT
+            complete
           end
 
+          lines.each { |line| @log&.browser(line) }
           self
         end
 

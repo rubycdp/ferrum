@@ -5,13 +5,14 @@ module Ferrum
         LIMIT: ::Integer
         DRAIN_TIMEOUT: ::Float
 
+        @log: Log?
         @lines: Array[String]
         @partial: String
         @mutex: ::Thread::Mutex
         @io: IO?
         @reader: ::Thread?
 
-        def initialize: () -> void
+        def initialize: (?Log? log) -> void
 
         def pipe: () { (IO io) -> void } -> void
 

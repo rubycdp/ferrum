@@ -77,8 +77,8 @@ module Ferrum
     #   An array of paths to files or JS source code to be preloaded into the
     #   browser e.g.: `["/path/to/script.js", { source: "window.secret = 'top'" }]`
     #
-    # @option options [#puts] :logger
-    #   When present, debug output is written to this object.
+    # @option options [#puts, Logger] :logger
+    #   When present, debug output is written to this object, see {Log}.
     #
     # @option options [Integer, Float] :slowmo
     #   Set a delay in seconds to wait before sending a command.

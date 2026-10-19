@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "logger"
 require "ferrum/proxy"
 
 describe Ferrum::Browser do
@@ -43,14 +44,217 @@ describe Ferrum::Browser do
       end
     end
 
-    it "supports :logger argument", local_browser: true do
-      browser = Ferrum::Browser.new(logger: logger)
-      browser.go_to(base_url("/console_log"))
+    context ":logger argument" do
+      it "supports :logger argument", local_browser: true do
+        browser = Ferrum::Browser.new(logger: logger)
+        browser.go_to(base_url("/console_log"))
 
-      wait_for { logger.string }.to include("Runtime.consoleAPICalled")
-      expect(logger.string).not_to include("[log] Hello world")
-    ensure
-      browser&.quit
+        wait_for { logger.string }.to include("Runtime.consoleAPICalled")
+        expect(logger.string).to include("DevTools listening on")
+        expect(logger.string).not_to include("[log] Hello world")
+      ensure
+        browser&.quit
+      end
+
+      it "writes to a Logger at debug level", local_browser: true do
+        browser = Ferrum::Browser.new(logger: Logger.new(logger, level: :debug))
+        browser.go_to(base_url("/console_log"))
+
+        expect(logger.string).to include("DEBUG -- ferrum:browser: DevTools listening on")
+        expect(logger.string).to include("DEBUG -- ferrum:protocol: \n\n▶")
+      ensure
+        browser&.quit
+      end
+
+      it "writes nothing to a Logger above debug level", local_browser: true do
+        browser = Ferrum::Browser.new(logger: Logger.new(logger, level: :info))
+        browser.go_to(base_url("/console_log"))
+
+        expect(logger.string).to be_empty
+      ensure
+        browser&.quit
+      end
+
+      it "logs to $stdout with FERRUM_LOG", local_browser: true do
+        with_env("FERRUM_LOG" => "browser") do
+          expect do
+            Ferrum::Browser.new.quit
+          end.to output(/DevTools listening on/).to_stdout
+        end
+      end
+
+      it "logs nothing with FERRUM_LOG=0", local_browser: true do
+        with_env("FERRUM_LOG" => "0") do
+          browser = Ferrum::Browser.new(logger: logger)
+          browser.go_to(base_url("/console_log"))
+
+          expect(logger.string).to be_empty
+        ensure
+          browser&.quit
+        end
+      end
+
+      it "logs everything with the deprecated FERRUM_DEBUG", local_browser: true do
+        with_env("FERRUM_DEBUG" => "true") do
+          browser = Ferrum::Browser.new(logger: logger)
+          browser.go_to(base_url("/console_log"))
+
+          expect(logger.string).to include("Page.navigate")
+          expect(logger.string).to include("DevTools listening on")
+        ensure
+          browser&.quit
+        end
+      end
+
+      it "leaves out the channels excluded in FERRUM_LOG", local_browser: true do
+        with_env("FERRUM_LOG" => "*,-browser") do
+          browser = Ferrum::Browser.new(logger: logger)
+          browser.go_to(base_url("/console_log"))
+
+          expect(logger.string).to include("Page.navigate")
+          expect(logger.string).not_to include("DevTools listening on")
+        ensure
+          browser&.quit
+        end
+      end
+
+      it "logs only CDP messages matching FERRUM_LOG", local_browser: true do
+        with_env("FERRUM_LOG" => "Page.navigate") do
+          browser = Ferrum::Browser.new(logger: logger)
+          browser.go_to(base_url("/console_log"))
+
+          expect(logger.string).to include(%("method":"Page.navigate"))
+          expect(logger.string).to match(/"result":\{"frameId":"\h+","loaderId"/)
+          expect(logger.string).not_to include("Runtime.")
+          expect(logger.string).not_to include("DevTools listening on")
+        ensure
+          browser&.quit
+        end
+      end
+
+      it "leaves out CDP messages excluded in FERRUM_LOG", local_browser: true do
+        with_env("FERRUM_LOG" => "protocol,-Network.*,-Page.navigate") do
+          browser = Ferrum::Browser.new(logger: logger)
+          browser.go_to(base_url("/console_log"))
+
+          wait_for { logger.string }.to include("Runtime.consoleAPICalled")
+          expect(logger.string).not_to include("Network.")
+          expect(logger.string).not_to include("Page.navigate")
+          expect(logger.string).not_to match(/"result":\{"frameId":"\h+","loaderId"/)
+        ensure
+          browser&.quit
+        end
+      end
+
+      it "writes CDP messages as JSON alone with FERRUM_LOG_FORMAT=json", local_browser: true do
+        with_env("FERRUM_LOG" => "protocol", "FERRUM_LOG_FORMAT" => "json") do
+          def logger.tty? = true
+          browser = Ferrum::Browser.new(logger: logger)
+          browser.go_to(base_url("/console_log"))
+
+          messages = logger.string.lines.map { |line| JSON.parse(line) }
+          expect(messages).to include(a_hash_including("method" => "Page.navigate", "params" => { "url" => base_url("/console_log") }))
+          expect(messages).to include(a_hash_including("id" => a_kind_of(Integer), "result" => a_hash_including("frameId")))
+        ensure
+          browser&.quit
+        end
+      end
+
+      it "annotates CDP messages with FERRUM_LOG_FORMAT=annotated", local_browser: true do
+        with_env("FERRUM_LOG_FORMAT" => "annotated") do
+          browser = Ferrum::Browser.new(logger: logger)
+          browser.go_to(base_url("/console_log"))
+
+          expect(logger.string).to match(%r{^▶ \d+\.\d{3} #\d+ Page\.navigate \{"url":"http://[^"]+/console_log"\} @\h{8}$})
+          id = logger.string[/▶ \S+ #(\d+) Page\.navigate/, 1]
+          expect(logger.string).to match(/^    ◀ \d+\.\d{3} ##{id} Page\.navigate \d+ms \{"frameId":"\h+",.+\} @\h{8}$/)
+          wait_for { logger.string }.to match(/^    ◀ \d+\.\d{3} Runtime\.consoleAPICalled \{"type":"log"/)
+        ensure
+          browser&.quit
+        end
+      end
+
+      it "colors protocol lines written to a terminal", local_browser: true do
+        def logger.tty? = true
+        browser = Ferrum::Browser.new(logger: logger)
+        browser.go_to(base_url("/console_log"))
+
+        expect(logger.string).to include(%("method":"\e[1mPage.navigate\e[0m"))
+        expect(logger.string).to include("\e[36m▶\e[0m")
+      ensure
+        browser&.quit
+      end
+
+      it "writes plain text when not writing to a terminal", local_browser: true do
+        browser = Ferrum::Browser.new(logger: logger)
+        browser.go_to(base_url("/console_log"))
+
+        expect(logger.string).to include("Page.navigate")
+        expect(logger.string).not_to include("\e[")
+      ensure
+        browser&.quit
+      end
+
+      it "colors lines written anywhere with FERRUM_LOG_COLOR=always", local_browser: true do
+        with_env("FERRUM_LOG_COLOR" => "always") do
+          browser = Ferrum::Browser.new(logger: logger)
+          browser.go_to(base_url("/console_log"))
+
+          expect(logger.string).to include("\e[36m▶\e[0m")
+        ensure
+          browser&.quit
+        end
+      end
+
+      it "writes plain text to a terminal with FERRUM_LOG_COLOR=never", local_browser: true do
+        with_env("FERRUM_LOG_COLOR" => "never") do
+          def logger.tty? = true
+          browser = Ferrum::Browser.new(logger: logger)
+          browser.go_to(base_url("/console_log"))
+
+          expect(logger.string).to include("Page.navigate")
+          expect(logger.string).not_to include("\e[")
+        ensure
+          browser&.quit
+        end
+      end
+
+      it "keeps the browser working when the logger fails", local_browser: true do
+        broken = Object.new
+        def broken.puts(*) = raise(IOError, "closed stream")
+        browser = nil
+
+        expect do
+          browser = Ferrum::Browser.new(logger: broken)
+          browser.go_to(base_url("/console_log"))
+        end.to output(/couldn't write to the logger, IOError: closed stream/).to_stderr
+        expect(browser.evaluate("1 + 1")).to eq(2)
+      ensure
+        browser&.quit
+      end
+
+      it "logs CDP messages nested deeper than JSON's default limit", local_browser: true do
+        browser = Ferrum::Browser.new(logger: logger)
+        browser.go_to(base_url("/deeply_nested"))
+
+        expect(browser.evaluate(%(document.getElementById("text"))).text).to eq("text")
+        expect(logger.string).to include("DOM.describeNode")
+      ensure
+        browser&.quit
+      end
+
+      it "shortens long strings in logged CDP messages", local_browser: true,
+                                                         skip: Ferrum::Log::VALUE_LENGTH.zero? do
+        browser = Ferrum::Browser.new(logger: logger)
+        browser.go_to(base_url("/console_log"))
+        screenshot = browser.screenshot(encoding: :base64)
+
+        expect(logger.string).not_to include(screenshot)
+        expect(logger.string).to include("#{screenshot[0, Ferrum::Log::VALUE_LENGTH]}... (" \
+                                         "#{screenshot.size - Ferrum::Log::VALUE_LENGTH} more characters)")
+      ensure
+        browser&.quit
+      end
     end
 
     it "keeps the output of the browser process", local_browser: true do

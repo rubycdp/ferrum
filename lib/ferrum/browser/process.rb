@@ -55,14 +55,14 @@ module Ferrum
       def initialize(options)
         @pid = @xvfb = @user_data_dir = nil
         @requested_host = options.host
-        @output = Output.new
+        @log = options.log
+        @output = Output.new(@log)
 
         if options.ws_url || options.url
           self.ws_url = options.ws_url || fetch_ws_url(options.url)
           return
         end
 
-        @logger = options.logger
         @process_timeout = options.process_timeout
         @env = Hash(options.env)
 
@@ -81,7 +81,7 @@ module Ferrum
 
         begin
           @xvfb = Xvfb.start(@command.options) if @command.xvfb?
-          @output = Output.new
+          @output = Output.new(@log)
           @output.pipe { |io| spawn_browser(io) }
           parse_ws_url
           @output.follow
@@ -191,10 +191,7 @@ module Ferrum
 
       def parse_ws_url
         match = @output.wait_for(WS_URL, @process_timeout)
-        unless match
-          @logger&.puts(@output.to_s)
-          raise ProcessTimeoutError.new(@process_timeout, @output.to_s)
-        end
+        raise ProcessTimeoutError.new(@process_timeout, @output.to_s) unless match
 
         self.ws_url = rewrite_host(match[1].strip)
       end

@@ -1,0 +1,57 @@
+module Ferrum
+  class Log
+    include Paint
+
+    CHANNELS: Array[Symbol]
+    ALL: Array[String]
+    OFF: Array[String]
+    FORMATS: Hash[Symbol, (singleton(Default) | singleton(Json) | singleton(Annotated))]
+    VALUE_LENGTH: ::Integer
+
+    attr_reader logger: untyped
+    attr_reader channels: Array[Symbol]
+    attr_reader only: Array[String]
+    attr_reader skip: Array[String]
+
+    @logger: untyped
+    @channels: Array[Symbol]
+    @only: Array[String]
+    @skip: Array[String]
+    @color: bool
+    @formatter: (Default | Json | Annotated)
+    @write_failed: bool?
+    @commands: ::Concurrent::Map[[untyped, ::Integer], [String, ::Float]]?
+
+    def self.parse: (String? value) -> { channels: Array[Symbol], only: Array[String], skip: Array[String] }?
+
+    def self.parse_channel: (String name) -> Array[Symbol]
+
+    def self.parse_format: (String? value) -> Symbol
+
+    def self.parse_color: (String? value) -> Symbol
+
+    def self.dump: (untyped value) -> String
+
+    def self.truncate: (untyped value) -> untyped
+
+    def initialize: (untyped logger, ?channels: Array[Symbol], ?only: Array[String], ?skip: Array[String], ?format: Symbol, ?color: Symbol) -> void
+
+    def enabled?: (Symbol channel) -> bool
+
+    def sent: (Hash[Symbol, untyped] message, ?untyped connection) -> void
+
+    def received: (Hash[String, untyped]? message, String raw, ?untyped connection) -> void
+
+    def browser: (String line) -> void
+
+    private
+
+    def answered_command: (Hash[String, untyped]? message, untyped connection) -> [String, ::Float]?
+
+    def show?: (String? method) -> bool
+
+    def matches?: (Array[String] patterns, String method) -> bool
+
+    def write: (Symbol channel) { () -> String } -> void
+  end
+end

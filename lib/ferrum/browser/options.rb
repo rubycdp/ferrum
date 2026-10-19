@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ferrum/log"
+
 module Ferrum
   class Browser
     #
@@ -16,9 +18,10 @@ module Ferrum
       DEFAULT_TIMEOUT = ENV.fetch("FERRUM_DEFAULT_TIMEOUT", 5).to_i
       DEFAULT_PROTOCOL_TIMEOUT = ENV.fetch("FERRUM_PROTOCOL_TIMEOUT", DEFAULT_TIMEOUT).to_i
       PROCESS_TIMEOUT = ENV.fetch("FERRUM_PROCESS_TIMEOUT", 10).to_i
-      DEBUG_MODE = !ENV.fetch("FERRUM_DEBUG", nil).nil?
 
-      attr_reader :window_size, :logger, :ws_max_receive_size,
+      warn "Ferrum: FERRUM_DEBUG is deprecated, use FERRUM_LOG=* instead" if ENV.key?("FERRUM_DEBUG")
+
+      attr_reader :window_size, :logger, :log, :ws_max_receive_size,
                   :js_errors, :base_url, :slowmo, :pending_connection_errors,
                   :url, :ws_url, :env, :process_timeout, :browser_name, :browser_path,
                   :save_path, :proxy, :port, :host, :headless, :incognito, :dockerize, :browser_options,
@@ -51,7 +54,7 @@ module Ferrum
         @ignore_default_browser_options = @options[:ignore_default_browser_options]
 
         @proxy = validate_proxy(@options[:proxy])
-        @logger = parse_logger(@options[:logger])
+        @logger, @log = parse_logger(@options[:logger])
         @base_url = parse_base_url(@options[:base_url]) if @options[:base_url]
         @url = @options[:url].to_s if @options[:url]
         @ws_url = @options[:ws_url].to_s if @options[:ws_url]
@@ -120,9 +123,13 @@ module Ferrum
       private
 
       def parse_logger(logger)
-        return logger if logger
+        value = ENV.fetch("FERRUM_LOG") { "*" if ENV.key?("FERRUM_DEBUG") }
+        settings = value ? Log.parse(value) : {}
+        logger ||= $stdout.tap { |s| s.sync = true } if value && settings
+        return [logger, nil] unless logger && settings
 
-        !logger && DEBUG_MODE ? $stdout.tap { |s| s.sync = true } : logger
+        [logger, Log.new(logger, **settings, format: Log.parse_format(ENV.fetch("FERRUM_LOG_FORMAT", nil)),
+                                             color: Log.parse_color(ENV.fetch("FERRUM_LOG_COLOR", nil)))]
       end
 
       def parse_base_url(value)

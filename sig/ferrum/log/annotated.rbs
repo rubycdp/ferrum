@@ -1,0 +1,25 @@
+module Ferrum
+  class Log
+    class Annotated
+      include Paint
+
+      def initialize: (?color: bool) -> void
+
+      def sent: (Hash[Symbol, untyped] message, ::Float elapsed) -> String
+
+      def received: (Hash[String, untyped]? message, String raw, ::Float elapsed, ?[String, ::Float]? command) -> String
+
+      private
+
+      def event: (Hash[String, untyped] message, ::Float elapsed) -> String
+
+      def line: (*untyped parts) -> String
+
+      def time: (::Float elapsed) -> String
+
+      def json: (untyped value) -> String?
+
+      def session: (String? id) -> String?
+    end
+  end
+end

@@ -6,11 +6,22 @@
 - `page.console` collects `console.*` calls, browser log entries and uncaught exceptions as `Console::Message`s,
   `Enumerable` over the last 1000, and `page.on(:console)` yields new ones, also on workers. No more parsing the
   `:logger` output to get them [cuprite#113]
-- Ferrum keeps reading what Chrome writes after startup: the last 100 lines are in `browser.process.output`
+- `:logger` accepts a `Logger`: CDP messages and browser output go out at debug level, with `ferrum:protocol` or
+  `ferrum:browser` as program name
+- `FERRUM_LOG` picks what's logged: `*`, `-browser`, CDP method patterns like `Page.*` or `-Network.*`, `0` for nothing
+- Logger output written to a terminal is colored: arrows by kind, bold methods, dimmed times. Files, pipes and
+  `NO_COLOR` keep plain text, `FERRUM_LOG_COLOR=always|never` overrides it
+- `FERRUM_LOG_FORMAT=annotated` puts the command id and method in front of each CDP message and gives responses
+  their command's method and duration, `FERRUM_LOG_FORMAT=json` writes each CDP message as JSON alone
+- Ferrum keeps reading what Chrome writes after startup: it's logged on the `browser` channel, the last 100 lines are in
+  `browser.process.output`
 
 ### Changed
+- The logger cuts any string value over 1024 characters in CDP messages, not just screenshots.
+  `FERRUM_LOG_VALUE_LENGTH` sets the length, `0` keeps them whole. `FERRUM_LOGGING_SCREENSHOTS` is gone
 - `ProcessTimeoutError` is raised as soon as Chrome exits instead of after `:process_timeout`
 - The logger no longer prints `[log] ...` lines for console calls, use `page.on(:console) { |message| puts message }`
+- `FERRUM_DEBUG` is deprecated in favor of `FERRUM_LOG=*`
 - `keyboard.down` and `keyboard.up` raise `ArgumentError` for a modifier such as `:shift` and point to `hold`. `down`
   used to crash with `NoMethodError`, `up` sent an empty keyup event [#581]
 - Behind a proxy with `:user` and `:password`, Ferrum stops continuing intercepted requests once you subscribe to
@@ -23,6 +34,7 @@
   `429 Too Many Requests` for a full remote browser service, and exposes it as `#status`
 
 ### Fixed
+- Every CDP response was scanned for Base64 screenshots to hide from the logger, even with no `:logger` set
 - Headers can be added on a remote browser whose `/json/version` has no `User-Agent`, such as browserless v2, instead of
   failing with `Invalid parameters` [rubycdp/cuprite#300]
 - A `Ferrum::Node` found before a navigation or reload kept its cached CDP node id, which Chrome reuses for the new
