@@ -33,7 +33,8 @@ end
 puts ""
 
 RSpec.configure do |config|
-  config.filter_run_excluding local_browser: true if remote_url
+  # Specs tagged :launch start their own Chrome, so they can't run against a remote browser (FERRUM_URL).
+  config.filter_run_excluding :launch if remote_url
   config.wait_timeout = 1
   config.wait_delay = 0.2
 

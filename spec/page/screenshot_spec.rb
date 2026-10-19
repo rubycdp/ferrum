@@ -489,7 +489,7 @@ describe Ferrum::Page::Screenshot do
       expect(browser.viewport_size).to eq([1024, 681])
     end
 
-    it "supports specifying viewport size with an option", local_browser: true do
+    it "supports specifying viewport size with an option", :launch do
       browser = Ferrum::Browser.new(window_size: [800, 600])
       browser.go_to(base_url)
       expect(browser.viewport_size).to eq([800, 513])

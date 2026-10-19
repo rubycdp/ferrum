@@ -176,7 +176,7 @@ under it, which crashpad needs (ferrum#541, #544). Downloads then belong to the 
 - `.github/workflows/docker.yml` runs the Go tests, then builds each browser and architecture pair on a native
   runner, never through QEMU, which crashes Chrome (ferrum#270).
   - It runs the Ferrum suite against every image, with `FERRUM_URL` pointing at the driver. Specs tagged
-    `local_browser`, which start their own Chrome, are skipped.
+    `:launch`, which start their own Chrome, are skipped.
   - It merges the architectures into one multi-arch tag by digest. A failed build or suite publishes nothing, so
     `latest` stays where it was.
 - Builds happen on driver changes pushed to `main` and on a daily check for new browser versions: Google's apt
