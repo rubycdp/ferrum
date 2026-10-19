@@ -53,6 +53,14 @@ describe Ferrum::Browser do
       browser&.quit
     end
 
+    it "keeps the output of the browser process", local_browser: true do
+      browser = Ferrum::Browser.new
+
+      expect(browser.process.output.lines).to include(a_string_starting_with("DevTools listening on"))
+    ensure
+      browser&.quit
+    end
+
     it "supports :ignore_default_browser_options argument", local_browser: true do
       defaults = Ferrum::Browser::Options::Chrome.options.except("mute-audio")
       browser = Ferrum::Browser.new(ignore_default_browser_options: true,

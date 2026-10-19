@@ -90,12 +90,12 @@ describe Ferrum::Browser::Process do
   context "when spawning Chrome itself" do
     it "uses the requested :host instead of the address Chrome reports" do
       subject = described_class.new(Ferrum::Browser::Options.new(host: "ferrum.localhost", port: 6001))
-      read_io, write_io = IO.pipe
-      write_io.write("DevTools listening on ws://127.0.0.1:6001/devtools/browser/" \
-                     "11111111-1111-1111-1111-111111111111\n")
-      write_io.close
+      subject.output.pipe do |io|
+        io.write("DevTools listening on ws://127.0.0.1:6001/devtools/browser/" \
+                 "11111111-1111-1111-1111-111111111111\n")
+      end
 
-      subject.send(:parse_ws_url, read_io, 1)
+      subject.send(:parse_ws_url)
 
       expect(subject.host).to eq("ferrum.localhost")
       expect(subject.port).to eq(6001)

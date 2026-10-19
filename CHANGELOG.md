@@ -6,8 +6,10 @@
 - `page.console` collects `console.*` calls, browser log entries and uncaught exceptions as `Console::Message`s,
   `Enumerable` over the last 1000, and `page.on(:console)` yields new ones, also on workers. No more parsing the
   `:logger` output to get them [cuprite#113]
+- Ferrum keeps reading what Chrome writes after startup: the last 100 lines are in `browser.process.output`
 
 ### Changed
+- `ProcessTimeoutError` is raised as soon as Chrome exits instead of after `:process_timeout`
 - The logger no longer prints `[log] ...` lines for console calls, use `page.on(:console) { |message| puts message }`
 - `keyboard.down` and `keyboard.up` raise `ArgumentError` for a modifier such as `:shift` and point to `hold`. `down`
   used to crash with `NoMethodError`, `up` sent an empty keyup event [#581]
