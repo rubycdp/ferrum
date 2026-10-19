@@ -28,9 +28,10 @@ The suite boots a real Chrome and a Sinatra/Puma test app (`spec/support/applica
 
 - **Prefer system/feature specs**: drive a real browser against the test app and assert on observable behavior.
   They live in `spec/` next to the feature, e.g. `spec/page_spec.rb`, `spec/network/`.
-- **Unit specs go in `spec/unit/` and nowhere else.** A spec is a unit spec if it stubs or mocks Ferrum's own
-  objects (`allow(...).to receive`, `and_raise`, `and_wrap_original`), builds objects with `allocate` or
-  `instance_variable_set`, or tests one class in isolation. Mirror the `lib/` path:
+- **Unit specs go in `spec/unit/` and nowhere else.** A unit spec tests one class in isolation or its internals:
+  it builds objects with `allocate` or `instance_variable_set`, or asserts on internal calls and state. A spec that
+  drives the browser and asserts observable behavior stays a feature spec even if it stubs one call, e.g. to
+  simulate a Chrome failure. Mirror the `lib/` path:
   `lib/ferrum/contexts.rb` -> `spec/unit/contexts_spec.rb`, `lib/ferrum/client/web_socket.rb` ->
   `spec/unit/client/web_socket_spec.rb`. Never add them to the feature spec files in `spec/`.
 - Don't test private methods; cover them through the public API.
