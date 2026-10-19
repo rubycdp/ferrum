@@ -19,6 +19,7 @@ module Ferrum
     attr_reader mouse: Mouse
     attr_reader keyboard: Keyboard
     attr_reader network: Network
+    attr_reader console: Console
     attr_reader accessibility: Accessibility
     attr_reader headers: Headers
     attr_reader cookies: Cookies
@@ -38,6 +39,7 @@ module Ferrum
     @headers: Headers
     @cookies: Cookies
     @network: Network
+    @console: Console
     @tracing: Page::Tracing
     @downloads: Downloads
     @referrer: String?
@@ -87,6 +89,7 @@ module Ferrum
     def command: (String method, ?wait: ::Numeric?, ?slowmoable: bool, ?timeout: ::Numeric?, **untyped) -> Hash[String, untyped]
 
     def on: (:dialog) { (Dialog, Integer, Integer) -> void } -> Integer
+          | (:console) { (Console::Message) -> void } -> Integer
           | (:request) { (Network::InterceptedRequest, Integer, Integer) -> void } -> Integer
           | (:response) { (Network::Exchange, Integer, Integer) -> void } -> Integer
           | (:auth) { (Network::AuthRequest, Integer, Integer) -> void } -> Integer

@@ -2,6 +2,7 @@
 
 require "ferrum/frame/runtime"
 require "ferrum/interceptable"
+require "ferrum/console"
 
 module Ferrum
   # A dedicated or shared Worker spawned by a page. Unlike {Page} it has no
@@ -26,6 +27,7 @@ module Ferrum
       @page = self
       @execution_id = Concurrent::MVar.new
       @network = Network.new(self)
+      @console = Console.new(self)
 
       subscribe
       prepare
@@ -35,6 +37,11 @@ module Ferrum
     #
     # @return [Network]
     attr_reader :network
+
+    # Console messages.
+    #
+    # @return [Console]
+    attr_reader :console
 
     # How long to wait for CDP responses and JS evaluation to complete.
     #
@@ -88,6 +95,7 @@ module Ferrum
 
     def subscribe
       network.subscribe
+      console.subscribe
 
       on("Runtime.executionContextCreated") do |params|
         self.execution_id = params.dig("context", "id")

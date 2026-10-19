@@ -8,6 +8,7 @@ require "ferrum/headers"
 require "ferrum/cookies"
 require "ferrum/dialog"
 require "ferrum/network"
+require "ferrum/console"
 require "ferrum/accessibility"
 require "ferrum/interceptable"
 require "ferrum/downloads"
@@ -67,6 +68,11 @@ module Ferrum
     # @return [Network]
     attr_reader :network
 
+    # Console messages.
+    #
+    # @return [Console]
+    attr_reader :console
+
     # Accessibility object.
     #
     # @return [Accessibility]
@@ -110,6 +116,7 @@ module Ferrum
       @headers = Headers.new(self)
       @cookies = Cookies.new(self)
       @network = Network.new(self)
+      @console = Console.new(self)
       @accessibility = Accessibility.new(self)
       @tracing = Tracing.new(self)
       @downloads = Downloads.new(self)
@@ -535,15 +542,10 @@ module Ferrum
     def subscribe
       frames_subscribe
       network.subscribe
+      console.subscribe
       downloads.subscribe
 
       on("DOM.documentUpdated") { @document_version += 1 }
-
-      if @options.logger
-        on("Runtime.consoleAPICalled") do |params|
-          log_console_api(params)
-        end
-      end
 
       if @options.js_errors
         on("Runtime.exceptionThrown") do |params|
@@ -596,16 +598,6 @@ module Ferrum
       # the history and if the transitionType for example `link` then
       # content is already loaded, and we can try to get the document.
       document_node_id
-    end
-
-    def log_console_api(params)
-      message = params.fetch("args", []).filter_map { |arg| arg["value"] || arg["description"] }.join(" ")
-      @options.logger.puts("[#{params['type']}] #{message}")
-
-      params.dig("stackTrace", "callFrames")&.each do |frame|
-        location = "#{frame['url']}:#{frame['lineNumber'].to_i + 1}:#{frame['columnNumber'].to_i + 1}"
-        @options.logger.puts("    at #{frame['functionName']} (#{location})")
-      end
     end
 
     def inject_extensions

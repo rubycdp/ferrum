@@ -3,8 +3,12 @@
 ### Added
 - `keyboard.hold(:shift) { }` holds modifiers for every keyboard and mouse event in the block, e.g. a shift+drag, and
   releases them afterwards. `mouse.move` accepts `modifiers:` like `down` and `up` [#581]
+- `page.console` collects `console.*` calls, browser log entries and uncaught exceptions as `Console::Message`s,
+  `Enumerable` over the last 1000, and `page.on(:console)` yields new ones, also on workers. No more parsing the
+  `:logger` output to get them [cuprite#113]
 
 ### Changed
+- The logger no longer prints `[log] ...` lines for console calls, use `page.on(:console) { |message| puts message }`
 - `keyboard.down` and `keyboard.up` raise `ArgumentError` for a modifier such as `:shift` and point to `hold`. `down`
   used to crash with `NoMethodError`, `up` sent an empty keyup event [#581]
 - Behind a proxy with `:user` and `:password`, Ferrum stops continuing intercepted requests once you subscribe to

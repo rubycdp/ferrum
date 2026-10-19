@@ -1,0 +1,21 @@
+module Ferrum
+  class Console
+    class Location
+      attr_reader url: String
+      attr_reader line: ::Integer?
+      attr_reader column: ::Integer?
+      attr_reader function_name: String
+
+      @url: String
+      @line: ::Integer?
+      @column: ::Integer?
+      @function_name: String
+
+      def self.from_frame: (Hash[String, untyped] frame) -> Location
+
+      def initialize: (url: String, ?line: ::Integer?, ?column: ::Integer?, ?function_name: String) -> void
+
+      def to_s: () -> String
+    end
+  end
+end

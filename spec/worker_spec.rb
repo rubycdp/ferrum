@@ -33,6 +33,23 @@ describe Ferrum::Worker do
       expect(browser.workers).to contain_exactly(target.worker)
       expect(target.worker.evaluate("1 + 1")).to eq(2)
     end
+
+    it "collects its console messages" do
+      page.go_to
+
+      page.execute <<~JS
+        new Worker(URL.createObjectURL(new Blob(
+          ["self.onmessage = () => {}"],
+          { type: "application/javascript" }
+        )))
+      JS
+
+      worker = wait_for_target(&:worker?).worker
+      worker.execute(%(console.warn("from worker")))
+
+      wait_for { worker.console.map(&:text) }.to eq(["from worker"])
+      expect(worker.console.first).to be_warning
+    end
   end
 
   describe "shared workers" do
