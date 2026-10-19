@@ -45,7 +45,7 @@ module Ferrum
 
       @words: ::Set[::String]
 
-      attr_reader source: ::String
+      @source: ::String
 
       attr_reader code: ::String
 
@@ -56,10 +56,6 @@ module Ferrum
       def named_function?: () -> bool
 
       def awaits?: () -> bool
-
-      def uses?: (::String word) -> bool
-
-      def leading_line_break?: () -> bool
 
       def parameters: () -> ::Array[::String]?
 

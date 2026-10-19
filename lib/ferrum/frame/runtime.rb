@@ -2,7 +2,6 @@
 
 require "singleton"
 require "ferrum/frame/script"
-require "ferrum/frame/runtime/legacy"
 
 module Ferrum
   #
@@ -81,8 +80,6 @@ module Ferrum
     # it run for as long as it takes.
     #
     module Runtime
-      include Legacy
-
       INTERMITTENT_ATTEMPTS = ENV.fetch("FERRUM_INTERMITTENT_ATTEMPTS", 6).to_i
       INTERMITTENT_SLEEP = ENV.fetch("FERRUM_INTERMITTENT_SLEEP", 0.1).to_f
 
@@ -199,10 +196,6 @@ module Ferrum
       #
       def run(expression, positional, keywords, mode:, on: nil)
         script = Script.new(expression)
-        if legacy?(script, positional, keywords, mode: mode, on: on)
-          return run_legacy(script, positional, keywords, mode: mode, on: on)
-        end
-
         named = keywords.except(:timeout, :args)
         params, values = arguments_for(script, positional, named_arguments(keywords[:args], named), mode)
         call(wrap(script, params, mode), values, on: on, mode: mode, timeout: script_timeout(keywords[:timeout]))

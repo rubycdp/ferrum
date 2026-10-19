@@ -68,6 +68,7 @@
 - `Browser::Process#default_user_agent`, `#browser_version`, `#protocol_version`, `#v8_version` and `#webkit_version`,
   use `Browser#default_user_agent` and `Browser#version` instead
 - Ruby 3.1 support, Ferrum requires Ruby 3.2 or newer
+- `#evaluate_async`, `#evaluate_func` and `#evaluate_on`, use `#evaluate` and `Node#evaluate`
 
 
 ## [0.19.1](https://github.com/rubycdp/ferrum/compare/v0.19.0...v0.19.1) (October 16, 2026) ##
@@ -122,8 +123,9 @@
 - `Ferrum::Page::Stream#stream` now closes the CDP stream handle (`IO.close`) once it's been fully read, so streams
   opened for `Ferrum::Browser#pdf` and `Ferrum::Page::Tracing#record` no longer keep their backing storage alive in
   the browser; a failed `IO.close` is raised to the caller.
-- `#evaluate_async`, `#evaluate_func` and `#evaluate_on` are deprecated, and scripts whose result will change in the upcoming
-  0.21 warn with a rewrite, see [upgrading](docs/13-javascript.md#upgrading-to-021)
+- `#evaluate`/`#execute` await a returned promise or thenable, keywords are always named parameters and can't be
+  mixed with positional arguments, a thrown non-`Error` raises, and `Node#evaluate` resolves nodes and dates, see
+  [upgrading](docs/13-javascript.md#upgrading-to-021)
 - `Ferrum::ScriptTimeoutError` is a `Ferrum::TimeoutError`
 
 ### Fixed

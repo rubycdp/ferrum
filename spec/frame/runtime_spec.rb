@@ -410,6 +410,51 @@ describe Ferrum::Frame::Runtime do
     end
   end
 
+  describe "#evaluate in 0.21" do
+    it "awaits a returned promise and raises when it rejects" do
+      expect(browser.evaluate("new Promise(resolve => setTimeout(() => resolve(42), 100))")).to eq(42)
+      expect { browser.evaluate("Promise.reject(new Error('nope'))") }.to raise_error(Ferrum::JavaScriptError, /nope/)
+    end
+
+    it "awaits a returned object with a then method" do
+      expect(browser.evaluate("({ then(resolve) { resolve(42) } })")).to eq(42)
+    end
+
+    it "makes keywords parameters even when the script reads arguments" do
+      expect(browser.evaluate("[foo, arguments[0]]", foo: 1)).to eq([1, 1])
+    end
+
+    it "rejects mixing positional and named arguments" do
+      expect { browser.evaluate("a", 1, a: 2) }.to raise_error(ArgumentError, /either positionally or by name/)
+    end
+
+    it "raises for more than one expression" do
+      expect { browser.evaluate("1; 2") }.to raise_error(Ferrum::JavaScriptError, /SyntaxError/)
+    end
+
+    it "runs a script after a leading line break" do
+      expect(browser.evaluate("\n  1 + 1\n")).to eq(2)
+    end
+
+    it "raises when a value that isn't an Error is thrown" do
+      expect { browser.evaluate("(() => { throw 'boom' })()") }.to raise_error(Ferrum::JavaScriptError, /"boom"/)
+    end
+
+    it "waits for a promise returned to #execute" do
+      browser.execute("return new Promise(resolve => setTimeout(() => { window.done = true; resolve() }, 100))")
+
+      expect(browser.evaluate("window.done")).to be(true)
+    end
+
+    it "resolves nodes and dates from Node#evaluate" do
+      browser.go_to("/index")
+      node = browser.at_xpath(".//a")
+
+      expect(node.evaluate("this.parentNode")).to be_a(Ferrum::Node)
+      expect(node.evaluate("new Date(0)")).to be_a(String)
+    end
+  end
+
   describe "#evaluate_handle" do
     it "returns a handle that can be passed back in" do
       browser.go_to("/index")

@@ -105,8 +105,7 @@ page.evaluate(<<~JS, a: 1, b: 2)
 JS
 ```
 
-`await` works directly, and a function declaration's returned promise is
-awaited:
+`await` works directly, and a returned promise is awaited:
 
 ```ruby
 page.evaluate("await fetch(url).then(r => r.text())", url: "/api")
@@ -134,8 +133,7 @@ page.evaluate("Array.from(nodes).map(n => n.textContent)", nodes: list)
 page.at_css("input").evaluate("this.value")
 ```
 
-Scripts written for the old API keep working, and Ferrum warns about any whose
-result will change in the next release, 0.21, with a suggested rewrite. See
+Coming from 0.20 or earlier? See
 [upgrading to 0.21](docs/13-javascript.md#upgrading-to-021).
 
 Do any mouse movements you like:

@@ -57,17 +57,15 @@ page.at_css("input").execute("this.value = text", text: "hello")
 
 #### Upgrading to 0.21
 
-The next release, Ferrum 0.21, finishes the move to the API above. Until then, scripts written for the old API run
-exactly as before, and Ferrum warns, pointing at your code, about any whose result will change. `evaluate_async`,
-`evaluate_func` and `evaluate_on` are deprecated and will be removed in 0.21. Set
-`FERRUM_DEPRECATION_WARNINGS=raise` to turn the warnings into errors while migrating, or `0` to silence them.
+0.21 finishes the move to the API above. Ferrum 0.20 runs old-style scripts as before and warns about each change below,
+pointing at your code, so upgrade to 0.20 first and fix its warnings.
 
-| Warning | In 0.20 | From 0.21 | Rewrite |
+| Script | 0.20 | 0.21 | Rewrite |
 |---|---|---|---|
 | Keyword arguments read through `arguments` | one object in `arguments[0]` | named parameters | `evaluate("options.foo", options: { foo: 1 })` |
 | Mixing positional and keyword arguments | keywords appended as an object | `ArgumentError` | pass the object in braces, or name every argument |
 | More than one expression, `"a(); b"` | returns `a()`, skips the rest | `SyntaxError` | `evaluate("function() { a(); return b }")` |
-| Never runs, a line break before the script | `nil`, nothing runs | runs and returns its value | check it's safe to run, or remove it |
+| A line break before the script | `nil`, nothing runs | runs and returns its value | check it's safe to run, or remove it |
 | Returns a promise | `{}`, not awaited | awaited, raises if rejected | prefix with `void` to keep it from waiting |
 | Returns an object with a `then` method | the object | awaited like a promise | wrap it, `({ value: object })` |
 | Throws something that isn't an `Error` | the thrown value | `Ferrum::JavaScriptError` | return the value instead |

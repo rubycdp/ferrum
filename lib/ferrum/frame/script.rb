@@ -44,9 +44,6 @@ module Ferrum
       # Words after which a `/` starts a regular expression, not a division.
       REGEXP_KEYWORDS = %w[return typeof instanceof in of new delete void throw case do else yield await].freeze
 
-      # @return [String] the script as given.
-      attr_reader :source
-
       # @return [String] the script without surrounding whitespace, comments
       #   and trailing semicolons.
       attr_reader :code
@@ -91,29 +88,7 @@ module Ferrum
       # @return [Boolean]
       #
       def awaits?
-        uses?("await")
-      end
-
-      #
-      # Whether the script mentions the given word as code, rather than as a
-      # property name or inside a string or comment.
-      #
-      # @param [String] word
-      #
-      # @return [Boolean]
-      #
-      def uses?(word)
-        @words.include?(word)
-      end
-
-      #
-      # Whether a line break comes before the code, which right after a
-      # `return` ends that statement.
-      #
-      # @return [Boolean]
-      #
-      def leading_line_break?
-        !@code.empty? && @source[0...@code_start].include?("\n")
+        @words.include?("await")
       end
 
       #
