@@ -177,7 +177,7 @@ describe Ferrum::Frame::Runtime do
     end
   end
 
-  describe "#evaluate_func" do
+  describe "#evaluate with a positional function declaration" do
     let(:function) do
       <<~JS
         function(c) {
@@ -189,7 +189,7 @@ describe Ferrum::Frame::Runtime do
     end
 
     it "evaluates multiple lines of javascript function" do
-      expect(browser.evaluate_func(function, 3)).to eq(6)
+      expect(browser.evaluate(function, 3)).to eq(6)
     end
 
     it "evaluates a function on a node" do
@@ -202,26 +202,11 @@ describe Ferrum::Frame::Runtime do
         }
       JS
 
-      expect(browser.evaluate_func(function, "href", on: node)).to eq("js_redirect")
+      expect(node.evaluate(function, "href")).to eq("js_redirect")
     end
   end
 
-  describe "#evaluate_async" do
-    it "handles values properly" do
-      expect(browser.evaluate_async("arguments[0](null)", 5)).to be_nil
-      expect(browser.evaluate_async("arguments[0](false)", 5)).to be false
-      expect(browser.evaluate_async("arguments[0](true)", 5)).to be true
-      expect(browser.evaluate_async(%(arguments[0]({foo: "bar"})), 5)).to eq("foo" => "bar")
-    end
-
-    it "times out" do
-      expect do
-        browser.evaluate_async("var callback=arguments[0]; setTimeout(function(){callback(true)}, 4000)", 1)
-      end.to raise_error(Ferrum::ScriptTimeoutError)
-    end
-  end
-
-  describe "#evaluate_on" do
+  describe "on a node of the previous page" do
     it "does not retry if node is not around anymore" do
       stub_const("Ferrum::Frame::Runtime::INTERMITTENT_SLEEP", 5)
 
@@ -231,7 +216,7 @@ describe Ferrum::Frame::Runtime do
       browser.go_to("/table")
 
       started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      expect { browser.evaluate_on(node: node, expression: "this.textContent") }.to raise_error(Ferrum::NodeNotFoundError)
+      expect { node.evaluate("this.textContent") }.to raise_error(Ferrum::NodeNotFoundError)
       elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
 
       expect(elapsed).to be < Ferrum::Frame::Runtime::INTERMITTENT_SLEEP
@@ -247,6 +232,236 @@ describe Ferrum::Frame::Runtime do
       expect do
         browser.evaluate("arguments[0].textContent", { "objectId" => object_id })
       end.to raise_error(Ferrum::NodeNotFoundError, /same JavaScript world/)
+    end
+  end
+
+  describe "#evaluate with named arguments" do
+    it "names arguments as function parameters" do
+      expect(browser.evaluate("a + b", a: 1, b: 2)).to eq(3)
+    end
+
+    it "sends each argument separately so nodes stay live" do
+      browser.go_to("/index")
+      node = browser.at_xpath(".//a")
+
+      expect(browser.evaluate("el.getAttribute(name)", el: node, name: "href")).to eq("js_redirect")
+    end
+
+    it "binds by name when the script declares its own parameters" do
+      expect(browser.evaluate("function(a, b) { return a - b }", b: 1, a: 5)).to eq(4)
+    end
+
+    it "raises when an argument isn't a declared parameter" do
+      expect { browser.evaluate("function(a, b) { return [a, b] }", a: 1, c: 2) }
+        .to raise_error(ArgumentError, /"c" not declared by the function, which takes \(a, b\)/)
+    end
+
+    it "passes parameters left out as undefined" do
+      expect(browser.evaluate("function(a, b) { return [typeof a, b] }", b: 2)).to eq(["undefined", 2])
+    end
+
+    it "falls back to insertion order when the parameters can't be read" do
+      expect(browser.evaluate("function({ x }, y = 0) { return x - y }", a: { x: 5 }, b: 1)).to eq(4)
+    end
+
+    it "accepts arrow functions" do
+      expect(browser.evaluate("(a, b) => a * b", a: 3, b: 4)).to eq(12)
+      expect(browser.evaluate("a => a * 2", a: 21)).to eq(42)
+    end
+
+    it "passes nil, hashes and arrays by value" do
+      expect(browser.evaluate("value", value: nil)).to be_nil
+      expect(browser.evaluate("value.foo", value: { foo: "bar" })).to eq("bar")
+      expect(browser.evaluate("value.length", value: [1, 2, 3])).to eq(3)
+    end
+
+    it "accepts reserved names through args:" do
+      expect(browser.evaluate("timeout * 2", args: { timeout: 21 })).to eq(42)
+    end
+
+    it "rejects names that aren't valid JavaScript identifiers" do
+      expect { browser.evaluate("a", args: { "not-an-identifier": 1 }) }
+        .to raise_error(ArgumentError, /not a valid JavaScript parameter name/)
+    end
+
+    it "rejects reserved words and args: that isn't a Hash" do
+      expect { browser.evaluate("1", class: 1) }
+        .to raise_error(ArgumentError, /"class" is not a valid JavaScript parameter name/)
+      expect { browser.evaluate("1", args: [1, 2]) }
+        .to raise_error(ArgumentError, "args: takes a Hash of named arguments, got Array")
+    end
+
+    it "binds parameters with default values by name" do
+      expect(browser.evaluate("function(a = 0, b = 0) { return a - b }", b: 1, a: 3)).to eq(2)
+    end
+
+    it "passes positional arguments through arguments" do
+      expect(browser.evaluate("arguments[0] + arguments[1]", 1, 2)).to eq(3)
+    end
+  end
+
+  describe "#evaluate with a function declaration" do
+    it "evaluates multiple statements" do
+      expect(browser.evaluate(<<~JS, c: 3)).to eq(6)
+        function(c) {
+          let a = 1;
+          let b = 2;
+          return a + b + c;
+        }
+      JS
+    end
+
+    it "evaluates a named function declaration" do
+      expect(browser.evaluate("function sum(a, b) { return a + b }", a: 1, b: 2)).to eq(3)
+    end
+
+    it "treats an immediately invoked function as an expression, not a declaration" do
+      expect(browser.evaluate(<<~JS)).to eq(3)
+        function() {
+          let a = 1;
+          return a + 2;
+        }();
+      JS
+      expect(browser.evaluate("(function() { return 3 })()")).to eq(3)
+      expect(browser.evaluate("(() => 3)()")).to eq(3)
+    end
+
+    it "accepts arrow functions with default and destructured parameters" do
+      expect(browser.evaluate("(a = 1) => a + 41")).to eq(42)
+      expect(browser.evaluate("({ x }) => x", point: { x: 1 })).to eq(1)
+    end
+
+    it "includes a thrown value that isn't an Error in the message" do
+      expect { browser.evaluate("function() { throw 'boom' }") }
+        .to raise_error(Ferrum::JavaScriptError, /"boom"/)
+    end
+
+    it "ignores trailing comments and semicolons when detecting a declaration" do
+      expect(browser.evaluate("function(a) { return a } // adds nothing", a: 1)).to eq(1)
+      expect(browser.evaluate("function(a) { return a };", a: 1)).to eq(1)
+    end
+
+    it "keeps a // inside strings and regular expressions on the last line" do
+      expect(browser.evaluate("'http://example.com'")).to eq("http://example.com")
+      expect(browser.evaluate("function() { return 'http://example.com' }")).to eq("http://example.com")
+      expect(browser.evaluate("'a//b'.replace(/\\/\\//, '-')")).to eq("a-b")
+      expect(browser.evaluate("`${'http'}://example.com`")).to eq("http://example.com")
+    end
+
+    it "ignores comments before a declaration" do
+      expect(browser.evaluate("// doubles\nfunction(a) { return a * 2 }", a: 2)).to eq(4)
+    end
+
+    it "does not call a function that is merely the result of an expression" do
+      expect(browser.evaluate("new Function")).to eq({})
+      expect(browser.evaluate("window.setTimeout")).to eq({})
+    end
+  end
+
+  describe "#evaluate with promises" do
+    it "awaits an expression" do
+      expect(browser.evaluate("await Promise.resolve(42)")).to eq(42)
+    end
+
+    it "awaits a promise returned by a function declaration" do
+      expect(browser.evaluate("function() { return new Promise(resolve => setTimeout(() => resolve(42), 100)) }"))
+        .to eq(42)
+    end
+
+    it "awaits an async function declaration" do
+      expect(browser.evaluate("async function(a) { return await Promise.resolve(a) }", a: 7)).to eq(7)
+    end
+
+    it "propagates a rejection" do
+      expect { browser.evaluate(%(await Promise.reject(new Error("nope")))) }
+        .to raise_error(Ferrum::JavaScriptError, /nope/)
+    end
+
+    it "times out" do
+      expect { browser.evaluate("new Promise(() => {})", timeout: 1) }
+        .to raise_error(Ferrum::ScriptTimeoutError)
+    end
+
+    it "waits past the page timeout when disabled" do
+      with_timeout(1) do
+        expect(browser.evaluate("new Promise(resolve => setTimeout(() => resolve(1), 1500))", timeout: 0)).to eq(1)
+      end
+    end
+
+    it "raises a script timeout that is also a Ferrum::TimeoutError" do
+      expect { browser.evaluate("new Promise(() => {})", timeout: 1) }.to raise_error(Ferrum::TimeoutError)
+    end
+
+    it "times out when the page replaces setTimeout" do
+      browser.execute("window.setTimeout = () => 0")
+
+      expect { browser.evaluate("new Promise(() => {})", timeout: 1) }.to raise_error(Ferrum::ScriptTimeoutError)
+    end
+
+    it "keeps working when the page replaces Promise" do
+      browser.execute("window.Promise = undefined")
+
+      expect(browser.evaluate("a + 1", a: 1)).to eq(2)
+    end
+
+    it "honours a timeout longer than the page timeout" do
+      script = "new Promise(resolve => setTimeout(() => resolve(1), 100))"
+      expect(browser.evaluate(script, timeout: browser.timeout + 5)).to eq(1)
+    end
+  end
+
+  describe "#evaluate_handle" do
+    it "returns a handle that can be passed back in" do
+      browser.go_to("/index")
+      handle = browser.evaluate_handle("document.querySelectorAll('a')")
+
+      expect(handle).to be_a(Ferrum::RemoteObject)
+      expect(browser.evaluate("nodes.length", nodes: handle)).to eq(browser.css("a").size)
+    end
+
+    it "returns nodes as Node" do
+      browser.go_to("/index")
+      expect(browser.evaluate_handle("document.querySelector('a')")).to be_a(Ferrum::Node)
+    end
+
+    it "returns primitives as-is" do
+      expect(browser.evaluate_handle("42")).to eq(42)
+    end
+
+    it "serializes a handle from an iframe" do
+      browser.go_to("/frame_parent")
+      frame = browser.at_css("#childFrame").frame
+
+      expect(frame.evaluate_handle("({ title: document.title })").value).to eq("title" => "This is the child frame title")
+    end
+  end
+
+  describe "Ferrum::Node#evaluate" do
+    before { browser.go_to("/index") }
+
+    it "binds this to the node" do
+      expect(browser.at_xpath(".//a").evaluate("this.getAttribute('href')")).to eq("js_redirect")
+    end
+
+    it "accepts named arguments" do
+      expect(browser.at_xpath(".//a").evaluate("this.getAttribute(name)", name: "href")).to eq("js_redirect")
+    end
+
+    it "resolves nodes returned by a function declaration" do
+      expect(browser.at_xpath(".//a").evaluate("function() { return this.parentNode }")).to be_a(Ferrum::Node)
+    end
+
+    it "defines a named function with #execute instead of calling it" do
+      browser.execute("function setup() { window.ran = true }")
+
+      expect(browser.evaluate("window.ran")).to be_nil
+    end
+
+    it "runs statements with #execute" do
+      node = browser.at_xpath(".//a")
+      node.execute("this.dataset.touched = value", value: "yes")
+
+      expect(node.evaluate("this.dataset.touched")).to eq("yes")
     end
   end
 

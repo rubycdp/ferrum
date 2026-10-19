@@ -46,7 +46,7 @@ module Ferrum
     def awaited: () -> String
   end
 
-  class ScriptTimeoutError < Error
+  class ScriptTimeoutError < TimeoutError
     def message: () -> "Timed out waiting for evaluated script to return a value"
   end
 

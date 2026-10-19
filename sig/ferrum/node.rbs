@@ -7,6 +7,7 @@ module Ferrum
     @node_id: untyped
     @object_id: untyped
     @document_version: ::Integer
+    @runtime: Frame::Runtime
 
     attr_reader page: untyped
 
@@ -16,7 +17,7 @@ module Ferrum
 
     attr_reader tag_name: untyped
 
-    def initialize: (untyped frame, untyped target_id, untyped node_id, untyped description) -> void
+    def initialize: (Frame::Runtime frame, untyped target_id, untyped description, ?object_id: untyped, ?node_id: untyped) -> void
 
     def node?: () -> untyped
 
@@ -68,7 +69,11 @@ module Ferrum
 
     def select: (*untyped values, ?by: ::Symbol) -> untyped
 
-    def evaluate: (untyped expression) -> untyped
+    def evaluate: (untyped expression, *untyped positional, **untyped keywords) -> untyped
+
+    def evaluate_handle: (untyped expression, *untyped positional, **untyped keywords) -> untyped
+
+    def execute: (untyped expression, *untyped positional, **untyped keywords) -> true
 
     def ==: (untyped other) -> (false | untyped)
 

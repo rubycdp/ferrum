@@ -1,0 +1,83 @@
+module Ferrum
+  class Frame
+    class Script
+      FUNCTION_DECLARATION: ::Regexp
+
+      NAMED_FUNCTION: ::Regexp
+
+      SINGLE_PARAMETER_ARROW: ::Regexp
+
+      ASYNC_PREFIX: ::Regexp
+
+      ARROW: ::Regexp
+
+      PARAMETER: ::Regexp
+
+      JS_IDENTIFIER: ::Regexp
+
+      RESERVED_WORDS: ::Array[::String]
+
+      NOISE: ::Regexp
+
+      STRING: ::Regexp
+
+      TEMPLATE_CHUNK: ::Regexp
+
+      REGEXP: ::Regexp
+
+      WORD: ::Regexp
+
+      VALUE_END: ::Regexp
+
+      REGEXP_KEYWORDS: ::Array[::String]
+
+      @code_start: ::Integer
+
+      @code_end: ::Integer
+
+      @body_end: ::Integer?
+
+      @paren_open: ::Integer?
+
+      @paren_close: ::Integer?
+
+      @parameter_commas: ::Array[::Integer]
+
+      @words: ::Set[::String]
+
+      attr_reader source: ::String
+
+      attr_reader code: ::String
+
+      def initialize: (untyped source) -> void
+
+      def declaration?: () -> bool
+
+      def named_function?: () -> bool
+
+      def awaits?: () -> bool
+
+      def uses?: (::String word) -> bool
+
+      def leading_line_break?: () -> bool
+
+      def parameters: () -> ::Array[::String]?
+
+      private
+
+      def arrow?: () -> bool
+
+      def scan: () -> void
+
+      def scan_token: (::StringScanner scanner, ::Array[::String | ::Symbol] stack, ::String? previous) -> ::String
+
+      def scan_punctuator: (::StringScanner scanner, ::Array[::String | ::Symbol] stack) -> ::String
+
+      def track_parameters: (::String char, ::Integer position, ::Array[::String | ::Symbol] stack) -> void
+
+      def scan_template: (::StringScanner scanner, ::Array[::String | ::Symbol] stack) -> ::String
+
+      def regexp_allowed?: (::String? previous) -> bool
+    end
+  end
+end

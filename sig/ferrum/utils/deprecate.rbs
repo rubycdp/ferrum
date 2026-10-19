@@ -1,0 +1,13 @@
+module Ferrum
+  module Utils
+    module Deprecate
+      self.@seen: Concurrent::Set[::String]
+
+      def self?.warn: (::String message, ?user_code: bool) -> void
+
+      def self?.reset!: () -> void
+
+      def self?.skip?: (::String path, bool user_code) -> bool
+    end
+  end
+end
