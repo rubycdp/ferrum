@@ -31,7 +31,7 @@ module Ferrum
     delegate %i[go_to goto go back forward refresh reload stop wait_for_reload
                 at_css at_xpath css xpath wait_for_selector current_url current_title url title
                 body doctype content=
-                headers cookies network accessibility downloads
+                headers cookies network console accessibility downloads
                 mouse keyboard
                 screenshot pdf mhtml viewport_size device_pixel_ratio
                 start_screencast stop_screencast
@@ -77,8 +77,8 @@ module Ferrum
     #   An array of paths to files or JS source code to be preloaded into the
     #   browser e.g.: `["/path/to/script.js", { source: "window.secret = 'top'" }]`
     #
-    # @option options [#puts] :logger
-    #   When present, debug output is written to this object.
+    # @option options [#puts, Logger] :logger
+    #   When present, debug output is written to this object, see {Log}.
     #
     # @option options [Integer, Float] :slowmo
     #   Set a delay in seconds to wait before sending a command.

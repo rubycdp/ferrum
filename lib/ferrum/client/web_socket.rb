@@ -15,14 +15,13 @@ module Ferrum
     class WebSocket
       WEBSOCKET_BUG_SLEEP = 0.05
       DEFAULT_PORTS = { "ws" => 80, "wss" => 443 }.freeze
-      SKIP_LOGGING_SCREENSHOTS = !ENV["FERRUM_LOGGING_SCREENSHOTS"]
       ESCAPE_OR_LONE_SURROGATE = /\\u[dD][89abAB]\h{2}\\u[dD][c-fC-F]\h{2}|\\u([dD][89a-fA-F]\h{2})|\\./
 
       attr_reader :url, :messages
 
-      def initialize(url, max_receive_size, logger)
+      def initialize(url, max_receive_size, log)
         @url    = url
-        @logger = logger
+        @log    = log
         uri     = URI.parse(@url)
         port    = uri.port || DEFAULT_PORTS[uri.scheme]
 
@@ -42,8 +41,6 @@ module Ferrum
         # callers, pong/close replies from the reader. One lock keeps frames from interleaving.
         @driver_mutex = Mutex.new
         @messages = Queue.new
-
-        @screenshot_commands = Concurrent::Hash.new if SKIP_LOGGING_SCREENSHOTS
 
         @driver.on(:open,    &method(:on_open))
         @driver.on(:message, &method(:on_message))
@@ -73,13 +70,7 @@ module Ferrum
       #
       def on_message(event)
         data = safely_parse_json(event.data)
-        output = event.data
-        if SKIP_LOGGING_SCREENSHOTS && @screenshot_commands[data&.dig("id")]
-          @screenshot_commands.delete(data&.dig("id"))
-          output.sub!(/{"data":"[^"]*"}/, %("Set FERRUM_LOGGING_SCREENSHOTS=true to see screenshots in Base64"))
-        end
-
-        @logger&.puts("    ◀ #{Utils::ElapsedTime.elapsed_time} #{output}\n")
+        @log&.received(data, event.data, self)
 
         # If we couldn't parse JSON data for some reason (parse error or deeply nested object) we
         # don't push response to @messages. Worse that could happen we raise timeout error due to command didn't return
@@ -118,8 +109,6 @@ module Ferrum
       #   is closed, since the frame was cut off midway.
       #
       def send_message(data, timeout = nil)
-        @screenshot_commands[data[:id]] = true if SKIP_LOGGING_SCREENSHOTS
-
         json = data.to_json
         @driver_mutex.synchronize do
           @write_timeout = timeout
@@ -127,7 +116,7 @@ module Ferrum
         ensure
           @write_timeout = nil
         end
-        @logger&.puts("\n\n▶ #{Utils::ElapsedTime.elapsed_time} #{json}")
+        @log&.sent(data, self)
       end
 
       #

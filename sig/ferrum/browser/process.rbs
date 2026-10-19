@@ -7,6 +7,8 @@ module Ferrum
 
       LOCAL_HOSTS: ::Array[String]
 
+      WS_URL: Regexp
+
       attr_reader host: String?
 
       attr_reader port: ::Integer?
@@ -19,10 +21,13 @@ module Ferrum
 
       attr_reader xvfb: Browser::Xvfb?
 
+      attr_reader output: Output
+
       @pid: ::Integer?
       @xvfb: Browser::Xvfb?
       @user_data_dir: String?
-      @logger: (IO | nil)
+      @log: Log?
+      @output: Output
       @process_timeout: ::Integer
       @env: Hash[String, String]
       @command: Browser::Command?
@@ -47,21 +52,21 @@ module Ferrum
 
       private
 
+      def spawn_browser: (IO io) -> void
+
       def sync_stop: () -> nil
 
       def async_stop: () -> Thread
 
       def remove_user_data_dir: () -> void
 
-      def parse_ws_url: (IO read_io, ::Integer timeout) -> String?
+      def parse_ws_url: () -> void
 
       def ws_url=: (String? url) -> void
 
       def rewrite_host: (String url) -> String
 
       def fetch_ws_url: (Addressable::URI | String url) -> String
-
-      def close_io: (*IO ios) -> void
 
       def json_version_url: (Addressable::URI | String url) -> Addressable::URI
 

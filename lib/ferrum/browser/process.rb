@@ -8,6 +8,7 @@ require "forwardable"
 require "ferrum/browser/options/base"
 require "ferrum/browser/options/chrome"
 require "ferrum/browser/process/killer"
+require "ferrum/browser/process/output"
 require "ferrum/browser/command"
 require "ferrum/utils/elapsed_time"
 require "ferrum/utils/platform"
@@ -27,6 +28,7 @@ module Ferrum
       HTTP_SCHEMES = { "ws" => "http", "wss" => "https" }.freeze
       WS_SCHEMES = { "http" => "ws", "https" => "wss" }.freeze
       LOCAL_HOSTS = %w[0.0.0.0 :: 127.0.0.1 ::1 localhost].freeze
+      WS_URL = %r{DevTools listening on (ws://.*[a-zA-Z0-9-]{36})}
 
       delegate path: :command
 
@@ -44,16 +46,23 @@ module Ferrum
 
       attr_reader :host, :port, :ws_url, :pid, :command, :xvfb
 
+      # What the browser process wrote to stdout and stderr, empty for a
+      # browser Ferrum didn't launch.
+      #
+      # @return [Output]
+      attr_reader :output
+
       def initialize(options)
         @pid = @xvfb = @user_data_dir = nil
         @requested_host = options.host
+        @log = options.log
+        @output = Output.new(@log)
 
         if options.ws_url || options.url
           self.ws_url = options.ws_url || fetch_ws_url(options.url)
           return
         end
 
-        @logger = options.logger
         @process_timeout = options.process_timeout
         @env = Hash(options.env)
 
@@ -71,20 +80,13 @@ module Ferrum
         return if ws_url
 
         begin
-          read_io, write_io = IO.pipe
-          process_options = { in: File::NULL }
-          process_options[:pgroup] = true unless Utils::Platform.windows?
-          process_options[:out] = process_options[:err] = write_io
-
           @xvfb = Xvfb.start(@command.options) if @command.xvfb?
-
-          env = Hash(@xvfb&.to_env).merge(@env)
-          @pid = ::Process.spawn(env, *@command.to_a, process_options)
-          ObjectSpace.define_finalizer(self, Killer.finalizer([@pid, @xvfb&.pid], @user_data_dir))
-
-          parse_ws_url(read_io, @process_timeout)
+          @output = Output.new(@log)
+          @output.pipe { |io| spawn_browser(io) }
+          parse_ws_url
+          @output.follow
         ensure
-          close_io(read_io, write_io)
+          @output.close unless ws_url
         end
       end
 
@@ -138,6 +140,15 @@ module Ferrum
 
       private
 
+      def spawn_browser(io)
+        process_options = { in: File::NULL, out: io, err: io }
+        process_options[:pgroup] = true unless Utils::Platform.windows?
+        env = Hash(@xvfb&.to_env).merge(@env)
+
+        @pid = ::Process.spawn(env, *@command.to_a, process_options)
+        ObjectSpace.define_finalizer(self, Killer.finalizer([@pid, @xvfb&.pid], @user_data_dir))
+      end
+
       def sync_stop
         if @pid
           Killer.kill(@pid)
@@ -145,6 +156,7 @@ module Ferrum
           @pid = nil
         end
 
+        @output.close
         remove_user_data_dir if @user_data_dir
         ObjectSpace.undefine_finalizer(self)
         nil
@@ -160,11 +172,13 @@ module Ferrum
         pid = @pid
         xvfb_pid = @xvfb&.pid
         user_data_dir = @user_data_dir
+        output = @output
         @pid = @user_data_dir = nil
 
         Utils::Thread.spawn do
           Killer.kill(pid) if pid
           Killer.kill(xvfb_pid) if xvfb_pid
+          output.close
           Killer.remove_directory(user_data_dir) if user_data_dir
           ObjectSpace.undefine_finalizer(self)
         end
@@ -175,28 +189,11 @@ module Ferrum
         @user_data_dir = nil
       end
 
-      def parse_ws_url(read_io, timeout)
-        output = ""
-        start = Utils::ElapsedTime.monotonic_time
-        max_time = start + timeout
-        regexp = %r{DevTools listening on (ws://.*[a-zA-Z0-9-]{36})}
-        while (now = Utils::ElapsedTime.monotonic_time) < max_time
-          begin
-            output += read_io.read_nonblock(512)
-          rescue IO::WaitReadable
-            read_io.wait_readable(max_time - now)
-          else
-            if output.match(regexp)
-              self.ws_url = rewrite_host(output.match(regexp)[1].strip)
-              break
-            end
-          end
-        end
+      def parse_ws_url
+        match = @output.wait_for(WS_URL, @process_timeout)
+        raise ProcessTimeoutError.new(@process_timeout, @output.to_s) unless match
 
-        return if ws_url
-
-        @logger&.puts(output)
-        raise ProcessTimeoutError.new(timeout, output)
+        self.ws_url = rewrite_host(match[1].strip)
       end
 
       def ws_url=(url)
@@ -209,14 +206,6 @@ module Ferrum
         uri = Addressable::URI.parse(url)
         uri.host = @requested_host
         uri.to_s
-      end
-
-      def close_io(*ios)
-        ios.each do |io|
-          io.close if io && !io.closed?
-        rescue IOError
-          raise unless RUBY_ENGINE == "jruby"
-        end
       end
 
       def fetch_ws_url(url)

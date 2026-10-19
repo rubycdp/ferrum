@@ -71,7 +71,7 @@ describe Ferrum::Downloads do
     end
 
     context "with the browser's implicit context" do
-      it "saves an attachment", local_browser: true do
+      it "saves an attachment", :launch do
         with_external_browser(incognito: false) do |url|
           remote = Ferrum::Browser.new(url: url, base_url: base_url, save_path: save_path)
           remote_page = remote.create_page

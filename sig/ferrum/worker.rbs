@@ -7,6 +7,7 @@ module Ferrum
     attr_reader target_id: String
     attr_reader url: String
     attr_reader network: Network
+    attr_reader console: Console
 
     @client: (Client | SessionClient)
     @target_id: String
@@ -15,6 +16,7 @@ module Ferrum
     @page: Worker
     @execution_id: untyped
     @network: Network
+    @console: Console
 
     def initialize: ((Client | SessionClient) client, target_id: String, url: String) -> void
 

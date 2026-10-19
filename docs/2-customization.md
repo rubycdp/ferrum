@@ -23,8 +23,8 @@ Ferrum::Browser.new(options)
     * `:extensions` (Array[String | Hash]) - An array of paths to files or JS
       source code to be preloaded into the browser e.g.:
       `["/path/to/script.js", { source: "window.secret = 'top'" }]`
-    * `:logger` (Object responding to `puts`) - When present, debug output is
-      written to this object.
+    * `:logger` (Object responding to `puts`, or a `Logger`) - When present, debug output is
+      written to it, see [Logging](#logging).
     * `:slowmo` (Integer | Float) - Set a delay in seconds to wait before sending command.
       Useful companion of headless option, so that you have time to see changes.
     * `:timeout` (Numeric) - The number of seconds we'll wait for a response when
@@ -59,6 +59,55 @@ Ferrum::Browser.new(options)
     * `:proxy` (Hash) - Specify proxy settings, [read more](https://github.com/rubycdp/ferrum#proxy)
     * `:save_path` (String) - Path to save attachments with [Content-Disposition](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition) header.
     * `:env` (Hash) - Environment variables you'd like to pass through to the process
+
+## Logging
+
+With `:logger`, or `FERRUM_LOG` set to print to `$stdout`, Ferrum writes two channels:
+
+* `protocol` - every CDP message sent (`▶`) and received (`◀`). String values longer than 1024 characters, such as
+  Base64 screenshots, are cut; set `FERRUM_LOG_VALUE_LENGTH` to another length, or to `0` to keep them whole.
+* `browser` - what the Chrome process Ferrum launched writes to stdout and stderr.
+
+`FERRUM_LOG` picks what's written, as a comma-separated list:
+
+```sh
+FERRUM_LOG=*                         # everything, what to attach to a bug report
+FERRUM_LOG=*,-browser                # everything but Chrome's output
+FERRUM_LOG=*,-Network.*,-Target.*    # leave out CDP messages whose method matches
+FERRUM_LOG=Page.*,Runtime.evaluate   # only CDP messages whose method matches
+FERRUM_LOG=0                         # nothing, even with :logger
+```
+
+Items with a dot are CDP method patterns, a leading `-` leaves things out and wins over the rest, and a response is
+kept or dropped with the command it answers. Without `FERRUM_LOG`, `:logger` gets everything. `FERRUM_DEBUG` still
+works as `FERRUM_LOG=*`, but is deprecated.
+
+`FERRUM_LOG_FORMAT` picks how CDP messages look. `json` writes each message as JSON alone, one per line and never
+colored, for tools such as `jq`. `annotated` puts the command id and method in front of each CDP message, one line
+each, and gives a response the method of its command and how long the answer took. Params, results and events stay
+whole JSON:
+
+```
+▶ 1.623 #23 Page.navigate {"url":"http://127.0.0.1:5000/console_log"} @4E470240
+    ◀ 1.637 #23 Page.navigate 14ms {"frameId":"325D8B09…","loaderId":"64738D2F…"} @4E470240
+    ◀ 1.640 Runtime.consoleAPICalled {"type":"warning","args":[{"type":"string","value":"hey"}],…} @4E470240
+```
+
+Without `FERRUM_LOG_FORMAT`, lines look as they always have, `▶ 1.623 {"id":23,"method":"Page.navigate",...}`.
+
+Written to a terminal, lines are colored with the basic ANSI colors, which follow the terminal's light or dark theme:
+arrows are colored by kind (sent, response, error, event), methods are bold and times dimmed. The text stays the
+same, and files, pipes, `StringIO` and `Logger`s get it without colors, as does a terminal when `NO_COLOR` is set.
+`FERRUM_LOG_COLOR=always` or `never` overrides both.
+
+A `Logger` gets every line at debug level, with `ferrum:protocol` or `ferrum:browser` as program name, and nothing is
+built when its level is higher.
+
+Console messages aren't logged, subscribe to them with [`page.on(:console)`](/docs/ferrum/javascript#console) and
+write them wherever you like.
+
+Chrome's output is also kept when nothing is logged: `browser.process.output.lines` holds its last 100 lines, and
+`ProcessTimeoutError#output` has them when Chrome doesn't start.
 
 ## The crashpad handler
 

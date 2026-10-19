@@ -1,0 +1,67 @@
+module Ferrum
+  class Console
+    class Message
+      SEVERITIES: Hash[Symbol, Symbol]
+      UNSERIALIZABLE: Hash[String, ::Float]
+
+      attr_reader type: Symbol
+      attr_reader source: Symbol
+      attr_reader timestamp: ::Time
+
+      @type: Symbol
+      @source: Symbol
+      @timestamp: ::Time
+      @raw_args: Array[Hash[String, untyped]]
+      @raw_text: String?
+      @frames: Array[Hash[String, untyped]]
+      @text: String?
+      @args: Array[untyped]?
+      @stack_trace: Array[Location]?
+
+      def self.from_console_api: (Hash[String, untyped] params) -> Message
+
+      def self.from_log_entry: (Hash[String, untyped] entry) -> Message
+
+      def self.from_exception: (Hash[String, untyped] params) -> Message
+
+      def initialize: (type: String, source: String, timestamp: ::Numeric?, ?raw_args: Array[Hash[String, untyped]]?,
+                       ?raw_text: String?, ?frames: Array[Hash[String, untyped]]?) -> void
+
+      def text: () -> String
+
+      def args: () -> Array[untyped]
+
+      def stack_trace: () -> Array[Location]
+
+      def location: () -> Location?
+
+      def severity: () -> (:debug | :info | :warn | :error)
+
+      def error?: () -> bool
+
+      def warning?: () -> bool
+
+      def match?: (Regexp | String pattern) -> bool
+
+      def to_s: () -> String
+
+      def inspect: () -> String
+
+      private
+
+      def underscore: (String? name) -> Symbol
+
+      def arg_text: (Hash[String, untyped] arg) -> String
+
+      def arg_value: (Hash[String, untyped] arg) -> untyped
+
+      def preview_value: (Hash[String, untyped]? preview) -> (Hash[String, untyped] | Array[untyped])?
+
+      def property_value: (Hash[String, untyped] property) -> untyped
+
+      def unserializable: (String value) -> (::Float | ::Integer | String)
+
+      def parse_number: (String value) -> (::Float | ::Integer | String)
+    end
+  end
+end

@@ -1,0 +1,17 @@
+module Ferrum
+  class Log
+    class Default
+      include Paint
+
+      def initialize: (?color: bool) -> void
+
+      def sent: (Hash[Symbol, untyped] message, ::Float elapsed) -> String
+
+      def received: (Hash[String, untyped]? message, String raw, ::Float elapsed, ?[String, ::Float]? _command) -> String
+
+      private
+
+      def payload: (Hash[Symbol | String, untyped] message, String? method) -> String
+    end
+  end
+end

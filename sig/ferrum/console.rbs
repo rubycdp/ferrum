@@ -1,0 +1,42 @@
+module Ferrum
+  class Console
+    include Enumerable[Console::Message]
+
+    LIMIT: ::Integer
+
+    @page: (Page | Worker)
+    @messages: Array[Console::Message]
+    @listeners: ::Concurrent::Map[::Integer, ^(Console::Message) -> void]
+    @listener_id: ::Concurrent::AtomicFixnum
+    @mutex: ::Thread::Mutex
+
+    def initialize: ((Page | Worker) page) -> void
+
+    def each: () { (Console::Message) -> void } -> self
+            | () -> ::Enumerator[Console::Message, self]
+
+    def to_a: () -> Array[Console::Message]
+
+    def last: () -> Console::Message?
+
+    def size: () -> ::Integer
+
+    def empty?: () -> bool
+
+    def clear: () -> self
+
+    def on: () { (Console::Message) -> void } -> ::Integer
+
+    def off: (::Integer id) -> void
+
+    def subscribe: () -> void
+
+    def inspect: () -> String
+
+    private
+
+    def replayed?: (Hash[String, untyped] params) -> bool
+
+    def add: (Console::Message message) -> void
+  end
+end

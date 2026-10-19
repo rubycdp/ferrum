@@ -160,7 +160,7 @@ module Ferrum
       @ws_url = ws_url
       @options = options
       @pendings = Concurrent::Hash.new
-      @ws = WebSocket.new(ws_url, options.ws_max_receive_size, options.logger)
+      @ws = WebSocket.new(ws_url, options.ws_max_receive_size, options.log)
       @subscriber = Subscriber.new
 
       start

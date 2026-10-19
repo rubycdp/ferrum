@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "logger"
 require "ferrum/proxy"
 
 describe Ferrum::Browser do
@@ -17,7 +18,7 @@ describe Ferrum::Browser do
         end
       end
 
-      it "supports custom chrome path", local_browser: true do
+      it "supports custom chrome path", :launch do
         original_path = "#{PROJECT_ROOT}/spec/support/chrome_path"
         File.write(original_path, browser.process.path)
 
@@ -43,18 +44,227 @@ describe Ferrum::Browser do
       end
     end
 
-    it "supports :logger argument", local_browser: true do
-      browser = Ferrum::Browser.new(logger: logger)
-      browser.go_to(base_url("/console_log"))
-      expect(logger.string).to include("Hello world")
-      expect(logger.string).to include("[log] Hello world")
-      expect(logger.string).to include("at window.onload")
-      expect(logger.string).to include("/console_log")
+    context ":logger argument" do
+      it "supports :logger argument", :launch do
+        browser = Ferrum::Browser.new(logger: logger)
+        browser.go_to(base_url("/console_log"))
+
+        wait_for { logger.string }.to include("Runtime.consoleAPICalled")
+        expect(logger.string).to include("DevTools listening on")
+        expect(logger.string).not_to include("[log] Hello world")
+      ensure
+        browser&.quit
+      end
+
+      it "writes to a Logger at debug level", :launch do
+        browser = Ferrum::Browser.new(logger: Logger.new(logger, level: :debug))
+        browser.go_to(base_url("/console_log"))
+
+        expect(logger.string).to include("DEBUG -- ferrum:browser: DevTools listening on")
+        expect(logger.string).to include("DEBUG -- ferrum:protocol: \n\n▶")
+      ensure
+        browser&.quit
+      end
+
+      it "writes nothing to a Logger above debug level", :launch do
+        browser = Ferrum::Browser.new(logger: Logger.new(logger, level: :info))
+        browser.go_to(base_url("/console_log"))
+
+        expect(logger.string).to be_empty
+      ensure
+        browser&.quit
+      end
+
+      it "logs to $stdout with FERRUM_LOG", :launch do
+        with_env("FERRUM_LOG" => "browser") do
+          expect do
+            Ferrum::Browser.new.quit
+          end.to output(/DevTools listening on/).to_stdout
+        end
+      end
+
+      it "logs nothing with FERRUM_LOG=0", :launch do
+        with_env("FERRUM_LOG" => "0") do
+          browser = Ferrum::Browser.new(logger: logger)
+          browser.go_to(base_url("/console_log"))
+
+          expect(logger.string).to be_empty
+        ensure
+          browser&.quit
+        end
+      end
+
+      it "logs everything with the deprecated FERRUM_DEBUG", :launch do
+        with_env("FERRUM_DEBUG" => "true") do
+          browser = Ferrum::Browser.new(logger: logger)
+          browser.go_to(base_url("/console_log"))
+
+          expect(logger.string).to include("Page.navigate")
+          expect(logger.string).to include("DevTools listening on")
+        ensure
+          browser&.quit
+        end
+      end
+
+      it "leaves out the channels excluded in FERRUM_LOG", :launch do
+        with_env("FERRUM_LOG" => "*,-browser") do
+          browser = Ferrum::Browser.new(logger: logger)
+          browser.go_to(base_url("/console_log"))
+
+          expect(logger.string).to include("Page.navigate")
+          expect(logger.string).not_to include("DevTools listening on")
+        ensure
+          browser&.quit
+        end
+      end
+
+      it "logs only CDP messages matching FERRUM_LOG", :launch do
+        with_env("FERRUM_LOG" => "Page.navigate") do
+          browser = Ferrum::Browser.new(logger: logger)
+          browser.go_to(base_url("/console_log"))
+
+          expect(logger.string).to include(%("method":"Page.navigate"))
+          expect(logger.string).to match(/"result":\{"frameId":"\h+","loaderId"/)
+          expect(logger.string).not_to include("Runtime.")
+          expect(logger.string).not_to include("DevTools listening on")
+        ensure
+          browser&.quit
+        end
+      end
+
+      it "leaves out CDP messages excluded in FERRUM_LOG", :launch do
+        with_env("FERRUM_LOG" => "protocol,-Network.*,-Page.navigate") do
+          browser = Ferrum::Browser.new(logger: logger)
+          browser.go_to(base_url("/console_log"))
+
+          wait_for { logger.string }.to include("Runtime.consoleAPICalled")
+          expect(logger.string).not_to include("Network.")
+          expect(logger.string).not_to include("Page.navigate")
+          expect(logger.string).not_to match(/"result":\{"frameId":"\h+","loaderId"/)
+        ensure
+          browser&.quit
+        end
+      end
+
+      it "writes CDP messages as JSON alone with FERRUM_LOG_FORMAT=json", :launch do
+        with_env("FERRUM_LOG" => "protocol", "FERRUM_LOG_FORMAT" => "json") do
+          def logger.tty? = true
+          browser = Ferrum::Browser.new(logger: logger)
+          browser.go_to(base_url("/console_log"))
+
+          messages = logger.string.lines.map { |line| JSON.parse(line) }
+          expect(messages).to include(a_hash_including("method" => "Page.navigate", "params" => { "url" => base_url("/console_log") }))
+          expect(messages).to include(a_hash_including("id" => a_kind_of(Integer), "result" => a_hash_including("frameId")))
+        ensure
+          browser&.quit
+        end
+      end
+
+      it "annotates CDP messages with FERRUM_LOG_FORMAT=annotated", :launch do
+        with_env("FERRUM_LOG_FORMAT" => "annotated") do
+          browser = Ferrum::Browser.new(logger: logger)
+          browser.go_to(base_url("/console_log"))
+
+          expect(logger.string).to match(%r{^▶ \d+\.\d{3} #\d+ Page\.navigate \{"url":"http://[^"]+/console_log"\} @\h{8}$})
+          id = logger.string[/▶ \S+ #(\d+) Page\.navigate/, 1]
+          expect(logger.string).to match(/^    ◀ \d+\.\d{3} ##{id} Page\.navigate \d+ms \{"frameId":"\h+",.+\} @\h{8}$/)
+          wait_for { logger.string }.to match(/^    ◀ \d+\.\d{3} Runtime\.consoleAPICalled \{"type":"log"/)
+        ensure
+          browser&.quit
+        end
+      end
+
+      it "colors protocol lines written to a terminal", :launch do
+        def logger.tty? = true
+        browser = Ferrum::Browser.new(logger: logger)
+        browser.go_to(base_url("/console_log"))
+
+        expect(logger.string).to include(%("method":"\e[1mPage.navigate\e[0m"))
+        expect(logger.string).to include("\e[36m▶\e[0m")
+      ensure
+        browser&.quit
+      end
+
+      it "writes plain text when not writing to a terminal", :launch do
+        browser = Ferrum::Browser.new(logger: logger)
+        browser.go_to(base_url("/console_log"))
+
+        expect(logger.string).to include("Page.navigate")
+        expect(logger.string).not_to include("\e[")
+      ensure
+        browser&.quit
+      end
+
+      it "colors lines written anywhere with FERRUM_LOG_COLOR=always", :launch do
+        with_env("FERRUM_LOG_COLOR" => "always") do
+          browser = Ferrum::Browser.new(logger: logger)
+          browser.go_to(base_url("/console_log"))
+
+          expect(logger.string).to include("\e[36m▶\e[0m")
+        ensure
+          browser&.quit
+        end
+      end
+
+      it "writes plain text to a terminal with FERRUM_LOG_COLOR=never", :launch do
+        with_env("FERRUM_LOG_COLOR" => "never") do
+          def logger.tty? = true
+          browser = Ferrum::Browser.new(logger: logger)
+          browser.go_to(base_url("/console_log"))
+
+          expect(logger.string).to include("Page.navigate")
+          expect(logger.string).not_to include("\e[")
+        ensure
+          browser&.quit
+        end
+      end
+
+      it "keeps the browser working when the logger fails", :launch do
+        broken = Object.new
+        def broken.puts(*) = raise(IOError, "closed stream")
+        browser = nil
+
+        expect do
+          browser = Ferrum::Browser.new(logger: broken)
+          browser.go_to(base_url("/console_log"))
+        end.to output(/couldn't write to the logger, IOError: closed stream/).to_stderr
+        expect(browser.evaluate("1 + 1")).to eq(2)
+      ensure
+        browser&.quit
+      end
+
+      it "logs CDP messages nested deeper than JSON's default limit", :launch do
+        browser = Ferrum::Browser.new(logger: logger)
+        browser.go_to(base_url("/deeply_nested"))
+
+        expect(browser.evaluate(%(document.getElementById("text"))).text).to eq("text")
+        expect(logger.string).to include("DOM.describeNode")
+      ensure
+        browser&.quit
+      end
+
+      it "shortens long strings in logged CDP messages", :launch, skip: Ferrum::Log::VALUE_LENGTH.zero? do
+        browser = Ferrum::Browser.new(logger: logger)
+        browser.go_to(base_url("/console_log"))
+        screenshot = browser.screenshot(encoding: :base64)
+
+        expect(logger.string).not_to include(screenshot)
+        expect(logger.string).to include("#{screenshot[0, Ferrum::Log::VALUE_LENGTH]}... (" \
+                                         "#{screenshot.size - Ferrum::Log::VALUE_LENGTH} more characters)")
+      ensure
+        browser&.quit
+      end
+    end
+
+    it "keeps the output of the browser process", :launch do
+      browser = Ferrum::Browser.new
+
+      expect(browser.process.output.lines).to include(a_string_starting_with("DevTools listening on"))
     ensure
       browser&.quit
     end
 
-    it "supports :ignore_default_browser_options argument", local_browser: true do
+    it "supports :ignore_default_browser_options argument", :launch do
       defaults = Ferrum::Browser::Options::Chrome.options.except("mute-audio")
       browser = Ferrum::Browser.new(ignore_default_browser_options: true,
                                     browser_options: defaults.merge("no-sandbox" => nil))
@@ -92,7 +302,7 @@ describe Ferrum::Browser do
     end
 
     context ":extensions argument" do
-      it "extends the browser's world with files", local_browser: true do
+      it "extends the browser's world with files", :launch do
         browser = Ferrum::Browser.new(base_url: base_url,
                                       extensions: [File.expand_path("support/geolocation.js", __dir__)])
 
@@ -113,7 +323,7 @@ describe Ferrum::Browser do
         browser&.quit
       end
 
-      it "extends the browser's world with source", local_browser: true do
+      it "extends the browser's world with source", :launch do
         browser = Ferrum::Browser.new(base_url: base_url,
                                       extensions: [{ source: "window.secret = 'top'" }])
 
@@ -124,7 +334,7 @@ describe Ferrum::Browser do
         browser&.quit
       end
 
-      it "errors when extension is unavailable", local_browser: true do
+      it "errors when extension is unavailable", :launch do
         browser = Ferrum::Browser.new(extensions: [File.expand_path("../support/non_existent.js", __dir__)])
         expect { browser.go_to }.to raise_error(Errno::ENOENT)
       ensure
@@ -132,7 +342,7 @@ describe Ferrum::Browser do
       end
     end
 
-    it "supports :port argument", local_browser: true do
+    it "supports :port argument", :launch do
       browser = Ferrum::Browser.new(port: 12_345)
       browser.go_to(base_url)
 
@@ -141,7 +351,7 @@ describe Ferrum::Browser do
       browser&.quit
     end
 
-    it "supports :url argument", local_browser: true do
+    it "supports :url argument", :launch do
       with_external_browser do |url, _process|
         browser = Ferrum::Browser.new(url: url)
         browser.go_to(base_url)
@@ -211,7 +421,7 @@ describe Ferrum::Browser do
       upstream&.close
     end
 
-    it "supports :url argument with a query string", local_browser: true do
+    it "supports :url argument with a query string", :launch do
       with_external_browser do |url, _process|
         with_token_authenticated_proxy(url, token: "secret") do |proxy_url|
           browser = Ferrum::Browser.new(url: proxy_url)
@@ -226,7 +436,7 @@ describe Ferrum::Browser do
       end
     end
 
-    it "adds headers when /json/version has no User-Agent", local_browser: true do
+    it "adds headers when /json/version has no User-Agent", :launch do
       with_external_browser do |url, _process|
         with_token_authenticated_proxy(url, token: "secret", json_version: :without_user_agent) do |proxy_url|
           browser = Ferrum::Browser.new(url: proxy_url, base_url: base_url)
@@ -241,7 +451,7 @@ describe Ferrum::Browser do
       end
     end
 
-    it "raises when :url doesn't answer with a websocket url", local_browser: true do
+    it "raises when :url doesn't answer with a websocket url", :launch do
       with_external_browser do |url, _process|
         with_token_authenticated_proxy(url, token: "secret") do |proxy_url|
           unauthorized = proxy_url.sub("secret", "wrong")
@@ -252,7 +462,7 @@ describe Ferrum::Browser do
       end
     end
 
-    it "supports :ws_url argument", local_browser: true do
+    it "supports :ws_url argument", :launch do
       with_external_browser do |url, _process|
         browser = Ferrum::Browser.new(ws_url: web_socket_debugger_url(url))
         browser.go_to(base_url)
@@ -263,7 +473,7 @@ describe Ferrum::Browser do
       end
     end
 
-    it "supports :ws_url argument without asking /json/version", local_browser: true do
+    it "supports :ws_url argument without asking /json/version", :launch do
       with_external_browser do |url, _process|
         with_token_authenticated_proxy(url, token: "secret", json_version: :missing) do |proxy_url|
           path = Addressable::URI.parse(web_socket_debugger_url(url)).path
@@ -301,7 +511,7 @@ describe Ferrum::Browser do
       after { proxy.stop }
 
       context "without authorization" do
-        it "works without authorization", local_browser: true do
+        it "works without authorization", :launch do
           browser = Ferrum::Browser.new(
             proxy: { host: proxy.host, port: proxy.port }
           )
@@ -317,7 +527,7 @@ describe Ferrum::Browser do
       context "with authorization" do
         let(:options) { Hash(user: "user", password: "pa$$") }
 
-        it "works with right password", local_browser: true do
+        it "works with right password", :launch do
           browser = Ferrum::Browser.new(
             proxy: { host: proxy.host, port: proxy.port, **options }
           )
@@ -329,7 +539,7 @@ describe Ferrum::Browser do
           browser&.quit
         end
 
-        it "breaks with wrong password", local_browser: true do
+        it "breaks with wrong password", :launch do
           browser = Ferrum::Browser.new(
             proxy: { host: proxy.host, port: proxy.port, user: "u1", password: "p1" }
           )
@@ -343,7 +553,7 @@ describe Ferrum::Browser do
           browser&.quit
         end
 
-        it "lets requests be aborted", local_browser: true do
+        it "lets requests be aborted", :launch do
           browser = Ferrum::Browser.new(
             proxy: { host: proxy.host, port: proxy.port, **options }
           )
@@ -358,7 +568,7 @@ describe Ferrum::Browser do
           browser&.quit
         end
 
-        it "supports blacklist", local_browser: true do
+        it "supports blacklist", :launch do
           browser = Ferrum::Browser.new(
             proxy: { host: proxy.host, port: proxy.port, **options }
           )
@@ -398,7 +608,7 @@ describe Ferrum::Browser do
       end
     end
 
-    it "supports :pending_connection_errors argument", local_browser: true do
+    it "supports :pending_connection_errors argument", :launch do
       browser = Ferrum::Browser.new(base_url: base_url, pending_connection_errors: true, timeout: 0.5)
 
       expect { browser.go_to("/really_slow") }.to raise_error(Ferrum::PendingConnectionsError)
@@ -436,7 +646,7 @@ describe Ferrum::Browser do
       context "with local path" do
         let(:save_path) { "spec/tmp" }
 
-        it "raises an error", local_browser: true do
+        it "raises an error", :launch do
           expect do
             browser.go_to("/#{filename}")
           end.to raise_error(Ferrum::Error, "supply absolute path for `:save_path` option")
@@ -445,14 +655,14 @@ describe Ferrum::Browser do
     end
 
     context "with error on initialize" do
-      it "stops process if an error is raised during process start", local_browser: true do
+      it "stops process if an error is raised during process start", :launch do
         process = Ferrum::Browser::Process.new(Ferrum::Browser::Options.new(process_timeout: 0))
         allow(Ferrum::Browser::Process).to receive(:new).and_return(process)
         expect { Ferrum::Browser.new }.to raise_error(Ferrum::ProcessTimeoutError)
         expect(process.pid).to be(nil)
       end
 
-      it "stops process if an error is raised during client creation", local_browser: true do
+      it "stops process if an error is raised during client creation", :launch do
         process = Ferrum::Browser::Process.new(Ferrum::Browser::Options.new)
         allow(Ferrum::Browser::Process).to receive(:new).and_return(process)
 
@@ -463,7 +673,7 @@ describe Ferrum::Browser do
         expect(process.pid).to be(nil)
       end
 
-      it "stops process if an error is raised during contexts creation", local_browser: true do
+      it "stops process if an error is raised during contexts creation", :launch do
         process = Ferrum::Browser::Process.new(Ferrum::Browser::Options.new)
         allow(Ferrum::Browser::Process).to receive(:new).and_return(process)
 
@@ -521,14 +731,14 @@ describe Ferrum::Browser do
   end
 
   describe "#quit" do
-    it "stops silently before go_to call", local_browser: true do
+    it "stops silently before go_to call", :launch do
       browser = Ferrum::Browser.new
       expect { browser.quit }.not_to raise_error
     ensure
       browser&.quit
     end
 
-    it "supports stopping the session", skip: Ferrum::Utils::Platform.windows?, local_browser: true do
+    it "supports stopping the session", :launch, skip: Ferrum::Utils::Platform.windows? do
       browser = Ferrum::Browser.new
       pid = browser.process.pid
 
@@ -538,7 +748,7 @@ describe Ferrum::Browser do
       expect { Process.kill(0, pid) }.to raise_error(Errno::ESRCH)
     end
 
-    it "returns immediately with wait: false, finishing cleanup once the returned thread is joined", skip: Ferrum::Utils::Platform.windows?, local_browser: true do
+    it "returns immediately with wait: false, finishing cleanup once the returned thread is joined", :launch, skip: Ferrum::Utils::Platform.windows? do
       browser = Ferrum::Browser.new
       pid = browser.process.pid
 
@@ -556,7 +766,7 @@ describe Ferrum::Browser do
   end
 
   describe "#restart" do
-    it "blocks until the old process is confirmed dead before returning", skip: Ferrum::Utils::Platform.windows?, local_browser: true do
+    it "blocks until the old process is confirmed dead before returning", :launch, skip: Ferrum::Utils::Platform.windows? do
       browser = Ferrum::Browser.new
       old_pid = browser.process.pid
 
@@ -629,7 +839,7 @@ describe Ferrum::Browser do
   end
 
   describe "#evaluate_on_new_document" do
-    it "supports evaluation of JavaScript before page loads", local_browser: true do
+    it "supports evaluation of JavaScript before page loads", :launch do
       browser = Ferrum::Browser.new(base_url: base_url)
 
       browser.evaluate_on_new_document <<~JS
@@ -838,7 +1048,7 @@ describe Ferrum::Browser do
   end
 
   describe "#debug_url" do
-    it "parses the devtools frontend url correctly when devtoolsFrontendUrl is relative", local_browser: true do
+    it "parses the devtools frontend url correctly when devtoolsFrontendUrl is relative", :launch do
       browser = Ferrum::Browser.new(port: 12_345)
       uri = instance_double(URI)
 
@@ -848,7 +1058,7 @@ describe Ferrum::Browser do
       expect(browser.send(:debug_url)).to eq("http://127.0.0.1:12345/works")
     end
 
-    it "parses the devtools frontend url correctly when devtoolsFrontendUrl is fully qualified", local_browser: true do
+    it "parses the devtools frontend url correctly when devtoolsFrontendUrl is fully qualified", :launch do
       browser = Ferrum::Browser.new(port: 12_346)
       uri = instance_double(URI)
 
@@ -861,7 +1071,7 @@ describe Ferrum::Browser do
     end
   end
 
-  context "with pty", local_browser: true, if: Ferrum::Utils::Platform.mri? && !Ferrum::Utils::Platform.windows? do
+  context "with pty", :launch, if: Ferrum::Utils::Platform.mri? && !Ferrum::Utils::Platform.windows? do
     require "pty"
     require "timeout"
 

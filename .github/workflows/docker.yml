@@ -5,10 +5,12 @@ on:
       - main
     paths:
       - "docker/**"
+      - "!docker/**/*.md"
       - ".github/workflows/docker.yml"
   pull_request:
     paths:
       - "docker/**"
+      - "!docker/**/*.md"
       - ".github/workflows/docker.yml"
   schedule:
     - cron: "0 6 * * *"

@@ -100,3 +100,46 @@ Returns nothing.
 ```ruby
 page.disable_javascript
 ```
+
+## Console
+
+#### console : `Console`
+
+What the DevTools console would show for the page: `console.*` calls, browser log entries (failed resource loads,
+CSP violations, deprecations, ...) and uncaught exceptions. It keeps the last 1000 messages, oldest first, and is
+`Enumerable`, so filter it like any collection.
+
+```ruby
+page.go_to("https://example.com")
+page.console.select(&:error?) # => [#<Ferrum::Console::Message type=:error source=:network ...>]
+page.console.select { |message| message.match?(/deprecated/) }
+page.console.last.text # => "Hello world"
+page.console.clear
+```
+
+`Ferrum::Console::Message` has:
+
+* `type` `Symbol` - `:log`, `:info`, `:warning`, `:error`, `:debug`, `:table`, ... for `console.*` calls, the log
+  entry's level for browser log entries, `:error` for uncaught exceptions
+* `source` `Symbol` - `:console_api`, `:exception`, or the log entry's source such as `:network` or `:security`
+* `text` `String` - the arguments joined by spaces, objects and arrays as JSON
+* `args` `Array` - the `console.*` arguments as Ruby values, objects and arrays built from Chrome's shallow preview
+* `location` `Location` and `stack_trace` `Array<Location>` - `url`, `line`, `column`, `function_name`
+* `timestamp` `Time`
+* `severity` `Symbol` - `:debug`, `:info`, `:warn` or `:error`, the matching `Logger` method
+* `error?`, `warning?`, `match?(pattern)`
+
+#### on(:console)
+
+Calls the block for every new message.
+
+```ruby
+logger = Logger.new($stdout)
+page.on(:console) { |message| logger.public_send(message.severity, message.to_s) }
+```
+
+Fail a test on browser errors:
+
+```ruby
+after { expect(browser.console.select(&:error?)).to be_empty }
+```

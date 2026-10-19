@@ -65,7 +65,11 @@ RSpec.shared_context "Global helpers" do
     # nop
   end
 
-  def wait_a_bit(duration = 0.2)
-    Thread.pass && sleep(duration)
+  def with_env(env)
+    original = env.keys.to_h { |name| [name, ENV.fetch(name, nil)] }
+    ENV.update(env)
+    yield
+  ensure
+    ENV.update(original) if original
   end
 end

@@ -1,0 +1,39 @@
+module Ferrum
+  class Browser
+    class Process
+      class Output
+        LIMIT: ::Integer
+        DRAIN_TIMEOUT: ::Float
+
+        @log: Log?
+        @lines: Array[String]
+        @partial: String
+        @mutex: ::Thread::Mutex
+        @io: IO?
+        @reader: ::Thread?
+
+        def initialize: (?Log? log) -> void
+
+        def pipe: () { (IO io) -> void } -> void
+
+        def wait_for: (Regexp regexp, ::Numeric timeout) -> MatchData?
+
+        def follow: () -> ::Thread
+
+        def close: () -> void
+
+        def <<: (String chunk) -> self
+
+        def lines: () -> Array[String]
+
+        def to_s: () -> String
+
+        private
+
+        def utf8: (String line) -> String
+
+        def close_io: (IO? io) -> void
+      end
+    end
+  end
+end
