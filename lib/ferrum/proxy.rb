@@ -134,19 +134,19 @@ module Ferrum
 
           if proxy
             @logger.debug("CONNECT: sending a Request-Line")
-            os << proxy_request_line << CRLF
+            os << proxy_request_line << WEBrick::CRLF
             @logger.debug("CONNECT: > #{proxy_request_line}")
             if credentials
               @logger.debug("CONNECT: sending credentials")
-              os << "Proxy-Authorization: " << credentials << CRLF
+              os << "Proxy-Authorization: " << credentials << WEBrick::CRLF
             end
-            os << CRLF
-            proxy_status_line = os.gets(LF)
+            os << WEBrick::CRLF
+            proxy_status_line = os.gets(WEBrick::LF)
             @logger.debug("CONNECT: read Status-Line from the upstream server")
             @logger.debug("CONNECT: < #{proxy_status_line}")
             if %r{^HTTP/\d+\.\d+\s+200\s*} =~ proxy_status_line
-              while line = os.gets(LF)
-                break if /\A(#{CRLF}|#{LF})\z/om =~ line
+              while line = os.gets(WEBrick::LF)
+                break if /\A(#{WEBrick::CRLF}|#{WEBrick::LF})\z/om =~ line
               end
             else
               raise WEBrick::HTTPStatus::BadGateway
@@ -170,7 +170,7 @@ module Ferrum
 
           # Should clear request-line not to send the response twice.
           # see: HTTPServer#run
-          req.parse(NullReader) rescue nil
+          req.parse(WEBrick::NullReader) rescue nil
         end
 
         begin

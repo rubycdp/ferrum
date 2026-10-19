@@ -583,24 +583,28 @@ describe Ferrum::Browser do
         end
       end
 
-      context "with rotation", skip: "Think how to make it working on CI" do
-        it "works after disposing context" do
+      context "with rotation" do
+        let(:upstream) { Ferrum::Proxy.start(user: "user", password: "pa$$") }
+
+        after { upstream.stop }
+
+        it "forwards connections to the upstream proxy in a new context", :launch do
           browser = Ferrum::Browser.new(
-            proxy: { host: proxy.host, port: proxy.port, **options }
+            proxy: { host: proxy.host, port: proxy.port }
           )
 
-          proxy.rotate(host: "host", port: 0, user: "user", password: "password")
+          proxy.rotate(host: upstream.host, port: upstream.port, user: "user", password: "pa$$")
           browser.create_page(new_context: true) do |page|
-            page.go_to("https://api.ipify.org?format=json")
+            page.go_to("https://example.com")
             expect(page.network.status).to eq(200)
-            expect(page.body).to include("x.x.x.x")
+            expect(page.body).to include("Example Domain")
           end
 
-          proxy.rotate(host: "host", port: 0, user: "user", password: "password")
+          proxy.rotate(host: upstream.host, port: upstream.port, user: "user", password: "wrong")
           browser.create_page(new_context: true) do |page|
-            page.go_to("https://api.ipify.org?format=json")
-            expect(page.network.status).to eq(200)
-            expect(page.body).to include("x.x.x.x")
+            expect { page.go_to("https://example.com") }.to raise_error(
+              Ferrum::StatusError, /ERR_TUNNEL_CONNECTION_FAILED/
+            )
           end
         ensure
           browser&.quit
