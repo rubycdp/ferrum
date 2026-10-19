@@ -8,14 +8,14 @@ describe Ferrum::Mouse do
       expect(browser.body).to include("x: 100, y: 150")
     end
 
-    it "has no trouble clicking elements when the size of a document changes", skip: true do
+    it "has no trouble clicking elements when the size of a document changes" do
       browser.go_to("/long_page")
-      browser.at_css("#penultimate").click
+      browser.at_css("#penultimate").scroll_into_view.click
       browser.execute <<~JS
         el = document.getElementById("penultimate")
         el.parentNode.removeChild(el)
       JS
-      browser.at_xpath("//a[text() = 'Phasellus blandit velit']").click
+      browser.at_xpath("//a[text() = 'Phasellus blandit velit']").scroll_into_view.click
       expect(browser.body).to include("Hello")
     end
 
@@ -152,14 +152,13 @@ describe Ferrum::Mouse do
       browser.reset
     end
 
-    it "scrolls around so that elements can be clicked", skip: true do
+    it "clicks elements scrolled into view" do
       browser.resize(width: 200, height: 200)
       log = browser.at_css("#log")
 
       instructions = %w[one four one two three]
       instructions.each do |instruction|
-        browser.at_css("##{instruction}").click
-        browser.screenshot(path: "a.png")
+        browser.at_css("##{instruction}").scroll_into_view.click
         expect(log.text).to eq(instruction)
       end
     end
