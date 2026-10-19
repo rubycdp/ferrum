@@ -631,9 +631,6 @@ describe Ferrum::Browser do
         let(:save_path) { "/tmp/ferrum" }
 
         it "saves an attachment" do
-          # Also https://github.com/puppeteer/puppeteer/issues/10161
-          skip "https://bugs.chromium.org/p/chromium/issues/detail?id=1444729"
-
           browser.go_to("/#{filename}")
           browser.downloads.wait
 
