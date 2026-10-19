@@ -209,7 +209,9 @@ module Ferrum
     #
     # @param [Numeric, nil] timeout
     #   How long to wait for the browser to take the message, and then for its
-    #   response. Defaults to `protocol_timeout`.
+    #   response. Defaults to `protocol_timeout`. `Float::INFINITY` waits for
+    #   the response for as long as it takes, still giving the browser
+    #   `protocol_timeout` to take the message.
     #
     # @return [Boolean, Hash]
     #   `true` when sent asynchronously, otherwise the parsed `"result"`
@@ -217,9 +219,10 @@ module Ferrum
     #
     def send_message(message, async:, timeout: nil)
       timeout ||= protocol_timeout
+      write_timeout = timeout.infinite? ? protocol_timeout : timeout
 
       if async
-        @ws.send_message(message, timeout)
+        @ws.send_message(message, write_timeout)
         true
       else
         raise DeadBrowserError if @ws.messages.closed?
@@ -227,8 +230,8 @@ module Ferrum
         pending = Concurrent::IVar.new
         @pendings[message[:id]] = pending
         begin
-          @ws.send_message(message, timeout)
-          data = pending.value!(timeout)
+          @ws.send_message(message, write_timeout)
+          data = pending.value!(timeout.infinite? ? nil : timeout)
         ensure
           @pendings.delete(message[:id])
         end

@@ -282,9 +282,8 @@ describe Ferrum::Browser do
     it "keeps the same-origin policy by default" do
       browser.go_to("/frames")
 
-      result = browser.evaluate_async(<<~JS, browser.timeout)
-        fetch("http://localhost:" + location.port + "/headers")
-          .then(() => arguments[0]("read"), () => arguments[0]("blocked"))
+      result = browser.evaluate(<<~JS)
+        await fetch("http://localhost:" + location.port + "/headers").then(() => "read", () => "blocked")
       JS
 
       expect(result).to eq("blocked")
