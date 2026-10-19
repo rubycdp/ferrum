@@ -20,14 +20,28 @@ describe Ferrum::Node do
       expect(browser.network.traffic.length).to be <= 5
     end
 
-    it "does not run into content quads error" do
-      browser.go_to("/index")
+    context "when content quads can't be computed" do
+      before do
+        allow_any_instance_of(described_class).to receive(:content_quads)
+          .and_raise(Ferrum::CoordinatesNotFoundError, "Could not compute content quads")
+      end
 
-      allow_any_instance_of(Ferrum::Node).to receive(:content_quads)
-        .and_raise(Ferrum::CoordinatesNotFoundError, "Could not compute content quads")
+      it "clicks the element by its bounding rect" do
+        browser.go_to("/index")
 
-      browser.at_xpath("//a[text() = 'JS redirect']").click
-      expect(browser.body).to include("Hello world")
+        browser.at_xpath("//a[text()='JS redirect']").click
+
+        expect(browser.body).to include("Hello world")
+      end
+
+      it "clicks the element by its bounding rect on a scrolled page" do
+        browser.go_to("/long_page")
+        link = browser.at_xpath("//a[text() = 'Phasellus blandit velit']").scroll_into_view
+
+        link.click
+
+        expect(browser.current_url).to eq(base_url("/"))
+      end
     end
 
     it "synchronizes page loads properly" do
