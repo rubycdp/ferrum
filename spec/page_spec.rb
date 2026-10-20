@@ -256,6 +256,30 @@ describe Ferrum::Page do
           page.reload
         end.not_to(change { is_mobile? })
       end
+
+      it "keeps the pointer type set with --blink-settings", :launch do
+        browser = Ferrum::Browser.new(browser_options: { "blink-settings" => "primaryPointerType=2,availablePointerTypes=2" })
+        browser.go_to(base_url)
+
+        expect do
+          browser.set_viewport(width: 500, height: 300)
+        end.not_to(change { browser.evaluate("matchMedia('(pointer: coarse)').matches") }.from(true))
+      ensure
+        browser&.quit
+      end
+    end
+
+    context "when mobile was true before" do
+      it "disables touch/mobile emulation again" do
+        page.go_to("/")
+        page.set_viewport(mobile: true)
+        page.reload
+
+        expect do
+          page.set_viewport(mobile: false)
+          page.reload
+        end.to change { is_mobile? }.from(true).to(false)
+      end
     end
   end
 

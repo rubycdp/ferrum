@@ -44,6 +44,7 @@ module Ferrum
     @downloads: Downloads
     @referrer: String?
     @document_version: ::Integer
+    @touch_emulation_enabled: bool
 
     def initialize: ((Client | SessionClient) client, context_id: String?, target_id: String, ?proxy: { host: String, port: ::Integer, user: String?, password: String? }?) -> void
 

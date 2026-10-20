@@ -109,6 +109,7 @@ module Ferrum
       @main_frame = Frame.new(nil, self)
       @event = Utils::Event.new.tap(&:set)
       @document_version = 0
+      @touch_emulation_enabled = false
       self.proxy = proxy
 
       @mouse = Mouse.new(self)
@@ -193,11 +194,16 @@ module Ferrum
     # @param [Boolean] mobile whether to emulate mobile device and enable touch
     #
     def set_viewport(width: 0, height: 0, scale_factor: 0, mobile: false)
-      command(
-        "Emulation.setTouchEmulationEnabled",
-        enabled: mobile,
-        maxTouchPoints: 1
-      )
+      # Turning touch emulation off makes Chrome reset hover and pointer to the detected input devices, which undoes
+      # --blink-settings overrides, so only turn it off after a mobile viewport turned it on.
+      if mobile || @touch_emulation_enabled
+        command(
+          "Emulation.setTouchEmulationEnabled",
+          enabled: mobile,
+          maxTouchPoints: 1
+        )
+        @touch_emulation_enabled = mobile
+      end
 
       command(
         "Emulation.setDeviceMetricsOverride",
