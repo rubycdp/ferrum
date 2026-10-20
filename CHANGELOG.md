@@ -15,6 +15,7 @@
   their command's method and duration, `FERRUM_LOG_FORMAT=json` writes each CDP message as JSON alone
 - Ferrum keeps reading what Chrome writes after startup: it's logged on the `browser` channel, the last 100 lines are in
   `browser.process.output`
+- `browser.add_extension` adds an extension for pages and iframes attached afterwards [#663]
 
 ### Changed
 - The logger cuts any string value over 1024 characters in CDP messages, not just screenshots.
@@ -27,6 +28,11 @@
 - Behind a proxy with `:user` and `:password`, Ferrum stops continuing intercepted requests once you subscribe to
   `on(:request)`, like it already does without a proxy: your callbacks have to continue or abort every request, or it
   stays paused until the page times out [#332]
+- `evaluate_on_new_document` is a `Page` method sending `Page.addScriptToEvaluateOnNewDocument` to that page, with
+  `world_name:` and `run_immediately:`. It returns the script id for `remove_script_on_new_document`. It used to add
+  an extension for every page built afterwards, use `browser.add_extension` for that [#663]
+- Extension files are read in `Browser.new`, a missing one raises `Errno::ENOENT` there instead of on first
+  navigation [#663]
 - Browser details (user agent, versions) come from `Browser.getVersion` over CDP for every browser, local or remote.
   `/json/version` is only asked for the websocket url when `url:` is given, so `ws_url:` works against services
   without an HTTP endpoint and a local launch makes no HTTP call
@@ -34,6 +40,10 @@
   `429 Too Many Requests` for a full remote browser service, and exposes it as `#status`
 
 ### Fixed
+- An out-of-process iframe kept its parent page's session when `Target.targetCreated` came before
+  `Target.attachedToTarget`, so commands sent through it reached the page [#663]
+- `:extensions` run before the document's own scripts in popups and out-of-process iframes too. Popups used to get
+  them only after loading, iframes not at all, and every page ran them once more on `about:blank` [#663]
 - Every CDP response was scanned for Base64 screenshots to hide from the logger, even with no `:logger` set
 - Headers can be added on a remote browser whose `/json/version` has no `User-Agent`, such as browserless v2, instead of
   failing with `Invalid parameters` [rubycdp/cuprite#300]

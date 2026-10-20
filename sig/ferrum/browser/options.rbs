@@ -95,7 +95,7 @@ module Ferrum
       @url: String?
       @ws_url: String?
       @browser_options: Hash[String, (String | bool | nil)]
-      @extensions: ::Array[String]?
+      @extensions: ::Array[String]
       @default_user_agent: String?
 
       def initialize: (?Hash[Symbol, untyped]? options) -> void
@@ -104,11 +104,15 @@ module Ferrum
 
       def extensions: () -> ::Array[String]
 
+      def add_extension: (String | Hash[Symbol, String] extension) -> ::Array[String]
+
       def validate_proxy: (Hash[Symbol, (String | ::Integer)]? options) -> Hash[Symbol, (String | ::Integer)]?
 
       def to_h: () -> Hash[Symbol, untyped]
 
       private
+
+      def read_extension: (String | Hash[Symbol, String] extension) -> String
 
       def parse_logger: (untyped logger) -> [untyped, Log?]
 

@@ -124,13 +124,16 @@ module Ferrum
     #
     # @param [String, nil] session_id
     #
+    # @param [Boolean] attached
+    #   The session comes from `Target.attachedToTarget`, so it replaces the one a target got from its frame owner.
+    #
     # @return [Target]
-    def add_target(params:, session_id: nil)
+    def add_target(params:, session_id: nil, attached: false)
       new_target = Target.new(@client, session_id, params, implicit: implicit?)
       # `put_if_absent` returns nil if added a new value or existing if there was one already
       target = @targets.put_if_absent(new_target.id, new_target) || new_target
       # on first iteration session_id may be nil, then if session is present here we must set it to the target
-      target.session_id = session_id if session_id && target.session_id.nil?
+      target.session_id = session_id if session_id && (attached || target.session_id.nil?)
       @default_target ||= target
 
       new_pending = Concurrent::IVar.new

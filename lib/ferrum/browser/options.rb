@@ -25,7 +25,7 @@ module Ferrum
                   :js_errors, :base_url, :slowmo, :pending_connection_errors,
                   :url, :ws_url, :env, :process_timeout, :browser_name, :browser_path,
                   :save_path, :proxy, :port, :host, :headless, :incognito, :dockerize, :browser_options,
-                  :ignore_default_browser_options, :xvfb, :flatten
+                  :ignore_default_browser_options, :xvfb, :flatten, :extensions
       attr_accessor :timeout, :protocol_timeout, :default_user_agent
 
       def initialize(options = nil)
@@ -58,6 +58,7 @@ module Ferrum
         @base_url = parse_base_url(@options[:base_url]) if @options[:base_url]
         @url = @options[:url].to_s if @options[:url]
         @ws_url = @options[:ws_url].to_s if @options[:ws_url]
+        @extensions = Array(@options[:extensions]).map { |e| read_extension(e) }.freeze
 
         @options = @options.merge(window_size: @window_size).freeze
         @browser_options = @options.fetch(:browser_options, {}).freeze
@@ -76,15 +77,24 @@ module Ferrum
       end
 
       #
-      # JS source to preload into the browser, read from `:extensions` option.
+      # Adds an extension to run in every new document, before the document's own scripts. Applies to pages and
+      # iframes attached after the call: pages already open keep the extensions they were attached with.
+      #
+      # @param [String, Hash] extension
+      #   A path to a JS file, or `{ source: "..." }`.
       #
       # @return [Array<String>]
-      #   JS source code for each configured extension.
+      #   JS source code of every extension.
       #
-      def extensions
-        @extensions ||= Array(@options[:extensions]).map do |extension|
-          (extension.is_a?(Hash) && extension[:source]) || File.read(extension)
-        end
+      # @raise [Errno::ENOENT]
+      #   If the file doesn't exist.
+      #
+      # @example
+      #   browser.add_extension("/path/to/stub.js")
+      #   browser.add_extension(source: "window.secret = 'top'")
+      #
+      def add_extension(extension)
+        @extensions = [*@extensions, read_extension(extension)].freeze
       end
 
       #
@@ -121,6 +131,10 @@ module Ferrum
       end
 
       private
+
+      def read_extension(extension)
+        (extension.is_a?(Hash) && extension[:source]) || File.read(extension)
+      end
 
       def parse_logger(logger)
         value = ENV.fetch("FERRUM_LOG") { "*" if ENV.key?("FERRUM_DEBUG") }

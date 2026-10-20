@@ -334,9 +334,70 @@ describe Ferrum::Browser do
         browser&.quit
       end
 
+      it "extends a popup's world before its scripts run", :launch do
+        browser = Ferrum::Browser.new(base_url: base_url,
+                                      extensions: [File.expand_path("support/geolocation.js", __dir__)])
+        browser.go_to
+
+        browser.execute(%(window.open("/requiring_custom_extension", "popup")))
+        popup, = browser.windows(:last)
+
+        expect(popup.at_css("#location").text).to eq("1,-1")
+      ensure
+        browser&.quit
+      end
+
+      it "extends an out-of-process iframe's world before its scripts run", :launch do
+        report = <<~JS
+          if (window !== top) {
+            addEventListener("load", () => parent.postMessage(document.getElementById("location").textContent, "*"));
+          }
+        JS
+        browser = Ferrum::Browser.new(base_url: base_url,
+                                      browser_options: { "site-per-process" => nil },
+                                      extensions: [File.expand_path("support/geolocation.js", __dir__), { source: report }])
+        browser.go_to
+        browser.execute(<<~JS)
+          addEventListener("message", (event) => { window.iframeLocation = event.data });
+          document.body.innerHTML = `<iframe src="http://localhost:${location.port}/requiring_custom_extension">`;
+        JS
+
+        iframe_location = Ferrum::Utils::Attempt.with_retry(errors: RuntimeError, max: 50, wait: 0.1) do
+          browser.evaluate("window.iframeLocation") || raise("no message from the iframe yet")
+        end
+
+        expect(browser.targets.values.map(&:type)).to include("iframe")
+        expect(iframe_location).to eq("1,-1")
+      ensure
+        browser&.quit
+      end
+
       it "errors when extension is unavailable", :launch do
-        browser = Ferrum::Browser.new(extensions: [File.expand_path("../support/non_existent.js", __dir__)])
-        expect { browser.go_to }.to raise_error(Errno::ENOENT)
+        expect do
+          Ferrum::Browser.new(extensions: [File.expand_path("../support/non_existent.js", __dir__)])
+        end.to raise_error(Errno::ENOENT)
+      end
+    end
+
+    describe "#add_extension" do
+      it "extends the world of pages opened afterwards", :launch do
+        browser = Ferrum::Browser.new(base_url: base_url)
+
+        browser.add_extension(source: "window.secret = 'top'")
+        page = browser.create_page
+        page.go_to("/requiring_custom_extension")
+
+        expect(page.evaluate("window.secret")).to eq("top")
+      ensure
+        browser&.quit
+      end
+
+      it "errors when extension is unavailable", :launch do
+        browser = Ferrum::Browser.new
+
+        expect do
+          browser.add_extension(File.expand_path("../support/non_existent.js", __dir__))
+        end.to raise_error(Errno::ENOENT)
       ensure
         browser&.quit
       end
@@ -836,24 +897,6 @@ describe Ferrum::Browser do
         browser.resize(width: 200, height: 400)
         expect(browser.viewport_size).to eq([200, 400])
       end
-    end
-  end
-
-  describe "#evaluate_on_new_document" do
-    it "supports evaluation of JavaScript before page loads", :launch do
-      browser = Ferrum::Browser.new(base_url: base_url)
-
-      browser.evaluate_on_new_document <<~JS
-        Object.defineProperty(navigator, "languages", {
-          get: function() { return ["tlh"]; }
-        });
-      JS
-
-      browser.go_to("/with_user_js")
-      language = browser.at_xpath("//*[@id='browser-languages']/text()").text
-      expect(language).to eq("tlh")
-    ensure
-      browser&.quit
     end
   end
 

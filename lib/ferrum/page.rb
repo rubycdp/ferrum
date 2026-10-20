@@ -418,6 +418,45 @@ module Ferrum
     end
 
     #
+    # Adds JavaScript to run in every new document of this page and its in-process frames, before the document's own
+    # scripts. For every page and iframe of the browser, see {Browser::Options#add_extension}.
+    #
+    # @param [String] source
+    #
+    # @param [String, nil] world_name
+    #   Runs the script in an isolated world with this name instead of the page's main world.
+    #
+    # @param [Boolean] run_immediately
+    #   Runs the script in the current document as well.
+    #
+    # @return [String]
+    #   The script identifier, for {#remove_script_on_new_document}.
+    #
+    # @example
+    #   page.evaluate_on_new_document <<~JS
+    #     Object.defineProperty(navigator, "languages", {
+    #       get: function() { return ["tlh"]; }
+    #     });
+    #   JS
+    #
+    def evaluate_on_new_document(source, world_name: nil, run_immediately: false)
+      params = { source: source, worldName: world_name, runImmediately: run_immediately }.compact
+      command("Page.addScriptToEvaluateOnNewDocument", **params)["identifier"]
+    end
+
+    #
+    # Stops running a script added with {#evaluate_on_new_document} in new documents.
+    #
+    # @param [String] identifier
+    #
+    # @return [true]
+    #
+    def remove_script_on_new_document(identifier)
+      command("Page.removeScriptToEvaluateOnNewDocument", identifier: identifier)
+      true
+    end
+
+    #
     # Activates (focuses) the target for the given page.
     # When you have multiple tabs you work with, and you need to switch a given one.
     #
@@ -582,12 +621,6 @@ module Ferrum
 
       downloads.set_behavior(save_path: @options.save_path) if @options.save_path
 
-      @options.extensions.each do |extension|
-        command("Page.addScriptToEvaluateOnNewDocument", source: extension)
-      end
-
-      inject_extensions
-
       response = command("Page.getNavigationHistory")
       transition_type = response.dig("entries", 0, "transitionType")
       return if transition_type == "auto_toplevel"
@@ -598,19 +631,6 @@ module Ferrum
       # the history and if the transitionType for example `link` then
       # content is already loaded, and we can try to get the document.
       document_node_id
-    end
-
-    def inject_extensions
-      @options.extensions.each do |extension|
-        # https://github.com/GoogleChrome/puppeteer/issues/1443
-        # https://github.com/ChromeDevTools/devtools-protocol/issues/77
-        # https://github.com/cyrus-and/chrome-remote-interface/issues/319
-        # We also evaluate script just in case because
-        # `Page.addScriptToEvaluateOnNewDocument` doesn't work in popups.
-        command("Runtime.evaluate", expression: extension,
-                                    executionContextId: execution_id!,
-                                    returnByValue: true)
-      end
     end
 
     def history_navigate(delta:)

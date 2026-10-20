@@ -35,7 +35,7 @@ module Ferrum
 
     def extensions: () -> ::Array[String]
 
-    def evaluate_on_new_document: (String expression) -> void
+    def add_extension: (String | Hash[Symbol, String] extension) -> ::Array[String]
 
     def command: (String method, **untyped params) -> Hash[String, untyped]
 

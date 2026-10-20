@@ -163,7 +163,7 @@ module Ferrum
 
         context_id = info["browserContextId"]
         add_context(context_id)
-        target = @contexts[context_id]&.add_target(session_id: session_id, params: info)
+        target = @contexts[context_id]&.add_target(session_id: session_id, params: info, attached: true)
 
         rearm_auto_attach(session_id, info["type"])
         handle_attach(target, session_id, params)
@@ -225,9 +225,22 @@ module Ferrum
         detach_unless_manually_attached(target, session_id)
       elsif target.worker? || target.shared_worker?
         connect_worker(target)
-      elsif params["waitingForDebugger"]
-        resume(session_id)
+      else
+        add_extensions_and_resume(session_id, params["waitingForDebugger"])
       end
+    end
+
+    # A page or iframe is paused until we resume it, so the extensions we
+    # register now run before any script of its first document. An
+    # out-of-process iframe ignores them until the Page domain is enabled.
+    def add_extensions_and_resume(session_id, waiting)
+      extensions = @client.options.extensions
+      session = @client.session(session_id)
+      session.command("Page.enable", async: true) if extensions.any?
+      extensions.each do |source|
+        session.command("Page.addScriptToEvaluateOnNewDocument", async: true, source: source)
+      end
+      resume(session_id) if waiting
     end
 
     # Auto-attach pauses every target it attaches to, including the types

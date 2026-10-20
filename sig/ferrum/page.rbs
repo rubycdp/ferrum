@@ -82,6 +82,10 @@ module Ferrum
 
     def bypass_csp: (?enabled: bool) -> Hash[String, untyped]
 
+    def evaluate_on_new_document: (String source, ?world_name: String?, ?run_immediately: bool) -> String
+
+    def remove_script_on_new_document: (String identifier) -> true
+
     def window_id: () -> ::Integer
 
     def set_window_bounds: (Hash[Symbol, (::Integer | String)] bounds) -> Hash[String, untyped]
@@ -110,8 +114,6 @@ module Ferrum
     def subscribe: () -> void
 
     def prepare_page: () -> void
-
-    def inject_extensions: () -> void
 
     def history_navigate: (::Integer delta) -> Hash[String, untyped]
 
