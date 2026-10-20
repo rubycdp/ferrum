@@ -38,6 +38,7 @@ module Ferrum
                 frames frame_by main_frame
                 evaluate evaluate_on evaluate_async execute evaluate_func
                 add_script_tag add_style_tag bypass_csp
+                evaluate_on_new_document remove_script_on_new_document
                 on position position=
                 playback_rate playback_rate=
                 disable_javascript set_viewport resize] => :page
@@ -45,7 +46,7 @@ module Ferrum
     attr_reader :client, :process, :contexts, :options
 
     delegate %i[timeout timeout= protocol_timeout protocol_timeout=
-                base_url base_url= default_user_agent default_user_agent= extensions] => :options
+                base_url base_url= default_user_agent default_user_agent= extensions add_extension] => :options
     delegate %i[command] => :client
 
     #
@@ -189,23 +190,6 @@ module Ferrum
         page&.close
         context&.dispose if new_context
       end
-    end
-
-    #
-    # Evaluate JavaScript to modify things before a page load.
-    #
-    # @param [String] expression
-    #   The JavaScript to add to each new document.
-    #
-    # @example
-    #   browser.evaluate_on_new_document <<~JS
-    #     Object.defineProperty(navigator, "languages", {
-    #       get: function() { return ["tlh"]; }
-    #     });
-    #   JS
-    #
-    def evaluate_on_new_document(expression)
-      extensions << expression
     end
 
     #

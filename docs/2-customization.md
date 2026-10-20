@@ -21,8 +21,8 @@ Ferrum::Browser.new(options)
     * `:window_size` (Array) - The dimensions of the browser window in which to
       test, expressed as a 2-element array, e.g. [1024, 768]. Default: [1024, 768]
     * `:extensions` (Array[String | Hash]) - An array of paths to files or JS
-      source code to be preloaded into the browser e.g.:
-      `["/path/to/script.js", { source: "window.secret = 'top'" }]`
+      source code to run in every page and iframe before it loads, e.g.:
+      `["/path/to/script.js", { source: "window.secret = 'top'" }]`. Files are read in `Browser.new`.
     * `:logger` (Object responding to `puts`, or a `Logger`) - When present, debug output is
       written to it, see [Logging](#logging).
     * `:slowmo` (Integer | Float) - Set a delay in seconds to wait before sending command.

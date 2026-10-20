@@ -164,6 +164,39 @@ describe Ferrum::Page do
     end
   end
 
+  describe "#evaluate_on_new_document" do
+    it "runs JavaScript before the page's scripts" do
+      page.evaluate_on_new_document <<~JS
+        Object.defineProperty(navigator, "languages", {
+          get: function() { return ["tlh"]; }
+        });
+      JS
+
+      page.go_to("/with_user_js")
+
+      expect(page.at_css("#browser-languages").text).to eq("tlh")
+    end
+
+    it "runs JavaScript in the current document too" do
+      page.go_to("/simple")
+
+      page.evaluate_on_new_document("window.secret = 'top'", run_immediately: true)
+
+      expect(page.evaluate("window.secret")).to eq("top")
+    end
+
+    it "stops running removed JavaScript" do
+      id = page.evaluate_on_new_document("window.secret = 'top'")
+      page.go_to("/simple")
+      expect(page.evaluate("window.secret")).to eq("top")
+
+      page.remove_script_on_new_document(id)
+      page.reload
+
+      expect(page.evaluate("window.secret")).to be_nil
+    end
+  end
+
   describe "#timeout=" do
     it "supports to change timeout dynamically" do
       allow(browser.options).to receive(:pending_connection_errors).and_return(true)

@@ -335,8 +335,31 @@ describe Ferrum::Browser do
       end
 
       it "errors when extension is unavailable", :launch do
-        browser = Ferrum::Browser.new(extensions: [File.expand_path("../support/non_existent.js", __dir__)])
-        expect { browser.go_to }.to raise_error(Errno::ENOENT)
+        expect do
+          Ferrum::Browser.new(extensions: [File.expand_path("../support/non_existent.js", __dir__)])
+        end.to raise_error(Errno::ENOENT)
+      end
+    end
+
+    describe "#add_extension" do
+      it "extends the world of pages opened afterwards", :launch do
+        browser = Ferrum::Browser.new(base_url: base_url)
+
+        browser.add_extension(source: "window.secret = 'top'")
+        page = browser.create_page
+        page.go_to("/requiring_custom_extension")
+
+        expect(page.evaluate("window.secret")).to eq("top")
+      ensure
+        browser&.quit
+      end
+
+      it "errors when extension is unavailable", :launch do
+        browser = Ferrum::Browser.new
+
+        expect do
+          browser.add_extension(File.expand_path("../support/non_existent.js", __dir__))
+        end.to raise_error(Errno::ENOENT)
       ensure
         browser&.quit
       end
@@ -836,24 +859,6 @@ describe Ferrum::Browser do
         browser.resize(width: 200, height: 400)
         expect(browser.viewport_size).to eq([200, 400])
       end
-    end
-  end
-
-  describe "#evaluate_on_new_document" do
-    it "supports evaluation of JavaScript before page loads", :launch do
-      browser = Ferrum::Browser.new(base_url: base_url)
-
-      browser.evaluate_on_new_document <<~JS
-        Object.defineProperty(navigator, "languages", {
-          get: function() { return ["tlh"]; }
-        });
-      JS
-
-      browser.go_to("/with_user_js")
-      language = browser.at_xpath("//*[@id='browser-languages']/text()").text
-      expect(language).to eq("tlh")
-    ensure
-      browser&.quit
     end
   end
 

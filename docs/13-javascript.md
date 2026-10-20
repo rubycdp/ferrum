@@ -41,18 +41,42 @@ Execute expression. Doesn't return the result
 page.execute(%(1 + 1)) # => true
 ```
 
-#### evaluate_on_new_document(expression)
+#### evaluate_on_new_document(source, \*\*options) : `String`
 
-Evaluate JavaScript to modify things before a page load
+Runs JavaScript in every new document of the page and its in-process frames, before the document's own scripts.
+Returns the script identifier. For every page and iframe of the browser, use `add_extension`.
 
-* expression `String` should be valid JavaScript
+* source `String` should be valid JavaScript
+* options `Hash`
+  * :world_name `String` - run in an isolated world with this name instead of the page's main world
+  * :run_immediately `Boolean` - run in the current document as well, `false` by default
 
 ```ruby
-browser.evaluate_on_new_document <<~JS
+id = page.evaluate_on_new_document <<~JS
   Object.defineProperty(navigator, "languages", {
     get: function() { return ["tlh"]; }
   });
 JS
+```
+
+#### remove_script_on_new_document(identifier) : `Boolean`
+
+Stops running a script added with `evaluate_on_new_document` in new documents.
+
+```ruby
+page.remove_script_on_new_document(id) # => true
+```
+
+#### add_extension(extension)
+
+Adds an extension, see the `:extensions` option. It runs in every page attached after the call, before its own
+scripts. Pages already open keep the extensions they had.
+
+* extension `String | Hash` a path to a JS file or `{ source: "..." }`
+
+```ruby
+browser.add_extension("/path/to/stub.js")
+browser.add_extension(source: "window.secret = 'top'")
 ```
 
 #### add_script_tag(\*\*options) : `Boolean`
