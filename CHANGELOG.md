@@ -40,6 +40,8 @@
   `429 Too Many Requests` for a full remote browser service, and exposes it as `#status`
 
 ### Fixed
+- An out-of-process iframe kept its parent page's session when `Target.targetCreated` came before
+  `Target.attachedToTarget`, so commands sent through it reached the page [#663]
 - `:extensions` run before the document's own scripts in popups and out-of-process iframes too. Popups used to get
   them only after loading, iframes not at all, and every page ran them once more on `about:blank` [#663]
 - Every CDP response was scanned for Base64 screenshots to hide from the logger, even with no `:logger` set

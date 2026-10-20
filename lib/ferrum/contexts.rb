@@ -163,7 +163,7 @@ module Ferrum
 
         context_id = info["browserContextId"]
         add_context(context_id)
-        target = @contexts[context_id]&.add_target(session_id: session_id, params: info)
+        target = @contexts[context_id]&.add_target(session_id: session_id, params: info, attached: true)
 
         rearm_auto_attach(session_id, info["type"])
         handle_attach(target, session_id, params)

@@ -33,7 +33,7 @@ module Ferrum
 
     def create_target: () -> Target
 
-    def add_target: (params: Hash[String, untyped], ?session_id: String?) -> Target
+    def add_target: (params: Hash[String, untyped], ?session_id: String?, ?attached: bool) -> Target
 
     def update_target: (String target_id, Hash[String, untyped] params) -> void
 
