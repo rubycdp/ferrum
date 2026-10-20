@@ -334,6 +334,44 @@ describe Ferrum::Browser do
         browser&.quit
       end
 
+      it "extends a popup's world before its scripts run", :launch do
+        browser = Ferrum::Browser.new(base_url: base_url,
+                                      extensions: [File.expand_path("support/geolocation.js", __dir__)])
+        browser.go_to
+
+        browser.execute(%(window.open("/requiring_custom_extension", "popup")))
+        popup, = browser.windows(:last)
+
+        expect(popup.at_css("#location").text).to eq("1,-1")
+      ensure
+        browser&.quit
+      end
+
+      it "extends an out-of-process iframe's world before its scripts run", :launch do
+        report = <<~JS
+          if (window !== top) {
+            addEventListener("load", () => parent.postMessage(document.getElementById("location").textContent, "*"));
+          }
+        JS
+        browser = Ferrum::Browser.new(base_url: base_url,
+                                      browser_options: { "site-per-process" => nil },
+                                      extensions: [File.expand_path("support/geolocation.js", __dir__), { source: report }])
+        browser.go_to
+        browser.execute(<<~JS)
+          addEventListener("message", (event) => { window.iframeLocation = event.data });
+          document.body.innerHTML = `<iframe src="http://localhost:${location.port}/requiring_custom_extension">`;
+        JS
+
+        iframe_location = Ferrum::Utils::Attempt.with_retry(errors: RuntimeError, max: 50, wait: 0.1) do
+          browser.evaluate("window.iframeLocation") || raise("no message from the iframe yet")
+        end
+
+        expect(browser.targets.values.map(&:type)).to include("iframe")
+        expect(iframe_location).to eq("1,-1")
+      ensure
+        browser&.quit
+      end
+
       it "errors when extension is unavailable", :launch do
         expect do
           Ferrum::Browser.new(extensions: [File.expand_path("../support/non_existent.js", __dir__)])

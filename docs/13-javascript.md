@@ -69,8 +69,8 @@ page.remove_script_on_new_document(id) # => true
 
 #### add_extension(extension)
 
-Adds an extension, see the `:extensions` option. It runs in every page attached after the call, before its own
-scripts. Pages already open keep the extensions they had.
+Adds an extension, see the `:extensions` option. It runs in every page and iframe, popups and out-of-process iframes
+included, attached after the call, before their own scripts. Pages already open keep the extensions they had.
 
 * extension `String | Hash` a path to a JS file or `{ source: "..." }`
 

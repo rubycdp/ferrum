@@ -115,8 +115,6 @@ module Ferrum
 
     def prepare_page: () -> void
 
-    def inject_extensions: () -> void
-
     def history_navigate: (::Integer delta) -> Hash[String, untyped]
 
     def combine_url!: (String? url) -> String

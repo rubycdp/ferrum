@@ -621,12 +621,6 @@ module Ferrum
 
       downloads.set_behavior(save_path: @options.save_path) if @options.save_path
 
-      @options.extensions.each do |extension|
-        command("Page.addScriptToEvaluateOnNewDocument", source: extension)
-      end
-
-      inject_extensions
-
       response = command("Page.getNavigationHistory")
       transition_type = response.dig("entries", 0, "transitionType")
       return if transition_type == "auto_toplevel"
@@ -637,19 +631,6 @@ module Ferrum
       # the history and if the transitionType for example `link` then
       # content is already loaded, and we can try to get the document.
       document_node_id
-    end
-
-    def inject_extensions
-      @options.extensions.each do |extension|
-        # https://github.com/GoogleChrome/puppeteer/issues/1443
-        # https://github.com/ChromeDevTools/devtools-protocol/issues/77
-        # https://github.com/cyrus-and/chrome-remote-interface/issues/319
-        # We also evaluate script just in case because
-        # `Page.addScriptToEvaluateOnNewDocument` doesn't work in popups.
-        command("Runtime.evaluate", expression: extension,
-                                    executionContextId: execution_id!,
-                                    returnByValue: true)
-      end
     end
 
     def history_navigate(delta:)
