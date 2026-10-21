@@ -50,6 +50,23 @@ describe Ferrum::Worker do
       wait_for { worker.console.map(&:text) }.to eq(["from worker"])
       expect(worker.console.first).to be_warning
     end
+
+    it "is left out of Context#workers once detached" do
+      page.go_to
+
+      page.execute <<~JS
+        new Worker(URL.createObjectURL(new Blob(
+          ["self.onmessage = () => {}"],
+          { type: "application/javascript" }
+        )))
+      JS
+
+      target = wait_for_target(&:worker?)
+      wait_for { browser.workers }.to contain_exactly(target.worker)
+      page.command("Target.detachFromTarget", sessionId: target.session_id)
+
+      wait_for { browser.workers }.to be_empty
+    end
   end
 
   describe "shared workers" do
@@ -93,6 +110,15 @@ describe Ferrum::Worker do
                .select { |info| info["type"] == "service_worker" }.map { |info| info["attached"] }
       end.to eq([false])
       expect(target.session_id).to be_nil
+    end
+
+    it "raises when connected to without attaching first" do
+      page.go_to
+      page.evaluate_async(%(navigator.serviceWorker.register("/sw.js").then(arguments[0])), 5)
+      target = wait_for_target(&:service_worker?)
+      wait_for { target.session_id }.to be_nil
+
+      expect { target.worker }.to raise_error(Ferrum::NoSuchTargetError, /attach_target/)
     end
 
     it "connects on demand through Context#attach_target, keeping it alive" do

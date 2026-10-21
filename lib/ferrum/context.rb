@@ -56,11 +56,12 @@ module Ferrum
       @targets.values.select(&:page?).map(&:page)
     end
 
-    # Dedicated and shared workers spawned by any page in this context.
+    # Dedicated and shared workers spawned by any page in this context,
+    # leaving out the ones we have no session with, e.g. detached ones.
     #
     # @return [Array<Worker>]
     def workers
-      @targets.values.select { |t| t.worker? || t.shared_worker? }.map(&:worker)
+      @targets.values.select { |t| (t.worker? || t.shared_worker?) && t.session_id }.map(&:worker)
     end
 
     # Service worker targets registered in this context. Unlike {#workers},
