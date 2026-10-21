@@ -38,4 +38,23 @@ describe Ferrum::Context do
       same.close
     end
   end
+
+  describe "#attach_target" do
+    it "reuses the session of an already attached target", :launch do
+      browser = Ferrum::Browser.new(base_url: base_url,
+                                    extensions: [{ source: "window.runs = (window.runs || 0) + 1" }])
+      page = browser.create_page
+      page.go_to
+      target = browser.targets[page.target_id]
+      session_id = target.session_id
+
+      2.times { expect(browser.attach_target(target.id)).to eq(target) }
+      page.refresh
+
+      expect(target.session_id).to eq(session_id)
+      expect(page.evaluate("window.runs")).to eq(1)
+    ensure
+      browser&.quit
+    end
+  end
 end

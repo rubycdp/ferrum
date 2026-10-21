@@ -40,6 +40,7 @@
   `429 Too Many Requests` for a full remote browser service, and exposes it as `#status`
 
 ### Fixed
+- `attach_target` reuses a target's session and returns the target, instead of opening one more that reruns extensions
 - Service workers registered by a page stayed attached and alive for the browser's lifetime, now Chrome can stop them
 - An out-of-process iframe kept its parent page's session when `Target.targetCreated` came before
   `Target.attachedToTarget`, so commands sent through it reached the page [#663]

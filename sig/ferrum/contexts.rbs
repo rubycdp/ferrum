@@ -59,6 +59,8 @@ module Ferrum
 
     def resume: (String session_id) -> void
 
+    def forget_session: (String target_id, String session_id) -> void
+
     def silent_detach: (String session_id, (Client | SessionClient) parent) -> Thread
 
     def discover: () -> void

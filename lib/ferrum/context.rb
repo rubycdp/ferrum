@@ -164,18 +164,26 @@ module Ferrum
 
     # Manually attaches to a target, e.g. a service worker discovered via
     # {#service_workers}. Once attached, `target.worker`/`target.page`
-    # returns a connected {Worker}/{Page} for it.
+    # returns a connected {Worker}/{Page} for it. A target that already has
+    # a session keeps it.
     #
     # Note: attaching to a service worker's session prevents Chrome from
     # ever terminating it while the connection is open.
+    #
+    # @param [String] target_id
+    #
+    # @return [Target]
+    #
+    # @raise [NoSuchTargetError] if the context has no such target.
     def attach_target(target_id)
       target = @targets[target_id]
       raise NoSuchTargetError unless target
+      return target if target.session_id
 
       @contexts.manually_attached(target_id)
       session = @client.command("Target.attachToTarget", targetId: target_id, flatten: true)
       target.session_id = session["sessionId"]
-      true
+      target
     end
 
     # Returns the first target for which the block returns truthy.
