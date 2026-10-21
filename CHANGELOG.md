@@ -63,6 +63,7 @@
 ### Removed
 - `Browser::Process#default_user_agent`, `#browser_version`, `#protocol_version`, `#v8_version` and `#webkit_version`,
   use `Browser#default_user_agent` and `Browser#version` instead
+- Ruby 3.1 support, Ferrum requires Ruby 3.2 or newer
 
 
 ## [0.19.1](https://github.com/rubycdp/ferrum/compare/v0.19.0...v0.19.1) (October 16, 2026) ##
