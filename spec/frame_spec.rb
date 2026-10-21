@@ -125,6 +125,14 @@ describe Ferrum::Frame do
     end
   end
 
+  it "finishes a form submission that opens an inline PDF" do
+    page.go_to("/inline_pdf")
+    page.at_css("button").click
+
+    expect(page.current_url).to eq(base_url("/inline.pdf"))
+    expect(page.network.response.content_type).to eq("application/pdf")
+  end
+
   context "with lazy loading iframes" do
     it "does not block visit on lazy iframe" do
       expect { page.go_to("/lazy_iframe") }.not_to raise_error

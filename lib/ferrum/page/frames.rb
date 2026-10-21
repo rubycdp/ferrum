@@ -104,6 +104,7 @@ module Ferrum
             frame.execution_id = nil
           else
             @frames.delete(params["frameId"])
+            @event.set if idling?
           end
         end
       end
