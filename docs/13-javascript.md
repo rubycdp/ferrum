@@ -59,6 +59,24 @@ id = page.evaluate_on_new_document <<~JS
 JS
 ```
 
+#### isolated_world(name) : `IsolatedWorld`
+
+Returns the frame's isolated world with this name, its own JavaScript globals over the frame's DOM, so the page's
+scripts can't see or override what runs there. It has `evaluate`, `evaluate_async`, `execute` and `evaluate_func`,
+takes and returns nodes, and comes back empty in every new document. On a page it's the main frame's world, use
+`frame.isolated_world(name)` for an iframe. It's the same world `evaluate_on_new_document` runs in with
+`world_name:`.
+
+* name `String`
+
+```ruby
+world = page.isolated_world("ferrum")
+world.execute("window.secret = 'top'")
+world.evaluate("window.secret") # => "top"
+page.evaluate("window.secret") # => nil
+world.evaluate("document.title") # => same as page.evaluate("document.title")
+```
+
 #### remove_script_on_new_document(identifier) : `Boolean`
 
 Stops running a script added with `evaluate_on_new_document` in new documents.

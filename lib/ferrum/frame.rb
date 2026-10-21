@@ -2,6 +2,7 @@
 
 require "ferrum/frame/dom"
 require "ferrum/frame/runtime"
+require "ferrum/isolated_world"
 
 module Ferrum
   #
@@ -62,6 +63,7 @@ module Ferrum
       @parent_id = parent_id
       @lifecycle_events = []
       @execution_id = Concurrent::MVar.new
+      @isolated_worlds = Concurrent::Map.new
     end
 
     # Sets the frame's state, validating it's one of {STATE_VALUES}.
@@ -220,6 +222,34 @@ module Ferrum
       else
         @execution_id.try_put!(value)
       end
+    end
+
+    #
+    # Returns the frame's isolated world with the given name: its own
+    # JavaScript globals over the frame's DOM. Created on first use.
+    #
+    # @param [String] name
+    #
+    # @return [IsolatedWorld]
+    #
+    # @example
+    #   world = page.main_frame.isolated_world("ferrum")
+    #   world.execute("window.secret = 'top'")
+    #   world.evaluate("window.secret") # => "top"
+    #   page.evaluate("window.secret") # => nil
+    #
+    def isolated_world(name)
+      @isolated_worlds.compute_if_absent(name) { IsolatedWorld.new(self, name) }
+    end
+
+    #
+    # The frame's isolated worlds used so far, by {#isolated_world},
+    # {Page#evaluate_on_new_document} with `world_name:` or extensions.
+    #
+    # @return [Array<IsolatedWorld>]
+    #
+    def isolated_worlds
+      @isolated_worlds.values
     end
 
     #

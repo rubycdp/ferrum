@@ -152,11 +152,7 @@ module Ferrum
         Utils::Attempt.with_retry(errors: errors, max: INTERMITTENT_ATTEMPTS, wait: INTERMITTENT_SLEEP) do
           params = options.dup
 
-          if on
-            response = @page.command("DOM.resolveNode", nodeId: on.node_id)
-            object_id = response.dig("object", "objectId")
-            params = params.merge(objectId: object_id)
-          end
+          params = params.merge(objectId: resolve_node(on)) if on
 
           if params[:executionContextId].nil? && params[:objectId].nil?
             params = params.merge(executionContextId: execution_id!)
@@ -221,11 +217,18 @@ module Ferrum
         end
       end
 
+      def resolve_node(node)
+        @page.command("DOM.resolveNode", nodeId: node.node_id, **resolve_node_options).dig("object", "objectId")
+      end
+
+      def resolve_node_options
+        {}
+      end
+
       def prepare_args(args)
         args.map do |arg|
           if arg.is_a?(Node)
-            resolved = @page.command("DOM.resolveNode", nodeId: arg.node_id)
-            { objectId: resolved["object"]["objectId"] }
+            { objectId: resolve_node(arg) }
           elsif arg.is_a?(Hash) && arg["objectId"]
             { objectId: arg["objectId"] }
           else
