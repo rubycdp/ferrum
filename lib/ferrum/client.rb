@@ -228,7 +228,8 @@ module Ferrum
         @pendings[message[:id]] = pending
         begin
           @ws.send_message(message, timeout)
-          data = pending.value!(timeout)
+          wait_with_keepalive(timeout) { |slice| pending.wait(slice).complete? }
+          data = pending.value!(0)
         ensure
           @pendings.delete(message[:id])
         end
@@ -335,7 +336,38 @@ module Ferrum
       { method: method, params: params }.merge(id: next_command_id)
     end
 
+    #
+    # Waits up to `timeout` seconds for the block to return truthy, calling it
+    # with how long it may block. With {Browser::Options#keepalive_interval}
+    # set, the wait is split into slices of at most that length with a CDP
+    # command sent between them, so the connection never sits idle.
+    #
+    # @param [Numeric] timeout
+    #
+    # @yieldparam [Numeric] slice
+    #   The longest the block may block for.
+    #
+    # @return [Boolean]
+    #   Whether the block returned truthy before the timeout.
+    #
+    def wait_with_keepalive(timeout)
+      return !!yield(timeout) unless (interval = options.keepalive_interval)
+
+      deadline = Utils::ElapsedTime.monotonic_time + timeout
+      loop do
+        remaining = deadline - Utils::ElapsedTime.monotonic_time
+        return false unless remaining.positive?
+        return true if yield([interval, remaining].min)
+
+        keepalive
+      end
+    end
+
     private
+
+    def keepalive
+      @ws.send_message(build_message("Browser.getVersion", {}), protocol_timeout)
+    end
 
     def start
       @thread = Utils::Thread.spawn do

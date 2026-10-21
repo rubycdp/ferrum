@@ -70,7 +70,11 @@ module Ferrum
 
     def protocol_timeout=: (::Numeric value) -> ::Numeric
 
+    def wait_with_keepalive: (::Numeric timeout) { (::Numeric slice) -> boolish } -> bool
+
     private
+
+    def keepalive: () -> void
 
     def start: () -> void
 

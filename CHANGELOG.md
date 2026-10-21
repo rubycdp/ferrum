@@ -1,6 +1,8 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.19.1...main) ##
 
 ### Added
+- `:keepalive_interval` sends a CDP command at least every given number of seconds while waiting for a navigation,
+  so a proxy with an idle timeout doesn't drop the connection during a long `:timeout`
 - `keyboard.hold(:shift) { }` holds modifiers for every keyboard and mouse event in the block, e.g. a shift+drag, and
   releases them afterwards. `mouse.move` accepts `modifiers:` like `down` and `up` [#581]
 - `page.console` collects `console.*` calls, browser log entries and uncaught exceptions as `Console::Message`s,

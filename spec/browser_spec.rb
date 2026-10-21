@@ -673,6 +673,57 @@ describe Ferrum::Browser do
       end
     end
 
+    context ":keepalive_interval argument" do
+      it "sends a CDP command while waiting for a slow navigation", :launch do
+        browser = Ferrum::Browser.new(base_url: base_url, logger: logger, timeout: 5, keepalive_interval: 0.5)
+
+        browser.go_to("/really_slow")
+
+        expect(browser.body).to include("really slow page")
+        expect(logger.string.scan("Browser.getVersion").size).to be >= 4
+      ensure
+        browser&.quit
+      end
+
+      it "sends a CDP command while waiting for a navigation started by a click", :launch do
+        browser = Ferrum::Browser.new(base_url: base_url, logger: logger, timeout: 5, keepalive_interval: 0.5)
+        browser.go_to("/")
+        browser.execute(<<~JS)
+          document.body.innerHTML = '<a id="slow" href="/really_slow">Slow</a>'
+        JS
+        calls_before_click = logger.string.scan("Browser.getVersion").size
+
+        browser.at_css("#slow").click
+
+        expect(browser.body).to include("really slow page")
+        expect(logger.string.scan("Browser.getVersion").size - calls_before_click).to be >= 3
+      ensure
+        browser&.quit
+      end
+
+      it "still times out after :timeout", :launch do
+        browser = Ferrum::Browser.new(base_url: base_url, logger: logger, pending_connection_errors: true,
+                                      timeout: 1, keepalive_interval: 0.3)
+        startup_calls = logger.string.scan("Browser.getVersion").size
+
+        expect { browser.go_to("/really_slow") }.to raise_error(Ferrum::PendingConnectionsError)
+        expect(logger.string.scan("Browser.getVersion").size).to be > startup_calls
+      ensure
+        browser&.quit
+      end
+
+      it "doesn't send keepalive commands when not set", :launch do
+        browser = Ferrum::Browser.new(base_url: base_url, logger: logger, timeout: 5)
+        startup_calls = logger.string.scan("Browser.getVersion").size
+
+        browser.go_to("/really_slow")
+
+        expect(logger.string.scan("Browser.getVersion").size).to eq(startup_calls)
+      ensure
+        browser&.quit
+      end
+    end
+
     it "supports :pending_connection_errors argument", :launch do
       browser = Ferrum::Browser.new(base_url: base_url, pending_connection_errors: true, timeout: 0.5)
 

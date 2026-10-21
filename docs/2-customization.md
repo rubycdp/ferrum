@@ -29,6 +29,9 @@ Ferrum::Browser.new(options)
       Useful companion of headless option, so that you have time to see changes.
     * `:timeout` (Numeric) - The number of seconds we'll wait for a response when
       communicating with browser. Default is 5.
+    * `:keepalive_interval` (Numeric) - While waiting for a navigation, send a CDP command at least this often
+      (in seconds) so a proxy between Ruby and Chrome doesn't drop the idle connection, e.g. Heroku's router
+      closes connections idle for 55 seconds. The total wait is still bounded by `:timeout`. Default is nil (off).
     * `:js_errors` (Boolean) - When true, JavaScript errors get re-raised in Ruby.
     * `:pending_connection_errors` (Boolean) - Raise `PendingConnectionsError` when main frame is still waiting
       for slow responses and timeout is reached. Default is false.

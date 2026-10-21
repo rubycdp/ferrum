@@ -22,7 +22,7 @@ module Ferrum
       warn "Ferrum: FERRUM_DEBUG is deprecated, use FERRUM_LOG=* instead" if ENV.key?("FERRUM_DEBUG")
 
       attr_reader :window_size, :logger, :log, :ws_max_receive_size,
-                  :js_errors, :base_url, :slowmo, :pending_connection_errors,
+                  :js_errors, :base_url, :slowmo, :keepalive_interval, :pending_connection_errors,
                   :url, :ws_url, :env, :process_timeout, :browser_name, :browser_path,
                   :save_path, :proxy, :port, :host, :headless, :incognito, :dockerize, :browser_options,
                   :ignore_default_browser_options, :xvfb, :flatten, :extensions
@@ -44,6 +44,7 @@ module Ferrum
         @pending_connection_errors = @options.fetch(:pending_connection_errors, false)
         @process_timeout = @options.fetch(:process_timeout, PROCESS_TIMEOUT)
         @slowmo = @options[:slowmo].to_f
+        @keepalive_interval = @options[:keepalive_interval]
 
         @env = @options[:env]
         @xvfb = @options[:xvfb]

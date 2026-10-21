@@ -34,6 +34,8 @@ module Ferrum
 
       attr_reader slowmo: ::Float
 
+      attr_reader keepalive_interval: ::Numeric?
+
       attr_reader pending_connection_errors: bool
 
       attr_reader url: String?
@@ -81,6 +83,7 @@ module Ferrum
       @pending_connection_errors: bool
       @process_timeout: ::Integer
       @slowmo: ::Float
+      @keepalive_interval: ::Numeric?
       @env: Hash[String, String]?
       @xvfb: bool?
       @save_path: String?

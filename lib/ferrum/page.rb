@@ -506,7 +506,7 @@ module Ferrum
         # the main frame, and it started to load new content.
         @event.wait(wait)
         if iteration != @event.iteration
-          set = @event.wait(self.timeout)
+          set = client.wait_with_keepalive(self.timeout) { |slice| @event.wait(slice) }
           raise TimeoutError unless set
         end
       end
