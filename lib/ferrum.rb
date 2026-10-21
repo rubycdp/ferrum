@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "concurrent-ruby"
+require "ferrum/version"
 require "ferrum/utils/event"
 require "ferrum/utils/thread"
 require "ferrum/utils/platform"
