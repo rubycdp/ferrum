@@ -22,7 +22,7 @@ HEADLESS=false bundle exec rspec ...  # watch the browser
 ```
 
 The suite boots a real Chrome and a Sinatra/Puma test app (`spec/support/application.rb`, views in
-`spec/support/views/`). CI runs Ruby 3.1 to 4.0 against stable Chrome.
+`spec/support/views/`). CI runs Ruby 3.2 to 4.0 against stable Chrome.
 
 ## Tests
 
@@ -40,7 +40,7 @@ The suite boots a real Chrome and a Sinatra/Puma test app (`spec/support/applica
 
 ## Code style
 
-- Ruby >= 3.1, `# frozen_string_literal: true`, double quotes, RuboCop config in `.rubocop.yml`.
+- Ruby >= 3.2, `# frozen_string_literal: true`, double quotes, RuboCop config in `.rubocop.yml`.
 - Prefer self-documenting code over comments. Document public methods with YARD (`@param`, `@return`, `@raise`).
 - Add or update RBS types in `sig/` for anything you touch.
 - American English everywhere: code, comments, docs, errors, commits.
