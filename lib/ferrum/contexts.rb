@@ -168,6 +168,10 @@ module Ferrum
         rearm_auto_attach(session_id, info["type"])
         handle_attach(target, session_id, params, client)
       end
+
+      client.on("Target.detachedFromTarget") do |params|
+        forget_session(params["targetId"], params["sessionId"])
+      end
     end
 
     def subscribe_target_created
@@ -257,6 +261,7 @@ module Ferrum
     def detach_unless_manually_attached(target, session_id, parent)
       return if @manually_attached.delete(target.id)
 
+      forget_session(target.id, session_id)
       silent_detach(session_id, parent)
     end
 
@@ -271,6 +276,11 @@ module Ferrum
 
     def resume(session_id)
       @client.session(session_id).command("Runtime.runIfWaitingForDebugger", async: true)
+    end
+
+    def forget_session(target_id, session_id)
+      target = find_by(target_id: target_id)&.targets&.[](target_id)
+      target.session_id = nil if target&.session_id == session_id
     end
 
     def silent_detach(session_id, parent)

@@ -39,7 +39,7 @@ module Ferrum
 
     def delete_target: (String target_id) -> Target?
 
-    def attach_target: (String target_id) -> true
+    def attach_target: (String target_id) -> Target
 
     def find_target: () { (Target) -> bool } -> Target?
 
