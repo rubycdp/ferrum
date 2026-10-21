@@ -55,6 +55,9 @@ module Ferrum
     # Connects to and returns this target's {Worker}.
     #
     # @return [Worker]
+    #
+    # @raise [NoSuchTargetError] if there's no session with the target, e.g. a service worker
+    #   not attached to with {Context#attach_target}.
     def worker
       @worker ||= build_worker
     end
@@ -82,6 +85,10 @@ module Ferrum
     #
     # @return [Worker]
     def build_worker
+      if options.flatten && session_id.nil?
+        raise NoSuchTargetError, "No session with #{type} #{id}, attach to it with Context#attach_target first"
+      end
+
       Worker.new(client, target_id: id, url: url)
     end
 
