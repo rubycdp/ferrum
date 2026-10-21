@@ -9,6 +9,7 @@ require "ferrum/utils/elapsed_time"
 require "ferrum/utils/attempt"
 require "ferrum/errors"
 require "ferrum/browser"
+require "ferrum/remote_object"
 require "ferrum/node"
 
 #

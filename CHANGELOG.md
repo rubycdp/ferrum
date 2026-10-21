@@ -68,6 +68,7 @@
 - `Browser::Process#default_user_agent`, `#browser_version`, `#protocol_version`, `#v8_version` and `#webkit_version`,
   use `Browser#default_user_agent` and `Browser#version` instead
 - Ruby 3.1 support, Ferrum requires Ruby 3.2 or newer
+- `#evaluate_async`, `#evaluate_func` and `#evaluate_on`, use `#evaluate` and `Node#evaluate`
 
 
 ## [0.19.1](https://github.com/rubycdp/ferrum/compare/v0.19.0...v0.19.1) (October 16, 2026) ##
@@ -104,6 +105,9 @@
   loaded (on CDP's `Network.loadingFinished`, not `Network.responseReceived`, so `exchange.response.body` is always
   available), yielding the request's `Network::Exchange`. Doesn't require `network.intercept` to be set up, and is
   never fired for requests that fail to load [#294]
+- `#evaluate`/`#execute` take named arguments that become the script's parameters, `page.evaluate("a + b", a: 1,
+  b: 2)`, a function declaration as the script, `await`, and `timeout:`
+- `#evaluate_handle` returning a `Ferrum::RemoteObject`, and `Node#execute`/`Node#evaluate_handle`
 - `Ferrum::Browser#quit`/`Ferrum::Browser::Process#stop` accept `wait: false` to return immediately and run process
   killing and user-data-directory cleanup on a background thread instead of blocking; the call returns the `Thread`
   so callers can `#join` it if they need cleanup to have finished, e.g. before process exit or before reusing a
@@ -119,6 +123,10 @@
 - `Ferrum::Page::Stream#stream` now closes the CDP stream handle (`IO.close`) once it's been fully read, so streams
   opened for `Ferrum::Browser#pdf` and `Ferrum::Page::Tracing#record` no longer keep their backing storage alive in
   the browser; a failed `IO.close` is raised to the caller.
+- `#evaluate`/`#execute` await a returned promise or thenable, keywords are always named parameters and can't be
+  mixed with positional arguments, a thrown non-`Error` raises, and `Node#evaluate` resolves nodes and dates, see
+  [upgrading](docs/13-javascript.md#upgrading-to-021)
+- `Ferrum::ScriptTimeoutError` is a `Ferrum::TimeoutError`
 
 ### Fixed
 - An out-of-process iframe, e.g. Chrome's PDF viewer for an embedded PDF, appearing while a web worker was connected

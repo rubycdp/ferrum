@@ -17,6 +17,7 @@ module Ferrum
     attr_reader :page, :target_id, :description, :tag_name
 
     def initialize(frame, target_id, description, object_id: nil, node_id: nil)
+      @runtime = frame
       @page = frame.page
       @target_id = target_id
       @description = description
@@ -210,9 +211,9 @@ module Ferrum
     #
     # @return [Boolean]
     def in_viewport?(of: nil)
-      function = <<~JS
-        function(element, scope) {
-          const rect = element.getBoundingClientRect();
+      evaluate(<<~JS, scope: of)
+        function(scope) {
+          const rect = this.getBoundingClientRect();
           const [height, width] = scope
             ? [scope.offsetHeight, scope.offsetWidth]
             : [window.innerHeight, window.innerWidth];
@@ -222,7 +223,6 @@ module Ferrum
            rect.right <= width;
         }
       JS
-      page.evaluate_func(function, self, of)
     end
 
     #
@@ -369,15 +369,14 @@ module Ferrum
     # @return [Array<Node>]
     #
     def selected
-      function = <<~JS
-        function(element) {
-          if (element.nodeName.toLowerCase() !== 'select') {
+      evaluate(<<~JS)
+        function() {
+          if (this.nodeName.toLowerCase() !== 'select') {
             throw new Error('Element is not a <select> element.');
           }
-          return Array.from(element).filter(option => option.selected);
+          return Array.from(this).filter(option => option.selected);
         }
       JS
-      page.evaluate_func(function, self, on: self)
     end
 
     #
@@ -405,38 +404,73 @@ module Ferrum
     #
     def select(*values, by: :value)
       tap do
-        function = <<~JS
-          function(element, values, by) {
-            if (element.nodeName.toLowerCase() !== 'select') {
+        execute(<<~JS, values: values.flatten, by: by)
+          function(values, by) {
+            if (this.nodeName.toLowerCase() !== 'select') {
               throw new Error('Element is not a <select> element.');
             }
-            const options = Array.from(element.options);
-            element.value = undefined;
+            const options = Array.from(this.options);
+            this.value = undefined;
             for (const option of options) {
               option.selected = values.some((value) => option[by] === value);
-              if (option.selected && !element.multiple) break;
+              if (option.selected && !this.multiple) break;
             }
-            element.dispatchEvent(new Event('input', { bubbles: true }));
-            element.dispatchEvent(new Event('change', { bubbles: true }));
+            this.dispatchEvent(new Event('input', { bubbles: true }));
+            this.dispatchEvent(new Event('change', { bubbles: true }));
           }
         JS
-        page.evaluate_func(function, self, values.flatten, by, on: self)
       end
     end
 
     #
-    # Evaluates the given JavaScript expression with `this` bound to the
-    # node.
+    # Evaluates JavaScript with `this` bound to the node, and returns the
+    # result serialized into Ruby. Takes the same script shapes and arguments
+    # as {Frame::Runtime#evaluate}. Arrow functions don't get `this`, so use a
+    # `function` declaration when the script needs it.
     #
-    # @param [String] expression
+    # @param (see Frame::Runtime#evaluate)
+    # @option (see Frame::Runtime#evaluate)
     #
     # @return [Object]
     #
     # @example
     #   page.at_css("input").evaluate("this.value")
+    #   page.at_css("input").evaluate("this.value + suffix", suffix: "!")
     #
-    def evaluate(expression)
-      page.evaluate_on(node: self, expression: expression)
+    def evaluate(expression, *positional, **keywords)
+      @runtime.evaluate_in(self, expression, positional, keywords, mode: :value)
+    end
+
+    #
+    # Same as {#evaluate}, but returns a {RemoteObject} that stays in the
+    # browser instead of being serialized.
+    #
+    # @param (see Frame::Runtime#evaluate)
+    # @option (see Frame::Runtime#evaluate)
+    #
+    # @return [RemoteObject, Node, Object]
+    #
+    def evaluate_handle(expression, *positional, **keywords)
+      @runtime.evaluate_in(self, expression, positional, keywords, mode: :handle)
+    end
+
+    #
+    # Runs JavaScript with `this` bound to the node, for its side effects.
+    # The script is used as a function body, so multiple statements need no
+    # wrapping.
+    #
+    # @param (see Frame::Runtime#evaluate)
+    # @option (see Frame::Runtime#evaluate)
+    #
+    # @return [Boolean]
+    #   Always `true`.
+    #
+    # @example
+    #   page.at_css("input").execute("this.value = text", text: "hello")
+    #
+    def execute(expression, *positional, **keywords)
+      @runtime.evaluate_in(self, expression, positional, keywords, mode: :none)
+      true
     end
 
     #

@@ -85,6 +85,57 @@ JS
 browser.quit
 ```
 
+Pass arguments by name, so the script can use parameters instead of digging
+through `arguments[0]`:
+
+```ruby
+page.evaluate("a + b", a: 1, b: 2) # => 3
+page.evaluate("el.getAttribute(name)", el: page.at_css("a"), name: "href")
+```
+
+A script that starts with a function or arrow declaration is used as-is, which
+is how you run more than one statement:
+
+```ruby
+page.evaluate(<<~JS, a: 1, b: 2)
+  function(a, b) {
+    const sum = a + b;
+    return sum * 3;
+  }
+JS
+```
+
+`await` works directly, and a returned promise is awaited:
+
+```ruby
+page.evaluate("await fetch(url).then(r => r.text())", url: "/api")
+```
+
+Pass `timeout:` (seconds, defaulting to the page timeout) to bound how long the
+script may take before `Ferrum::ScriptTimeoutError` is raised, or `0` to let it
+run for as long as it takes. `timeout:` and `args:` are the only reserved
+keywords; use `args:` when a JavaScript parameter needs one of those names:
+
+```ruby
+page.evaluate("timeout * 2", args: { timeout: 21 }) # => 42
+```
+
+Use `#execute` when you only want the side effects, `#evaluate_handle` when you
+want to keep a value in the browser and pass it back in later, and
+`Ferrum::Node#evaluate` to run a script with `this` bound to an element:
+
+```ruby
+page.execute("window.scrollBy(0, 100)") # => true
+
+list = page.evaluate_handle("document.querySelectorAll('li')")
+page.evaluate("Array.from(nodes).map(n => n.textContent)", nodes: list)
+
+page.at_css("input").evaluate("this.value")
+```
+
+Coming from 0.20 or earlier? See
+[upgrading to 0.21](docs/13-javascript.md#upgrading-to-021).
+
 Do any mouse movements you like:
 
 ```ruby
