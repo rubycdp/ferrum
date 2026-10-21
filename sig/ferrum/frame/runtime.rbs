@@ -29,6 +29,10 @@ module Ferrum
 
       def handle_response: (untyped response) -> untyped
 
+      def resolve_node: (Node node) -> String
+
+      def resolve_node_options: () -> ::Hash[Symbol, Integer]
+
       def prepare_args: (untyped args) -> untyped
 
       def reduce_props: (untyped object_id, untyped to) { (untyped, untyped, untyped) -> untyped } -> (::Array[untyped] | untyped | untyped)

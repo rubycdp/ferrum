@@ -16,6 +16,7 @@
 - Ferrum keeps reading what Chrome writes after startup: it's logged on the `browser` channel, the last 100 lines are in
   `browser.process.output`
 - `browser.add_extension` adds an extension for pages and iframes attached afterwards [#663]
+- `page.isolated_world(name)` and `frame.isolated_world(name)` evaluate JavaScript in a world hidden from the page
 
 ### Changed
 - The logger cuts any string value over 1024 characters in CDP messages, not just screenshots.
