@@ -83,6 +83,17 @@ describe Ferrum::Worker do
       expect(browser.service_workers).to contain_exactly(target)
     end
 
+    it "detaches from them so Chrome can terminate them" do
+      page.go_to
+      page.evaluate_async(%(navigator.serviceWorker.register("/sw.js").then(arguments[0])), 5)
+      wait_for_target(&:service_worker?)
+
+      wait_for do
+        browser.client.command("Target.getTargets")["targetInfos"]
+               .select { |info| info["type"] == "service_worker" }.map { |info| info["attached"] }
+      end.to eq([false])
+    end
+
     it "connects on demand through Context#attach_target, keeping it alive" do
       page.go_to
       page.evaluate_async(%(navigator.serviceWorker.register("/sw.js").then(arguments[0])), 5)
