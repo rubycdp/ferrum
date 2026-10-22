@@ -72,6 +72,12 @@ module Ferrum
                 filename: "attachment.pdf"
     end
 
+    post "/inline.pdf" do
+      send_file File.join(FERRUM_APP, "static", "attachment.pdf"),
+                disposition: :inline,
+                filename: "inline.pdf"
+    end
+
     get "/foo" do
       "Another World"
     end

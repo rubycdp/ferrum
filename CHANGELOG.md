@@ -41,6 +41,9 @@
   `429 Too Many Requests` for a full remote browser service, and exposes it as `#status`
 
 ### Fixed
+- Navigation no longer times out when the last loading child frame detaches, including inline PDF form submissions
+  with the out-of-process PDF viewer (`PdfOopif`), enabled by default on Windows/macOS/Linux starting in Chromium 145
+  and available in earlier versions
 - `workers` skips detached workers, `target.worker` with no session raises `NoSuchTargetError` instead of a CDP error
 - `attach_target` reuses a target's session and returns the target, instead of opening one more that reruns extensions
 - Service workers registered by a page stayed attached and alive for the browser's lifetime, now Chrome can stop them
