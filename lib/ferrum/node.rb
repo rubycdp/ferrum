@@ -165,7 +165,9 @@ module Ferrum
     # mode: (:left | :right | :double)
     # keys: (:alt, (:ctrl | :control), (:meta | :command), :shift)
     # offset: { :x, :y, :position (:top | :center) }
-    def click(mode: :left, keys: [], offset: {}, delay: 0)
+    # wait: seconds to watch for a navigation started by a left click, then
+    #   wait for it to load; 0 returns as soon as the click is dispatched
+    def click(mode: :left, keys: [], offset: {}, delay: 0, wait: Mouse::CLICK_WAIT)
       x, y = find_position(**offset)
       modifiers = page.keyboard.modifiers(keys)
 
@@ -177,7 +179,7 @@ module Ferrum
       when :double
         page.mouse.click(x:, y:, modifiers:, delay:, count: 2, wait: 0)
       when :left
-        page.mouse.click(x:, y:, modifiers:, delay:)
+        page.mouse.click(x:, y:, modifiers:, delay:, wait:)
       end
 
       self
