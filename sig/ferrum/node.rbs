@@ -47,7 +47,7 @@ module Ferrum
 
     def type: (*untyped keys) -> untyped
 
-    def click: (?mode: ::Symbol, ?keys: untyped, ?offset: ::Hash[untyped, untyped], ?delay: ::Integer) -> self
+    def click: (?mode: ::Symbol, ?keys: untyped, ?offset: ::Hash[untyped, untyped], ?delay: ::Integer, ?wait: ::Numeric) -> self
 
     def hover: () -> untyped
 
