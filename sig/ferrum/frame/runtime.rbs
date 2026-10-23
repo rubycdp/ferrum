@@ -11,6 +11,10 @@ module Ferrum
 
       INTERMITTENT_SLEEP: untyped
 
+      DEEP_SERIALIZATION: ::Hash[Symbol, untyped]
+
+      UNSERIALIZABLE_NUMBERS: ::Hash[String, Float]
+
       def evaluate: (untyped expression, *untyped args) -> untyped
 
       def evaluate_async: (untyped expression, untyped wait, *untyped args) -> untyped
@@ -27,7 +31,9 @@ module Ferrum
 
       def handle_error: (untyped response) -> (nil | untyped)
 
-      def handle_response: (untyped response) -> untyped
+      def handle_response: (Hash[String, untyped] response) -> untyped
+
+      def deserialize: (Hash[String, untyped] serialized, ?Hash[Integer, Hash[String, untyped]] references, ?Array[Integer] path) -> untyped
 
       def resolve_node: (Node node) -> String
 
@@ -35,11 +41,7 @@ module Ferrum
 
       def prepare_args: (untyped args) -> untyped
 
-      def reduce_props: (untyped object_id, untyped to) { (untyped, untyped, untyped) -> untyped } -> (::Array[untyped] | untyped | untyped)
-
-      def cyclic?: (untyped object_id) -> untyped
-
-      def cyclic_object: () -> untyped
+      def cyclic_object: () -> CyclicObject
     end
   end
 end

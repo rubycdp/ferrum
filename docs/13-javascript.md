@@ -16,6 +16,11 @@ Evaluate and return result for given JS expression
 page.evaluate("[window.scrollX, window.scrollY]")
 ```
 
+The result is converted to Ruby: objects become `Hash`, arrays and node lists `Array`, DOM nodes `Ferrum::Node`,
+dates ISO 8601 strings, `NaN` and `Infinity` `Float`, `BigInt` `Integer`, `null` and `undefined` `nil`. Values
+without a Ruby counterpart, such as functions, `Map`, `Set` or `window`, become `{}`. A reference back to an
+enclosing object, e.g. `a.self = a`, becomes `Ferrum::CyclicObject`.
+
 #### evaluate_async(expression, wait_time, \*args)
 
 Evaluate asynchronous expression and return result

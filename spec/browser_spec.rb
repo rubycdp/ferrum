@@ -238,7 +238,7 @@ describe Ferrum::Browser do
         browser.go_to(base_url("/deeply_nested"))
 
         expect(browser.evaluate(%(document.getElementById("text"))).text).to eq("text")
-        expect(logger.string).to include("DOM.describeNode")
+        expect(logger.string).to include("DOM.setChildNodes")
       ensure
         browser&.quit
       end

@@ -110,6 +110,36 @@ describe Ferrum::Frame::Runtime do
       )
     end
 
+    it "returns nodes of every type" do
+      browser.content = <<~HTML
+        <!DOCTYPE html>
+        <p class="a" id="b">text<!--comment--></p>
+        <iframe srcdoc="<b>inner</b>"></iframe>
+        <my-element></my-element>
+        <svg><circle r="1"/></svg>
+        <div id="host"></div>
+      HTML
+      nodes = browser.evaluate(<<~JS)
+        (() => {
+          const host = document.getElementById("host");
+          host.attachShadow({ mode: "open" });
+          const p = document.querySelector("p");
+          return [document, document.doctype, p, p.firstChild, p.lastChild, document.querySelector("iframe"),
+                  document.querySelector("my-element"), document.querySelector("circle"), host.shadowRoot];
+        })()
+      JS
+
+      expect(nodes.map(&:tag_name)).to eq(
+        %w[#document html p #text #comment iframe my-element circle #document-fragment]
+      )
+      expect(nodes.map(&:node_type)).to eq([9, 10, 1, 3, 8, 1, 1, 1, 11])
+      expect(nodes.map(&:node?)).to eq([false, false, true, false, false, true, true, true, false])
+      expect(nodes[5].frame_id).to eq(browser.frames.reject(&:main?).first.id)
+      expect(nodes.values_at(0..4, 6..8).map(&:frame_id)).to all(be_nil)
+      expect(nodes[2].description).to include("nodeName" => "P", "attributes" => %w[class a id b])
+      expect(nodes[8].description).to include("shadowRootType" => "open")
+    end
+
     it "returns values properly" do
       expect(browser.evaluate("null")).to be_nil
       expect(browser.evaluate("false")).to be false
@@ -148,7 +178,33 @@ describe Ferrum::Frame::Runtime do
       expect(browser.evaluate(%(new Error("smth")))).to eq({})
     end
 
+    it "keeps null and undefined in arrays" do
+      expect(browser.evaluate("[1, null, undefined, 3]")).to eq([1, nil, nil, 3])
+    end
+
+    it "returns numbers JSON can't represent" do
+      expect(browser.evaluate("NaN")).to be_nan
+      expect(browser.evaluate("1 / 0")).to eq(Float::INFINITY)
+      expect(browser.evaluate("-1 / 0")).to eq(-Float::INFINITY)
+      expect(browser.evaluate("-0").to_s).to eq("-0.0")
+      expect(browser.evaluate("{ big: 2n ** 64n }")).to eq("big" => 2**64)
+    end
+
+    it "returns dates as ISO strings" do
+      expect(browser.evaluate("[new Date(Date.UTC(2012, 0))]")).to eq(["2012-01-01T00:00:00.000Z"])
+    end
+
+    it "returns values of getters" do
+      expect(browser.evaluate("{ get a() { return 1 } }")).to eq("a" => 1)
+    end
+
+    it "returns objects without a Ruby equivalent as empty hashes" do
+      expect(browser.evaluate("[new Map([[1, 2]]), new Set([1]), /a/, Symbol('a')]")).to eq([{}, {}, {}, nil])
+    end
+
     context "when cyclic structure is returned" do
+      let(:cyclic) { Ferrum::CyclicObject.instance }
+
       context "ignores seen" do
         let(:code) do
           <<~JS
@@ -166,11 +222,11 @@ describe Ferrum::Frame::Runtime do
         end
 
         it "returns object" do
-          expect(browser.evaluate(code % "a")).to eq(Ferrum::CyclicObject.instance)
+          expect(browser.evaluate(code % "a")).to eq("a" => cyclic, "b" => {}, "c" => { "a" => cyclic })
         end
 
         it "returns array" do
-          expect(browser.evaluate(code % "[a]")).to eq([Ferrum::CyclicObject.instance])
+          expect(browser.evaluate(code % "[a]")).to eq([{ "a" => cyclic, "b" => {}, "c" => { "a" => cyclic } }])
         end
       end
 
@@ -178,21 +234,23 @@ describe Ferrum::Frame::Runtime do
         expect(browser.evaluate("(function() { var a = {}; return [a, a] })()")).to eq([{}, {}])
       end
 
-      it "only checks for a cycle once for the whole result tree, not once per nested object" do
-        frame = browser.main_frame
-        original_cyclic = frame.method(:cyclic?)
-        calls = 0
-        allow(frame).to receive(:cyclic?) do |*args|
-          calls += 1
-          original_cyclic.call(*args)
-        end
+      it "returns an array containing itself" do
+        expect(browser.evaluate("(function() { var a = [1]; a.push(a); return a })()")).to eq([1, cyclic])
+      end
+
+      it "returns window as an empty hash" do
+        expect(browser.evaluate("window")).to eq({})
+      end
+
+      it "fetches the whole result tree with one command" do
+        allow(browser.page).to receive(:command).and_call_original
 
         result = browser.evaluate(<<~JS)
           Array.from({ length: 50 }, (_, i) => ({ i: i, nested: { j: i * 2 } }))
         JS
 
         expect(result.size).to eq(50)
-        expect(calls).to eq(1)
+        expect(browser.page).to have_received(:command).once
       end
     end
   end

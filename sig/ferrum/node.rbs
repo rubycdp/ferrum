@@ -5,22 +5,31 @@ module Ferrum
     MOVING_WAIT_ATTEMPTS: untyped
 
     @node_id: untyped
-    @object_id: untyped
     @document_version: ::Integer
 
     attr_reader page: untyped
 
     attr_reader target_id: untyped
 
-    attr_reader description: untyped
+    @backend_node_id: Integer
+    @node_type: Integer
+    @tag_name: String?
+    @frame_id: String?
+    @description: Hash[String, untyped]?
 
-    attr_reader tag_name: untyped
+    attr_reader backend_node_id: Integer
 
-    def initialize: (untyped frame, untyped target_id, untyped node_id, untyped description) -> void
+    attr_reader node_type: Integer
+
+    def initialize: (untyped frame, Hash[String, untyped] properties) -> void
+
+    def description: () -> Hash[String, untyped]
+
+    def tag_name: () -> String
 
     def node?: () -> untyped
 
-    def frame_id: () -> untyped
+    attr_reader frame_id: String?
 
     def frame: () -> untyped
 
