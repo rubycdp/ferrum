@@ -4,10 +4,9 @@ require "singleton"
 
 module Ferrum
   #
-  # Placeholder object substituted for a JavaScript value that couldn't be
-  # fully serialized because it contains circular references. It exists
-  # only so that {#inspect} can report the situation instead of the
-  # evaluation raising or hanging.
+  # Placeholder substituted for a reference back to a JavaScript object that
+  # contains it, e.g. `a.self = a`, so that the result stays a finite Ruby
+  # Hash or Array.
   #
   class CyclicObject
     include Singleton
@@ -24,12 +23,23 @@ module Ferrum
     #
     # Evaluates and executes JavaScript in a frame's execution context via
     # `Runtime.callFunctionOn`, converting arguments and return values
-    # between Ruby and JS, and resolving object/array/node results
-    # (including cyclic ones, via {CyclicObject}) into Ruby equivalents.
+    # between Ruby and JS, and resolving object/array/node results into Ruby
+    # equivalents. A reference back to an enclosing object becomes
+    # {CyclicObject}.
     #
     module Runtime
       INTERMITTENT_ATTEMPTS = ENV.fetch("FERRUM_INTERMITTENT_ATTEMPTS", 6).to_i
       INTERMITTENT_SLEEP = ENV.fetch("FERRUM_INTERMITTENT_SLEEP", 0.1).to_f
+      DEEP_SERIALIZATION = {
+        serialization: "deep",
+        additionalParameters: { maxNodeDepth: 0, includeShadowTree: "none" }
+      }.freeze
+      UNSERIALIZABLE_NUMBERS = {
+        "NaN" => Float::NAN,
+        "-0" => -0.0,
+        "Infinity" => Float::INFINITY,
+        "-Infinity" => -Float::INFINITY
+      }.freeze
 
       #
       # Evaluate and return result for given JS expression.
@@ -153,6 +163,7 @@ module Ferrum
           params = options.dup
 
           params = params.merge(objectId: resolve_node(on)) if on
+          params = params.merge(serializationOptions: DEEP_SERIALIZATION) if handle
 
           if params[:executionContextId].nil? && params[:objectId].nil?
             params = params.merge(executionContextId: execution_id!)
@@ -182,38 +193,37 @@ module Ferrum
         end
       end
 
-      def handle_response(response, check_cyclic: true)
-        case response["type"]
-        when "boolean", "number", "string"
-          response["value"]
-        when "undefined"
+      def handle_response(response)
+        deserialize(response["deepSerializedValue"])
+      end
+
+      def deserialize(serialized, references = {}, path = [])
+        reference = serialized["weakLocalObjectReference"]
+        if reference
+          return cyclic_object if path.include?(reference)
+
+          serialized = references[reference] ||= serialized
+          path += [reference]
+        end
+
+        value = serialized["value"]
+        case serialized["type"]
+        when "undefined", "null", "symbol"
           nil
-        when "function"
-          {}
+        when "boolean", "string", "date"
+          value
+        when "number"
+          UNSERIALIZABLE_NUMBERS.fetch(value, value)
+        when "bigint"
+          Integer(value)
+        when "array", "nodelist", "htmlcollection"
+          value.map { |v| deserialize(v, references, path) }
         when "object"
-          object_id = response["objectId"]
-
-          case response["subtype"]
-          when "node"
-            description = @page.command("DOM.describeNode", objectId: object_id)["node"]
-            Node.new(self, @page.target_id, description, object_id: object_id)
-          when "array"
-            reduce_props(object_id, [], check_cyclic: check_cyclic) do |memo, key, value|
-              next(memo) unless Integer(key, exception: false)
-
-              value = value["objectId"] ? handle_response(value, check_cyclic: false) : value["value"]
-              memo.insert(key.to_i, value)
-            end.compact
-          when "date"
-            response["description"]
-          when "null"
-            nil
-          else
-            reduce_props(object_id, {}, check_cyclic: check_cyclic) do |memo, key, value|
-              value = value["objectId"] ? handle_response(value, check_cyclic: false) : value["value"]
-              memo.merge(key => value)
-            end
-          end
+          value.to_h { |k, v| [k, deserialize(v, references, path)] }
+        when "node"
+          Node.new(self, value)
+        else
+          {}
         end
       end
 
@@ -235,52 +245,6 @@ module Ferrum
             { value: arg }
           end
         end
-      end
-
-      def reduce_props(object_id, to, check_cyclic: true)
-        if check_cyclic && cyclic?(object_id).dig("result", "value")
-          to.is_a?(Array) ? [cyclic_object] : cyclic_object
-        else
-          props = @page.command("Runtime.getProperties", ownProperties: true, objectId: object_id)
-          props["result"].reduce(to) do |memo, prop|
-            next(memo) unless prop["enumerable"]
-
-            yield(memo, prop["name"], prop["value"])
-          end
-        end
-      end
-
-      def cyclic?(object_id)
-        @page.command(
-          "Runtime.callFunctionOn",
-          objectId: object_id,
-          returnByValue: true,
-          functionDeclaration: <<~JS
-            function() {
-              if (Array.isArray(this) &&
-                  this.every(e => e instanceof Node)) {
-                return false;
-              }
-
-              function detectCycle(obj, seen) {
-                if (typeof obj === "object") {
-                  if (seen.indexOf(obj) !== -1) {
-                    return true;
-                  }
-                  for (let key in obj) {
-                    if (obj.hasOwnProperty(key) && detectCycle(obj[key], seen.concat([obj]))) {
-                      return true;
-                    }
-                  }
-                }
-
-                return false;
-              }
-
-              return detectCycle(this, []);
-            }
-          JS
-        )
       end
 
       def cyclic_object

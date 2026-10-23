@@ -17,8 +17,15 @@
   `browser.process.output`
 - `browser.add_extension` adds an extension for pages and iframes attached afterwards [#663]
 - `page.isolated_world(name)` and `frame.isolated_world(name)` evaluate JavaScript in a world hidden from the page
+- `Node#backend_node_id` and `Node#node_type`
 
 ### Changed
+- `evaluate` fetches the whole result in one CDP call instead of one per nested object, dates come back as ISO 8601
+  strings and a cyclic result is a `Hash`/`Array` with `CyclicObject` only where it refers back to itself, instead of
+  being replaced by `CyclicObject` entirely
+- Nodes returned by `evaluate`, `css` and the other finders no longer cost a `DOM.describeNode` call each,
+  `Node#description` is fetched on first use. `Node.new` takes the node as Chrome deep serializes it instead of
+  a target id and a description
 - The logger cuts any string value over 1024 characters in CDP messages, not just screenshots.
   `FERRUM_LOG_VALUE_LENGTH` sets the length, `0` keeps them whole. `FERRUM_LOGGING_SCREENSHOTS` is gone
 - `ProcessTimeoutError` is raised as soon as Chrome exits instead of after `:process_timeout`
@@ -43,6 +50,8 @@
 ### Fixed
 - `evaluate`, `execute` and friends raise `JavaScriptError` when JS throws something other than an `Error`, e.g.
   `throw "smth"`, instead of returning it. Returning an `Error` object no longer crashes with `NoMethodError`
+- `evaluate` keeps `null` and `undefined` in arrays and returns `NaN`, `Infinity`, `-0` and `BigInt` instead of `nil`,
+  and no longer crashes on objects with getters
 - `workers` skips detached workers, `target.worker` with no session raises `NoSuchTargetError` instead of a CDP error
 - `attach_target` reuses a target's session and returns the target, instead of opening one more that reruns extensions
 - Service workers registered by a page stayed attached and alive for the browser's lifetime, now Chrome can stop them
