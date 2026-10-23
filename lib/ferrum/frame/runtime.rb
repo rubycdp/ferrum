@@ -171,14 +171,14 @@ module Ferrum
 
       # FIXME: We should have a central place to handle all type of errors
       def handle_error(response)
-        result = response["result"]
-        return if result["subtype"] != "error"
+        details = response["exceptionDetails"]
+        return unless details
 
-        case result["description"]
+        case details.dig("exception", "description")
         when /\AError: timed out promise/
           raise ScriptTimeoutError
         else
-          raise JavaScriptError, response["exceptionDetails"]
+          raise JavaScriptError, details
         end
       end
 

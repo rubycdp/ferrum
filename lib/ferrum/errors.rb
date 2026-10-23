@@ -216,7 +216,7 @@ module Ferrum
 
     def initialize(response)
       @class_name, @message = response["exception"]&.values_at("className", "description")
-      @message ||= response["text"]
+      @message ||= [response["text"], response.dig("exception", "value")].compact.join(" ")
       @stack_trace = response["stackTrace"]
       super(response.merge("message" => @message))
     end
