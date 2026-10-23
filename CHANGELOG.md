@@ -41,6 +41,8 @@
   `429 Too Many Requests` for a full remote browser service, and exposes it as `#status`
 
 ### Fixed
+- `evaluate`, `execute` and friends raise `JavaScriptError` when JS throws something other than an `Error`, e.g.
+  `throw "smth"`, instead of returning it. Returning an `Error` object no longer crashes with `NoMethodError`
 - `workers` skips detached workers, `target.worker` with no session raises `NoSuchTargetError` instead of a CDP error
 - `attach_target` reuses a target's session and returns the target, instead of opening one more that reruns extensions
 - Service workers registered by a page stayed attached and alive for the browser's lifetime, now Chrome can stop them

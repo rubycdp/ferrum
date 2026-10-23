@@ -2,6 +2,10 @@
 
 describe Ferrum::Frame::Runtime do
   describe "#execute" do
+    it "raises when a string is thrown" do
+      expect { browser.execute(%(throw "smth")) }.to raise_error(Ferrum::JavaScriptError, "Uncaught smth")
+    end
+
     it "executes multiple lines of javascript" do
       browser.execute <<-JS
         var a = 1
@@ -128,6 +132,22 @@ describe Ferrum::Frame::Runtime do
       end.to raise_error(Ferrum::JavaScriptError)
     end
 
+    it "raises when a string is thrown" do
+      expect do
+        browser.evaluate(%((() => { throw "smth" })()))
+      end.to raise_error(Ferrum::JavaScriptError, "Uncaught smth")
+    end
+
+    it "raises when an object is thrown" do
+      expect do
+        browser.evaluate("(() => { throw { code: 1 } })()")
+      end.to raise_error(Ferrum::JavaScriptError) { |e| expect(e.class_name).to eq("Object") }
+    end
+
+    it "returns an Error object instead of raising" do
+      expect(browser.evaluate(%(new Error("smth")))).to eq({})
+    end
+
     context "when cyclic structure is returned" do
       context "ignores seen" do
         let(:code) do
@@ -219,9 +239,24 @@ describe Ferrum::Frame::Runtime do
         browser.evaluate_async("var callback=arguments[0]; setTimeout(function(){callback(true)}, 4000)", 1)
       end.to raise_error(Ferrum::ScriptTimeoutError)
     end
+
+    it "raises when a string is thrown" do
+      expect do
+        browser.evaluate_async(%(throw "smth"), 5)
+      end.to raise_error(Ferrum::JavaScriptError, "Uncaught (in promise) smth")
+    end
   end
 
   describe "#evaluate_on" do
+    it "raises when a string is thrown" do
+      browser.go_to("/table")
+      node = browser.at_xpath(".//td")
+
+      expect do
+        browser.evaluate_on(node: node, expression: %((() => { throw "smth" })()))
+      end.to raise_error(Ferrum::JavaScriptError, "Uncaught smth")
+    end
+
     it "does not retry if node is not around anymore" do
       stub_const("Ferrum::Frame::Runtime::INTERMITTENT_SLEEP", 5)
 
