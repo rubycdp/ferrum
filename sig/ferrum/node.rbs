@@ -6,6 +6,7 @@ module Ferrum
 
     @node_id: untyped
     @document_version: ::Integer
+    @runtime: Frame::Runtime
 
     attr_reader page: untyped
 
@@ -21,7 +22,7 @@ module Ferrum
 
     attr_reader node_type: Integer
 
-    def initialize: (untyped frame, Hash[String, untyped] properties) -> void
+    def initialize: (Frame::Runtime frame, Hash[String, untyped] properties) -> void
 
     def description: () -> Hash[String, untyped]
 
@@ -77,7 +78,11 @@ module Ferrum
 
     def select: (*untyped values, ?by: ::Symbol) -> untyped
 
-    def evaluate: (untyped expression) -> untyped
+    def evaluate: (untyped expression, *untyped positional, **untyped keywords) -> untyped
+
+    def evaluate_handle: (untyped expression, *untyped positional, **untyped keywords) -> untyped
+
+    def execute: (untyped expression, *untyped positional, **untyped keywords) -> true
 
     def ==: (untyped other) -> (false | untyped)
 
