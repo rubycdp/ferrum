@@ -74,6 +74,9 @@
 - When Chrome can't compute an element's content quads, `node.click` falls back to its bounding rect, but it added the
   page scroll offset and missed the element on a scrolled page. It clicks in viewport coordinates now
 - `Proxy#rotate` to an upstream proxy failed every HTTPS request with `ERR_TUNNEL_CONNECTION_FAILED`
+- `set_viewport` without `mobile: true` and `resize` turned touch emulation off, even on a page that never had it on.
+  Chrome then resets hover and pointer to the detected input devices, which undid `--blink-settings` overrides such
+  as a mouse on headless Linux. Touch emulation is only turned off now after a `mobile: true` viewport [#664]
 
 ### Removed
 - `Browser::Process#default_user_agent`, `#browser_version`, `#protocol_version`, `#v8_version` and `#webkit_version`,
