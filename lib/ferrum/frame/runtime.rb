@@ -2,7 +2,6 @@
 
 require "singleton"
 require "ferrum/frame/script"
-require "ferrum/frame/runtime/legacy"
 
 module Ferrum
   #
@@ -140,19 +139,7 @@ module Ferrum
     # is sent unchanged, with `this` bound to the node and the arguments
     # `["#", "!"]`, and comes back as `"#main!"`.
     #
-    # ## Scripts written for the old API
-    #
-    # Until Ferrum 0.21, a call that only the old API could have made runs
-    # the old way through {Legacy} and warns when its result will change.
-    # That's a call without named arguments, or one whose script reads
-    # `arguments` or also passes positional ones, unless the script is a
-    # declaration or uses `await`, or the method is {#evaluate_handle} or
-    # {Node#execute}.
-    # `FERRUM_JS_API=new` sends every call through the steps above.
-    #
     module Runtime
-      include Legacy
-
       INTERMITTENT_ATTEMPTS = ENV.fetch("FERRUM_INTERMITTENT_ATTEMPTS", 6).to_i
       INTERMITTENT_SLEEP = ENV.fetch("FERRUM_INTERMITTENT_SLEEP", 0.1).to_f
       DEEP_SERIALIZATION = {
@@ -276,10 +263,6 @@ module Ferrum
       #
       def run(expression, positional, keywords, mode:, on: nil)
         script = Script.new(expression)
-        if legacy?(script, positional, keywords, mode: mode, on: on)
-          return run_legacy(script, positional, keywords, mode: mode, on: on)
-        end
-
         named = keywords.except(:timeout)
         params, values = arguments_for(script, positional, named)
         call(wrap(script, params, mode), values, on: on, mode: mode, timeout: script_timeout(keywords[:timeout]))

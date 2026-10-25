@@ -7,8 +7,6 @@ module Ferrum
 
   class Frame
     module Runtime
-      include Legacy
-
       INTERMITTENT_ATTEMPTS: untyped
 
       INTERMITTENT_SLEEP: untyped

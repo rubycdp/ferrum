@@ -3,8 +3,7 @@
 module Ferrum
   module Utils
     #
-    # Emits deprecation warnings for the JavaScript evaluation API, whose
-    # old behavior is removed in the next release, Ferrum 0.21.
+    # Emits deprecation warnings for APIs removed in a later release.
     #
     # Warnings are printed once per unique message and call site so that a
     # deprecated call inside a loop doesn't flood the output. Set

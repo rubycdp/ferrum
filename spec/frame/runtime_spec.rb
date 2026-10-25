@@ -521,15 +521,7 @@ describe Ferrum::Frame::Runtime do
     end
   end
 
-  describe "with FERRUM_JS_API=new" do
-    around do |example|
-      original = ENV.fetch("FERRUM_JS_API", nil)
-      ENV["FERRUM_JS_API"] = "new"
-      example.run
-    ensure
-      ENV["FERRUM_JS_API"] = original
-    end
-
+  describe "scripts written for the old API" do
     it "awaits a returned promise and raises when it rejects" do
       expect(browser.evaluate("new Promise(resolve => setTimeout(() => resolve(42), 100))")).to eq(42)
       expect { browser.evaluate("Promise.reject(new Error('nope'))") }.to raise_error(Ferrum::JavaScriptError, /nope/)
@@ -569,10 +561,6 @@ describe Ferrum::Frame::Runtime do
 
       expect(node.evaluate("this.parentNode")).to be_a(Ferrum::Node)
       expect(node.evaluate("new Date(0)")).to be_a(String)
-    end
-
-    it "doesn't warn" do
-      expect { expect(browser.evaluate("Promise.resolve(1)")).to eq(1) }.not_to output.to_stderr
     end
   end
 
