@@ -399,6 +399,40 @@ module Ferrum
     end
 
     #
+    # Runs the block and, if it starts a navigation of the main frame within
+    # `wait` seconds, waits for that navigation to finish, e.g. after a click
+    # on a link made from JavaScript.
+    #
+    # @param [Numeric] wait
+    #   How many seconds to watch for a navigation after the block returns.
+    #
+    # @yield The code that may start a navigation.
+    #
+    # @return [Boolean]
+    #   `false` when a navigation started but didn't finish within the page's
+    #   `timeout`.
+    #
+    # @example
+    #   page.wait_for_navigation { page.at_css("a").evaluate("this.click()") } # => true
+    #
+    def wait_for_navigation(wait = Mouse::CLICK_WAIT)
+      iteration = @event.reset
+      yield
+      @event.wait(wait)
+      iteration == @event.iteration || @event.wait(timeout)
+    end
+
+    #
+    # Waits for a navigation the block starts or raises {Ferrum::TimeoutError}.
+    # Accepts the same arguments as {#wait_for_navigation}.
+    #
+    # @raise [Ferrum::TimeoutError]
+    #
+    def wait_for_navigation!(...)
+      raise TimeoutError unless wait_for_navigation(...)
+    end
+
+    #
     # Enables/disables CSP bypass.
     #
     # @param [Boolean] enabled
@@ -496,21 +530,14 @@ module Ferrum
     #   page.command("Page.navigate", url: "https://github.com/")
     #
     def command(method, wait: 0, slowmoable: false, timeout: nil, **params)
-      iteration = @event.reset if wait.positive?
-      sleep(@options.slowmo) if slowmoable && @options.slowmo.positive?
-      result = client.command(method, timeout: timeout || self.timeout, **params)
-
       if wait.positive?
-        # Wait a bit after command and check if iteration has
-        #  changed, which means there was some network event for
-        # the main frame, and it started to load new content.
-        @event.wait(wait)
-        if iteration != @event.iteration
-          set = @event.wait(self.timeout)
-          raise TimeoutError unless set
-        end
+        result = nil
+        wait_for_navigation!(wait) { result = command(method, slowmoable:, timeout:, **params) }
+        return result
       end
-      result
+
+      sleep(@options.slowmo) if slowmoable && @options.slowmo.positive?
+      client.command(method, timeout: timeout || self.timeout, **params)
     end
 
     # Subscribes to a CDP event, or to `:dialog`, `:request`, `:response`,

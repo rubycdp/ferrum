@@ -80,6 +80,10 @@ module Ferrum
 
     def wait_for_reload: (?::Numeric timeout) -> void
 
+    def wait_for_navigation: (?::Numeric wait) { () -> void } -> bool
+
+    def wait_for_navigation!: (?::Numeric wait) { () -> void } -> void
+
     def bypass_csp: (?enabled: bool) -> Hash[String, untyped]
 
     def evaluate_on_new_document: (String source, ?world_name: String?, ?run_immediately: bool) -> String
