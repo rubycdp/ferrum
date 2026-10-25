@@ -85,6 +85,55 @@ JS
 browser.quit
 ```
 
+Pass arguments by name, so the script can use parameters instead of digging
+through `arguments[0]`:
+
+```ruby
+page.evaluate("a + b", a: 1, b: 2) # => 3
+page.evaluate("el.getAttribute(name)", el: page.at_css("a"), name: "href")
+```
+
+A script that is a function or arrow declaration is used as-is and takes its
+arguments positionally, in the order it declares them:
+
+```ruby
+page.evaluate(<<~JS, 1, 2)
+  function(a, b) {
+    const sum = a + b;
+    return sum * 3;
+  }
+JS
+```
+
+`await` works directly, and a function declaration's returned promise is
+awaited:
+
+```ruby
+page.evaluate("await fetch(url).then(r => r.text())", url: "/api")
+```
+
+Pass `timeout:` (seconds, defaulting to the page timeout) to bound how long the
+script may take before `Ferrum::ScriptTimeoutError` is raised. `timeout:` is the
+only reserved keyword.
+
+Use `#execute` when you only want the side effects, `#evaluate_handle` when you
+want to keep a value in the browser and pass it back in later, and
+`Ferrum::Node#evaluate` to run a script with `this` bound to an element:
+
+```ruby
+page.execute("window.scrollBy(0, 100)") # => true
+
+list = page.evaluate_handle("document.querySelectorAll('li')")
+page.evaluate("Array.from(nodes).map(n => n.textContent)", nodes: list)
+
+page.at_css("input").evaluate("this.value")
+```
+
+Scripts written for the old API keep working, and Ferrum warns, with a suggested
+rewrite, about any whose result will change. The next release, 0.21, removes the
+old behavior, so run your suite with `FERRUM_JS_API=new` to check it's ready. See
+[upgrading to 0.21](docs/13-javascript.md#upgrading-to-021).
+
 Do any mouse movements you like:
 
 ```ruby

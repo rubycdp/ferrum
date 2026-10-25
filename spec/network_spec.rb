@@ -238,9 +238,11 @@ describe Ferrum::Network do
       network.blacklist = /jquery/
       page.go_to("/")
 
-      size = page.evaluate_async(<<~JS, page.timeout)
-        const bytes = new Uint8Array([0x22, 0x5c, 0x00, 0x0a, 0xed, 0xa0, 0x80, 0x41]);
-        fetch("/upload", { method: "PUT", body: new Blob([bytes]) }).then((r) => r.text()).then(arguments[0]);
+      size = page.evaluate(<<~JS)
+        async function() {
+          const bytes = new Uint8Array([0x22, 0x5c, 0x00, 0x0a, 0xed, 0xa0, 0x80, 0x41]);
+          return fetch("/upload", { method: "PUT", body: new Blob([bytes]) }).then((r) => r.text());
+        }
       JS
 
       expect(size).to eq("8")
