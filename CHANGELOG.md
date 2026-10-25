@@ -50,6 +50,8 @@
   `429 Too Many Requests` for a full remote browser service, and exposes it as `#status`
 
 ### Fixed
+- `Node#property` and `Node#attribute` read any name, a quote in it no longer breaks the script, and `property`
+  returns a `Ferrum::Node` for a property holding one instead of `{}` [#673]
 - `evaluate`, `execute` and friends raise `JavaScriptError` when JS throws something other than an `Error`, e.g.
   `throw "smth"`, instead of returning it. Returning an `Error` object no longer crashes with `NoMethodError`
 - `evaluate` keeps `null` and `undefined` in arrays and returns `NaN`, `Infinity`, `-0` and `BigInt` instead of `nil`,
@@ -117,6 +119,9 @@
   loaded (on CDP's `Network.loadingFinished`, not `Network.responseReceived`, so `exchange.response.body` is always
   available), yielding the request's `Network::Exchange`. Doesn't require `network.intercept` to be set up, and is
   never fired for requests that fail to load [#294]
+- `#evaluate`/`#execute` take named arguments that become the script's parameters, `page.evaluate("a + b", a: 1,
+  b: 2)`, a function declaration as the script with positional arguments, `await`, and `timeout:` [#673]
+- `#evaluate_handle` returning a `Ferrum::RemoteObject`, and `Node#execute`/`Node#evaluate_handle` [#673]
 - `Ferrum::Browser#quit`/`Ferrum::Browser::Process#stop` accept `wait: false` to return immediately and run process
   killing and user-data-directory cleanup on a background thread instead of blocking; the call returns the `Thread`
   so callers can `#join` it if they need cleanup to have finished, e.g. before process exit or before reusing a
@@ -132,6 +137,10 @@
 - `Ferrum::Page::Stream#stream` now closes the CDP stream handle (`IO.close`) once it's been fully read, so streams
   opened for `Ferrum::Browser#pdf` and `Ferrum::Page::Tracing#record` no longer keep their backing storage alive in
   the browser; a failed `IO.close` is raised to the caller.
+- `#evaluate_async`, `#evaluate_func` and `#evaluate_on` are deprecated, and scripts whose result will change in
+  0.21 warn with a rewrite. 0.21 removes the old behavior, and `FERRUM_JS_API=new` runs the new one now, see
+  [upgrading](docs/13-javascript.md#upgrading-to-021) [#673]
+- `Ferrum::ScriptTimeoutError` inherits from `Ferrum::TimeoutError` [#673]
 
 ### Fixed
 - An out-of-process iframe, e.g. Chrome's PDF viewer for an embedded PDF, appearing while a web worker was connected

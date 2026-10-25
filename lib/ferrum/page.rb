@@ -34,7 +34,8 @@ module Ferrum
 
     delegate %i[at_css at_xpath css xpath wait_for_selector
                 current_url current_title url title body doctype content=
-                execution_id execution_id! evaluate evaluate_on evaluate_async execute evaluate_func isolated_world
+                execution_id execution_id! evaluate evaluate_handle execute
+                evaluate_on evaluate_async evaluate_func isolated_world
                 add_script_tag add_style_tag] => :main_frame
     delegate %i[base_url default_user_agent timeout timeout=] => :@options
 

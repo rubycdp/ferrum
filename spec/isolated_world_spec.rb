@@ -39,6 +39,17 @@ describe Ferrum::IsolatedWorld do
     expect(world.evaluate("document.querySelector('#nav')").text).to eq("Home")
   end
 
+  it "takes named arguments and evaluates on its nodes" do
+    page.go_to("/simple")
+    world = page.isolated_world("ferrum")
+    world.execute("window.secret = 'isolated'")
+
+    node = world.evaluate("document.querySelector('#nav')")
+
+    expect(world.evaluate("el.id", el: page.at_css("#break"))).to eq("break")
+    expect(node.evaluate("this.textContent + window.secret")).to eq("Homeisolated")
+  end
+
   it "evaluates in a frame" do
     page.go_to("/frames")
     frame = page.at_css("iframe[name]").frame

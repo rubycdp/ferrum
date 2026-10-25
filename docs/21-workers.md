@@ -36,7 +36,7 @@ Returns service worker targets registered in this context. Unlike `workers`, the
 are not connected to -- call `attach_target` first if you want to interact with one.
 
 ```ruby
-page.evaluate_async(%(navigator.serviceWorker.register("/sw.js").then(arguments[0])), 5)
+page.evaluate(%(await navigator.serviceWorker.register("/sw.js")))
 
 sleep 0.1
 
@@ -91,7 +91,7 @@ Same API as `page.console` -- see [JavaScript](/docs/ferrum/javascript#console).
 worker.console.map(&:text) # => ["from worker"]
 ```
 
-#### evaluate / execute / evaluate_async
+#### evaluate / execute / evaluate_handle
 
 Same API as on `Page`/`Frame` -- see [JavaScript](/docs/ferrum/javascript). A worker has a single execution context,
 so there's no frame to target.

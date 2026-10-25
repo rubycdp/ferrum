@@ -1,0 +1,57 @@
+module Ferrum
+  class Frame
+    module Runtime
+      module Legacy : Runtime
+        TIMEOUT_MARKER: ::String
+
+        NEXT_VERSION: ::String
+
+        %a{deprecated} def evaluate_async: (untyped expression, untyped wait, *untyped args) -> untyped
+
+        %a{deprecated} def evaluate_func: (untyped expression, *untyped args, ?on: untyped?) -> untyped
+
+        %a{deprecated} def evaluate_on: (node: untyped, expression: untyped, ?by_value: bool, ?wait: ::Integer) -> untyped
+
+        private
+
+        def legacy?: (Script script, ::Array[untyped] positional, ::Hash[::Symbol, untyped] keywords, mode: ::Symbol, on: (Node | RemoteObject)?) -> bool
+
+        def run_legacy: (Script script, ::Array[untyped] positional, ::Hash[::Symbol, untyped] keywords, mode: ::Symbol, on: (Node | RemoteObject)?) -> untyped
+
+        def legacy_evaluate: (Script script, ::Array[untyped] arguments) -> untyped
+
+        def legacy_evaluate_on: (Script script, ::Array[untyped] arguments, Node node) -> untyped
+
+        def legacy_execute: (Script script, ::Array[untyped] arguments) -> true
+
+        def serialize: (untyped result) -> untyped
+
+        def release: (untyped result) -> void
+
+        def legacy_call: (expression: ::String, ?arguments: ::Array[untyped], ?on: Node?, ?wait: ::Integer, ?handle: (bool | :raw), **untyped options) -> untyped
+
+        def legacy_handle_error: (untyped response) -> void
+
+        def warn_about_keywords: (Script script, ::Array[untyped] positional, ::Hash[::Symbol, untyped] keywords) -> void
+
+        def warn_about_line_break: (Script script) -> void
+
+        def warn_about_statements: (Script script) -> void
+
+        def warn_about_result: (Script script, untyped response, ::Symbol kind) -> void
+
+        def warn_about_throw: (Script script, untyped result) -> void
+
+        def warn_about_promise: (Script script, ::Symbol kind) -> void
+
+        def warn_about_node: (Script script, ::String value, ::String replacement) -> void
+
+        def warn_about_nodes: (Script script, untyped result) -> void
+
+        def properties: (untyped result, **untyped options) -> ::Array[untyped]
+
+        def warn_about: (Script script, ::String message) -> void
+      end
+    end
+  end
+end
