@@ -54,6 +54,27 @@ page.go_to("https://github.com/")
 page.stop
 ```
 
+#### wait_for_navigation(wait = 0.1) { } : `Boolean`
+
+Runs the block and, if it starts a navigation within `wait` seconds, waits for the new page to load. Returns `false`
+if it doesn't load within the page timeout. `click` already does this, use it for navigations started from
+JavaScript.
+
+* wait `Numeric` seconds to watch for a navigation after the block, `FERRUM_CLICK_WAIT` or `0.1` by default
+
+```ruby
+page.wait_for_navigation { page.at_css("a").evaluate("this.click()") } # => true
+page.current_url # => the link's page
+```
+
+#### wait_for_navigation!(wait = 0.1) { }
+
+Same as `wait_for_navigation`, but raises `Ferrum::TimeoutError` if the new page doesn't load within the page timeout.
+
+```ruby
+page.wait_for_navigation! { page.at_css("a").evaluate("this.click()") }
+```
+
 #### position = \*\*options
 
 Set the position for the browser window

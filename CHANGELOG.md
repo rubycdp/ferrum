@@ -18,6 +18,8 @@
 - `browser.add_extension` adds an extension for pages and iframes attached afterwards [#663]
 - `page.isolated_world(name)` and `frame.isolated_world(name)` evaluate JavaScript in a world hidden from the page
 - `Node#backend_node_id` and `Node#node_type`
+- `page.wait_for_navigation { }` and `wait_for_navigation! { }` wait for a navigation the block starts, e.g. a click
+  made from JavaScript [#679]
 
 ### Changed
 - `evaluate` fetches the whole result in one CDP call instead of one per nested object, dates come back as ISO 8601
