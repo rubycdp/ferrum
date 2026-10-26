@@ -692,7 +692,7 @@ describe Ferrum::Browser do
       after { browser.quit }
 
       context "with absolute path" do
-        let(:save_path) { "/tmp/ferrum" }
+        let(:save_path) { "/tmp/ferrum-downloads" }
 
         it "saves an attachment" do
           browser.go_to("/#{filename}")
