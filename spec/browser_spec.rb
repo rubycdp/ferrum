@@ -472,8 +472,8 @@ describe Ferrum::Browser do
 
       [[socket, upstream], [upstream, socket]].map do |from, to|
         Thread.new do
-          IO.copy_stream(from, to)
-        rescue IOError, Errno::ECONNRESET, Errno::EPIPE
+          loop { to.write(from.readpartial(16 * 1024)) }
+        rescue IOError, Errno::ECONNRESET, Errno::EPIPE, Errno::EBADF
           nil
         end
       end.each(&:join)
