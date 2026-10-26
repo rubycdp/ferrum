@@ -104,7 +104,10 @@ describe Ferrum::Client do
 
       it "times out a command waiting to be sent and keeps the connection", :launch do
         page = remote.create_page
+        StallDebug.chrome_pid = remote.process.pid if defined?(StallDebug)
+        StallDebug.log("--- example start") if defined?(StallDebug)
         Process.kill("STOP", remote.process.pid)
+        StallDebug.log("STOP") if defined?(StallDebug)
 
         sender = evaluate_in_background(page, larger_than_socket_buffers, timeout: 10)
         sleep(0.2)
@@ -113,7 +116,11 @@ describe Ferrum::Client do
         expect(waiting.join(2)).to eq(waiting), "the command was still blocked after 2s"
         expect(waiting.value).to be_a(Ferrum::TimeoutError)
 
+        StallDebug.log("waiting: #{waiting.value.class}") if defined?(StallDebug)
         Process.kill("CONT", remote.process.pid)
+        StallDebug.log("CONT") if defined?(StallDebug)
+        StallDebug.log("sender: #{sender.value.inspect[0, 200]}") if defined?(StallDebug)
+        expect(sender.value).not_to be_a(Exception), -> { "the stalled command failed: #{sender.value.inspect}" }
         expect(sender.value.dig("result", "value")).to eq(16 * 1024 * 1024)
         expect(page.evaluate("1 + 1")).to eq(2)
       end

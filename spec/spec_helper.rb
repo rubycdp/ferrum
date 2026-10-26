@@ -18,6 +18,7 @@ require "shellwords"
 require "ferrum"
 require "support/server"
 require "support/global_helpers"
+require "support/stall_debug" if ENV["FERRUM_STALL_DEBUG"]
 
 # GA servers are slow it's better to increase
 ENV["FERRUM_NEW_WINDOW_WAIT"] ||= "0.8" if ENV["CI"]

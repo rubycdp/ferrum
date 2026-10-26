@@ -1,0 +1,60 @@
+name: Debug resume stall
+on:
+  pull_request:
+
+jobs:
+  debug:
+    name: Debug (attempt ${{ matrix.attempt }})
+    strategy:
+      fail-fast: false
+      matrix:
+        attempt: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      FERRUM_PROCESS_TIMEOUT: 25
+      FERRUM_DEFAULT_TIMEOUT: 15
+      FERRUM_CHROME_DOCKERIZE: true
+      FERRUM_STALL_DEBUG: 1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: jruby
+          bundler-cache: true
+
+      - uses: browser-actions/setup-chrome@latest
+        with:
+          chrome-version: stable
+
+      - name: Full suite
+        timeout-minutes: 15
+        continue-on-error: true
+        run: |
+          mkdir -p /tmp/ferrum
+          bundle exec rake
+
+      - name: The example alone, 10 times
+        timeout-minutes: 10
+        continue-on-error: true
+        run: |
+          for i in $(seq 1 10); do
+            echo "=== isolated run $i" | tee -a /tmp/ferrum/stall-debug.log
+            bundle exec rspec spec/client_spec.rb -e "keeps the connection" || echo "isolated run $i FAILED" | tee -a /tmp/ferrum/stall-debug.log
+          done
+
+      - name: Stall log
+        if: always()
+        run: cat /tmp/ferrum/stall-debug.log || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stall-debug-${{ matrix.attempt }}
+          path: /tmp/ferrum/
