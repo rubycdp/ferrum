@@ -48,6 +48,9 @@
   without an HTTP endpoint and a local launch makes no HTTP call
 - `NoWebSocketUrlError` names the HTTP status `/json/version` answered with, e.g. `401 Unauthorized` for a missing token or
   `429 Too Many Requests` for a full remote browser service, and exposes it as `#status`
+- Commands are written to the websocket by a writer thread. A command waiting behind a large one the browser is slow
+  to take fails after its own `timeout:` instead of the large one's, and the connection is closed only after the
+  browser takes no data for `protocol_timeout`, so a shorter pause no longer kills it [#676]
 
 ### Fixed
 - `Node#property` and `Node#attribute` read any name, a quote in it no longer breaks the script, and `property`
