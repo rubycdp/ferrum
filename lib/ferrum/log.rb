@@ -152,6 +152,7 @@ module Ferrum
                end
       @formatter = FORMATS.fetch(format).new(color: @color)
       @commands = Concurrent::Map.new if format == :annotated || only.any? || skip.any?
+      @mutex = Mutex.new
     end
 
     # Whether the channel is written to the logger.
@@ -235,7 +236,8 @@ module Ferrum
       if logger.respond_to?(:debug)
         logger.debug("ferrum:#{channel}", &block)
       else
-        logger.puts(block.call)
+        line = block.call
+        @mutex.synchronize { logger.puts(line) }
       end
     rescue StandardError => e
       warn "Ferrum: couldn't write to the logger, #{e.class}: #{e.message}" unless @write_failed

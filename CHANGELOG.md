@@ -80,6 +80,7 @@
 - `Proxy#rotate` to an upstream proxy failed every HTTPS request with `ERR_TUNNEL_CONNECTION_FAILED`
 - On JRuby `browser.pages`, `windows(:last)` and `workers` came back in random order, so the window a page had just
   opened wasn't the last one. Targets are kept in the order they were created now
+- On JRuby lines written to a `:logger` IO from several threads at once could get mixed up, they're written one by one now
 
 ### Removed
 - `Browser::Process#default_user_agent`, `#browser_version`, `#protocol_version`, `#v8_version` and `#webkit_version`,
