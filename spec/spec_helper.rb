@@ -45,6 +45,10 @@ RSpec.configure do |config|
     @server = Ferrum::Server.boot
   end
 
+  config.after(:suite) do
+    Ferrum::Server.server&.stop
+  end
+
   config.before(:all) do
     base_url = Ferrum::Server.server.base_url
     options = { base_url: base_url }
