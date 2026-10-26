@@ -44,17 +44,21 @@ jobs:
         timeout-minutes: 10
         continue-on-error: true
         run: |
+          set +e
+          mkdir -p /tmp/stall-debug
           for i in $(seq 1 10); do
-            echo "=== isolated run $i" | tee -a /tmp/ferrum/stall-debug.log
-            bundle exec rspec spec/client_spec.rb -e "keeps the connection" || echo "isolated run $i FAILED" | tee -a /tmp/ferrum/stall-debug.log
+            echo "=== isolated run $i" | tee -a /tmp/stall-debug/stall-debug.log
+            bundle exec rspec spec/client_spec.rb -e "keeps the connection" || echo "isolated run $i FAILED" | tee -a /tmp/stall-debug/stall-debug.log
           done
 
       - name: Stall log
         if: always()
-        run: cat /tmp/ferrum/stall-debug.log || true
+        run: cat /tmp/stall-debug/stall-debug.log || true
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: stall-debug-${{ matrix.attempt }}
-          path: /tmp/ferrum/
+          path: |
+            /tmp/stall-debug/
+            /tmp/ferrum/

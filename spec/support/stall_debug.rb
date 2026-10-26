@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module StallDebug
-  LOG_PATH = "/tmp/ferrum/stall-debug.log"
+  LOG_PATH = "/tmp/stall-debug/stall-debug.log"
   MUTEX = Mutex.new
 
   class << self
