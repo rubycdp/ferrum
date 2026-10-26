@@ -208,30 +208,24 @@ module Ferrum
     #   Whether to return immediately instead of waiting for a response.
     #
     # @param [Numeric, nil] timeout
-    #   How long to wait for the browser to take the message, and then for its
-    #   response. Defaults to `protocol_timeout`.
+    #   How long to wait for the response. Defaults to `protocol_timeout`.
     #
     # @return [Boolean, Hash]
     #   `true` when sent asynchronously, otherwise the parsed `"result"`
     #   from the response.
     #
     def send_message(message, async:, timeout: nil)
-      timeout ||= protocol_timeout
-
       if async
-        @ws.send_message(message, timeout)
+        @ws.send_message(message)
         true
       else
         raise DeadBrowserError if @ws.messages.closed?
 
         pending = Concurrent::IVar.new
         @pendings[message[:id]] = pending
-        begin
-          @ws.send_message(message, timeout)
-          data = pending.value!(timeout)
-        ensure
-          @pendings.delete(message[:id])
-        end
+        @ws.send_message(message)
+        data = pending.value!(timeout || protocol_timeout)
+        @pendings.delete(message[:id])
 
         raise DeadBrowserError if data.nil? && @ws.messages.closed?
         raise TimeoutError.new(message[:method], session_id: message[:sessionId]) unless data

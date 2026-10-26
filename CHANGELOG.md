@@ -5,6 +5,8 @@
 ### Changed
 
 ### Fixed
+- On JRuby `Ferrum::Browser.new` hung forever in the websocket handshake: the nonblocking write from [#644] waits for
+  the lock JRuby holds while the reader thread is blocked reading the same socket. Writes are blocking again [#676]
 
 ### Removed
 
