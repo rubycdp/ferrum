@@ -48,9 +48,6 @@
   without an HTTP endpoint and a local launch makes no HTTP call
 - `NoWebSocketUrlError` names the HTTP status `/json/version` answered with, e.g. `401 Unauthorized` for a missing token or
   `429 Too Many Requests` for a full remote browser service, and exposes it as `#status`
-- Commands are written to the websocket by a writer thread. A command waiting behind a large one the browser is slow
-  to take fails after its own `timeout:` instead of the large one's, and the connection is closed only after the
-  browser takes no data for `protocol_timeout`, so a shorter pause no longer kills it [#676]
 
 ### Fixed
 - `Node#property` and `Node#attribute` read any name, a quote in it no longer breaks the script, and `property`
@@ -81,8 +78,6 @@
 - When Chrome can't compute an element's content quads, `node.click` falls back to its bounding rect, but it added the
   page scroll offset and missed the element on a scrolled page. It clicks in viewport coordinates now
 - `Proxy#rotate` to an upstream proxy failed every HTTPS request with `ERR_TUNNEL_CONNECTION_FAILED`
-- On JRuby `Ferrum::Browser.new` hung forever in the websocket handshake: the nonblocking write from [#644] waits for
-  the lock JRuby holds while the reader thread is blocked reading the same socket [#676]
 - On JRuby `browser.pages`, `windows(:last)` and `workers` came back in random order, so the window a page had just
   opened wasn't the last one. Targets are kept in the order they were created now
 
@@ -90,6 +85,22 @@
 - `Browser::Process#default_user_agent`, `#browser_version`, `#protocol_version`, `#v8_version` and `#webkit_version`,
   use `Browser#default_user_agent` and `Browser#version` instead
 - Ruby 3.1 support, Ferrum requires Ruby 3.2 or newer
+
+
+## [0.19.2](https://github.com/rubycdp/ferrum/compare/v0.19.1...v0.19.2) (October 26, 2026) ##
+
+### Added
+
+### Changed
+- Commands are written to the websocket by a writer thread. A command waiting behind a large one the browser is slow
+  to take fails after its own `timeout:` instead of the large one's, and the connection is closed only after the
+  browser takes no data for `protocol_timeout`, so a shorter pause no longer kills it [#676]
+
+### Fixed
+- On JRuby `Ferrum::Browser.new` hung forever in the websocket handshake: the nonblocking write from [#644] waits for
+  the lock JRuby holds while the reader thread is blocked reading the same socket. Writes are blocking again [#676]
+
+### Removed
 
 
 ## [0.19.1](https://github.com/rubycdp/ferrum/compare/v0.19.0...v0.19.1) (October 16, 2026) ##
