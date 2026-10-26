@@ -1,4 +1,4 @@
-## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.19.1...main) ##
+## [0.19.2](https://github.com/rubycdp/ferrum/compare/v0.19.1...v0.19.2) (October 26, 2026) ##
 
 ### Added
 
