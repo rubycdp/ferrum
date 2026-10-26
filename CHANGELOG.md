@@ -83,6 +83,8 @@
 - `Proxy#rotate` to an upstream proxy failed every HTTPS request with `ERR_TUNNEL_CONNECTION_FAILED`
 - On JRuby `Ferrum::Browser.new` hung forever in the websocket handshake: the nonblocking write from [#644] waits for
   the lock JRuby holds while the reader thread is blocked reading the same socket [#676]
+- On JRuby `browser.pages`, `windows(:last)` and `workers` came back in random order, so the window a page had just
+  opened wasn't the last one. Targets are kept in the order they were created now
 
 ### Removed
 - `Browser::Process#default_user_agent`, `#browser_version`, `#protocol_version`, `#v8_version` and `#webkit_version`,
