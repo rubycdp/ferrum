@@ -1,4 +1,15 @@
-## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.19.1...main) ##
+## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.20.0...main) ##
+
+### Added
+
+### Changed
+
+### Fixed
+
+### Removed
+
+
+## [0.20.0](https://github.com/rubycdp/ferrum/compare/v0.19.2...v0.20.0) (October 26, 2026) ##
 
 ### Added
 - `keyboard.hold(:shift) { }` holds modifiers for every keyboard and mouse event in the block, e.g. a shift+drag, and
