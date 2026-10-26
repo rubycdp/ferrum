@@ -3,6 +3,9 @@
 ### Added
 
 ### Changed
+- Commands are written to the websocket by a writer thread. A command waiting behind a large one the browser is slow
+  to take fails after its own `timeout:` instead of the large one's, and the connection is closed only after the
+  browser takes no data for `protocol_timeout`, so a shorter pause no longer kills it [#676]
 
 ### Fixed
 - On JRuby `Ferrum::Browser.new` hung forever in the websocket handshake: the nonblocking write from [#644] waits for
