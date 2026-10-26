@@ -98,24 +98,11 @@ module Ferrum
       # @param [Hash] data
       #   The message to send, must include an `:id` key.
       #
-      # @param [Numeric, nil] timeout
-      #   How long the browser may go without accepting any of the frame's
-      #   bytes. `nil` waits for as long as it takes.
-      #
       # @return [void]
       #
-      # @raise [Ferrum::DeadBrowserError]
-      #   If the browser accepted no data for `timeout` seconds. The connection
-      #   is closed, since the frame was cut off midway.
-      #
-      def send_message(data, timeout = nil)
+      def send_message(data)
         json = data.to_json
-        @driver_mutex.synchronize do
-          @write_timeout = timeout
-          @driver.text(json)
-        ensure
-          @write_timeout = nil
-        end
+        @driver_mutex.synchronize { @driver.text(json) }
         @log&.sent(data, self)
       end
 
@@ -124,28 +111,13 @@ module Ferrum
       # `websocket-driver` to emit frames. Closes {#messages} instead of
       # raising if the connection has already been torn down.
       #
-      # A browser that stops reading its socket (hung, or stopped) would block
-      # a plain write forever, holding the lock every other command needs to be
-      # sent. So the write gives up once the browser accepts no data for the
-      # timeout of the command being sent.
-      #
       # @param [String] data
       #   The raw bytes to write.
       #
       # @return [void]
       #
-      # @raise [Ferrum::DeadBrowserError]
-      #   If the browser accepted no data for the command's timeout.
-      #
       def write(data)
-        until data.empty?
-          written = @sock.write_nonblock(data, exception: false)
-          if written.is_a?(Integer)
-            data = data.byteslice(written..)
-          elsif !wait_for_socket(written)
-            abandon_stalled_write
-          end
-        end
+        @sock.write(data)
       rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, IOError # rubocop:disable Lint/ShadowedException
         @messages.close
       end
@@ -178,18 +150,6 @@ module Ferrum
       end
 
       private
-
-      def wait_for_socket(state)
-        readers, writers = state == :wait_readable ? [[@sock], nil] : [nil, [@sock]]
-        IO.select(readers, writers, nil, @write_timeout)
-      end
-
-      def abandon_stalled_write
-        timeout = @write_timeout
-        @messages.close
-        @sock.close
-        raise DeadBrowserError, "Browser accepted no data for #{timeout}s and is likely stuck, connection closed"
-      end
 
       def start
         @thread = Utils::Thread.spawn do

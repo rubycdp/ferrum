@@ -13,7 +13,6 @@ module Ferrum
       @driver: untyped
       @messages: ::Queue
       @thread: ::Thread
-      @write_timeout: ::Numeric?
 
       def initialize: ((String | ::Addressable::URI) url, Integer? max_receive_size, Log? log) -> void
 
@@ -23,7 +22,7 @@ module Ferrum
 
       def on_close: (untyped event) -> void
 
-      def send_message: (Hash[Symbol, untyped] data, ?::Numeric? timeout) -> void
+      def send_message: (Hash[Symbol, untyped] data) -> void
 
       def write: (String data) -> void
 
@@ -32,10 +31,6 @@ module Ferrum
       def force_close: () -> void
 
       private
-
-      def wait_for_socket: (:wait_readable | :wait_writable state) -> untyped
-
-      def abandon_stalled_write: () -> bot
 
       def start: () -> void
 

@@ -78,6 +78,8 @@
 - When Chrome can't compute an element's content quads, `node.click` falls back to its bounding rect, but it added the
   page scroll offset and missed the element on a scrolled page. It clicks in viewport coordinates now
 - `Proxy#rotate` to an upstream proxy failed every HTTPS request with `ERR_TUNNEL_CONNECTION_FAILED`
+- On JRuby `Ferrum::Browser.new` hung forever in the websocket handshake: the nonblocking write from [#644] waits for
+  the lock JRuby holds while the reader thread is blocked reading the same socket [#676]
 
 ### Removed
 - `Browser::Process#default_user_agent`, `#browser_version`, `#protocol_version`, `#v8_version` and `#webkit_version`,

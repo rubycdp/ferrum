@@ -59,47 +59,6 @@ describe Ferrum::Client do
     end
   end
 
-  describe "a browser that stops reading", skip: Ferrum::Utils::Platform.windows? do
-    let(:remote) { Ferrum::Browser.new(base_url: base_url, timeout: 1, protocol_timeout: 1) }
-    let(:larger_than_socket_buffers) { "'#{'x' * (16 * 1024 * 1024)}'.length" }
-
-    after do
-      Process.kill("CONT", remote.process.pid)
-      remote.quit
-    end
-
-    def evaluate_in_background(page, expression)
-      Thread.new do
-        page.command("Runtime.evaluate", expression: expression)
-      rescue Ferrum::Error => e
-        e
-      end
-    end
-
-    it "gives up on a command the browser doesn't take", :launch do
-      page = remote.create_page
-      Process.kill("STOP", remote.process.pid)
-
-      sender = evaluate_in_background(page, larger_than_socket_buffers)
-
-      expect(sender.join(5)).to eq(sender), "the command was still blocked after 5s"
-      expect(sender.value).to be_a(Ferrum::DeadBrowserError)
-      expect(sender.value.message).to match(/accepted no data for 1s/)
-    end
-
-    it "fails the commands waiting to be sent behind it", :launch do
-      page = remote.create_page
-      Process.kill("STOP", remote.process.pid)
-
-      evaluate_in_background(page, larger_than_socket_buffers)
-      sleep(0.2)
-      waiting = evaluate_in_background(page, "1 + 1")
-
-      expect(waiting.join(5)).to eq(waiting), "the command was still blocked after 5s"
-      expect(waiting.value).to be_a(Ferrum::DeadBrowserError)
-    end
-  end
-
   describe "event callbacks" do
     let(:remote) { Ferrum::Browser.new(base_url: base_url, timeout: 3, protocol_timeout: 3) }
 
