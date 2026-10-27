@@ -5,6 +5,8 @@
 ### Changed
 
 ### Fixed
+- `set_viewport` and `resize` turned touch emulation off on every desktop viewport, which reset hover and pointer and
+  undid `--blink-settings` overrides. `mobile:` defaults to `nil` and leaves touch as is, `false` turns it off [#664]
 
 ### Removed
 

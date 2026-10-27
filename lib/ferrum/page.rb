@@ -191,14 +191,12 @@ module Ferrum
     #
     # @param [Float] scale_factor device scale factor value. 0 disables the override
     #
-    # @param [Boolean] mobile whether to emulate mobile device and enable touch
+    # @param [Boolean, nil] mobile `true` emulates a mobile device with touch, `false` a desktop without touch, `nil`
+    #   a desktop and leaves touch emulation as is. Turning touch off resets hover and pointer to the detected input
+    #   devices, which undoes `--blink-settings` overrides until the next navigation
     #
-    def set_viewport(width: 0, height: 0, scale_factor: 0, mobile: false)
-      command(
-        "Emulation.setTouchEmulationEnabled",
-        enabled: mobile,
-        maxTouchPoints: 1
-      )
+    def set_viewport(width: 0, height: 0, scale_factor: 0, mobile: nil)
+      command("Emulation.setTouchEmulationEnabled", enabled: mobile, maxTouchPoints: 1) unless mobile.nil?
 
       command(
         "Emulation.setDeviceMetricsOverride",
@@ -206,7 +204,7 @@ module Ferrum
         width: width,
         height: height,
         deviceScaleFactor: scale_factor,
-        mobile: mobile
+        mobile: mobile || false
       )
     end
 

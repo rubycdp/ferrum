@@ -14,7 +14,8 @@ Overrides device screen dimensions and emulates viewport. When `:mobile` is
   * :width `Integer`, viewport width. `0` by default
   * :height `Integer`, viewport height. `0` by default
   * :scale_factor `Float`, device scale factor. `0` by default
-  * :mobile `Boolean`, whether to emulate mobile device and enable touch. `false` by default
+  * :mobile `Boolean | nil`, `true` emulates a mobile device with touch, `false` a desktop without touch, `nil` a
+    desktop and leaves touch emulation as is. `nil` by default
 
 ```ruby
 page.set_viewport(width: 1000, height: 600, scale_factor: 3)
@@ -29,3 +30,7 @@ size preset:
 ```ruby
 page.set_viewport(mobile: true)
 ```
+
+Turning touch emulation off with `mobile: false` makes Chrome reset hover and pointer media features to the
+detected input devices, which undoes `--blink-settings` overrides such as `primaryHoverType` until the next
+navigation. Leave `:mobile` out unless the page was switched to mobile before.
