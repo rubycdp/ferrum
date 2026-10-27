@@ -20,7 +20,7 @@ module Ferrum
       @implicit = implicit
       @client = client
       @contexts = contexts
-      @targets = Concurrent::Map.new
+      @targets = Concurrent::Hash.new
       @pendings = Concurrent::Map.new
     end
 
@@ -131,8 +131,7 @@ module Ferrum
     # @return [Target]
     def add_target(params:, session_id: nil, attached: false)
       new_target = Target.new(@client, session_id, params, implicit: implicit?)
-      # `put_if_absent` returns nil if added a new value or existing if there was one already
-      target = @targets.put_if_absent(new_target.id, new_target) || new_target
+      target = @targets[new_target.id] ||= new_target
       # on first iteration session_id may be nil, then if session is present here we must set it to the target
       target.session_id = session_id if session_id && (attached || target.session_id.nil?)
       @default_target ||= target
@@ -191,7 +190,8 @@ module Ferrum
     #
     # @return [Target, nil]
     def find_target
-      @targets.each_value { |t| return t if yield(t) }
+      targets = @targets.values
+      targets.each { |t| return t if yield(t) }
 
       nil
     end
@@ -201,11 +201,7 @@ module Ferrum
     #
     # @return [void]
     def close_targets_connection
-      @targets.each_value do |target|
-        next unless target.connected?
-
-        target.close_connection
-      end
+      @targets.values.select(&:connected?).each(&:close_connection)
     end
 
     # Disposes this browser context and all of its targets. The browser's

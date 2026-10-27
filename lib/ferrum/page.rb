@@ -34,7 +34,8 @@ module Ferrum
 
     delegate %i[at_css at_xpath css xpath wait_for_selector
                 current_url current_title url title body doctype content=
-                execution_id execution_id! evaluate evaluate_on evaluate_async execute evaluate_func isolated_world
+                execution_id execution_id! evaluate evaluate_handle execute
+                evaluate_on evaluate_async evaluate_func isolated_world
                 add_script_tag add_style_tag] => :main_frame
     delegate %i[base_url default_user_agent timeout timeout=] => :@options
 
@@ -190,14 +191,12 @@ module Ferrum
     #
     # @param [Float] scale_factor device scale factor value. 0 disables the override
     #
-    # @param [Boolean] mobile whether to emulate mobile device and enable touch
+    # @param [Boolean, nil] mobile `true` emulates a mobile device with touch, `false` a desktop without touch, `nil`
+    #   a desktop and leaves touch emulation as is. Turning touch off resets hover and pointer to the detected input
+    #   devices, which undoes `--blink-settings` overrides until the next navigation
     #
-    def set_viewport(width: 0, height: 0, scale_factor: 0, mobile: false)
-      command(
-        "Emulation.setTouchEmulationEnabled",
-        enabled: mobile,
-        maxTouchPoints: 1
-      )
+    def set_viewport(width: 0, height: 0, scale_factor: 0, mobile: nil)
+      command("Emulation.setTouchEmulationEnabled", enabled: mobile, maxTouchPoints: 1) unless mobile.nil?
 
       command(
         "Emulation.setDeviceMetricsOverride",
@@ -205,7 +204,7 @@ module Ferrum
         width: width,
         height: height,
         deviceScaleFactor: scale_factor,
-        mobile: mobile
+        mobile: mobile || false
       )
     end
 
@@ -399,6 +398,40 @@ module Ferrum
     end
 
     #
+    # Runs the block and, if it starts a navigation of the main frame within
+    # `wait` seconds, waits for that navigation to finish, e.g. after a click
+    # on a link made from JavaScript.
+    #
+    # @param [Numeric] wait
+    #   How many seconds to watch for a navigation after the block returns.
+    #
+    # @yield The code that may start a navigation.
+    #
+    # @return [Boolean]
+    #   `false` when a navigation started but didn't finish within the page's
+    #   `timeout`.
+    #
+    # @example
+    #   page.wait_for_navigation { page.at_css("a").evaluate("this.click()") } # => true
+    #
+    def wait_for_navigation(wait = Mouse::CLICK_WAIT)
+      iteration = @event.reset
+      yield
+      @event.wait(wait)
+      iteration == @event.iteration || @event.wait(timeout)
+    end
+
+    #
+    # Waits for a navigation the block starts or raises {Ferrum::TimeoutError}.
+    # Accepts the same arguments as {#wait_for_navigation}.
+    #
+    # @raise [Ferrum::TimeoutError]
+    #
+    def wait_for_navigation!(...)
+      raise TimeoutError unless wait_for_navigation(...)
+    end
+
+    #
     # Enables/disables CSP bypass.
     #
     # @param [Boolean] enabled
@@ -496,21 +529,14 @@ module Ferrum
     #   page.command("Page.navigate", url: "https://github.com/")
     #
     def command(method, wait: 0, slowmoable: false, timeout: nil, **params)
-      iteration = @event.reset if wait.positive?
-      sleep(@options.slowmo) if slowmoable && @options.slowmo.positive?
-      result = client.command(method, timeout: timeout || self.timeout, **params)
-
       if wait.positive?
-        # Wait a bit after command and check if iteration has
-        #  changed, which means there was some network event for
-        # the main frame, and it started to load new content.
-        @event.wait(wait)
-        if iteration != @event.iteration
-          set = @event.wait(self.timeout)
-          raise TimeoutError unless set
-        end
+        result = nil
+        wait_for_navigation!(wait) { result = command(method, slowmoable:, timeout:, **params) }
+        return result
       end
-      result
+
+      sleep(@options.slowmo) if slowmoable && @options.slowmo.positive?
+      client.command(method, timeout: timeout || self.timeout, **params)
     end
 
     # Subscribes to a CDP event, or to `:dialog`, `:request`, `:response`,

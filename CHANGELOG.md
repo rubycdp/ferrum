@@ -1,4 +1,19 @@
-## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.19.1...main) ##
+## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.20.0...main) ##
+
+### Added
+
+### Changed
+
+### Fixed
+- `set_viewport` and `resize` turned touch emulation off on every desktop viewport, which reset hover and pointer and
+  undid `--blink-settings` overrides. `mobile:` defaults to `nil` and leaves touch as is, `false` turns it off [#664]
+- A click or navigation timed out when the last loading iframe was removed without finishing, e.g. submitting a form
+  that opens an inline PDF in Chrome 145+, where the PDF viewer runs out of process [#672]
+
+### Removed
+
+
+## [0.20.0](https://github.com/rubycdp/ferrum/compare/v0.19.2...v0.20.0) (October 26, 2026) ##
 
 ### Added
 - `keyboard.hold(:shift) { }` holds modifiers for every keyboard and mouse event in the block, e.g. a shift+drag, and
@@ -17,8 +32,17 @@
   `browser.process.output`
 - `browser.add_extension` adds an extension for pages and iframes attached afterwards [#663]
 - `page.isolated_world(name)` and `frame.isolated_world(name)` evaluate JavaScript in a world hidden from the page
+- `Node#backend_node_id` and `Node#node_type`
+- `page.wait_for_navigation { }` and `wait_for_navigation! { }` wait for a navigation the block starts, e.g. a click
+  made from JavaScript [#679]
 
 ### Changed
+- `evaluate` fetches the whole result in one CDP call instead of one per nested object, dates come back as ISO 8601
+  strings and a cyclic result is a `Hash`/`Array` with `CyclicObject` only where it refers back to itself, instead of
+  being replaced by `CyclicObject` entirely
+- Nodes returned by `evaluate`, `css` and the other finders no longer cost a `DOM.describeNode` call each,
+  `Node#description` is fetched on first use. `Node.new` takes the node as Chrome deep serializes it instead of
+  a target id and a description
 - The logger cuts any string value over 1024 characters in CDP messages, not just screenshots.
   `FERRUM_LOG_VALUE_LENGTH` sets the length, `0` keeps them whole. `FERRUM_LOGGING_SCREENSHOTS` is gone
 - `ProcessTimeoutError` is raised as soon as Chrome exits instead of after `:process_timeout`
@@ -41,9 +65,12 @@
   `429 Too Many Requests` for a full remote browser service, and exposes it as `#status`
 
 ### Fixed
-- Navigation no longer times out when the last loading child frame detaches, including inline PDF form submissions
-  with the out-of-process PDF viewer (`PdfOopif`), enabled by default on Windows/macOS/Linux starting in Chromium 145
-  and available in earlier versions
+- `Node#property` and `Node#attribute` read any name, a quote in it no longer breaks the script, and `property`
+  returns a `Ferrum::Node` for a property holding one instead of `{}` [#673]
+- `evaluate`, `execute` and friends raise `JavaScriptError` when JS throws something other than an `Error`, e.g.
+  `throw "smth"`, instead of returning it. Returning an `Error` object no longer crashes with `NoMethodError`
+- `evaluate` keeps `null` and `undefined` in arrays and returns `NaN`, `Infinity`, `-0` and `BigInt` instead of `nil`,
+  and no longer crashes on objects with getters
 - `workers` skips detached workers, `target.worker` with no session raises `NoSuchTargetError` instead of a CDP error
 - `attach_target` reuses a target's session and returns the target, instead of opening one more that reruns extensions
 - Service workers registered by a page stayed attached and alive for the browser's lifetime, now Chrome can stop them
@@ -66,11 +93,30 @@
 - When Chrome can't compute an element's content quads, `node.click` falls back to its bounding rect, but it added the
   page scroll offset and missed the element on a scrolled page. It clicks in viewport coordinates now
 - `Proxy#rotate` to an upstream proxy failed every HTTPS request with `ERR_TUNNEL_CONNECTION_FAILED`
+- On JRuby `browser.pages`, `windows(:last)` and `workers` came back in random order, so the window a page had just
+  opened wasn't the last one. Targets are kept in the order they were created now
+- On JRuby lines written to a `:logger` IO from several threads at once could get mixed up, they're written one by one now
 
 ### Removed
 - `Browser::Process#default_user_agent`, `#browser_version`, `#protocol_version`, `#v8_version` and `#webkit_version`,
   use `Browser#default_user_agent` and `Browser#version` instead
 - Ruby 3.1 support, Ferrum requires Ruby 3.2 or newer
+
+
+## [0.19.2](https://github.com/rubycdp/ferrum/compare/v0.19.1...v0.19.2) (October 26, 2026) ##
+
+### Added
+
+### Changed
+- Commands are written to the websocket by a writer thread. A command waiting behind a large one the browser is slow
+  to take fails after its own `timeout:` instead of the large one's, and the connection is closed only after the
+  browser takes no data for `protocol_timeout`, so a shorter pause no longer kills it [#676]
+
+### Fixed
+- On JRuby `Ferrum::Browser.new` hung forever in the websocket handshake: the nonblocking write from [#644] waits for
+  the lock JRuby holds while the reader thread is blocked reading the same socket. Writes are blocking again [#676]
+
+### Removed
 
 
 ## [0.19.1](https://github.com/rubycdp/ferrum/compare/v0.19.0...v0.19.1) (October 16, 2026) ##
@@ -107,6 +153,9 @@
   loaded (on CDP's `Network.loadingFinished`, not `Network.responseReceived`, so `exchange.response.body` is always
   available), yielding the request's `Network::Exchange`. Doesn't require `network.intercept` to be set up, and is
   never fired for requests that fail to load [#294]
+- `#evaluate`/`#execute` take named arguments that become the script's parameters, `page.evaluate("a + b", a: 1,
+  b: 2)`, a function declaration as the script with positional arguments, `await`, and `timeout:` [#673]
+- `#evaluate_handle` returning a `Ferrum::RemoteObject`, and `Node#execute`/`Node#evaluate_handle` [#673]
 - `Ferrum::Browser#quit`/`Ferrum::Browser::Process#stop` accept `wait: false` to return immediately and run process
   killing and user-data-directory cleanup on a background thread instead of blocking; the call returns the `Thread`
   so callers can `#join` it if they need cleanup to have finished, e.g. before process exit or before reusing a
@@ -122,6 +171,10 @@
 - `Ferrum::Page::Stream#stream` now closes the CDP stream handle (`IO.close`) once it's been fully read, so streams
   opened for `Ferrum::Browser#pdf` and `Ferrum::Page::Tracing#record` no longer keep their backing storage alive in
   the browser; a failed `IO.close` is raised to the caller.
+- `#evaluate_async`, `#evaluate_func` and `#evaluate_on` are deprecated, and scripts whose result will change in
+  0.21 warn with a rewrite. 0.21 removes the old behavior, and `FERRUM_JS_API=new` runs the new one now, see
+  [upgrading](docs/13-javascript.md#upgrading-to-021) [#673]
+- `Ferrum::ScriptTimeoutError` inherits from `Ferrum::TimeoutError` [#673]
 
 ### Fixed
 - An out-of-process iframe, e.g. Chrome's PDF viewer for an embedded PDF, appearing while a web worker was connected

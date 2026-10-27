@@ -12,18 +12,33 @@ module Ferrum
     # framing, and exposes a queue of parsed incoming messages alongside
     # methods to send commands and close the connection.
     #
+    # The socket is only ever touched by two threads: the reader reads it and
+    # the writer writes it, both blocking. Callers and the driver only encode
+    # frames and queue them for the writer, so no lock is held while waiting
+    # on the socket and a browser that stops reading blocks nobody but the
+    # writer. A frame chunk the browser doesn't take within the write timeout
+    # closes the connection. JRuby can't mix a blocking read with
+    # `write_nonblock` or `IO.select` from another thread on the same socket,
+    # so neither is used.
+    #
     class WebSocket
       WEBSOCKET_BUG_SLEEP = 0.05
       DEFAULT_PORTS = { "ws" => 80, "wss" => 443 }.freeze
+      WRITE_CHUNK_SIZE = 64 * 1024
       ESCAPE_OR_LONE_SURROGATE = /\\u[dD][89abAB]\h{2}\\u[dD][c-fC-F]\h{2}|\\u([dD][89a-fA-F]\h{2})|\\./
 
       attr_reader :url, :messages
 
-      def initialize(url, max_receive_size, log)
-        @url    = url
-        @log    = log
-        uri     = URI.parse(@url)
-        port    = uri.port || DEFAULT_PORTS[uri.scheme]
+      # @return [String, nil]
+      #   Why Ferrum closed the connection itself, `nil` if it didn't.
+      attr_reader :close_reason
+
+      def initialize(url, max_receive_size, log, write_timeout = nil)
+        @url = url
+        @log = log
+        @write_timeout = write_timeout
+        uri = URI.parse(@url)
+        port = uri.port || DEFAULT_PORTS[uri.scheme]
 
         if port == 443 || url.scheme == "wss"
           tcp = TCPSocket.new(uri.host, port)
@@ -39,16 +54,19 @@ module Ferrum
         @driver = ::WebSocket::Driver.client(self, max_length: max_receive_size)
         # websocket-driver holds no locks and is called from many threads: commands from
         # callers, pong/close replies from the reader. One lock keeps frames from interleaving.
-        @driver_mutex = Mutex.new
+        @mutex = Mutex.new
+        @encoded = []
         @messages = Queue.new
+        @outgoing = Queue.new
 
         @driver.on(:open,    &method(:on_open))
         @driver.on(:message, &method(:on_message))
         @driver.on(:close,   &method(:on_close))
 
         start
+        start_writer
 
-        @driver_mutex.synchronize { @driver.start }
+        drive { @driver.start }
       end
 
       #
@@ -80,74 +98,52 @@ module Ferrum
       end
 
       #
-      # Handles the driver's `:close` event: closes the message queue and
-      # underlying socket, then kills the reader thread.
+      # Handles the driver's `:close` event: closes the message queue, lets the
+      # writer send what's queued and close the socket, then kills the reader
+      # thread.
       #
       # @return [void]
       #
       def on_close(_event)
         @messages.close
-        @sock.close
+        queue_encoded
+        @outgoing.close
         @thread.kill
       end
 
       #
-      # Serializes a CDP command to JSON and sends it as a websocket text
-      # frame.
+      # Serializes a CDP command to JSON and queues it as a websocket text
+      # frame. Returns without waiting for the frame to be written.
       #
       # @param [Hash] data
       #   The message to send, must include an `:id` key.
       #
       # @param [Numeric, nil] timeout
-      #   How long the browser may go without accepting any of the frame's
-      #   bytes. `nil` waits for as long as it takes.
+      #   How long the frame may wait in the queue. A frame still queued after
+      #   that is dropped, nobody waits for its response anymore. `nil` keeps it
+      #   until it's written.
       #
       # @return [void]
       #
-      # @raise [Ferrum::DeadBrowserError]
-      #   If the browser accepted no data for `timeout` seconds. The connection
-      #   is closed, since the frame was cut off midway.
-      #
       def send_message(data, timeout = nil)
         json = data.to_json
-        @driver_mutex.synchronize do
-          @write_timeout = timeout
-          @driver.text(json)
-        ensure
-          @write_timeout = nil
-        end
+        deadline = Utils::ElapsedTime.monotonic_time + timeout if timeout
+        drive(deadline) { @driver.text(json) }
         @log&.sent(data, self)
       end
 
       #
-      # Writes raw bytes to the underlying socket. Called by
-      # `websocket-driver` to emit frames. Closes {#messages} instead of
-      # raising if the connection has already been torn down.
-      #
-      # A browser that stops reading its socket (hung, or stopped) would block
-      # a plain write forever, holding the lock every other command needs to be
-      # sent. So the write gives up once the browser accepts no data for the
-      # timeout of the command being sent.
+      # Collects the raw bytes of a frame. Called by `websocket-driver` to
+      # emit frames, one call per frame, always from within the driver call
+      # that queues them for the writer thread.
       #
       # @param [String] data
-      #   The raw bytes to write.
+      #   The raw bytes of one frame.
       #
       # @return [void]
       #
-      # @raise [Ferrum::DeadBrowserError]
-      #   If the browser accepted no data for the command's timeout.
-      #
       def write(data)
-        until data.empty?
-          written = @sock.write_nonblock(data, exception: false)
-          if written.is_a?(Integer)
-            data = data.byteslice(written..)
-          elsif !wait_for_socket(written)
-            abandon_stalled_write
-          end
-        end
-      rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, IOError # rubocop:disable Lint/ShadowedException
-        @messages.close
+        @encoded << data
       end
 
       #
@@ -156,22 +152,23 @@ module Ferrum
       # @return [void]
       #
       def close
-        @driver_mutex.synchronize { @driver.close }
+        drive { @driver.close }
       end
 
       #
-      # Closes the underlying socket whether or not the close handshake ever
-      # completed.
+      # Stops the writer and closes the underlying socket whether or not the
+      # close handshake ever completed.
       #
-      # {#close} only sends a close frame; the socket itself is closed by
-      # {#on_close}, which runs when the browser answers with a close frame of
-      # its own. A browser that is already dead never answers, so without this
+      # {#close} only queues a close frame; the socket itself is closed by the
+      # writer once {#on_close} runs, when the browser answers with a close
+      # frame of its own. A browser that is already dead never answers, so without this
       # the socket stays open until GC finalizes it -- long enough to exhaust
       # the process's file descriptors when browsers are restarted in a loop.
       #
       # @return [void]
       #
       def force_close
+        @outgoing.close
         @sock.close unless @sock.closed?
       rescue IOError, SystemCallError
         # nop
@@ -179,16 +176,50 @@ module Ferrum
 
       private
 
-      def wait_for_socket(state)
-        readers, writers = state == :wait_readable ? [[@sock], nil] : [nil, [@sock]]
-        IO.select(readers, writers, nil, @write_timeout)
+      def drive(deadline = nil)
+        @mutex.synchronize do
+          yield
+          queue_encoded(deadline)
+        end
+      end
+
+      def queue_encoded(deadline = nil)
+        @encoded.each { |data| @outgoing << [data, deadline] }
+      rescue ClosedQueueError
+        @messages.close
+      ensure
+        @encoded.clear
+      end
+
+      def start_writer
+        @writer = Utils::Thread.spawn do
+          while (frame = @outgoing.pop)
+            data, deadline = frame
+            write_frame(data) unless deadline && Utils::ElapsedTime.monotonic_time > deadline
+          end
+        rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, Errno::EBADF, IOError # rubocop:disable Lint/ShadowedException
+          # The browser went away, nothing to report.
+        rescue StandardError => e
+          warn("Ferrum: websocket writer stopped, #{e.class}: #{e.message}\n  #{e.backtrace&.first}")
+        ensure
+          @messages.close
+          force_close
+        end
+      end
+
+      def write_frame(data)
+        0.step(data.bytesize - 1, WRITE_CHUNK_SIZE) do |offset|
+          watchdog = Concurrent::ScheduledTask.execute(@write_timeout) { abandon_stalled_write } if @write_timeout
+          @sock.write(data.byteslice(offset, WRITE_CHUNK_SIZE))
+        ensure
+          watchdog&.cancel
+        end
       end
 
       def abandon_stalled_write
-        timeout = @write_timeout
+        @close_reason = "Browser accepted no data for #{@write_timeout}s and is likely stuck, connection closed"
         @messages.close
-        @sock.close
-        raise DeadBrowserError, "Browser accepted no data for #{timeout}s and is likely stuck, connection closed"
+        force_close
       end
 
       def start
@@ -197,9 +228,9 @@ module Ferrum
             data = @sock.readpartial(512)
             break unless data
 
-            @driver_mutex.synchronize { @driver.parse(data) }
+            drive { @driver.parse(data) }
           end
-        rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, IOError # rubocop:disable Lint/ShadowedException
+        rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, Errno::EBADF, IOError # rubocop:disable Lint/ShadowedException
           # The browser went away, nothing to report.
         rescue StandardError => e
           warn("Ferrum: websocket reader stopped, #{e.class}: #{e.message}\n  #{e.backtrace&.first}")

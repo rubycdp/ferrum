@@ -29,6 +29,7 @@ module Ferrum
     delegate %i[default_context] => :contexts
     delegate %i[targets create_target page pages windows workers service_workers attach_target] => :default_context
     delegate %i[go_to goto go back forward refresh reload stop wait_for_reload
+                wait_for_navigation wait_for_navigation!
                 at_css at_xpath css xpath wait_for_selector current_url current_title url title
                 body doctype content=
                 headers cookies network console accessibility downloads
@@ -36,7 +37,8 @@ module Ferrum
                 screenshot pdf mhtml viewport_size device_pixel_ratio
                 start_screencast stop_screencast
                 frames frame_by main_frame
-                evaluate evaluate_on evaluate_async execute evaluate_func isolated_world
+                evaluate evaluate_handle execute
+                evaluate_on evaluate_async evaluate_func isolated_world
                 add_script_tag add_style_tag bypass_csp
                 evaluate_on_new_document remove_script_on_new_document
                 on position position=

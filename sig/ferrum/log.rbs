@@ -20,6 +20,7 @@ module Ferrum
     @color: bool
     @formatter: (Default | Json | Annotated)
     @write_failed: bool?
+    @mutex: ::Thread::Mutex
     @commands: ::Concurrent::Map[[untyped, ::Integer], [String, ::Float]]?
 
     def self.parse: (String? value) -> { channels: Array[Symbol], only: Array[String], skip: Array[String] }?

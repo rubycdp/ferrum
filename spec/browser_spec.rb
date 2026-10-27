@@ -238,7 +238,7 @@ describe Ferrum::Browser do
         browser.go_to(base_url("/deeply_nested"))
 
         expect(browser.evaluate(%(document.getElementById("text"))).text).to eq("text")
-        expect(logger.string).to include("DOM.describeNode")
+        expect(logger.string).to include("DOM.setChildNodes")
       ensure
         browser&.quit
       end
@@ -282,9 +282,8 @@ describe Ferrum::Browser do
     it "keeps the same-origin policy by default" do
       browser.go_to("/frames")
 
-      result = browser.evaluate_async(<<~JS, browser.timeout)
-        fetch("http://localhost:" + location.port + "/headers")
-          .then(() => arguments[0]("read"), () => arguments[0]("blocked"))
+      result = browser.evaluate(<<~JS)
+        await fetch("http://localhost:" + location.port + "/headers").then(() => "read", () => "blocked")
       JS
 
       expect(result).to eq("blocked")
@@ -473,8 +472,8 @@ describe Ferrum::Browser do
 
       [[socket, upstream], [upstream, socket]].map do |from, to|
         Thread.new do
-          IO.copy_stream(from, to)
-        rescue IOError, Errno::ECONNRESET, Errno::EPIPE
+          loop { to.write(from.readpartial(16 * 1024)) }
+        rescue IOError, Errno::ECONNRESET, Errno::EPIPE, Errno::EBADF
           nil
         end
       end.each(&:join)
@@ -693,7 +692,7 @@ describe Ferrum::Browser do
       after { browser.quit }
 
       context "with absolute path" do
-        let(:save_path) { "/tmp/ferrum" }
+        let(:save_path) { "/tmp/ferrum-downloads" }
 
         it "saves an attachment" do
           browser.go_to("/#{filename}")

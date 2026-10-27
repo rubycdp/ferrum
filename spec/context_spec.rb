@@ -39,6 +39,16 @@ describe Ferrum::Context do
     end
   end
 
+  describe "#pages" do
+    it "lists pages in the order they were created" do
+      pages = Array.new(10) { browser.create_page }
+
+      expect(browser.pages.last(10).map(&:target_id)).to eq(pages.map(&:target_id))
+    ensure
+      pages&.each(&:close)
+    end
+  end
+
   describe "#attach_target" do
     it "reuses the session of an already attached target", :launch do
       browser = Ferrum::Browser.new(base_url: base_url,
