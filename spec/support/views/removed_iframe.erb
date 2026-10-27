@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <button onclick="addFrame('/really_slow', 300); addFrame('/show_cookies/set_cookie_slow')">Add iframes</button>
+
+    <script>
+      function addFrame(src, removeAfter) {
+        var frame = document.createElement("iframe");
+        frame.src = src;
+        document.body.appendChild(frame);
+        if (removeAfter) setTimeout(function () { frame.remove(); }, removeAfter);
+      }
+    </script>
+  </body>
+</html>

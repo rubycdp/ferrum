@@ -133,6 +133,14 @@ describe Ferrum::Frame do
     expect(page.network.response.content_type).to eq("application/pdf")
   end
 
+  it "keeps waiting for a loading frame when another one is removed" do
+    page.go_to("/removed_iframe")
+    page.at_css("button").click
+
+    expect(page.evaluate("document.querySelector('iframe').contentWindow.location.pathname"))
+      .to eq("/show_cookies/set_cookie_slow")
+  end
+
   context "with lazy loading iframes" do
     it "does not block visit on lazy iframe" do
       expect { page.go_to("/lazy_iframe") }.not_to raise_error
