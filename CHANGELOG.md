@@ -5,9 +5,8 @@
 ### Changed
 
 ### Fixed
-- `set_viewport` without `mobile: true` and `resize` turned touch emulation off, even on a page that never had it on.
-  Chrome then resets hover and pointer to the detected input devices, which undid `--blink-settings` overrides such
-  as a mouse on headless Linux. Touch emulation is only turned off now after a `mobile: true` viewport [#664]
+- `set_viewport` and `resize` turned touch emulation off on every desktop viewport, which reset hover and pointer and
+  undid `--blink-settings` overrides. `mobile:` defaults to `nil` and leaves touch as is, `false` turns it off [#664]
 
 ### Removed
 

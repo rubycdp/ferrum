@@ -304,7 +304,9 @@ describe Ferrum::Page do
           page.reload
         end.not_to(change { is_mobile? })
       end
+    end
 
+    context "when mobile is not given" do
       it "keeps the pointer type set with --blink-settings", :launch do
         browser = Ferrum::Browser.new(browser_options: { "blink-settings" => "primaryPointerType=2,availablePointerTypes=2" })
         browser.go_to(base_url)
