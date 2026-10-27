@@ -1,0 +1,105 @@
+module Ferrum
+  class Frame
+    class Script
+      IDENTIFIER: ::Regexp
+
+      FUNCTION_DECLARATION: ::Regexp
+
+      SINGLE_PARAMETER_ARROW: ::Regexp
+
+      ASYNC_PREFIX: ::Regexp
+
+      ARROW: ::Regexp
+
+      COMMENT: ::Regexp
+
+      NOISE: ::Regexp
+
+      STRING: ::Regexp
+
+      TEMPLATE_CHUNK: ::Regexp
+
+      REGEXP: ::Regexp
+
+      WORD: ::Regexp
+
+      VALUE_END: ::Regexp
+
+      REGEXP_KEYWORDS: ::Array[::String]
+
+      CONTINUING_WORDS: ::Array[::String]
+
+      STATEMENT: ::Regexp
+
+      @code_start: ::Integer
+
+      @code_end: ::Integer
+
+      @body_end: ::Integer?
+
+      @paren_open: ::Integer?
+
+      @paren_close: ::Integer?
+
+      @words: ::Set[::String]
+
+      @block: bool?
+
+      @block_end: bool?
+
+      @condition: bool?
+
+      @condition_end: bool?
+
+      @scanned: bool
+
+      @wrapped: Script?
+
+      @last_statement_start: ::Integer?
+
+      attr_reader source: ::String
+
+      attr_reader code: ::String
+
+      def initialize: (untyped source) -> void
+
+      def declaration?: () -> bool
+
+      def awaits?: () -> bool
+
+      def uses?: (::String word) -> bool
+
+      def several_statements?: () -> bool
+
+      def split_last_statement: () -> [::String, ::String]
+
+      def leading_line_break?: () -> bool
+
+      private
+
+      def parenthesized?: () -> bool
+
+      def arrow?: () -> bool
+
+      def scan: () -> void
+
+      def new_line_statement?: (::String? previous, ::String token, ::String following) -> bool
+
+      def track_block: (::String token, ::String? previous, ::Array[::String | ::Symbol] stack) -> void
+
+      def track_condition: (::String token, ::String? previous, ::Array[::String | ::Symbol] stack) -> void
+
+      def block_start?: (::String? previous) -> bool
+
+      def scan_token: (::StringScanner scanner, ::Array[::String | ::Symbol] stack, ::String? previous) -> ::String
+
+      def scan_punctuator: (::StringScanner scanner, ::Array[::String | ::Symbol] stack) -> ::String
+
+      def track_parens: (::String char, ::Integer position, ::Array[::String | ::Symbol] stack) -> void
+
+      def scan_template: (::StringScanner scanner, ::Array[::String | ::Symbol] stack) -> ::String
+
+      def regexp_allowed?: (::String? previous) -> bool
+    end
+  end
+end

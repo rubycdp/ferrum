@@ -203,8 +203,9 @@ module Ferrum
 
       def subscribe_execution_context_created
         on("Runtime.executionContextCreated") do |params|
-          context_id = params.dig("context", "id")
-          frame_id = params.dig("context", "auxData", "frameId")
+          context = params["context"]
+          context_id = context["id"]
+          frame_id = context.dig("auxData", "frameId")
 
           unless @main_frame.id
             root_frame = command("Page.getFrameTree").dig("frameTree", "frame", "id")
@@ -215,7 +216,11 @@ module Ferrum
           end
 
           frame = @frames.fetch_or_store(frame_id, Frame.new(frame_id, self))
-          frame.execution_id = context_id
+          if context.dig("auxData", "isDefault")
+            frame.execution_id = context_id
+          elsif !context["name"].to_s.empty?
+            frame.isolated_world(context["name"]).execution_id = context_id
+          end
         end
       end
 
@@ -225,6 +230,7 @@ module Ferrum
           frame = frame_by(execution_id: execution_id)
           frame&.execution_id = nil
           frame&.state = :canceled
+          frames.flat_map(&:isolated_worlds).find { |w| w.execution_id == execution_id }&.execution_id = nil
         end
       end
 
@@ -240,6 +246,7 @@ module Ferrum
           @frames.each do |frame_id, f|
             if f.main?
               f.execution_id = nil
+              f.isolated_worlds.each { |w| w.execution_id = nil }
               f.loader_id = nil
               f.lifecycle_events.clear
               f.state = :canceled

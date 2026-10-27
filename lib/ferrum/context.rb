@@ -20,7 +20,7 @@ module Ferrum
       @implicit = implicit
       @client = client
       @contexts = contexts
-      @targets = Concurrent::Map.new
+      @targets = Concurrent::Hash.new
       @pendings = Concurrent::Map.new
     end
 
@@ -56,11 +56,12 @@ module Ferrum
       @targets.values.select(&:page?).map(&:page)
     end
 
-    # Dedicated and shared workers spawned by any page in this context.
+    # Dedicated and shared workers spawned by any page in this context,
+    # leaving out the ones we have no session with, e.g. detached ones.
     #
     # @return [Array<Worker>]
     def workers
-      @targets.values.select { |t| t.worker? || t.shared_worker? }.map(&:worker)
+      @targets.values.select { |t| (t.worker? || t.shared_worker?) && t.session_id }.map(&:worker)
     end
 
     # Service worker targets registered in this context. Unlike {#workers},
@@ -130,8 +131,7 @@ module Ferrum
     # @return [Target]
     def add_target(params:, session_id: nil, attached: false)
       new_target = Target.new(@client, session_id, params, implicit: implicit?)
-      # `put_if_absent` returns nil if added a new value or existing if there was one already
-      target = @targets.put_if_absent(new_target.id, new_target) || new_target
+      target = @targets[new_target.id] ||= new_target
       # on first iteration session_id may be nil, then if session is present here we must set it to the target
       target.session_id = session_id if session_id && (attached || target.session_id.nil?)
       @default_target ||= target
@@ -164,25 +164,34 @@ module Ferrum
 
     # Manually attaches to a target, e.g. a service worker discovered via
     # {#service_workers}. Once attached, `target.worker`/`target.page`
-    # returns a connected {Worker}/{Page} for it.
+    # returns a connected {Worker}/{Page} for it. A target that already has
+    # a session keeps it.
     #
     # Note: attaching to a service worker's session prevents Chrome from
     # ever terminating it while the connection is open.
+    #
+    # @param [String] target_id
+    #
+    # @return [Target]
+    #
+    # @raise [NoSuchTargetError] if the context has no such target.
     def attach_target(target_id)
       target = @targets[target_id]
       raise NoSuchTargetError unless target
+      return target if target.session_id
 
       @contexts.manually_attached(target_id)
       session = @client.command("Target.attachToTarget", targetId: target_id, flatten: true)
       target.session_id = session["sessionId"]
-      true
+      target
     end
 
     # Returns the first target for which the block returns truthy.
     #
     # @return [Target, nil]
     def find_target
-      @targets.each_value { |t| return t if yield(t) }
+      targets = @targets.values
+      targets.each { |t| return t if yield(t) }
 
       nil
     end
@@ -192,11 +201,7 @@ module Ferrum
     #
     # @return [void]
     def close_targets_connection
-      @targets.each_value do |target|
-        next unless target.connected?
-
-        target.close_connection
-      end
+      @targets.values.select(&:connected?).each(&:close_connection)
     end
 
     # Disposes this browser context and all of its targets. The browser's

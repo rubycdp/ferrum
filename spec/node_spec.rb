@@ -364,6 +364,10 @@ describe Ferrum::Node do
       expect(browser.at_css(".some_other_class").property("innerHTML")).to eq "<p>foobar</p>"
     end
 
+    it "gets an attribute whose name has a quote" do
+      expect(browser.at_css("#my_link").attribute("it's")).to be_nil
+    end
+
     it "gets attribute" do
       link = browser.at_xpath("//a[text() = 'Loop']")
       expect(link.attribute("data-random")).to eq "42"
@@ -506,6 +510,21 @@ describe Ferrum::Node do
     it "gets non existent property" do
       el = browser.at_css(".some_other_class")
       expect(el.property("does_not_exist")).to eq nil
+    end
+
+    it "gets a property holding a node as a node, without a warning" do
+      el = browser.at_css(".some_other_class p")
+
+      parent = nil
+      expect { parent = el.property("parentElement") }.not_to output.to_stderr
+      expect(parent.tag_name).to eq("div")
+    end
+
+    it "gets a property whose name has a quote" do
+      el = browser.at_css(".some_other_class")
+      el.execute(%(this["it's"] = 42))
+
+      expect(el.property("it's")).to eq(42)
     end
   end
 

@@ -20,6 +20,8 @@ module Ferrum
 
     attr_reader lifecycle_events: ::Array[::Hash[::String, ::String | ::Float]]
 
+    @isolated_worlds: ::Concurrent::Map[String, IsolatedWorld]
+
     def initialize: (untyped id, untyped page, ?untyped? parent_id) -> void
 
     def state=: (untyped value) -> untyped
@@ -41,6 +43,10 @@ module Ferrum
     def execution_id: () -> (nil | untyped)
 
     def execution_id=: (untyped value) -> untyped
+
+    def isolated_world: (String name) -> IsolatedWorld
+
+    def isolated_worlds: () -> ::Array[IsolatedWorld]
 
     def inspect: () -> ::String
   end

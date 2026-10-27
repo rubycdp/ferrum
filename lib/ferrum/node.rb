@@ -14,16 +14,57 @@ module Ferrum
     MOVING_WAIT_DELAY = ENV.fetch("FERRUM_NODE_MOVING_WAIT", 0.01).to_f
     MOVING_WAIT_ATTEMPTS = ENV.fetch("FERRUM_NODE_MOVING_ATTEMPTS", 50).to_i
 
-    attr_reader :page, :target_id, :description, :tag_name
+    # @return [Page] the page the node belongs to.
+    attr_reader :page
 
-    def initialize(frame, target_id, description, object_id: nil, node_id: nil)
+    # @return [String] the id of the page's target.
+    attr_reader :target_id
+
+    # @return [Integer] Chrome's id of the node, stable for the node's lifetime.
+    attr_reader :backend_node_id
+
+    # @return [Integer] the DOM `nodeType`, e.g. `1` for an element, `3` for a text node.
+    attr_reader :node_type
+
+    # @return [String, nil] the id of the frame an `iframe` or `frame` element contains, `nil` for other nodes.
+    attr_reader :frame_id
+
+    #
+    # @param [Frame, IsolatedWorld] frame
+    #   The runtime the node was returned from.
+    #
+    # @param [Hash{String => Object}] properties
+    #   The node's properties from Chrome's deep serialization.
+    #
+    def initialize(frame, properties)
+      @runtime = frame
       @page = frame.page
-      @target_id = target_id
-      @description = description
-      @tag_name = description["nodeName"].downcase
-      @object_id = object_id
-      @node_id = node_id
+      @target_id = @page.target_id
+      @backend_node_id = properties["backendNodeId"]
+      @node_type = properties["nodeType"]
+      @tag_name = properties["localName"]&.downcase
+      @frame_id = properties["frameId"]
       @document_version = @page.document_version
+    end
+
+    #
+    # Chrome's description of the node from `DOM.describeNode`, fetched on
+    # first use.
+    #
+    # @return [Hash{String => Object}]
+    #
+    def description
+      @description ||= page.command("DOM.describeNode", backendNodeId: backend_node_id)["node"]
+    end
+
+    #
+    # The lowercased tag name of an element, or the node name of any other
+    # node, e.g. `"#text"`.
+    #
+    # @return [String]
+    #
+    def tag_name
+      @tag_name ||= description["nodeName"].downcase
     end
 
     # Frontend node id is resolved lazily, on first actual need (focus, click, scroll_into_view, etc.)
@@ -34,14 +75,15 @@ module Ferrum
 
       document_version = page.document_version
       @node_id = begin
-        id = page.command("DOM.requestNode", objectId: @object_id)["nodeId"]
-        if id.zero?
-          raise NodeNotFoundError, { "message" => "node is not trackable, the page is still loading a new document" }
-        end
+        id = page.command("DOM.pushNodesByBackendIdsToFrontend",
+                          backendNodeIds: [backend_node_id])["nodeIds"].first
+        raise NodeNotFoundError, { "message" => "node is not trackable" } if id.zero?
 
         id
-      rescue NoExecutionContextError
-        raise NodeNotFoundError, { "message" => "node is not trackable" }
+      rescue BrowserError => e
+        raise unless e.message == "Document needs to be requested first"
+
+        raise NodeNotFoundError, { "message" => "node is not trackable, the page is still loading a new document" }
       end
       @document_version = document_version
       @node_id
@@ -51,16 +93,7 @@ module Ferrum
     #
     # @return [Boolean]
     def node?
-      description["nodeType"] == 1 # nodeType: 3, nodeName: "#text" e.g.
-    end
-
-    #
-    # The id of the frame this node belongs to.
-    #
-    # @return [String]
-    #
-    def frame_id
-      description["frameId"]
+      node_type == 1 # nodeType: 3, nodeName: "#text" e.g.
     end
 
     #
@@ -210,9 +243,9 @@ module Ferrum
     #
     # @return [Boolean]
     def in_viewport?(of: nil)
-      function = <<~JS
-        function(element, scope) {
-          const rect = element.getBoundingClientRect();
+      evaluate(<<~JS, of)
+        function(scope) {
+          const rect = this.getBoundingClientRect();
           const [height, width] = scope
             ? [scope.offsetHeight, scope.offsetWidth]
             : [window.innerHeight, window.innerWidth];
@@ -222,7 +255,6 @@ module Ferrum
            rect.right <= width;
         }
       JS
-      page.evaluate_func(function, self, of)
     end
 
     #
@@ -240,7 +272,7 @@ module Ferrum
       page.command(
         "DOM.setFileInputFiles",
         slowmoable: true,
-        backendNodeId: description["backendNodeId"],
+        backendNodeId: backend_node_id,
         files: Array(value)
       )
     end
@@ -343,7 +375,7 @@ module Ferrum
     #   page.at_css("input").property("value") # => "Foo"
     #
     def property(name)
-      evaluate("this['#{name}']")
+      evaluate("this[name]", name: name)
     end
     alias [] property
 
@@ -360,7 +392,7 @@ module Ferrum
     #   page.at_css("input").attribute("value") # => "Foo"
     #
     def attribute(name)
-      evaluate("this.getAttribute('#{name}')")
+      evaluate("this.getAttribute(name)", name: name)
     end
 
     #
@@ -369,15 +401,14 @@ module Ferrum
     # @return [Array<Node>]
     #
     def selected
-      function = <<~JS
-        function(element) {
-          if (element.nodeName.toLowerCase() !== 'select') {
+      evaluate(<<~JS)
+        function() {
+          if (this.nodeName.toLowerCase() !== 'select') {
             throw new Error('Element is not a <select> element.');
           }
-          return Array.from(element).filter(option => option.selected);
+          return Array.from(this).filter(option => option.selected);
         }
       JS
-      page.evaluate_func(function, self, on: self)
     end
 
     #
@@ -405,38 +436,73 @@ module Ferrum
     #
     def select(*values, by: :value)
       tap do
-        function = <<~JS
-          function(element, values, by) {
-            if (element.nodeName.toLowerCase() !== 'select') {
+        execute(<<~JS, values.flatten, by)
+          function(values, by) {
+            if (this.nodeName.toLowerCase() !== 'select') {
               throw new Error('Element is not a <select> element.');
             }
-            const options = Array.from(element.options);
-            element.value = undefined;
+            const options = Array.from(this.options);
+            this.value = undefined;
             for (const option of options) {
               option.selected = values.some((value) => option[by] === value);
-              if (option.selected && !element.multiple) break;
+              if (option.selected && !this.multiple) break;
             }
-            element.dispatchEvent(new Event('input', { bubbles: true }));
-            element.dispatchEvent(new Event('change', { bubbles: true }));
+            this.dispatchEvent(new Event('input', { bubbles: true }));
+            this.dispatchEvent(new Event('change', { bubbles: true }));
           }
         JS
-        page.evaluate_func(function, self, values.flatten, by, on: self)
       end
     end
 
     #
-    # Evaluates the given JavaScript expression with `this` bound to the
-    # node.
+    # Evaluates JavaScript with `this` bound to the node, and returns the
+    # result serialized into Ruby. Takes the same script shapes and arguments
+    # as {Frame::Runtime#evaluate}. Arrow functions don't get `this`, so use a
+    # `function` declaration when the script needs it.
     #
-    # @param [String] expression
+    # @param (see Frame::Runtime#evaluate)
+    # @option (see Frame::Runtime#evaluate)
     #
     # @return [Object]
     #
     # @example
     #   page.at_css("input").evaluate("this.value")
+    #   page.at_css("input").evaluate("this.value + suffix", suffix: "!")
     #
-    def evaluate(expression)
-      page.evaluate_on(node: self, expression: expression)
+    def evaluate(expression, *positional, **keywords)
+      @runtime.evaluate_in(self, expression, positional, keywords, mode: :value)
+    end
+
+    #
+    # Same as {#evaluate}, but returns a {RemoteObject} that stays in the
+    # browser instead of being serialized.
+    #
+    # @param (see Frame::Runtime#evaluate)
+    # @option (see Frame::Runtime#evaluate)
+    #
+    # @return [RemoteObject, Node, Object]
+    #
+    def evaluate_handle(expression, *positional, **keywords)
+      @runtime.evaluate_in(self, expression, positional, keywords, mode: :handle)
+    end
+
+    #
+    # Runs JavaScript with `this` bound to the node, for its side effects.
+    # The script is used as a function body, so multiple statements need no
+    # wrapping.
+    #
+    # @param (see Frame::Runtime#evaluate)
+    # @option (see Frame::Runtime#evaluate)
+    #
+    # @return [Boolean]
+    #   Always `true`.
+    #
+    # @example
+    #   page.at_css("input").execute("this.value = text", text: "hello")
+    #
+    def execute(expression, *positional, **keywords)
+      @runtime.evaluate_in(self, expression, positional, keywords, mode: :none)
+      true
     end
 
     #
@@ -453,7 +519,7 @@ module Ferrum
       # We compare backendNodeId because once nodeId is sent to frontend backend
       # never returns same nodeId sending 0. In other words frontend is
       # responsible for keeping track of node ids.
-      target_id == other.target_id && description["backendNodeId"] == other.description["backendNodeId"]
+      target_id == other.target_id && backend_node_id == other.backend_node_id
     end
 
     #
@@ -462,7 +528,8 @@ module Ferrum
     # @return [String]
     #
     def inspect
-      %(#<#{self.class} @target_id=#{@target_id.inspect} @node_id=#{@node_id} @description=#{@description.inspect}>)
+      %(#<#{self.class} @target_id=#{@target_id.inspect} @node_id=#{@node_id} ) +
+        %(@backend_node_id=#{@backend_node_id} @tag_name=#{@tag_name.inspect}>)
     end
 
     #

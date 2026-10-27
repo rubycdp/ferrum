@@ -1,0 +1,27 @@
+module Ferrum
+  class IsolatedWorld
+    include Frame::Runtime
+
+    attr_reader name: String
+
+    attr_reader frame: Frame
+
+    attr_reader page: Page
+
+    @execution_id: ::Concurrent::MVar
+
+    def initialize: (Frame frame, String name) -> void
+
+    def execution_id!: () -> Integer
+
+    def execution_id: () -> Integer?
+
+    def execution_id=: (Integer? value) -> (Integer | bool | nil)
+
+    def inspect: () -> ::String
+
+    private
+
+    def resolve_node_options: () -> ::Hash[Symbol, Integer]
+  end
+end

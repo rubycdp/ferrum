@@ -160,7 +160,7 @@ module Ferrum
       @ws_url = ws_url
       @options = options
       @pendings = Concurrent::Hash.new
-      @ws = WebSocket.new(ws_url, options.ws_max_receive_size, options.log)
+      @ws = WebSocket.new(ws_url, options.ws_max_receive_size, options.log, options.protocol_timeout)
       @subscriber = Subscriber.new
 
       start
@@ -208,8 +208,8 @@ module Ferrum
     #   Whether to return immediately instead of waiting for a response.
     #
     # @param [Numeric, nil] timeout
-    #   How long to wait for the browser to take the message, and then for its
-    #   response. Defaults to `protocol_timeout`.
+    #   How long to wait for the response, counting the time the message waits
+    #   to be sent. Defaults to `protocol_timeout`.
     #
     # @return [Boolean, Hash]
     #   `true` when sent asynchronously, otherwise the parsed `"result"`
@@ -222,7 +222,7 @@ module Ferrum
         @ws.send_message(message, timeout)
         true
       else
-        raise DeadBrowserError if @ws.messages.closed?
+        raise dead_browser_error if @ws.messages.closed?
 
         pending = Concurrent::IVar.new
         @pendings[message[:id]] = pending
@@ -233,7 +233,7 @@ module Ferrum
           @pendings.delete(message[:id])
         end
 
-        raise DeadBrowserError if data.nil? && @ws.messages.closed?
+        raise dead_browser_error if data.nil? && @ws.messages.closed?
         raise TimeoutError.new(message[:method], session_id: message[:sessionId]) unless data
 
         error, response = data.values_at("error", "result")
@@ -363,6 +363,10 @@ module Ferrum
     # is gone, release them instead of making each wait out its timeout.
     def release_pendings
       @pendings.each_value { |pending| pending.try_set(nil) }
+    end
+
+    def dead_browser_error
+      @ws.close_reason ? DeadBrowserError.new(@ws.close_reason) : DeadBrowserError.new
     end
 
     # Locked so two concurrent commands never share an id and read each

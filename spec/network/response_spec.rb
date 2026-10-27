@@ -96,7 +96,7 @@ describe Ferrum::Network::Response do
   describe "#error" do
     it "captures errors" do
       page.go_to("/with_ajax_fail")
-      expect(page.at_xpath("//h1[text() = 'Done']")).to be
+      page.network.wait_for_idle!
 
       expect(last_exchange.error).to be
     end

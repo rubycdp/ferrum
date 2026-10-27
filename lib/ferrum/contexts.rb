@@ -159,14 +159,18 @@ module Ferrum
     def subscribe_attached_target(client)
       client.on("Target.attachedToTarget") do |params|
         info, session_id = params.values_at("targetInfo", "sessionId")
-        next detach_untracked(session_id) unless ALLOWED_TARGET_TYPES.include?(info["type"])
+        next detach_untracked(session_id, client) unless ALLOWED_TARGET_TYPES.include?(info["type"])
 
         context_id = info["browserContextId"]
         add_context(context_id)
         target = @contexts[context_id]&.add_target(session_id: session_id, params: info, attached: true)
 
         rearm_auto_attach(session_id, info["type"])
-        handle_attach(target, session_id, params)
+        handle_attach(target, session_id, params, client)
+      end
+
+      client.on("Target.detachedFromTarget") do |params|
+        forget_session(params["targetId"], params["sessionId"])
       end
     end
 
@@ -218,11 +222,11 @@ module Ferrum
       subscribe_attached_target(client)
     end
 
-    def handle_attach(target, session_id, params)
+    def handle_attach(target, session_id, params, parent)
       return unless target
 
       if target.service_worker?
-        detach_unless_manually_attached(target, session_id)
+        detach_unless_manually_attached(target, session_id, parent)
       elsif target.worker? || target.shared_worker?
         connect_worker(target)
       else
@@ -247,21 +251,18 @@ module Ferrum
     # we don't track: Chrome's own `browser_ui` targets, for instance. We
     # never resume those, so left alone they stay attached and paused for
     # the lifetime of the browser. Resume them and drop the session.
-    def detach_untracked(session_id)
-      detach(session_id)
-    rescue BrowserError, TimeoutError
-      nil
+    def detach_untracked(session_id, parent)
+      silent_detach(session_id, parent)
     end
 
     # Attaching keeps a service worker alive forever, so unless the caller
     # explicitly asked to connect to it (via Context#attach_target), we
     # just resume it and let go.
-    def detach_unless_manually_attached(target, session_id)
+    def detach_unless_manually_attached(target, session_id, parent)
       return if @manually_attached.delete(target.id)
 
-      detach(session_id)
-    rescue BrowserError, TimeoutError
-      nil
+      forget_session(target.id, session_id)
+      silent_detach(session_id, parent)
     end
 
     # Workers have no events to notify us when they're ready, so we
@@ -277,9 +278,18 @@ module Ferrum
       @client.session(session_id).command("Runtime.runIfWaitingForDebugger", async: true)
     end
 
-    def detach(session_id)
-      resume(session_id)
-      @client.command("Target.detachFromTarget", sessionId: session_id)
+    def forget_session(target_id, session_id)
+      target = find_by(target_id: target_id)&.targets&.[](target_id)
+      target.session_id = nil if target&.session_id == session_id
+    end
+
+    def silent_detach(session_id, parent)
+      Utils::Thread.spawn do
+        @client.session(session_id).command("Runtime.runIfWaitingForDebugger")
+        parent.command("Target.detachFromTarget", sessionId: session_id)
+      rescue Error
+        nil
+      end
     end
 
     def discover

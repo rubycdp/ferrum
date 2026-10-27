@@ -80,6 +80,10 @@ module Ferrum
       end
     end
 
+    def stop
+      @puma&.stop(true)
+    end
+
     def boot!
       return if responsive?
 
@@ -112,11 +116,12 @@ module Ferrum
       log_writer.log "* Version #{Puma::Const::PUMA_VERSION} , codename: #{Puma::Const::CODE_NAME}"
       log_writer.log "* Min threads: #{config.options[:min_threads]}, max threads: #{config.options[:max_threads]}"
 
-      Puma::Server.new(config.app, nil, config.options).tap do |s|
+      @puma = Puma::Server.new(config.app, nil, config.options).tap do |s|
         s.binder.parse(config.options[:binds], log_writer)
         s.min_threads = config.options[:min_threads] if s.respond_to?(:min_threads=)
         s.max_threads = config.options[:max_threads] if s.respond_to?(:max_threads=)
-      end.run.join
+      end
+      @puma.run.join
     end
 
     def responsive?

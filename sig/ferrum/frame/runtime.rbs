@@ -7,35 +7,66 @@ module Ferrum
 
   class Frame
     module Runtime
+      include Legacy
+
       INTERMITTENT_ATTEMPTS: untyped
 
       INTERMITTENT_SLEEP: untyped
 
-      def evaluate: (untyped expression, *untyped args) -> untyped
+      DEEP_SERIALIZATION: ::Hash[Symbol, untyped]
 
-      def evaluate_async: (untyped expression, untyped wait, *untyped args) -> untyped
+      SHALLOW_SERIALIZATION: ::Hash[Symbol, untyped]
 
-      def execute: (untyped expression, *untyped args) -> true
+      UNSERIALIZABLE_NUMBERS: ::Hash[String, Float]
 
-      def evaluate_func: (untyped expression, *untyped args, ?on: untyped?) -> untyped
 
-      def evaluate_on: (node: untyped, expression: untyped, ?by_value: bool, ?wait: ::Integer) -> untyped
+      def evaluate: (untyped expression, *untyped positional, **untyped keywords) -> untyped
+
+      def evaluate_handle: (untyped expression, *untyped positional, **untyped keywords) -> untyped
+
+      def execute: (untyped expression, *untyped positional, **untyped keywords) -> true
+
+      def evaluate_in: (Node | RemoteObject object, untyped expression, ::Array[untyped] positional, ::Hash[::Symbol, untyped] keywords, ?mode: ::Symbol) -> untyped
 
       private
 
-      def call: (expression: untyped, ?arguments: untyped, ?on: untyped?, ?wait: ::Integer, ?handle: bool, **untyped options) -> untyped
+      def run: (untyped expression, ::Array[untyped] positional, ::Hash[::Symbol, untyped] keywords, mode: ::Symbol, ?on: (Node | RemoteObject)?) -> untyped
 
-      def handle_error: (untyped response) -> (nil | untyped)
+      def arguments_for: (Script script, ::Array[untyped] positional, ::Hash[untyped, untyped] named) -> [::Array[::String], ::Array[untyped]]
 
-      def handle_response: (untyped response) -> untyped
+      def wrap: (Script script, ::Array[::String] params, ::Symbol mode) -> ::String
+
+      def script_timeout: (Numeric? timeout) -> ::Float
+
+      def call: (::String declaration, ::Array[untyped] values, on: (Node | RemoteObject)?, mode: ::Symbol, timeout: ::Float) -> untyped
+
+      def call_function: (::String declaration, ::Array[untyped] values, ::Hash[::Symbol, untyped] target, ::Hash[::Symbol, untyped] serialization, ::Float timeout) -> untyped
+
+      def thenable?: (::Hash[::String, untyped] result) -> bool
+
+      def await_promise: (::Hash[::String, untyped] promise, ::Hash[::Symbol, untyped] serialization, ::Float timeout) -> ::Hash[::String, untyped]
+
+      def call_target: ((Node | RemoteObject)? on) -> ::Hash[::Symbol, untyped]
+
+      def handle_error: (untyped response, ?::String? declaration) -> void
+
+      def handle_remote_object: (untyped result) -> untyped
+
+      def handle_response: (Hash[String, untyped] response) -> untyped
+
+      def deserialize: (Hash[String, untyped] serialized, ?Hash[Integer, Hash[String, untyped]] references, ?Array[Integer] path, ?Hash[Integer, untyped] converted) -> untyped
+
+      def convert: (Hash[String, untyped] serialized, Hash[Integer, Hash[String, untyped]] references, Array[Integer] path, Hash[Integer, untyped] converted) -> untyped
+
+      def resolve_node: (Node node) -> String
+
+      def resolve_node_options: () -> ::Hash[Symbol, Integer]
 
       def prepare_args: (untyped args) -> untyped
 
-      def reduce_props: (untyped object_id, untyped to) { (untyped, untyped, untyped) -> untyped } -> (::Array[untyped] | untyped | untyped)
+      def nested_reference?: (untyped value) -> bool
 
-      def cyclic?: (untyped object_id) -> untyped
-
-      def cyclic_object: () -> untyped
+      def cyclic_object: () -> CyclicObject
     end
   end
 end

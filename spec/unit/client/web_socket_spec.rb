@@ -33,7 +33,8 @@ describe Ferrum::Client::WebSocket do
 
   before do
     web_socket.instance_variable_set(:@driver, frame_probe)
-    web_socket.instance_variable_set(:@driver_mutex, Mutex.new)
+    web_socket.instance_variable_set(:@mutex, Mutex.new)
+    web_socket.instance_variable_set(:@encoded, [])
   end
 
   describe "#send_message" do

@@ -2,7 +2,7 @@
 
 describe Ferrum::Downloads do
   let(:filename) { "attachment.pdf" }
-  let(:save_path) { "/tmp/ferrum" }
+  let(:save_path) { "/tmp/ferrum-downloads" }
 
   describe "#files" do
     it "saves an attachment" do
