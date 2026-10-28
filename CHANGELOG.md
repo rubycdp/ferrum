@@ -7,8 +7,8 @@
 ### Fixed
 - `set_viewport` and `resize` turned touch emulation off on every desktop viewport, which reset hover and pointer and
   undid `--blink-settings` overrides. `mobile:` defaults to `nil` and leaves touch as is, `false` turns it off [#664]
-- A click or navigation timed out when the last loading iframe was removed without finishing, e.g. submitting a form
-  that opens an inline PDF in Chrome 145+, where the PDF viewer runs out of process [#672]
+- A click or navigation timed out when the last loading iframe moved to another process, e.g. submitting a form that
+  opens an inline PDF in Chrome 145+, where the PDF viewer runs out of process [#672]
 
 ### Removed
 
