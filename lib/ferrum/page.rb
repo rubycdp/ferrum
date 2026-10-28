@@ -107,6 +107,7 @@ module Ferrum
       @options = client.options
 
       @frames = Concurrent::Map.new
+      @remote_frames = Concurrent::Map.new
       @main_frame = Frame.new(nil, self)
       @event = Utils::Event.new.tap(&:set)
       @document_version = 0

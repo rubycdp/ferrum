@@ -230,17 +230,18 @@ module Ferrum
       elsif target.worker? || target.shared_worker?
         connect_worker(target)
       else
-        add_extensions_and_resume(session_id, params["waitingForDebugger"])
+        add_extensions_and_resume(target, session_id, params["waitingForDebugger"])
       end
     end
 
     # A page or iframe is paused until we resume it, so the extensions we
     # register now run before any script of its first document. An
-    # out-of-process iframe ignores them until the Page domain is enabled.
-    def add_extensions_and_resume(session_id, waiting)
+    # out-of-process iframe ignores them until the Page domain is enabled,
+    # and its parent page needs the Page domain to see it finish loading.
+    def add_extensions_and_resume(target, session_id, waiting)
       extensions = @client.options.extensions
       session = @client.session(session_id)
-      session.command("Page.enable", async: true) if extensions.any?
+      session.command("Page.enable", async: true) if extensions.any? || target.iframe?
       extensions.each do |source|
         session.command("Page.addScriptToEvaluateOnNewDocument", async: true, source: source)
       end

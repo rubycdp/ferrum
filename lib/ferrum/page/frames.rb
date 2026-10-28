@@ -74,6 +74,7 @@ module Ferrum
       def frames_subscribe
         subscribe_frame_attached
         subscribe_frame_detached
+        subscribe_remote_frames
         subscribe_frame_started_navigating
         subscribe_frame_started_loading
         subscribe_frame_navigated
@@ -104,9 +105,48 @@ module Ferrum
             frame.execution_id = nil
           else
             @frames.delete(params["frameId"])
-            @event.set if @main_frame.idle? && frame&.idle? == false && frames.size == 1
+            forget_remote_frame(params["frameId"]) unless params["reason"] == "swap"
+            @event.set if @main_frame.idle? && frame&.idle? == false && frames.size == 1 && @remote_frames.values.none?
           end
         end
+      end
+
+      # A frame swapped into another process (`Page.frameDetached` with reason `swap`) leaves the page's frame tree
+      # and loads in its own `iframe` target, so its loading events come over that target's session. Until it stops
+      # loading there {#idling?} stays false, as it does for any other loading frame.
+      def subscribe_remote_frames
+        on("Target.attachedToTarget") do |params|
+          info, session_id = params.values_at("targetInfo", "sessionId")
+          next unless info["type"] == "iframe"
+
+          frame_id = info["targetId"]
+          @remote_frames.put_if_absent(frame_id, true)
+          subscribe_remote_frame_loading(client.session(session_id), frame_id)
+        end
+
+        on("Target.detachedFromTarget") do |params|
+          forget_remote_frame(params["targetId"])
+        end
+      end
+
+      def subscribe_remote_frame_loading(session, frame_id)
+        session.on("Page.frameStartedLoading") do |params|
+          next unless params["frameId"] == frame_id && @remote_frames.key?(frame_id)
+
+          @remote_frames[frame_id] = true
+          @event.reset
+        end
+
+        session.on("Page.frameStoppedLoading") do |params|
+          next unless params["frameId"] == frame_id && @remote_frames.key?(frame_id)
+
+          @remote_frames[frame_id] = false
+          @event.set if idling?
+        end
+      end
+
+      def forget_remote_frame(frame_id)
+        @event.set if @remote_frames.delete(frame_id) && idling?
       end
 
       # Tracks the +loaderId+ for each navigating frame and clears stale
@@ -257,11 +297,12 @@ module Ferrum
           end
 
           children.each { |id| @frames.delete(id) }
+          @remote_frames.clear
         end
       end
 
       def idling?
-        @frames.values.all?(&:idle?)
+        @frames.values.all?(&:idle?) && @remote_frames.values.none?
       end
     end
   end

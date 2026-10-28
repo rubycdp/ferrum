@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <button>Add cross-site iframe</button>
+
+    <script>
+      window.frameLoaded = false;
+
+      document.querySelector("button").addEventListener("click", function () {
+        var frame = document.createElement("iframe");
+        frame.onload = function () { window.frameLoaded = true; };
+        frame.src = location.origin.replace("127.0.0.1", "localhost") + "/slow_image";
+        document.body.appendChild(frame);
+      });
+    </script>
+  </body>
+</html>

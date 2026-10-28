@@ -15,6 +15,12 @@ module Ferrum
 
       def subscribe_frame_detached: () -> untyped
 
+      def subscribe_remote_frames: () -> untyped
+
+      def subscribe_remote_frame_loading: (SessionClient session, String frame_id) -> untyped
+
+      def forget_remote_frame: (String? frame_id) -> untyped
+
       def subscribe_frame_started_navigating: () -> untyped
 
       def subscribe_frame_started_loading: () -> untyped

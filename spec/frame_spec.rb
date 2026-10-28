@@ -148,6 +148,17 @@ describe Ferrum::Frame do
     expect(page.evaluate("location.pathname")).to eq("/slow")
   end
 
+  it "waits for a cross-site frame a click adds", :launch do
+    browser = Ferrum::Browser.new(base_url: base_url,
+                                  browser_options: { "site-per-process" => nil, "disable-features" => "Translate" })
+    browser.go_to("/cross_site_iframe")
+    browser.at_css("button").click
+
+    expect(browser.evaluate("window.frameLoaded")).to be(true)
+  ensure
+    browser&.quit
+  end
+
   context "with lazy loading iframes" do
     it "does not block visit on lazy iframe" do
       expect { page.go_to("/lazy_iframe") }.not_to raise_error
