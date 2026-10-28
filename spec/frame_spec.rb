@@ -125,6 +125,29 @@ describe Ferrum::Frame do
     end
   end
 
+  it "finishes a form submission that opens an inline PDF" do
+    page.go_to("/inline_pdf")
+    page.at_css("button").click
+
+    expect(page.current_url).to eq(base_url("/inline.pdf"))
+    expect(page.network.response.content_type).to eq("application/pdf")
+  end
+
+  it "keeps waiting for a loading frame when another one is removed" do
+    page.go_to("/removed_iframe")
+    page.at_css("button").click
+
+    expect(page.evaluate("document.querySelector('iframe').contentWindow.location.pathname"))
+      .to eq("/show_cookies/set_cookie_slow")
+  end
+
+  it "waits for a navigation a click starts after removing a loaded frame" do
+    page.go_to("/remove_iframe_and_navigate")
+    page.at_css("button").click
+
+    expect(page.evaluate("location.pathname")).to eq("/slow")
+  end
+
   context "with lazy loading iframes" do
     it "does not block visit on lazy iframe" do
       expect { page.go_to("/lazy_iframe") }.not_to raise_error

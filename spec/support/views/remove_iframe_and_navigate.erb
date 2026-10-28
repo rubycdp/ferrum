@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <iframe src="/slow"></iframe>
+    <button>Remove iframe and navigate</button>
+
+    <script>
+      document.querySelector("button").addEventListener("click", function () {
+        document.querySelector("iframe").remove();
+        setTimeout(function () { location.href = "/slow"; }, 20);
+      });
+    </script>
+  </body>
+</html>
