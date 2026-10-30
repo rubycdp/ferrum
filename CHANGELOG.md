@@ -18,6 +18,7 @@
   `go_to` instead
 
 ### Fixed
+- `Node#focusable?` left the node focused, now it gives focus back to the element that had it
 - `Node#moving?` returned `true` for a node that wasn't moving and `false` for one that was
 
 ### Removed

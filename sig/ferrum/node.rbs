@@ -36,7 +36,7 @@ module Ferrum
 
     def focus: () -> untyped
 
-    def focusable?: () -> untyped
+    def focusable?: () -> bool
 
     def node_id: -> untyped
 
@@ -99,6 +99,8 @@ module Ferrum
     def bounding_rect_coordinates: () -> [Numeric, Numeric]
 
     def content_quads: () -> untyped
+
+    def restore_focus: (Node? previous) -> void
 
     def content_quads_with: (?delay: untyped) -> ::Array[untyped]
 

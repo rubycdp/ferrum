@@ -17,7 +17,16 @@ frame.at_css("//a[text() = 'Log in']") # => Node
 ```
 
 #### focus
-#### focusable?
+#### focusable? : `Boolean`
+
+Whether the node can receive focus. It focuses the node to find out and then gives focus back to the element that had
+it, so `focus`/`blur` (and `focusin`/`focusout`) events fire on both:
+
+```ruby
+page.at_css("input[type=hidden]").focusable? # => false
+page.at_css("input[name='q']").focusable? # => true
+```
+
 #### moving? : `Boolean`
 #### wait_for_stop_moving
 #### blur

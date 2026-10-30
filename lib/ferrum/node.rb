@@ -124,12 +124,15 @@ module Ferrum
       tap { page.command("DOM.focus", slowmoable: true, nodeId: node_id) }
     end
 
-    # Whether the node can receive focus. Attempts to {#focus} the node to
-    # find out.
+    # Whether the node can receive focus. Focuses the node to find out, then
+    # gives focus back to the element that had it, so `focus` and `blur`
+    # events fire on both.
     #
     # @return [Boolean]
     def focusable?
+      previous = evaluate("this.ownerDocument.activeElement")
       focus
+      restore_focus(previous) unless previous == self
       true
     rescue BrowserError => e
       e.message == "Element is not focusable" ? false : raise
@@ -608,6 +611,14 @@ module Ferrum
       raise CoordinatesNotFoundError, "Node is either not visible or not an HTMLElement" if quads.empty?
 
       quads
+    end
+
+    def restore_focus(previous)
+      if previous.nil? || %w[body html].include?(previous.tag_name)
+        blur
+      else
+        previous.focus
+      end
     end
 
     def content_quads_with(delay: MOVING_WAIT_DELAY)

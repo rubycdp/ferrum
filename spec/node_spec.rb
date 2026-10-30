@@ -415,6 +415,17 @@ describe Ferrum::Node do
     context "with regular input" do
       it { expect(browser.at_css("#form_name").focusable?).to eq(true) }
     end
+
+    it "gives focus back to the element that had it" do
+      browser.at_css("#form_name_explanation").focus
+      browser.at_css("#form_name").focusable?
+      expect(browser.evaluate("document.activeElement.id")).to eq("form_name_explanation")
+    end
+
+    it "leaves nothing focused when nothing was" do
+      browser.at_css("#form_name").focusable?
+      expect(browser.evaluate("document.activeElement.tagName")).to eq("BODY")
+    end
   end
 
   describe "#computed_style" do
