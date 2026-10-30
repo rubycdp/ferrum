@@ -9,9 +9,9 @@ module Ferrum
 
       LINK_TAG: ::String
 
-      def current_url: () -> untyped
+      %a{deprecated} def current_url: () -> untyped
 
-      def current_title: () -> untyped
+      %a{deprecated} def current_title: () -> untyped
 
       def doctype: () -> untyped
 

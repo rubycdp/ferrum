@@ -7,7 +7,7 @@ describe Ferrum::Node do
 
       browser.at_xpath("//a[span[text() = 'Hidden link']]").click
 
-      expect(browser.current_url).to eq(base_url("/"))
+      expect(browser.url).to eq(base_url("/"))
     end
 
     it "fires a ping request for anchor elements" do
@@ -40,7 +40,7 @@ describe Ferrum::Node do
 
         link.click
 
-        expect(browser.current_url).to eq(base_url("/"))
+        expect(browser.url).to eq(base_url("/"))
       end
     end
 
@@ -134,7 +134,7 @@ describe Ferrum::Node do
       it "scrolls into view if element outside viewport" do
         link = page.at_xpath("//a[text() = 'Link outside viewport']")
         link.click
-        expect(page.current_url).to eq(base_url("/scroll"))
+        expect(page.url).to eq(base_url("/scroll"))
 
         expect(link.in_viewport?).to eq(true)
         box = page.at_xpath("//div[@id='overflow-box']")
@@ -143,7 +143,7 @@ describe Ferrum::Node do
         link.scroll_into_view
         expect(link.in_viewport?(of: box)).to eq(true)
         link.click
-        expect(page.current_url).to eq(base_url("/"))
+        expect(page.url).to eq(base_url("/"))
       end
 
       it "scrolls into view if element below the fold" do
@@ -154,7 +154,7 @@ describe Ferrum::Node do
 
         expect(link.in_viewport?).to eq(true)
         link.click
-        expect(page.current_url).to eq(base_url("/"))
+        expect(page.url).to eq(base_url("/"))
       end
     end
 

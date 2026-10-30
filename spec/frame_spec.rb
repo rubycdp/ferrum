@@ -64,13 +64,13 @@ describe Ferrum::Frame do
 
   it "waits for the cross-domain frame to load" do
     page.go_to("/frames")
-    expect(page.current_url).to eq(base_url("/frames"))
+    expect(page.url).to eq(base_url("/frames"))
     frame = page.at_xpath("//iframe[@name='frame']").frame
 
     expect(frame.url).to end_with("/slow")
     expect(frame.body).to include("slow page")
 
-    expect(page.current_url).to end_with("/frames")
+    expect(page.url).to end_with("/frames")
   end
 
   context "with src == about:blank" do
@@ -129,7 +129,7 @@ describe Ferrum::Frame do
     page.go_to("/inline_pdf")
     page.at_css("button").click
 
-    expect(page.current_url).to eq(base_url("/inline.pdf"))
+    expect(page.url).to eq(base_url("/inline.pdf"))
     expect(page.network.response.content_type).to eq("application/pdf")
   end
 
@@ -221,7 +221,26 @@ describe Ferrum::Frame do
 
     frame = page.at_xpath("//iframe").frame
     expect(frame.url).to end_with("/slow")
-    expect(page.current_url).to end_with("/frames")
+    expect(page.url).to end_with("/frames")
+  end
+
+  describe "#current_url and #current_title" do
+    around do |example|
+      Ferrum::Utils::Deprecate.reset!
+      example.run
+      Ferrum::Utils::Deprecate.reset!
+    end
+
+    it "return the top window's and warn that they are deprecated" do
+      page.go_to
+      page.execute(%(document.body.innerHTML += "<iframe src='/slow' name='frame'>"))
+      frame = page.at_xpath("//iframe[@name='frame']").frame
+
+      expect { expect(frame.current_url).to eq(page.url) }
+        .to output(/#current_url will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
+      expect { expect(frame.current_title).to eq(page.title) }
+        .to output(/#current_title will be removed in Ferrum 0\.22/).to_stderr
+    end
   end
 
   it "can set page content" do

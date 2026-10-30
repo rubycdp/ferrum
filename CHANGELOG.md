@@ -7,6 +7,10 @@
   statements run and the last one's value is returned, and `Node#evaluate` returns nodes and dates, see
   [upgrading](docs/13-javascript.md#upgrading-to-021) [#673]
 
+### Deprecated
+- `current_url` and `current_title` on pages and frames, will be removed in 0.22. Use `url` and `title`, or
+  `frame.page.url` for the top window from a frame, `frame.url` is the frame's own
+
 ### Fixed
 
 ### Removed

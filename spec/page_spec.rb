@@ -67,47 +67,47 @@ describe Ferrum::Page do
     end
   end
 
-  describe "#current_url" do
+  describe "#url" do
     it "supports whitespace characters" do
       page.go_to("/arbitrary_path/200/foo%20bar%20baz")
 
-      expect(page.current_url).to eq(base_url("/arbitrary_path/200/foo%20bar%20baz"))
+      expect(page.url).to eq(base_url("/arbitrary_path/200/foo%20bar%20baz"))
     end
 
     it "supports escaped characters" do
       page.go_to("/arbitrary_path/200/foo?a%5Bb%5D=c")
 
-      expect(page.current_url).to eq(base_url("/arbitrary_path/200/foo?a%5Bb%5D=c"))
+      expect(page.url).to eq(base_url("/arbitrary_path/200/foo?a%5Bb%5D=c"))
     end
 
     it "supports url in parameter" do
       page.go_to("/arbitrary_path/200/foo%20asd?a=http://example.com/asd%20asd")
 
-      expect(page.current_url).to eq(base_url("/arbitrary_path/200/foo%20asd?a=http://example.com/asd%20asd"))
+      expect(page.url).to eq(base_url("/arbitrary_path/200/foo%20asd?a=http://example.com/asd%20asd"))
     end
 
     it "supports restricted characters ' []:/+&='" do
       page.go_to("/arbitrary_path/200/foo?a=%20%5B%5D%3A%2F%2B%26%3D")
 
-      expect(page.current_url).to eq(base_url("/arbitrary_path/200/foo?a=%20%5B%5D%3A%2F%2B%26%3D"))
+      expect(page.url).to eq(base_url("/arbitrary_path/200/foo?a=%20%5B%5D%3A%2F%2B%26%3D"))
     end
 
     it "returns about:blank when on about:blank" do
       page.go_to("about:blank")
 
-      expect(page.current_url).to eq("about:blank")
+      expect(page.url).to eq("about:blank")
     end
 
     it "handles hash changes" do
       page.go_to("/#omg")
-      expect(page.current_url).to match(%r{/#omg$})
+      expect(page.url).to match(%r{/#omg$})
       page.execute <<-JS
         window.onhashchange = function() { window.last_hashchange = window.location.hash }
       JS
 
       page.go_to("/#foo")
 
-      expect(page.current_url).to match(%r{/#foo$})
+      expect(page.url).to match(%r{/#foo$})
       expect(page.evaluate("window.last_hashchange")).to eq("#foo")
     end
   end
@@ -118,9 +118,9 @@ describe Ferrum::Page do
 
       page.execute(%(window.history.pushState({foo: "bar"}, "title", "bar2.html");))
 
-      expect(page.current_url).to eq(base_url("/bar2.html"))
+      expect(page.url).to eq(base_url("/bar2.html"))
       expect { page.back }.not_to raise_error
-      expect(page.current_url).to eq(base_url("/"))
+      expect(page.url).to eq(base_url("/"))
     end
   end
 
@@ -129,13 +129,13 @@ describe Ferrum::Page do
       page.go_to
 
       page.execute(%(window.history.pushState({foo: "bar"}, "title", "bar2.html");))
-      expect(page.current_url).to eq(base_url("/bar2.html"))
+      expect(page.url).to eq(base_url("/bar2.html"))
       # don't use #back here to isolate the test
       page.execute("window.history.go(-1);")
 
-      expect(page.current_url).to eq(base_url("/"))
+      expect(page.url).to eq(base_url("/"))
       expect { page.forward }.not_to raise_error
-      expect(page.current_url).to eq(base_url("/bar2.html"))
+      expect(page.url).to eq(base_url("/bar2.html"))
     end
   end
 
