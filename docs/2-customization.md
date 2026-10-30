@@ -30,7 +30,8 @@ Ferrum::Browser.new(options)
     * `:timeout` (Numeric) - The number of seconds we'll wait for a response when
       communicating with browser. Default is 5.
     * `:js_errors` (Boolean) - Deprecated, will be removed in 0.22. When true, JavaScript errors get re-raised in
-      Ruby. Subscribe with `page.on("Runtime.exceptionThrown") { |params| ... }` instead.
+      Ruby. Uncaught exceptions are in the [console](/docs/ferrum/javascript#console), use
+      `page.console.select { |m| m.source == :exception }` or `page.on(:console)` instead.
     * `:pending_connection_errors` (Boolean) - Deprecated, will be removed in 0.22. Pass `on_timeout: :raise` to `go_to`
       instead: `page.go_to(url, on_timeout: :raise)`.
     * `:browser_name` (Symbol) - `:chrome` by default, `:opera` and `:edge` are

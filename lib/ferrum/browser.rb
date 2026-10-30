@@ -98,8 +98,9 @@ module Ferrum
     #
     # @option options [Boolean] :js_errors
     #   Deprecated, will be removed in Ferrum 0.22. When true, JavaScript
-    #   errors get re-raised in Ruby. Subscribe with
-    #   `page.on("Runtime.exceptionThrown")` instead.
+    #   errors get re-raised in Ruby. Uncaught exceptions are in the console,
+    #   use `page.console.select { |m| m.source == :exception }` or
+    #   `page.on(:console)` instead.
     #
     # @option options [Boolean] :pending_connection_errors (false)
     #   Deprecated, will be removed in Ferrum 0.22. Default for `go_to`'s

@@ -38,7 +38,8 @@ module Ferrum
         @window_size = @options.fetch(:window_size, WINDOW_SIZE)
         @js_errors = fetch_deprecated(
           :js_errors,
-          "Subscribe with page.on(\"Runtime.exceptionThrown\") { |params| ... } to handle JavaScript errors."
+          "Uncaught exceptions are in the console, use page.console.select { |m| m.source == :exception } " \
+          "or page.on(:console)."
         )
         @headless = @options.fetch(:headless, true)
         @incognito = @options.fetch(:incognito, true)
