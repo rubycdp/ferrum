@@ -7,16 +7,4 @@ module Concurrent
     def incomplete?: () -> bool
     def wait: (?Numeric? timeout) -> self
   end
-
-  module Async
-    def self.included: (Module base) -> void
-
-    def async: () -> IVar
-
-    def await: () -> untyped
-
-    module ClassMethods
-      def new: (*untyped args) -> instance
-    end
-  end
 end
