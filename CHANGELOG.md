@@ -37,6 +37,8 @@
 ## [0.20.0](https://github.com/rubycdp/ferrum/compare/v0.19.2...v0.20.0) (October 26, 2026) ##
 
 ### Added
+- `node.click(wait: 0)` returns as soon as a left click is dispatched instead of waiting for a navigation it
+  starts to load, like `Mouse#click` already allows [#674]
 - `keyboard.hold(:shift) { }` holds modifiers for every keyboard and mouse event in the block, e.g. a shift+drag, and
   releases them afterwards. `mouse.move` accepts `modifiers:` like `down` and `up` [#581]
 - `page.console` collects `console.*` calls, browser log entries and uncaught exceptions as `Console::Message`s,

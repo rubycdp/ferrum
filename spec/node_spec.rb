@@ -20,6 +20,20 @@ describe Ferrum::Node do
       expect(browser.network.traffic.length).to be <= 5
     end
 
+    it "returns without waiting for the navigation to load when wait is 0" do
+      browser.go_to("/")
+      browser.execute(<<~JS)
+        document.body.innerHTML = '<a id="slow" href="/really_slow">Slow</a>'
+      JS
+      started_at = Ferrum::Utils::ElapsedTime.monotonic_time
+
+      browser.at_css("#slow").click(wait: 0)
+
+      expect(Ferrum::Utils::ElapsedTime.monotonic_time - started_at).to be < 1
+      expect(browser.network.wait_for_idle(timeout: 5)).to be(true)
+      expect(browser.body).to include("really slow page")
+    end
+
     context "when content quads can't be computed" do
       before do
         allow_any_instance_of(described_class).to receive(:content_quads)
