@@ -289,10 +289,10 @@ module Ferrum
     # @return [Node, nil]
     #
     # @example
-    #   page.at_xpath("//iframe").at_xpath(".//a") # => Node
+    #   page.at_xpath("//nav").at_xpath(".//a") # => Node
     #
     def at_xpath(selector)
-      page.at_xpath(selector, within: self)
+      @runtime.at_xpath(selector, within: self)
     end
 
     #
@@ -307,7 +307,7 @@ module Ferrum
     #   page.at_css("form").at_css("input[name='q']") # => Node
     #
     def at_css(selector)
-      page.at_css(selector, within: self)
+      @runtime.at_css(selector, within: self)
     end
 
     #
@@ -322,7 +322,7 @@ module Ferrum
     #   page.at_css("ul").xpath(".//li") # => [Node]
     #
     def xpath(selector)
-      page.xpath(selector, within: self)
+      @runtime.xpath(selector, within: self)
     end
 
     #
@@ -337,7 +337,7 @@ module Ferrum
     #   page.at_css("ul").css("li") # => [Node]
     #
     def css(selector)
-      page.css(selector, within: self)
+      @runtime.css(selector, within: self)
     end
 
     #

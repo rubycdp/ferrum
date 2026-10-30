@@ -18,6 +18,8 @@
   `go_to` instead
 
 ### Fixed
+- `at_css`, `css`, `at_xpath` and `xpath` on a node inside an iframe raised `NodeNotFoundError`, now they search the
+  node's own frame
 - `Node#focusable?` left the node focused, now it gives focus back to the element that had it
 - `Node#moving?` returned `true` for a node that wasn't moving and `false` for one that was
 

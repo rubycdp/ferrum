@@ -182,6 +182,13 @@ describe Ferrum::Node do
       expect(p.at_xpath("a").text).to eq("Open for match")
       expect(p.at_xpath(".//a").text).to eq("Open for match")
     end
+
+    it "searches within a frame" do
+      browser.go_to("/form")
+      select = browser.at_xpath("//iframe[@name='frame']").frame.at_css("#select")
+
+      expect(select.at_xpath("option[2]").text).to eq("Two")
+    end
   end
 
   describe "#xpath" do
@@ -203,6 +210,13 @@ describe Ferrum::Node do
       expect(values.size).to eq(5)
       expect(values).to eq(["\n        ", "\n          ", "b", "\n        ", "\n      "])
     end
+
+    it "searches within a frame" do
+      browser.go_to("/form")
+      select = browser.at_xpath("//iframe[@name='frame']").frame.at_css("#select")
+
+      expect(select.xpath("option").map(&:text)).to eq(%w[One Two])
+    end
   end
 
   describe "#at_css" do
@@ -212,6 +226,13 @@ describe Ferrum::Node do
       p = browser.at_css("p#with_content")
 
       expect(p.at_css("a").text).to eq("Open for match")
+    end
+
+    it "searches within a frame" do
+      browser.go_to("/form")
+      select = browser.at_xpath("//iframe[@name='frame']").frame.at_css("#select")
+
+      expect(select.at_css("option:last-child").text).to eq("Two")
     end
   end
 
@@ -224,6 +245,13 @@ describe Ferrum::Node do
 
       expect(links.size).to eq(1)
       expect(links.first.text).to eq("Open for match")
+    end
+
+    it "searches within a frame" do
+      browser.go_to("/form")
+      select = browser.at_xpath("//iframe[@name='frame']").frame.at_css("#select")
+
+      expect(select.css("option").map(&:text)).to eq(%w[One Two])
     end
   end
 
