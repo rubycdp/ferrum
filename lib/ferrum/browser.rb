@@ -101,11 +101,9 @@ module Ferrum
     #   errors get re-raised in Ruby. Subscribe with
     #   `page.on("Runtime.exceptionThrown")` instead.
     #
-    # @option options [Boolean] :pending_connection_errors (true)
-    #   When main frame is still waiting for slow responses while timeout is
-    #   reached {PendingConnectionsError} is raised. It's better to figure out
-    #   why you have slow responses and fix or block them rather than turn this
-    #   setting off.
+    # @option options [Boolean] :pending_connection_errors (false)
+    #   Deprecated, will be removed in Ferrum 0.22. Default for `go_to`'s
+    #   `on_timeout:`, pass `on_timeout: :raise` to `go_to` instead.
     #
     # @option options [:chrome, :opera, :edge] :browser_name (:chrome)
     #   Sets the browser's name.

@@ -4,15 +4,19 @@ sidebar_position: 4
 
 # Navigation
 
-#### go_to(url) : `String`
+#### go_to(url, \*\*options) : `String`
 
 Navigate page to.
 
 * url `String` The url should include scheme unless you set `base_url` when
   configuring driver.
+* options `Hash`
+  * :on_timeout `Symbol` What to do when the timeout is reached: `:ignore` (default) returns `nil`,
+    `:raise` raises `Ferrum::NavigationTimeoutError` naming the requests still pending.
 
 ```ruby
 page.go_to("https://github.com/")
+page.go_to("https://github.com/", on_timeout: :raise)
 ```
 
 #### back

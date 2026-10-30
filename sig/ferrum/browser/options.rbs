@@ -34,7 +34,7 @@ module Ferrum
 
       attr_reader slowmo: ::Float
 
-      attr_reader pending_connection_errors: bool
+      %a{deprecated} attr_reader pending_connection_errors: bool
 
       attr_reader url: String?
 
@@ -112,7 +112,7 @@ module Ferrum
 
       private
 
-      def parse_js_errors: () -> bool
+      def fetch_deprecated: (Symbol name, String instead) -> bool
 
       def read_extension: (String | Hash[Symbol, String] extension) -> String
 

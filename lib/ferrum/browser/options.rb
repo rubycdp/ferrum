@@ -36,12 +36,17 @@ module Ferrum
         @timeout = @options.fetch(:timeout, DEFAULT_TIMEOUT)
         @protocol_timeout = @options.fetch(:protocol_timeout, DEFAULT_PROTOCOL_TIMEOUT)
         @window_size = @options.fetch(:window_size, WINDOW_SIZE)
-        @js_errors = parse_js_errors
+        @js_errors = fetch_deprecated(
+          :js_errors,
+          "Subscribe with page.on(\"Runtime.exceptionThrown\") { |params| ... } to handle JavaScript errors."
+        )
         @headless = @options.fetch(:headless, true)
         @incognito = @options.fetch(:incognito, true)
         @dockerize = @options.fetch(:dockerize, false)
         @flatten = @options.fetch(:flatten, true)
-        @pending_connection_errors = @options.fetch(:pending_connection_errors, false)
+        @pending_connection_errors = fetch_deprecated(
+          :pending_connection_errors, "Pass on_timeout: :raise to go_to instead: page.go_to(url, on_timeout: :raise)."
+        )
         @process_timeout = @options.fetch(:process_timeout, PROCESS_TIMEOUT)
         @slowmo = @options[:slowmo].to_f
 
@@ -132,15 +137,11 @@ module Ferrum
 
       private
 
-      def parse_js_errors
-        return false unless @options.key?(:js_errors)
+      def fetch_deprecated(name, instead)
+        return false unless @options.key?(name)
 
-        Utils::Deprecate.warn(
-          ":js_errors will be removed in Ferrum 0.22. Subscribe with " \
-          "page.on(\"Runtime.exceptionThrown\") { |params| ... } to handle JavaScript errors.",
-          user_code: true
-        )
-        @options[:js_errors]
+        Utils::Deprecate.warn(":#{name} will be removed in Ferrum 0.22. #{instead}", user_code: true)
+        @options[name]
       end
 
       def read_extension(extension)

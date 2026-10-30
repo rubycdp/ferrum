@@ -1,6 +1,8 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.20.1...main) ##
 
 ### Added
+- `go_to(url, on_timeout: :raise)` raises `NavigationTimeoutError`, a `TimeoutError` naming the requests still
+  pending, when the page doesn't load in time
 
 ### Changed
 - Every script runs the new way: keyword arguments are named parameters, promises and thenables are awaited, all
@@ -11,6 +13,8 @@
 - `current_url` and `current_title` on pages and frames, will be removed in 0.22. Use `url` and `title`, or
   `frame.page.url` for the top window from a frame, `frame.url` is the frame's own
 - `:js_errors`, will be removed in 0.22. Subscribe with `page.on("Runtime.exceptionThrown")` instead
+- `:pending_connection_errors` and `PendingConnectionsError`, will be removed in 0.22. Pass `on_timeout: :raise` to
+  `go_to` instead
 
 ### Fixed
 

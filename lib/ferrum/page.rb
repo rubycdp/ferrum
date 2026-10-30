@@ -29,6 +29,7 @@ module Ferrum
   #
   class Page
     GOTO_WAIT = ENV.fetch("FERRUM_GOTO_WAIT", 0.1).to_f
+    ON_TIMEOUT = %i[ignore raise].freeze
 
     extend Forwardable
 
@@ -132,10 +133,32 @@ module Ferrum
     #   The URL to navigate to. The url should include scheme unless you set
     #   `{Browser#base_url = url}` when configuring.
     #
+    # @param [:ignore, :raise, nil] on_timeout
+    #   What to do when the page doesn't load in time: `:ignore` returns `nil`,
+    #   `:raise` raises {NavigationTimeoutError}. `nil` follows the deprecated
+    #   `:pending_connection_errors` option, which raises {PendingConnectionsError}.
+    #
+    # @return [String, nil]
+    #   The navigated frame's id, or `nil` when the timeout is reached.
+    #
+    # @raise [StatusError]
+    #   If the request fails.
+    #
+    # @raise [NavigationTimeoutError]
+    #   If `on_timeout` is `:raise` and the timeout is reached.
+    #
+    # @raise [ArgumentError]
+    #   If `on_timeout` is neither `:ignore`, `:raise` nor `nil`.
+    #
     # @example
     #   page.go_to("https://github.com/")
+    #   page.go_to("/slow", on_timeout: :raise)
     #
-    def go_to(url = nil)
+    def go_to(url = nil, on_timeout: nil)
+      unless on_timeout.nil? || ON_TIMEOUT.include?(on_timeout)
+        raise ArgumentError, "on_timeout should be one of #{ON_TIMEOUT.inspect}, got #{on_timeout.inspect}"
+      end
+
       options = { url: combine_url!(url) }
       options.merge!(referrer: referrer) if referrer
       response = command("Page.navigate", wait: GOTO_WAIT, **options)
@@ -146,10 +169,13 @@ module Ferrum
 
       response["frameId"]
     rescue TimeoutError
-      if @options.pending_connection_errors
-        pendings = network.traffic.select(&:pending?).map(&:url).compact
-        raise PendingConnectionsError.new(options[:url], Array(pendings))
-      end
+      on_timeout ||= @options.pending_connection_errors ? :pending_connections : :ignore
+      return if on_timeout == :ignore
+
+      pendings = network.traffic.select(&:pending?).map(&:url).compact
+      raise NavigationTimeoutError.new(options[:url], pendings) if on_timeout == :raise
+
+      raise PendingConnectionsError.new(options[:url], pendings)
     end
     alias goto go_to
     alias go go_to
