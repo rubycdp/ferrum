@@ -31,8 +31,8 @@ Ferrum::Browser.new(options)
       communicating with browser. Default is 5.
     * `:js_errors` (Boolean) - Deprecated, will be removed in 0.22. When true, JavaScript errors get re-raised in
       Ruby. Subscribe with `page.on("Runtime.exceptionThrown") { |params| ... }` instead.
-    * `:pending_connection_errors` (Boolean) - Raise `PendingConnectionsError` when main frame is still waiting
-      for slow responses and timeout is reached. Default is false.
+    * `:pending_connection_errors` (Boolean) - Deprecated, will be removed in 0.22. Pass `on_timeout: :raise` to `go_to`
+      instead: `page.go_to(url, on_timeout: :raise)`.
     * `:browser_name` (Symbol) - `:chrome` by default, `:opera` and `:edge` are
       also supported.
     * `:browser_path` (String) - Path to Chrome binary, you can also set ENV

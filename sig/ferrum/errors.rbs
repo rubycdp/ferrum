@@ -24,10 +24,22 @@ module Ferrum
   class ServerError < Error
   end
 
-  class PendingConnectionsError < StatusError
+  %a{deprecated} class PendingConnectionsError < StatusError
     attr_reader pendings: ::Array[String]
 
     def initialize: (String url, ?::Array[String] pendings) -> void
+  end
+
+  class NavigationTimeoutError < TimeoutError
+    attr_reader url: String
+    attr_reader pendings: ::Array[String]
+
+    @url: String
+    @pendings: ::Array[String]
+
+    def initialize: (String url, ?::Array[String] pendings) -> void
+
+    def message: () -> String
   end
 
   class TimeoutError < Error
