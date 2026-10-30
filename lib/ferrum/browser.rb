@@ -97,7 +97,9 @@ module Ferrum
     #   `Target.attachToTarget`. These normally resolve in milliseconds.
     #
     # @option options [Boolean] :js_errors
-    #   When true, JavaScript errors get re-raised in Ruby.
+    #   Deprecated, will be removed in Ferrum 0.22. When true, JavaScript
+    #   errors get re-raised in Ruby. Subscribe with
+    #   `page.on("Runtime.exceptionThrown")` instead.
     #
     # @option options [Boolean] :pending_connection_errors (true)
     #   When main frame is still waiting for slow responses while timeout is
