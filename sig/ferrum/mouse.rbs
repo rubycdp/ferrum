@@ -13,7 +13,7 @@ module Ferrum
 
     def scroll_by: (::Numeric x, ::Numeric y) -> self
 
-    def scroll_to: (::Numeric top, ::Numeric left) -> self
+    def scroll_to: (::Numeric x, ::Numeric y) -> self
 
     def click: (x: ::Numeric, y: ::Numeric, ?delay: ::Numeric, ?wait: ::Numeric, ?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer) -> self
 
