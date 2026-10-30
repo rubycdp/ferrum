@@ -5,7 +5,7 @@ module Ferrum
 
       def stream_to: (path: untyped, encoding: untyped, handle: untyped) -> untyped
 
-      def stream_to_file: (path: untyped, handle: untyped) -> true
+      def stream_to_file: (path: untyped, handle: untyped) -> ::Integer
 
       def stream_to_memory: (encoding: untyped, handle: untyped) -> untyped
 

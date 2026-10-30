@@ -41,7 +41,7 @@ page.screenshot(path: "google.png", area: { x: 0, y: 0, width: 400, height: 300 
 page.screenshot(background_color: Ferrum::RGBA.new(0, 0, 0, 0.0))
 ```
 
-#### pdf(\*\*options) : `String` | `Boolean`
+#### pdf(\*\*options) : `String` | `Integer`
 
 Saves PDF on a disk or returns it as base64.
 
@@ -61,7 +61,7 @@ Saves PDF on a disk or returns it as base64.
 ```ruby
 page.go_to("https://google.com/")
 # Save to disk as a PDF
-page.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => true
+page.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => 4911
 ```
 
 #### mhtml(\*\*options) : `String` | `Integer`

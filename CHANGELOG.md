@@ -18,6 +18,8 @@
   `go_to` instead
 
 ### Fixed
+- `pdf(path:)` returned `true` while `screenshot(path:)` and `mhtml(path:)` return the number of bytes written, now it
+  returns the byte count too
 - `mouse.scroll_by` and `scroll_to` animated on a page with `scroll-behavior: smooth` in a Chrome without
   `--disable-smooth-scrolling`, so the position was mid-scroll when they returned. They scroll instantly now
 - `at_css`, `css`, `at_xpath` and `xpath` on a node inside an iframe raised `NodeNotFoundError`, now they search the

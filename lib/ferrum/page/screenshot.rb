@@ -142,7 +142,7 @@ module Ferrum
       # @example
       #   page.go_to("https://google.com/")
       #   # Save to disk as a PDF
-      #   page.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => true
+      #   page.pdf(path: "google.pdf", paper_width: 1.0, paper_height: 1.0) # => 4911
       #
       def pdf(timeout: DEFAULT_RENDER_TIMEOUT, **opts)
         path, encoding = common_options(**opts)

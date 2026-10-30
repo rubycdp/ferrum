@@ -24,8 +24,9 @@ module Ferrum
       # @param [String] handle
       #   The CDP `IO` stream handle to read from.
       #
-      # @return [Boolean, String]
-      #   `true` when saved to disk, otherwise the stream's contents.
+      # @return [Integer, String]
+      #   The number of bytes written when saved to disk, otherwise the
+      #   stream's contents.
       #
       def stream_to(path:, encoding:, handle:)
         if path.nil?
@@ -44,11 +45,13 @@ module Ferrum
       # @param [String] handle
       #   The CDP `IO` stream handle to read from.
       #
-      # @return [Boolean]
+      # @return [Integer] the number of bytes written.
       #
       def stream_to_file(path:, handle:)
-        File.open(path, "wb") { |f| stream(output: f, handle: handle) }
-        true
+        File.open(path, "wb") do |f|
+          stream(output: f, handle: handle)
+          f.pos
+        end
       end
 
       #

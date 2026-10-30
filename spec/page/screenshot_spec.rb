@@ -117,6 +117,12 @@ describe Ferrum::Page::Screenshot do
     let(:file) { "#{PROJECT_ROOT}/spec/tmp/screenshot.#{format}" }
     let(:device_pixel_ratio) { browser.device_pixel_ratio }
 
+    it "returns the number of bytes saved" do
+      browser.go_to("/simple")
+
+      expect(browser.screenshot(path: file)).to eq(File.size(file))
+    end
+
     def create_screenshot(**options)
       browser.screenshot(**options)
     end
@@ -370,6 +376,12 @@ describe Ferrum::Page::Screenshot do
       FileUtils.rm_f("#{PROJECT_ROOT}/spec/tmp/screenshot.pdf")
     end
 
+    it "returns the number of bytes saved" do
+      browser.go_to("/long_page")
+
+      expect(browser.pdf(path: file)).to eq(File.size(file))
+    end
+
     context "when :paper_width and :paper_height are set" do
       it "changes pdf size" do
         browser.go_to("/long_page")
@@ -467,6 +479,12 @@ describe Ferrum::Page::Screenshot do
       expect(data).to match(/mhtml.blink/)
       expect(data).to match(/<!DOCTYPE html>/)
       expect(data).to match(/Foo<br>Bar/)
+    end
+
+    it "returns the number of bytes saved" do
+      browser.go_to("/simple")
+
+      expect(browser.mhtml(path: file)).to eq(File.size(file))
     end
 
     it "saves a file" do
