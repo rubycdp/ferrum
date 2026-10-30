@@ -18,6 +18,7 @@
   `go_to` instead
 
 ### Fixed
+- `Node#moving?` returned `true` for a node that wasn't moving and `false` for one that was
 
 ### Removed
 - `#evaluate_async`, `#evaluate_func` and `#evaluate_on`, use `#evaluate` and `Node#evaluate`, and

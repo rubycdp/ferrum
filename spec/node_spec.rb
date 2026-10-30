@@ -391,6 +391,18 @@ describe Ferrum::Node do
     end
   end
 
+  describe "#moving?" do
+    it "is true for an animated node" do
+      browser.go_to("/animation")
+      expect(browser.at_css(".animated").moving?(delay: 0.1)).to eq(true)
+    end
+
+    it "is false for a static node" do
+      browser.go_to("/simple")
+      expect(browser.at_css("#nav").moving?(delay: 0.1)).to eq(false)
+    end
+  end
+
   describe "#focusable?" do
     before do
       browser.go_to("/form")

@@ -42,7 +42,7 @@ module Ferrum
 
     def wait_for_stop_moving: (?delay: untyped, ?attempts: untyped) -> untyped
 
-    def moving?: (?delay: untyped) -> untyped
+    def moving?: (?delay: Float) -> bool
 
     def blur: () -> untyped
 

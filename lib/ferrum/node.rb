@@ -158,8 +158,8 @@ module Ferrum
       end
     end
 
-    # Checks whether the node's position has stopped changing, by comparing
-    # two content-quad snapshots taken `delay` seconds apart.
+    # Checks whether the node's position is changing, by comparing two
+    # content-quad snapshots taken `delay` seconds apart.
     #
     # @param [Float] delay
     #   Seconds to wait between the two position checks.
@@ -167,7 +167,7 @@ module Ferrum
     # @return [Boolean]
     def moving?(delay: MOVING_WAIT_DELAY)
       previous, current = content_quads_with(delay: delay)
-      previous == current
+      previous != current
     end
 
     #
