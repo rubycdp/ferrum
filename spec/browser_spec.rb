@@ -1141,7 +1141,7 @@ describe Ferrum::Browser do
         browser.go_to("http://example.com")
         puts "Please type enter"
         sleep 1
-        browser.current_url
+        browser.url
       RUBY
     end
 

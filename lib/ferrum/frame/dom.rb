@@ -62,30 +62,36 @@ module Ferrum
       JS
 
       #
+      # @deprecated Will be removed in Ferrum 0.22. Use `page.url`, or
+      #   `frame.page.url` from a frame.
+      #
       # Returns current top window `location href`.
       #
       # @return [String]
       #   The window's current URL.
       #
-      # @example
-      #   browser.go_to("https://google.com/")
-      #   browser.current_url # => "https://www.google.com/"
-      #
       def current_url
+        Utils::Deprecate.warn(
+          "#current_url will be removed in Ferrum 0.22. Use page.url, or frame.page.url from a frame, " \
+          "frame.url is the frame's own URL."
+        )
         evaluate("window.top.location.href")
       end
 
+      #
+      # @deprecated Will be removed in Ferrum 0.22. Use `page.title`, or
+      #   `frame.page.title` from a frame.
       #
       # Returns current top window title.
       #
       # @return [String]
       #   The window's current title.
       #
-      # @example
-      #   browser.go_to("https://google.com/")
-      #   browser.current_title # => "Google"
-      #
       def current_title
+        Utils::Deprecate.warn(
+          "#current_title will be removed in Ferrum 0.22. Use page.title, or frame.page.title from a frame, " \
+          "frame.title is the frame's own title."
+        )
         evaluate("window.top.document.title")
       end
 

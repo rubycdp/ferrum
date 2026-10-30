@@ -125,24 +125,15 @@ frame = page.frame_by(id: "C09C4E4404314AAEAE85928EAC109A93")
 frame.main? # => false
 ```
 
-#### current_url : `String`
+#### page : `Page`
 
-Returns current frame's top window location href.
-
-```ruby
-page.go_to("https://www.w3schools.com/tags/tag_frame.asp")
-frame = page.frame_by(id: "C09C4E4404314AAEAE85928EAC109A93")
-frame.current_url # => "https://www.w3schools.com/tags/tag_frame.asp"
-```
-
-#### current_title : `String`
-
-Returns current frame's top window title.
+The page the frame belongs to, use `frame.page.url` and `frame.page.title` for the top window. `current_url` and
+`current_title` are deprecated and will be removed in 0.22.
 
 ```ruby
 page.go_to("https://www.w3schools.com/tags/tag_frame.asp")
 frame = page.frame_by(id: "C09C4E4404314AAEAE85928EAC109A93")
-frame.current_title # => "HTML frame tag"
+frame.page.url # => "https://www.w3schools.com/tags/tag_frame.asp"
 ```
 
 #### body : `String`

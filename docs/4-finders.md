@@ -58,23 +58,25 @@ page.go_to("https://github.com/")
 page.xpath("//a[@aria-label='Issues you created']") # => [Node]
 ```
 
-#### current_url : `String`
+#### url : `String`
 
-Returns current top window location href.
-
-```ruby
-page.go_to("https://google.com/")
-page.current_url # => "https://www.google.com/"
-```
-
-#### current_title : `String`
-
-Returns current top window title
+Returns the page's location href. On a frame `url` is that frame's own, see [Frames](/docs/ferrum/frames).
 
 ```ruby
 page.go_to("https://google.com/")
-page.current_title # => "Google"
+page.url # => "https://www.google.com/"
 ```
+
+#### title : `String`
+
+Returns the page's title.
+
+```ruby
+page.go_to("https://google.com/")
+page.title # => "Google"
+```
+
+`current_url` and `current_title` are deprecated and will be removed in 0.22, use `url` and `title`.
 
 #### body : `String`
 

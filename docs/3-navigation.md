@@ -64,7 +64,7 @@ JavaScript.
 
 ```ruby
 page.wait_for_navigation { page.at_css("a").evaluate("this.click()") } # => true
-page.current_url # => the link's page
+page.url # => the link's page
 ```
 
 #### wait_for_navigation!(wait = 0.1) { }
