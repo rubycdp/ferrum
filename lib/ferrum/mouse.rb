@@ -25,7 +25,8 @@ module Ferrum
     end
 
     #
-    # Scroll page by the given amount x, y.
+    # Scroll page by the given amount x, y. Scrolls instantly, even when the
+    # page sets `scroll-behavior: smooth`.
     #
     # @param [Integer] x
     #  The horizontal pixel value that you want to scroll by.
@@ -38,11 +39,12 @@ module Ferrum
     #   browser.mouse.scroll_by(0, 400)
     #
     def scroll_by(x, y)
-      tap { @page.execute("window.scrollBy(#{x}, #{y})") }
+      tap { @page.execute("window.scrollBy({ left: #{x}, top: #{y}, behavior: 'instant' })") }
     end
 
     #
-    # Scroll page to a given x, y coordinates.
+    # Scroll page to a given x, y coordinates. Scrolls instantly, even when
+    # the page sets `scroll-behavior: smooth`.
     #
     # @param [Integer] x
     #  The pixel along the horizontal axis of the document that you want
@@ -57,7 +59,7 @@ module Ferrum
     #   browser.mouse.scroll_to(0, 400)
     #
     def scroll_to(x, y)
-      tap { @page.execute("window.scrollTo(#{x}, #{y})") }
+      tap { @page.execute("window.scrollTo({ left: #{x}, top: #{y}, behavior: 'instant' })") }
     end
 
     #

@@ -45,6 +45,31 @@ describe Ferrum::Mouse do
     end
   end
 
+  context "with smooth scrolling", :launch do
+    let(:smooth_browser) do
+      defaults = Ferrum::Browser::Options::Chrome.options.except("disable-smooth-scrolling")
+      Ferrum::Browser.new(ignore_default_browser_options: true, browser_options: defaults.merge("no-sandbox" => nil))
+    end
+
+    before do
+      smooth_browser.go_to(base_url("/long_page"))
+      smooth_browser.resize(width: 10, height: 10)
+      smooth_browser.execute("document.documentElement.style.scrollBehavior = 'smooth'")
+    end
+
+    after { smooth_browser.quit }
+
+    it "scrolls by instantly" do
+      smooth_browser.mouse.scroll_by(30, 70)
+      expect(smooth_browser.evaluate("[window.scrollX, window.scrollY]")).to eq([30, 70])
+    end
+
+    it "scrolls to instantly" do
+      smooth_browser.mouse.scroll_to(200, 100)
+      expect(smooth_browser.evaluate("[window.scrollX, window.scrollY]")).to eq([200, 100])
+    end
+  end
+
   describe "#scroll_to" do
     it "allows the page to be scrolled" do
       browser.go_to("/long_page")
