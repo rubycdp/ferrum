@@ -28,7 +28,7 @@ module Ferrum
 
       attr_reader ws_max_receive_size: ::Integer?
 
-      attr_reader js_errors: bool
+      %a{deprecated} attr_reader js_errors: bool
 
       attr_reader base_url: ::Addressable::URI?
 
@@ -111,6 +111,8 @@ module Ferrum
       def to_h: () -> Hash[Symbol, untyped]
 
       private
+
+      def parse_js_errors: () -> bool
 
       def read_extension: (String | Hash[Symbol, String] extension) -> String
 

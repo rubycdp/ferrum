@@ -36,7 +36,7 @@ module Ferrum
         @timeout = @options.fetch(:timeout, DEFAULT_TIMEOUT)
         @protocol_timeout = @options.fetch(:protocol_timeout, DEFAULT_PROTOCOL_TIMEOUT)
         @window_size = @options.fetch(:window_size, WINDOW_SIZE)
-        @js_errors = @options.fetch(:js_errors, false)
+        @js_errors = parse_js_errors
         @headless = @options.fetch(:headless, true)
         @incognito = @options.fetch(:incognito, true)
         @dockerize = @options.fetch(:dockerize, false)
@@ -131,6 +131,17 @@ module Ferrum
       end
 
       private
+
+      def parse_js_errors
+        return false unless @options.key?(:js_errors)
+
+        Utils::Deprecate.warn(
+          ":js_errors will be removed in Ferrum 0.22. Subscribe with " \
+          "page.on(\"Runtime.exceptionThrown\") { |params| ... } to handle JavaScript errors.",
+          user_code: true
+        )
+        @options[:js_errors]
+      end
 
       def read_extension(extension)
         (extension.is_a?(Hash) && extension[:source]) || File.read(extension)

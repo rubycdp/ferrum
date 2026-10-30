@@ -29,7 +29,8 @@ Ferrum::Browser.new(options)
       Useful companion of headless option, so that you have time to see changes.
     * `:timeout` (Numeric) - The number of seconds we'll wait for a response when
       communicating with browser. Default is 5.
-    * `:js_errors` (Boolean) - When true, JavaScript errors get re-raised in Ruby.
+    * `:js_errors` (Boolean) - Deprecated, will be removed in 0.22. When true, JavaScript errors get re-raised in
+      Ruby. Subscribe with `page.on("Runtime.exceptionThrown") { |params| ... }` instead.
     * `:pending_connection_errors` (Boolean) - Raise `PendingConnectionsError` when main frame is still waiting
       for slow responses and timeout is reached. Default is false.
     * `:browser_name` (Symbol) - `:chrome` by default, `:opera` and `:edge` are
@@ -175,9 +176,6 @@ Ferrum::Browser.new(headless: false, window_size: [1920, 1080])
 
 # Connect to an existing Chrome instance
 Ferrum::Browser.new(url: "http://localhost:9222")
-
-# Enable JavaScript error raising
-Ferrum::Browser.new(js_errors: true)
 
 # Set custom timeout and slowmo for debugging
 Ferrum::Browser.new(timeout: 10, slowmo: 0.5)

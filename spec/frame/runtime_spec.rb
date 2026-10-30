@@ -27,7 +27,18 @@ describe Ferrum::Frame::Runtime do
     context "with javascript errors" do
       let(:browser) { Ferrum::Browser.new(base_url: base_url, js_errors: true) }
 
+      before { allow(Ferrum::Utils::Deprecate).to receive(:warn) }
+
       after { browser.quit }
+
+      it "warns that :js_errors is deprecated", :launch do
+        Ferrum::Utils::Deprecate.reset!
+        allow(Ferrum::Utils::Deprecate).to receive(:warn).and_call_original
+
+        expect { browser }.to output(/:js_errors will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
+      ensure
+        Ferrum::Utils::Deprecate.reset!
+      end
 
       it "propagates a Javascript error to a ruby exception", :launch do
         expect do
