@@ -41,8 +41,6 @@ module Ferrum
 
       @paren_close: ::Integer?
 
-      @words: ::Set[::String]
-
       @block: bool?
 
       @block_end: bool?
@@ -50,6 +48,8 @@ module Ferrum
       @condition: bool?
 
       @condition_end: bool?
+
+      @awaits: bool
 
       @scanned: bool
 
@@ -67,13 +67,8 @@ module Ferrum
 
       def awaits?: () -> bool
 
-      def uses?: (::String word) -> bool
-
-      def several_statements?: () -> bool
-
       def split_last_statement: () -> [::String, ::String]
 
-      def leading_line_break?: () -> bool
 
       private
 

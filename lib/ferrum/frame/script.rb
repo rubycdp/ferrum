@@ -77,7 +77,7 @@ module Ferrum
       def initialize(source)
         @source = source.to_s
         @code_start = @code_end = 0
-        @words = Set.new
+        @awaits = false
         @scanned = @source.valid_encoding? && (@source.encoding == Encoding::UTF_8 || @source.ascii_only?)
         @scanned ? scan : @code_end = @source.bytesize
         @code = @source.byteslice(@code_start...@code_end)
@@ -105,52 +105,21 @@ module Ferrum
       # @return [Boolean]
       #
       def awaits?
-        uses?("await")
-      end
-
-      #
-      # Whether the script mentions the given word as code, rather than as a
-      # property name or inside a string or comment.
-      #
-      # @param [String] word
-      #
-      # @return [Boolean]
-      #
-      def uses?(word)
-        @words.include?(word)
-      end
-
-      #
-      # Whether the code is several statements, separated by a top-level
-      # semicolon, as in `"a(); b"`, or by a line break that can only end a
-      # statement, as in `"a()\nb"`, unlike `"a\n.b()"`.
-      #
-      # @return [Boolean]
-      #
-      def several_statements?
-        !@last_statement_start.nil?
+        @awaits
       end
 
       #
       # The code split before its last statement, so that the value of that
-      # one can be returned: `"a = 1\nb"` gives `["a = 1\n", "b"]`.
+      # one can be returned. Statements are separated by a top-level
+      # semicolon, as in `"a(); b"`, or by a line break that can only end a
+      # statement, as in `"a = 1\nb"`, which gives `["a = 1\n", "b"]`.
       #
       # @return [Array(String, String)]
       #
       def split_last_statement
-        return ["", @code] unless several_statements?
+        return ["", @code] unless @last_statement_start
 
         [@source.byteslice(@code_start...@last_statement_start), @source.byteslice(@last_statement_start...@code_end)]
-      end
-
-      #
-      # Whether a line break comes before the code, which right after a
-      # `return` ends that statement.
-      #
-      # @return [Boolean]
-      #
-      def leading_line_break?
-        @scanned && !@code.empty? && @source.byteslice(0...@code_start).include?("\n")
       end
 
       private
@@ -230,7 +199,7 @@ module Ferrum
 
       def scan_token(scanner, stack, previous)
         if scanner.scan(WORD)
-          @words << scanner.matched unless previous == "."
+          @awaits ||= scanner.matched == "await" && previous != "."
           scanner.matched
         elsif scanner.scan(STRING) || (regexp_allowed?(previous) && scanner.scan(REGEXP))
           scanner.matched

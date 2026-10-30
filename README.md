@@ -129,9 +129,7 @@ page.evaluate("Array.from(nodes).map(n => n.textContent)", nodes: list)
 page.at_css("input").evaluate("this.value")
 ```
 
-Scripts written for the old API keep working, and Ferrum warns, with a suggested
-rewrite, about any whose result will change. The next release, 0.21, removes the
-old behavior, so run your suite with `FERRUM_JS_API=new` to check it's ready. See
+Some scripts written for Ferrum before 0.21 behave differently now, see
 [upgrading to 0.21](docs/13-javascript.md#upgrading-to-021).
 
 Do any mouse movements you like:

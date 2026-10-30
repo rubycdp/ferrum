@@ -62,16 +62,10 @@ page.at_css("input").execute("this.value = text", text: "hello")
 
 #### Upgrading to 0.21
 
-Scripts written for the old API run exactly as before, and Ferrum warns, pointing at your code, about any whose result
-will change. Calls that only the new API can make, e.g. with named arguments, already run the new way.
-
-* 0.20 runs old-style scripts the old way and warns. Set `FERRUM_JS_API=new` to run everything the new way.
-* 0.21 removes the old way, along with `evaluate_async`, `evaluate_func` and `evaluate_on`. There's no switch back.
-
-Warnings only cover the scripts and results your suite actually runs into, so before upgrading to 0.21, run the suite
-once with `FERRUM_JS_API=new`. Set `FERRUM_DEPRECATION_WARNINGS=raise` to turn the warnings into errors while
-migrating, or `0` to silence them. A library built on Ferrum should pass named arguments or a function declaration,
-which run the new way in both 0.20 and 0.21.
+0.21 removes the JavaScript API from before named arguments, along with `evaluate_async`, `evaluate_func` and
+`evaluate_on`. Plain expressions and positional arguments, `evaluate("document.title")` or
+`evaluate("arguments[0] + 1", 1)`, work as before. Upgrade to 0.20 first and fix what it warns about, or run your
+suite on 0.20 with `FERRUM_JS_API=new`, which behaves like 0.21. These scripts behave differently:
 
 | Script | < 0.21 | >= 0.21 | Notes |
 |---|---|---|---|

@@ -160,76 +160,36 @@ describe Ferrum::Frame::Script do
     end
   end
 
-  describe "#uses?" do
+  describe "#split_last_statement" do
     {
-      "arguments[0]" => true,
-      "Array.from(arguments)" => true,
-      "`${arguments.length}`" => true,
-      "fn.arguments" => false,
-      "'arguments'" => false,
-      "// arguments" => false,
-      "argumentsList" => false
+      "a(); b" => ["a(); ", "b"],
+      "a = 1\nb" => ["a = 1\n", "b"],
+      "a\n.b()" => ["", "a\n.b()"],
+      "a = 1\n!a" => ["a = 1\n", "!a"],
+      "a = 1\n~a" => ["a = 1\n", "~a"],
+      "a = 1\n++a" => ["a = 1\n", "++a"],
+      "a = 1\n--a" => ["a = 1\n", "--a"],
+      "x++\nx" => ["x++\n", "x"],
+      "x--\n--x" => ["x--\n", "--x"],
+      "x++ / 2" => ["", "x++ / 2"],
+      "function f() {}\n[1].map(f)" => ["function f() {}\n", "[1].map(f)"],
+      "class A {}\n(new A)" => ["class A {}\n", "(new A)"],
+      "if (a) {}\n[b]" => ["if (a) {}\n", "[b]"],
+      "f = () => {}\n[1].map(f)" => ["f = () => {}\n", "[1].map(f)"],
+      "o = {}\n[a]" => ["", "o = {}\n[a]"],
+      "if (a)\n  b\nelse\n  c" => ["", "if (a)\n  b\nelse\n  c"],
+      "while (a)\n  b()\nc" => ["while (a)\n  b()\n", "c"],
+      "f(a)\nb" => ["f(a)\n", "b"],
+      "a\n!= 1" => ["", "a\n!= 1"],
+      "a\n+ 1" => ["", "a\n+ 1"],
+      "if (a) { b }\nelse { c }" => ["", "if (a) { b }\nelse { c }"],
+      "try { a }\ncatch (e) { b }\nfinally { c }" => ["", "try { a }\ncatch (e) { b }\nfinally { c }"],
+      "x = 1;" => ["", "x = 1"],
+      "(function() { a(); b() })()" => ["", "(function() { a(); b() })()"],
+      "for (;;) {}" => ["", "for (;;) {}"]
     }.each do |source, expected|
-      it "is #{expected} for #{source.inspect} and arguments" do
-        expect(script(source).uses?("arguments")).to be(expected)
-      end
-    end
-  end
-
-  describe "#several_statements?" do
-    {
-      "a(); b" => true,
-      "1; 2" => true,
-      "{ a: 1 }; 2" => true,
-      "a();\nb()" => true,
-      "x = 1;" => false,
-      "a();;" => false,
-      "a(); // comment" => false,
-      "(function() { a(); b() })()" => false,
-      "for (;;) {}" => false,
-      "`${a; b}`" => false,
-      "\"a; b\"" => false,
-      "// a; b\n1" => false,
-      "a\nb" => true,
-      "a = 1\n!a" => true,
-      "a = 1\n~a" => true,
-      "a = 1\n++a" => true,
-      "a = 1\n--a" => true,
-      "a\n!= 1" => false,
-      "a\n+ 1" => false,
-      "if (a) { b }\nelse { c }" => false,
-      "try { a }\ncatch (e) { b }\nfinally { c }" => false,
-      "x++\nx" => true,
-      "x++ / 2" => false,
-      "function f() {}\n[1].map(f)" => true,
-      "if (a) {}\n[b]" => true,
-      "o = {}\n[a]" => false,
-      "if (a)\n  b\nelse\n  c" => false,
-      "while (a)\n  b()\nc" => true
-    }.each do |source, expected|
-      it "is #{expected} for #{source.inspect}" do
-        expect(script(source).several_statements?).to be(expected)
-      end
-    end
-  end
-
-  describe "#leading_line_break?" do
-    {
-      "\n1 + 1" => true,
-      "\n  window.x = 1\n" => true,
-      "  \n  1" => true,
-      "// comment\n1" => true,
-      "/* a\n b */ 1" => true,
-      "1 + 1" => false,
-      "  1 + 1" => false,
-      "/* comment */ 1" => false,
-      "1 +\n1" => false,
-      "1\n" => false,
-      "\n" => false,
-      "" => false
-    }.each do |source, expected|
-      it "is #{expected} for #{source.inspect}" do
-        expect(script(source).leading_line_break?).to be(expected)
+      it "is #{expected.inspect} for #{source.inspect}" do
+        expect(script(source).split_last_statement).to eq(expected)
       end
     end
   end
@@ -321,7 +281,7 @@ describe Ferrum::Frame::Script do
       result = script(source)
 
       expect(result.code.bytes).to eq(source.bytes)
-      expect([result.declaration?, result.awaits?, result.leading_line_break?]).to eq([false, false, false])
+      expect([result.declaration?, result.awaits?]).to eq([false, false])
     end
   end
 
