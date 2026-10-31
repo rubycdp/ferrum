@@ -109,10 +109,6 @@ module Ferrum
 
     def content_quads: () -> untyped
 
-    def restore_focus: (Node? previous) -> void
-
-    def focus_if_focusable: (Node node) -> bool
-
     def content_quads_with: (?delay: untyped) -> ::Array[untyped]
 
     def get_position: (untyped points, untyped offset_x, untyped offset_y, untyped position) -> ::Array[untyped]

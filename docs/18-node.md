@@ -72,10 +72,7 @@ input.focus
 
 #### focusable? : `Boolean`
 
-Whether the node can receive focus. It focuses the node to find out and then gives focus back to the element that had
-it, so `focus`/`blur` (and `focusin`/`focusout`) events fire on both. For a node inside an iframe, focus goes back to the
-element that had it in the iframe, but the page around it is left with the iframe focused instead of the element that had
-focus there:
+Whether the node can receive focus. It tries to [focus](#focus) the node to find out, and leaves it focused when it can:
 
 ```ruby
 page.at_css("input[type=hidden]").focusable? # => false

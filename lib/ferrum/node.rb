@@ -136,21 +136,15 @@ module Ferrum
       tap { page.command("DOM.focus", slowmoable: true, nodeId: node_id) }
     end
 
-    # Whether the node can receive focus. Focuses the node to find out, then
-    # gives focus back to the element that had it, so `focus` and `blur`
-    # events fire on both.
-    #
-    # @note For a node inside an iframe, focus goes back to the element that
-    #   had it in the iframe, but the page around it is left with the iframe
-    #   focused instead of the element that had focus there.
+    # Whether the node can receive focus. Attempts to {#focus} the node to
+    # find out, and leaves it focused when it can.
     #
     # @return [Boolean]
     def focusable?
-      previous = evaluate("this.ownerDocument.activeElement")
-      return false unless focus_if_focusable(self)
-
-      restore_focus(previous) unless previous == self
+      focus
       true
+    rescue BrowserError => e
+      e.message == "Element is not focusable" ? false : raise
     end
 
     #
@@ -725,19 +719,6 @@ module Ferrum
       raise CoordinatesNotFoundError, "Node is either not visible or not an HTMLElement" if quads.empty?
 
       quads
-    end
-
-    def restore_focus(previous)
-      return if previous && !%w[body html].include?(previous.tag_name) && focus_if_focusable(previous)
-
-      blur
-    end
-
-    def focus_if_focusable(node)
-      node.focus
-      true
-    rescue BrowserError => e
-      e.message == "Element is not focusable" ? false : raise
     end
 
     def content_quads_with(delay: MOVING_WAIT_DELAY)

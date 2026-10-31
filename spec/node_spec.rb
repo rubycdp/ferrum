@@ -444,25 +444,9 @@ describe Ferrum::Node do
       it { expect(browser.at_css("#form_name").focusable?).to eq(true) }
     end
 
-    it "gives focus back to the element that had it" do
-      browser.at_css("#form_name_explanation").focus
+    it "leaves the node focused" do
       browser.at_css("#form_name").focusable?
-      expect(browser.evaluate("document.activeElement.id")).to eq("form_name_explanation")
-    end
-
-    it "leaves nothing focused when nothing was" do
-      browser.at_css("#form_name").focusable?
-      expect(browser.evaluate("document.activeElement.tagName")).to eq("BODY")
-    end
-
-    it "is true when the element that had focus can't take it back" do
-      browser.execute(<<~JS)
-        document.querySelector("#form_name_explanation").addEventListener("blur", (e) => e.target.disabled = true)
-      JS
-      browser.at_css("#form_name_explanation").focus
-
-      expect(browser.at_css("#form_name").focusable?).to eq(true)
-      expect(browser.evaluate("document.activeElement.tagName")).to eq("BODY")
+      expect(browser.evaluate("document.activeElement.id")).to eq("form_name")
     end
   end
 
