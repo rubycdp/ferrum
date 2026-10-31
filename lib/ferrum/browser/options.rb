@@ -23,7 +23,7 @@ module Ferrum
 
       attr_reader :window_size, :logger, :log, :ws_max_receive_size,
                   :js_errors, :base_url, :slowmo, :pending_connection_errors,
-                  :url, :ws_url, :env, :process_timeout, :browser_name, :browser_path,
+                  :url, :ws_url, :env, :process_timeout, :browser_path,
                   :save_path, :proxy, :port, :host, :headless, :incognito, :dockerize, :browser_options,
                   :ignore_default_browser_options, :xvfb, :flatten, :extensions
       attr_accessor :timeout, :protocol_timeout, :default_user_agent
@@ -54,7 +54,6 @@ module Ferrum
         @env = @options[:env]
         @xvfb = @options[:xvfb]
         @save_path = @options[:save_path]
-        @browser_name = @options[:browser_name]
         @browser_path = @options[:browser_path]
         @ws_max_receive_size = @options[:ws_max_receive_size]
         @ignore_default_browser_options = @options[:ignore_default_browser_options]

@@ -34,9 +34,7 @@ Ferrum::Browser.new(options)
       `page.console.select { |m| m.source == :exception }` or `page.on(:console)` instead.
     * `:pending_connection_errors` (Boolean) - Deprecated, will be removed in 0.22. Pass `on_timeout: :raise` to `go_to`
       instead: `page.go_to(url, on_timeout: :raise)`.
-    * `:browser_name` (Symbol) - `:chrome` by default, `:opera` and `:edge` are
-      also supported.
-    * `:browser_path` (String) - Path to Chrome binary, you can also set ENV
+    * `:browser_path` (String) - Path to Chrome binary, or to an Opera or Edge one, you can also set ENV
       variable as `BROWSER_PATH=some/path/chrome bundle exec rspec`.
     * `:browser_options` (Hash) - Additional command line options,
       [see them all](https://peter.sh/experiments/chromium-command-line-switches/)

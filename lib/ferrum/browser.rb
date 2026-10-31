@@ -106,9 +106,6 @@ module Ferrum
     #   Deprecated, will be removed in Ferrum 0.22. Default for `go_to`'s
     #   `on_timeout:`, pass `on_timeout: :raise` to `go_to` instead.
     #
-    # @option options [:chrome, :opera, :edge] :browser_name (:chrome)
-    #   Sets the browser's name.
-    #
     # @option options [String] :browser_path
     #   Path to Chrome binary, you can also set ENV variable as
     #   `BROWSER_PATH=some/path/chrome bundle exec rspec`.

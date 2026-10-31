@@ -44,7 +44,6 @@ module Ferrum
 
       attr_reader process_timeout: ::Integer
 
-      attr_reader browser_name: Symbol?
 
       attr_reader browser_path: String?
 
@@ -84,7 +83,6 @@ module Ferrum
       @env: Hash[String, String]?
       @xvfb: bool?
       @save_path: String?
-      @browser_name: Symbol?
       @browser_path: String?
       @ws_max_receive_size: ::Integer?
       @ignore_default_browser_options: bool?

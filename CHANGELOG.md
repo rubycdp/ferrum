@@ -38,6 +38,8 @@
   `page.wait_for_navigation! { }` for `evaluate_on`'s `wait:` [#673]
 - `FERRUM_JS_API` [#673]
 - `Browser::Options::Base`, Chrome is the only browser, `Browser::Options::Chrome` has everything it had
+- `:browser_name`, it only switched between Chrome-named defaults and raised `NotImplementedError` for anything else, set
+  `:browser_path` to run Opera or Edge
 
 
 ## [0.20.1](https://github.com/rubycdp/ferrum/compare/v0.20.0...v0.20.1) (October 29, 2026) ##

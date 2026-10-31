@@ -13,17 +13,8 @@ module Ferrum
                   "it available on the PATH or set environment variable for " \
                   "example BROWSER_PATH=\"/usr/bin/chrome\""
 
-      # Currently only these browsers support CDP:
-      # https://github.com/cyrus-and/chrome-remote-interface#implementations
       def self.build(options, user_data_dir)
-        defaults = case options.browser_name
-                   when :chrome, :opera, :edge, nil
-                     Options::Chrome.options
-                   else
-                     raise NotImplementedError, "not supported browser"
-                   end
-
-        new(defaults, options, user_data_dir)
+        new(Options::Chrome.options, options, user_data_dir)
       end
 
       attr_reader :defaults, :path, :options
