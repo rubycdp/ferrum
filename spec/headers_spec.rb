@@ -31,6 +31,32 @@ describe Ferrum::Headers do
     end
   end
 
+  describe "#clear" do
+    it "stops sending the headers" do
+      browser.headers.set("X-Omg" => "wat")
+      browser.headers.clear
+      browser.go_to("/headers")
+      expect(browser.body).not_to include("X_OMG")
+    end
+
+    it "brings the user agent and language back" do
+      browser.headers.set("User-Agent" => "foo", "Accept-Language" => "de-DE")
+      browser.headers.clear
+      browser.go_to("/headers")
+      expect(browser.evaluate("navigator.userAgent")).to eq(browser.default_user_agent)
+      expect(browser.body).not_to include("ACCEPT_LANGUAGE: de-DE")
+      expect(browser.body).to include("SEC_CH_UA_PLATFORM")
+    end
+
+    it "keeps a user agent from network.emulate" do
+      browser.network.emulate(user_agent: "Bot/1.0")
+      browser.headers.set("X-Trace" => "1")
+      browser.headers.clear
+      browser.go_to
+      expect(browser.evaluate("navigator.userAgent")).to eq("Bot/1.0")
+    end
+  end
+
   describe "overrides" do
     it "keeps a user agent from network.emulate when adding other headers" do
       browser.network.emulate(user_agent: "Bot/1.0")

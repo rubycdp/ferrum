@@ -14,5 +14,9 @@ module Ferrum
     def clear: () -> true
 
     def add: (::Hash[String, String] headers, ?permanent: bool) -> true
+
+    private
+
+    def reset_overrides: (?keep: ::Hash[String, String]) -> void
   end
 end

@@ -34,19 +34,20 @@ module Ferrum
     # @return [true]
     #
     def set(headers)
-      dropped = OVERRIDES.select { |_, name| @headers.key?(name) && !headers.key?(name) }
-      clear
-      @page.network.emulate(**dropped.transform_values { nil }) unless dropped.empty?
+      reset_overrides(keep: headers)
+      @headers = {}
       add(headers)
     end
 
     #
-    # Clear all headers.
+    # Clear all headers, and the user agent and language they set.
     #
     # @return [true]
     #
     def clear
+      reset_overrides
       @headers = {}
+      @page.command("Network.setExtraHTTPHeaders", headers: @headers)
       true
     end
 
@@ -71,6 +72,13 @@ module Ferrum
       @page.network.emulate(**overrides) unless overrides.empty?
       @page.command("Network.setExtraHTTPHeaders", headers: @headers)
       true
+    end
+
+    private
+
+    def reset_overrides(keep: {})
+      dropped = OVERRIDES.select { |_, name| @headers.key?(name) && !keep.key?(name) }
+      @page.network.emulate(**dropped.transform_values { nil }) unless dropped.empty?
     end
   end
 end

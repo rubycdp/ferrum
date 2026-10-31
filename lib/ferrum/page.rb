@@ -189,7 +189,6 @@ module Ferrum
     #   page.close # => true
     #
     def close
-      @headers.clear
       client.command("Target.closeTarget", async: true, targetId: @target_id)
       close_connection
 

@@ -23,6 +23,8 @@
   `go_to` instead
 
 ### Fixed
+- `headers.clear` kept sending the old headers until the next `add` or `set`, and kept the user agent and language they
+  set. Now it clears them in Chrome right away
 - `headers.add` and `headers.set` reset a user agent or language set with `network.emulate`, and made Chrome stop
   sending client hints, even for headers like `X-Trace`. They touch the user agent and language only when given one
 - `Node#moving?` missed a slowly moving node with its 10ms default delay, now it waits 50ms
