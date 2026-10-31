@@ -1,6 +1,7 @@
 module Ferrum
   class Network
     CLEAR_TYPE: ::Array[:traffic | :cache]
+    EMULATE_KEYS: ::Array[:user_agent | :accept_language | :platform]
 
     AUTHORIZE_TYPE: ::Array[:server | :proxy]
 
@@ -57,6 +58,8 @@ module Ferrum
     def emulate_network_conditions: (?offline: bool, ?latency: ::Integer, ?download_throughput: ::Integer, ?upload_throughput: ::Integer, ?connection_type: untyped?) -> true
 
     def offline_mode: () -> untyped
+
+    def emulate: (?user_agent: String?, ?accept_language: String?, ?platform: String?) -> self
 
     private
 

@@ -5,7 +5,7 @@ module Ferrum
   # Manages the extra HTTP headers a page sends with its requests, via the
   # CDP `Network.setExtraHTTPHeaders` command. Setting a `User-Agent` or
   # `Accept-Language` header also updates the corresponding navigator
-  # override so JavaScript sees consistent values.
+  # override so JavaScript sees consistent values, see {Network#emulate}.
   #
   class Headers
     def initialize(page)
@@ -62,23 +62,9 @@ module Ferrum
       end
 
       @headers.merge!(headers)
-      user_agent = @headers["User-Agent"]
-      accept_language = @headers["Accept-Language"]
-
-      set_overrides(user_agent: user_agent, accept_language: accept_language)
+      @page.network.emulate(user_agent: @headers["User-Agent"], accept_language: @headers["Accept-Language"])
       @page.command("Network.setExtraHTTPHeaders", headers: @headers)
       true
-    end
-
-    private
-
-    def set_overrides(user_agent: nil, accept_language: nil, platform: nil)
-      options = {}
-      options[:userAgent] = user_agent || @page.default_user_agent
-      options[:acceptLanguage] = accept_language if accept_language
-      options[:platform] if platform
-
-      @page.command("Network.setUserAgentOverride", **options) unless options.empty?
     end
   end
 end

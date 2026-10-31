@@ -1,6 +1,8 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.20.1...main) ##
 
 ### Added
+- `network.emulate(user_agent:, accept_language:, platform:)` overrides what the page reports in the request headers
+  and in `navigator`, `platform` had no way to be set before
 - `go_to(url, on_timeout: :raise)` raises `NavigationTimeoutError`, a `TimeoutError` naming the requests still
   pending, when the page doesn't load in time
 

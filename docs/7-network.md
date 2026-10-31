@@ -228,6 +228,23 @@ page.network.offline_mode
 page.go_to("https://github.com/") # => Ferrum::StatusError (Request to https://github.com/ failed(net::ERR_INTERNET_DISCONNECTED))
 ```
 
+#### emulate(\*\*options) : `Network`
+
+Overrides the user agent, the accept language and the platform the page reports, in the request headers and in
+`navigator`. The options you don't pass keep their previous values, `nil` brings one back to the browser's default.
+Setting `User-Agent` or `Accept-Language` with [headers](https://github.com/rubycdp/ferrum#headers) goes through
+here too, the last one set wins.
+
+* options `Hash`
+    * :user_agent `String` the `User-Agent` header and `navigator.userAgent`
+    * :accept_language `String` the `Accept-Language` header and `navigator.language`
+    * :platform `String` `navigator.platform`, e.g. `"Win32"`
+
+```ruby
+page.network.emulate(platform: "Win32", accept_language: "de-DE")
+page.go_to("https://github.com/")
+```
+
 #### cache(disable: `Boolean`)
 
 Toggles ignoring cache for each request. If true, cache will not be used.

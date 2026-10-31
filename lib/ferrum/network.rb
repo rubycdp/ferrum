@@ -13,10 +13,12 @@ module Ferrum
   # {Network::Exchange}s built from the underlying CDP `Network.*` events.
   # Also provides request interception/authorization (`intercept`,
   # `authorize`, `blacklist=`/`whitelist=`) and network condition emulation
-  # (`emulate_network_conditions`, `offline_mode`).
+  # (`emulate_network_conditions`, `offline_mode`), and user agent, language
+  # and platform emulation (`emulate`).
   #
   class Network
     CLEAR_TYPE = %i[traffic cache].freeze
+    EMULATE_KEYS = %i[user_agent accept_language platform].freeze
     AUTHORIZE_TYPE = %i[server proxy].freeze
     REQUEST_STAGES = %i[Request Response].freeze
     RESOURCE_TYPES = %i[Document Stylesheet Image Media Font Script TextTrack
@@ -45,6 +47,7 @@ module Ferrum
       @exchange = nil
       @blacklist = nil
       @whitelist = nil
+      @overrides = {}
       @mutex = Mutex.new
     end
 
@@ -461,6 +464,48 @@ module Ferrum
     #
     def offline_mode
       emulate_network_conditions(offline: true, latency: 0, download_throughput: 0, upload_throughput: 0)
+    end
+
+    #
+    # Overrides the user agent, the accept language and the platform the page
+    # reports, both in the `User-Agent` and `Accept-Language` request headers
+    # and to JavaScript via `navigator`. Chrome replaces the whole override on
+    # every call, so the values you don't pass keep their previous ones. Pass
+    # `nil` to bring one back to the browser's default.
+    #
+    # Setting the `User-Agent` or `Accept-Language` through {Headers} goes
+    # through here too, and the last one set wins.
+    #
+    # @param [Hash{Symbol => String, nil}] overrides
+    #
+    # @option overrides [String, nil] :user_agent
+    #   The `User-Agent` header and `navigator.userAgent`.
+    #
+    # @option overrides [String, nil] :accept_language
+    #   The `Accept-Language` header and `navigator.language`.
+    #
+    # @option overrides [String, nil] :platform
+    #   `navigator.platform`, e.g. `"Win32"`.
+    #
+    # @return [self]
+    #
+    # @raise [ArgumentError] on any other option.
+    #
+    # @example
+    #   browser.network.emulate(platform: "Win32", accept_language: "de-DE")
+    #   browser.go_to("https://github.com/")
+    #
+    def emulate(**overrides)
+      unknown = overrides.keys - EMULATE_KEYS
+      raise ArgumentError, "unknown keywords: #{unknown.map(&:inspect).join(', ')}" unless unknown.empty?
+
+      @overrides.merge!(overrides)
+      params = { userAgent: @overrides[:user_agent] || @page.default_user_agent }
+      params[:acceptLanguage] = @overrides[:accept_language] if @overrides[:accept_language]
+      params[:platform] = @overrides[:platform] if @overrides[:platform]
+
+      @page.command("Network.setUserAgentOverride", **params)
+      self
     end
 
     #

@@ -12,9 +12,5 @@ module Ferrum
     def clear: () -> true
 
     def add: (::Hash[String, String] headers, ?permanent: bool) -> true
-
-    private
-
-    def set_overrides: (?user_agent: String?, ?accept_language: String?, ?platform: String?) -> Hash[String, untyped]?
   end
 end

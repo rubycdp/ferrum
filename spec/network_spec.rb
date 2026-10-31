@@ -603,6 +603,73 @@ describe Ferrum::Network do
     expect(Ferrum::Utils::ElapsedTime.elapsed_time(start)).to be >= 0.5
   end
 
+  describe "#emulate" do
+    it "overrides the user agent" do
+      page.network.emulate(user_agent: "foo")
+      page.go_to("/headers")
+
+      expect(page.evaluate("navigator.userAgent")).to eq("foo")
+      expect(page.body).to include("USER_AGENT: foo")
+    end
+
+    it "overrides the accept language" do
+      page.network.emulate(accept_language: "de-DE")
+      page.go_to("/headers")
+
+      expect(page.evaluate("navigator.language")).to eq("de-DE")
+      expect(page.body).to include("ACCEPT_LANGUAGE: de-DE")
+    end
+
+    it "overrides the platform" do
+      page.network.emulate(platform: "Win32")
+      page.go_to("/with_js")
+
+      expect(page.evaluate("navigator.platform")).to eq("Win32")
+    end
+
+    it "keeps the values that are not passed" do
+      page.network.emulate(user_agent: "foo", platform: "Win32")
+      page.network.emulate(accept_language: "de-DE")
+      page.go_to("/with_js")
+
+      expect(page.evaluate("[navigator.userAgent, navigator.platform, navigator.language]"))
+        .to eq(%w[foo Win32 de-DE])
+    end
+
+    it "brings a value back to the default with nil" do
+      page.network.emulate(user_agent: "foo", platform: "Win32")
+      page.network.emulate(user_agent: nil)
+      page.go_to("/with_js")
+
+      expect(page.evaluate("navigator.userAgent")).to eq(page.default_user_agent)
+      expect(page.evaluate("navigator.platform")).to eq("Win32")
+    end
+
+    it "keeps the platform when headers set the user agent" do
+      page.network.emulate(platform: "Win32")
+      page.headers.set("User-Agent" => "foo")
+      page.go_to("/with_js")
+
+      expect(page.evaluate("[navigator.userAgent, navigator.platform]")).to eq(%w[foo Win32])
+    end
+
+    it "keeps the header user agent when the platform is emulated" do
+      page.headers.set("User-Agent" => "foo")
+      page.network.emulate(platform: "Win32")
+      page.go_to("/with_js")
+
+      expect(page.evaluate("[navigator.userAgent, navigator.platform]")).to eq(%w[foo Win32])
+    end
+
+    it "returns the network" do
+      expect(page.network.emulate(platform: "Win32")).to be(page.network)
+    end
+
+    it "raises on an unknown option" do
+      expect { page.network.emulate(timezone: "UTC") }.to raise_error(ArgumentError, "unknown keywords: :timezone")
+    end
+  end
+
   it "#offline_mode" do
     page.network.offline_mode
 
