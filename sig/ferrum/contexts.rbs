@@ -55,7 +55,7 @@ module Ferrum
 
     def connect_worker: (Target target) -> void
 
-    def add_extensions_and_resume: (String session_id, bool? waiting) -> void
+    def add_extensions_and_resume: (Target target, String session_id, bool? waiting) -> void
 
     def resume: (String session_id) -> void
 

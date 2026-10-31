@@ -32,6 +32,7 @@ module Ferrum
     @target_id: String
     @options: Browser::Options
     @frames: ::Concurrent::Map[String, Frame]
+    @remote_frames: ::Concurrent::Map[String, bool]
     @main_frame: Frame
     @event: Utils::Event
     @mouse: Mouse

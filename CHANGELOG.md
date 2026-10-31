@@ -50,6 +50,8 @@
   undid `--blink-settings` overrides. `mobile:` defaults to `nil` and leaves touch as is, `false` turns it off [#664]
 - A click or navigation timed out when the last loading iframe moved to another process, e.g. submitting a form that
   opens an inline PDF in Chrome 145+, where the PDF viewer runs out of process [#672]
+- A click or navigation didn't wait for an out-of-process iframe to load, e.g. a cross-site iframe with site isolation
+  on. Ferrum now follows its loading in the iframe's own target [#685]
 
 ### Removed
 
