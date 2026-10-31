@@ -147,11 +147,10 @@ module Ferrum
     # @return [Boolean]
     def focusable?
       previous = evaluate("this.ownerDocument.activeElement")
-      focus
+      return false unless focus_if_focusable(self)
+
       restore_focus(previous) unless previous == self
       true
-    rescue BrowserError => e
-      e.message == "Element is not focusable" ? false : raise
     end
 
     #
@@ -729,11 +728,16 @@ module Ferrum
     end
 
     def restore_focus(previous)
-      if previous.nil? || %w[body html].include?(previous.tag_name)
-        blur
-      else
-        previous.focus
-      end
+      return if previous && !%w[body html].include?(previous.tag_name) && focus_if_focusable(previous)
+
+      blur
+    end
+
+    def focus_if_focusable(node)
+      node.focus
+      true
+    rescue BrowserError => e
+      e.message == "Element is not focusable" ? false : raise
     end
 
     def content_quads_with(delay: MOVING_WAIT_DELAY)

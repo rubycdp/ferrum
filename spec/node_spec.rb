@@ -454,6 +454,16 @@ describe Ferrum::Node do
       browser.at_css("#form_name").focusable?
       expect(browser.evaluate("document.activeElement.tagName")).to eq("BODY")
     end
+
+    it "is true when the element that had focus can't take it back" do
+      browser.execute(<<~JS)
+        document.querySelector("#form_name_explanation").addEventListener("blur", (e) => e.target.disabled = true)
+      JS
+      browser.at_css("#form_name_explanation").focus
+
+      expect(browser.at_css("#form_name").focusable?).to eq(true)
+      expect(browser.evaluate("document.activeElement.tagName")).to eq("BODY")
+    end
   end
 
   describe "#computed_style" do
