@@ -140,6 +140,10 @@ module Ferrum
     # gives focus back to the element that had it, so `focus` and `blur`
     # events fire on both.
     #
+    # @note For a node inside an iframe, focus goes back to the element that
+    #   had it in the iframe, but the page around it is left with the iframe
+    #   focused instead of the element that had focus there.
+    #
     # @return [Boolean]
     def focusable?
       previous = evaluate("this.ownerDocument.activeElement")
