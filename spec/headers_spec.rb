@@ -54,6 +54,13 @@ describe Ferrum::Headers do
       expect(browser.evaluate("navigator.userAgent")).to eq(browser.default_user_agent)
     end
 
+    it "brings client hints back when set no longer has a user agent" do
+      browser.headers.set("User-Agent" => "foo")
+      browser.headers.set("X-Trace" => "1")
+      browser.go_to("/headers")
+      expect(browser.body).to include("SEC_CH_UA_PLATFORM")
+    end
+
     it "keeps client hints when the headers have no user agent or language" do
       browser.headers.add({ "X-Trace" => "1" })
       browser.go_to("/headers")

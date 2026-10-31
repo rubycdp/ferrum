@@ -259,6 +259,8 @@ page.network.emulate(
 )
 ```
 
+Once every option is back to `nil` the override is removed and Chrome sends its own client hints again.
+
 #### cache(disable: `Boolean`)
 
 Toggles ignoring cache for each request. If true, cache will not be used.

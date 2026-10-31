@@ -477,7 +477,8 @@ module Ferrum
     #
     # While an override is active Chrome stops sending client hints
     # (`Sec-CH-UA-*` headers and `navigator.userAgentData`) unless you pass
-    # `:metadata`.
+    # `:metadata`. Once every option is back to `nil` the override is removed
+    # and Chrome sends them again.
     #
     # Setting the `User-Agent` or `Accept-Language` through {Headers} goes
     # through here too, and the last one set wins.
@@ -522,8 +523,8 @@ module Ferrum
 
       validate_metadata(overrides[:metadata]) if overrides[:metadata]
 
-      @overrides.merge!(overrides)
-      params = { userAgent: @overrides[:user_agent] || @page.default_user_agent }
+      @overrides.merge!(overrides).compact!
+      params = { userAgent: @overrides.empty? ? "" : @overrides[:user_agent] || @page.default_user_agent }
       params[:acceptLanguage] = @overrides[:accept_language] if @overrides[:accept_language]
       params[:platform] = @overrides[:platform] if @overrides[:platform]
       params[:userAgentMetadata] = camelize(@overrides[:metadata]) if @overrides[:metadata]

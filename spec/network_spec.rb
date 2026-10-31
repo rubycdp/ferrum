@@ -692,11 +692,20 @@ describe Ferrum::Network do
       end
 
       it "drops the client hints with nil" do
-        page.network.emulate(metadata: metadata)
+        page.network.emulate(user_agent: "foo", metadata: metadata)
         page.network.emulate(metadata: nil)
         page.go_to("/headers")
 
         expect(page.body).not_to include("SEC_CH_UA_PLATFORM")
+      end
+
+      it "brings Chrome's own client hints back once every option is nil" do
+        page.network.emulate(user_agent: "foo", metadata: metadata)
+        page.network.emulate(user_agent: nil, metadata: nil)
+        page.go_to("/headers")
+
+        expect(page.evaluate("navigator.userAgentData.platform")).not_to eq("Windows")
+        expect(page.body).to include("SEC_CH_UA_PLATFORM")
       end
 
       it "raises when a key is missing" do
