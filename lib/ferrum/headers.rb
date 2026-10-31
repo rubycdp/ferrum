@@ -6,8 +6,11 @@ module Ferrum
   # CDP `Network.setExtraHTTPHeaders` command. Setting a `User-Agent` or
   # `Accept-Language` header also updates the corresponding navigator
   # override so JavaScript sees consistent values, see {Network#emulate}.
+  # Headers that don't contain one of them leave the override alone.
   #
   class Headers
+    OVERRIDES = { user_agent: "User-Agent", accept_language: "Accept-Language" }.freeze
+
     def initialize(page)
       @page = page
       @headers = {}
@@ -31,7 +34,9 @@ module Ferrum
     # @return [true]
     #
     def set(headers)
+      dropped = OVERRIDES.select { |_, name| @headers.key?(name) && !headers.key?(name) }
       clear
+      @page.network.emulate(**dropped.transform_values { nil }) unless dropped.empty?
       add(headers)
     end
 
@@ -62,7 +67,8 @@ module Ferrum
       end
 
       @headers.merge!(headers)
-      @page.network.emulate(user_agent: @headers["User-Agent"], accept_language: @headers["Accept-Language"])
+      overrides = OVERRIDES.select { |_, name| headers.key?(name) }.transform_values { |name| headers[name] }
+      @page.network.emulate(**overrides) unless overrides.empty?
       @page.command("Network.setExtraHTTPHeaders", headers: @headers)
       true
     end

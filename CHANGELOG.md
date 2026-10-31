@@ -20,6 +20,8 @@
   `go_to` instead
 
 ### Fixed
+- `headers.add` and `headers.set` reset a user agent or language set with `network.emulate`, and made Chrome stop
+  sending client hints, even for headers like `X-Trace`. They touch the user agent and language only when given one
 - `Node#moving?` missed a slowly moving node with its 10ms default delay, now it waits 50ms
 - `pdf(path:)` returned `true` while `screenshot(path:)` and `mhtml(path:)` return the number of bytes written, now it
   returns the byte count too

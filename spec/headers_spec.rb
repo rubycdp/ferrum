@@ -31,6 +31,36 @@ describe Ferrum::Headers do
     end
   end
 
+  describe "overrides" do
+    it "keeps a user agent from network.emulate when adding other headers" do
+      browser.network.emulate(user_agent: "Bot/1.0")
+      browser.headers.add({ "X-Trace" => "1" })
+      browser.go_to("/headers")
+      expect(browser.evaluate("navigator.userAgent")).to eq("Bot/1.0")
+      expect(browser.body).to include("USER_AGENT: Bot/1.0")
+    end
+
+    it "keeps a user agent from network.emulate when setting other headers" do
+      browser.network.emulate(user_agent: "Bot/1.0")
+      browser.headers.set({ "X-Trace" => "1" })
+      browser.go_to
+      expect(browser.evaluate("navigator.userAgent")).to eq("Bot/1.0")
+    end
+
+    it "brings the user agent back when set no longer has one" do
+      browser.headers.set("User-Agent" => "foo")
+      browser.headers.set("X-Trace" => "1")
+      browser.go_to
+      expect(browser.evaluate("navigator.userAgent")).to eq(browser.default_user_agent)
+    end
+
+    it "keeps client hints when the headers have no user agent or language" do
+      browser.headers.add({ "X-Trace" => "1" })
+      browser.go_to("/headers")
+      expect(browser.body).to include("SEC_CH_UA_PLATFORM")
+    end
+  end
+
   describe "#get" do
     it "allows headers to be read" do
       expect(browser.headers.get).to eq({})
