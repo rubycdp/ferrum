@@ -13,6 +13,7 @@ module Ferrum
   class Node
     MOVING_WAIT_DELAY = ENV.fetch("FERRUM_NODE_MOVING_WAIT", 0.01).to_f
     MOVING_WAIT_ATTEMPTS = ENV.fetch("FERRUM_NODE_MOVING_ATTEMPTS", 50).to_i
+    MOVING_CHECK_DELAY = 0.05
 
     # @return [Page] the page the node belongs to.
     attr_reader :page
@@ -162,13 +163,14 @@ module Ferrum
     end
 
     # Checks whether the node's position is changing, by comparing two
-    # content-quad snapshots taken `delay` seconds apart.
+    # content-quad snapshots taken `delay` seconds apart. The default is a few
+    # frames, a shorter one can miss a node that moves slowly.
     #
     # @param [Float] delay
     #   Seconds to wait between the two position checks.
     #
     # @return [Boolean]
-    def moving?(delay: MOVING_WAIT_DELAY)
+    def moving?(delay: MOVING_CHECK_DELAY)
       previous, current = content_quads_with(delay: delay)
       previous != current
     end

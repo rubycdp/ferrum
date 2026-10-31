@@ -20,6 +20,7 @@
   `go_to` instead
 
 ### Fixed
+- `Node#moving?` missed a slowly moving node with its 10ms default delay, now it waits 50ms
 - `pdf(path:)` returned `true` while `screenshot(path:)` and `mhtml(path:)` return the number of bytes written, now it
   returns the byte count too
 - `mouse.scroll_by` and `scroll_to` animated on a page with `scroll-behavior: smooth` in a Chrome without

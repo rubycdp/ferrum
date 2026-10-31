@@ -1,6 +1,7 @@
 module Ferrum
   class Node
     MOVING_WAIT_DELAY: untyped
+    MOVING_CHECK_DELAY: ::Float
 
     MOVING_WAIT_ATTEMPTS: untyped
 
@@ -42,7 +43,7 @@ module Ferrum
 
     def wait_for_stop_moving: (?delay: untyped, ?attempts: untyped) -> untyped
 
-    def moving?: (?delay: Float) -> bool
+    def moving?: (?delay: ::Numeric) -> bool
 
     def blur: () -> untyped
 

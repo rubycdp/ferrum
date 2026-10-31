@@ -27,7 +27,11 @@ page.at_css("input[type=hidden]").focusable? # => false
 page.at_css("input[name='q']").focusable? # => true
 ```
 
-#### moving? : `Boolean`
+#### moving?(delay: `Float`) : `Boolean`
+
+Whether the node's position changes within `delay` seconds, `0.05` by default. A shorter delay can miss a node that
+moves slowly.
+
 #### wait_for_stop_moving
 #### blur
 #### type
