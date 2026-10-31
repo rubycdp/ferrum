@@ -661,6 +661,55 @@ describe Ferrum::Network do
       expect(page.evaluate("[navigator.userAgent, navigator.platform]")).to eq(%w[foo Win32])
     end
 
+    context "with metadata" do
+      let(:metadata) do
+        { platform: "Windows", platform_version: "15.0.0", architecture: "x86", model: "", mobile: false }
+      end
+
+      it "sends the client hints" do
+        page.network.emulate(user_agent: "foo", metadata: metadata)
+        page.go_to("/headers")
+
+        expect(page.evaluate("navigator.userAgentData.platform")).to eq("Windows")
+        expect(page.body).to include(%(SEC_CH_UA_PLATFORM: "Windows"))
+        expect(page.body).to include("SEC_CH_UA_MOBILE: ?0")
+      end
+
+      it "reports a mobile device" do
+        page.network.emulate(metadata: metadata.merge(mobile: true))
+        page.go_to("/headers")
+
+        expect(page.evaluate("navigator.userAgentData.mobile")).to eq(true)
+        expect(page.body).to include("SEC_CH_UA_MOBILE: ?1")
+      end
+
+      it "sends the brands" do
+        brands = [{ brand: "Acme", version: "7" }]
+        page.network.emulate(metadata: metadata.merge(brands: brands))
+        page.go_to("/headers")
+
+        expect(page.evaluate("navigator.userAgentData.brands")).to eq([{ "brand" => "Acme", "version" => "7" }])
+      end
+
+      it "drops the client hints with nil" do
+        page.network.emulate(metadata: metadata)
+        page.network.emulate(metadata: nil)
+        page.go_to("/headers")
+
+        expect(page.body).not_to include("SEC_CH_UA_PLATFORM")
+      end
+
+      it "raises when a key is missing" do
+        expect { page.network.emulate(metadata: metadata.except(:model, :mobile)) }
+          .to raise_error(ArgumentError, "metadata is missing: :model, :mobile")
+      end
+
+      it "raises on an unknown key" do
+        expect { page.network.emulate(metadata: metadata.merge(color: "red")) }
+          .to raise_error(ArgumentError, "metadata has unknown keys: :color")
+      end
+    end
+
     it "returns the network" do
       expect(page.network.emulate(platform: "Win32")).to be(page.network)
     end

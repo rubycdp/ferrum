@@ -14,11 +14,13 @@ module Ferrum
   # Also provides request interception/authorization (`intercept`,
   # `authorize`, `blacklist=`/`whitelist=`) and network condition emulation
   # (`emulate_network_conditions`, `offline_mode`), and user agent, language
-  # and platform emulation (`emulate`).
+  # platform and client hints emulation (`emulate`).
   #
   class Network
     CLEAR_TYPE = %i[traffic cache].freeze
-    EMULATE_KEYS = %i[user_agent accept_language platform].freeze
+    EMULATE_KEYS = %i[user_agent accept_language platform metadata].freeze
+    METADATA_REQUIRED = %i[platform platform_version architecture model mobile].freeze
+    METADATA_OPTIONAL = %i[brands full_version_list full_version bitness wow64 form_factors].freeze
     AUTHORIZE_TYPE = %i[server proxy].freeze
     REQUEST_STAGES = %i[Request Response].freeze
     RESOURCE_TYPES = %i[Document Stylesheet Image Media Font Script TextTrack
@@ -467,16 +469,20 @@ module Ferrum
     end
 
     #
-    # Overrides the user agent, the accept language and the platform the page
-    # reports, both in the `User-Agent` and `Accept-Language` request headers
-    # and to JavaScript via `navigator`. Chrome replaces the whole override on
-    # every call, so the values you don't pass keep their previous ones. Pass
-    # `nil` to bring one back to the browser's default.
+    # Overrides the user agent, the accept language, the platform and the
+    # client hints the page reports, both in the request headers and to
+    # JavaScript via `navigator`. Chrome replaces the whole override on every
+    # call, so the values you don't pass keep their previous ones. Pass `nil`
+    # to bring one back to the browser's default.
+    #
+    # While an override is active Chrome stops sending client hints
+    # (`Sec-CH-UA-*` headers and `navigator.userAgentData`) unless you pass
+    # `:metadata`.
     #
     # Setting the `User-Agent` or `Accept-Language` through {Headers} goes
     # through here too, and the last one set wins.
     #
-    # @param [Hash{Symbol => String, nil}] overrides
+    # @param [Hash{Symbol => String, Hash, nil}] overrides
     #
     # @option overrides [String, nil] :user_agent
     #   The `User-Agent` header and `navigator.userAgent`.
@@ -487,22 +493,40 @@ module Ferrum
     # @option overrides [String, nil] :platform
     #   `navigator.platform`, e.g. `"Win32"`.
     #
+    # @option overrides [Hash{Symbol => Object}, nil] :metadata
+    #   The client hints, needs all of `:platform`, `:platform_version`,
+    #   `:architecture`, `:model` and `:mobile`. `:brands` and
+    #   `:full_version_list` take an array of `{ brand:, version: }`, and
+    #   `:full_version`, `:bitness`, `:wow64` and `:form_factors` are optional
+    #   too.
+    #
     # @return [self]
     #
-    # @raise [ArgumentError] on any other option.
+    # @raise [ArgumentError] on any other option, or a `:metadata` that is
+    #   missing a key or has an unknown one.
     #
     # @example
     #   browser.network.emulate(platform: "Win32", accept_language: "de-DE")
     #   browser.go_to("https://github.com/")
     #
+    # @example Client hints that match the user agent:
+    #   browser.network.emulate(
+    #     user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130.0.0.0 Safari/537.36",
+    #     platform: "Win32",
+    #     metadata: { platform: "Windows", platform_version: "15.0.0", architecture: "x86", model: "", mobile: false }
+    #   )
+    #
     def emulate(**overrides)
       unknown = overrides.keys - EMULATE_KEYS
       raise ArgumentError, "unknown keywords: #{unknown.map(&:inspect).join(', ')}" unless unknown.empty?
+
+      validate_metadata(overrides[:metadata]) if overrides[:metadata]
 
       @overrides.merge!(overrides)
       params = { userAgent: @overrides[:user_agent] || @page.default_user_agent }
       params[:acceptLanguage] = @overrides[:accept_language] if @overrides[:accept_language]
       params[:platform] = @overrides[:platform] if @overrides[:platform]
+      params[:userAgentMetadata] = camelize(@overrides[:metadata]) if @overrides[:metadata]
 
       @page.command("Network.setUserAgentOverride", **params)
       self
@@ -519,6 +543,26 @@ module Ferrum
     end
 
     private
+
+    def validate_metadata(metadata)
+      missing = METADATA_REQUIRED - metadata.keys
+      raise ArgumentError, "metadata is missing: #{missing.map(&:inspect).join(', ')}" unless missing.empty?
+
+      unknown = metadata.keys - METADATA_REQUIRED - METADATA_OPTIONAL
+      raise ArgumentError, "metadata has unknown keys: #{unknown.map(&:inspect).join(', ')}" unless unknown.empty?
+    end
+
+    def camelize(value)
+      case value
+      when Hash then value.to_h { |key, v| [camel_case(key), camelize(v)] }
+      when Array then value.map { |v| camelize(v) }
+      else value
+      end
+    end
+
+    def camel_case(key)
+      key.to_s.gsub(/_(\w)/) { Regexp.last_match(1).upcase }.to_sym
+    end
 
     def subscribe_request_will_be_sent
       @page.on("Network.requestWillBeSent") do |params|

@@ -230,8 +230,8 @@ page.go_to("https://github.com/") # => Ferrum::StatusError (Request to https://g
 
 #### emulate(\*\*options) : `Network`
 
-Overrides the user agent, the accept language and the platform the page reports, in the request headers and in
-`navigator`. The options you don't pass keep their previous values, `nil` brings one back to the browser's default.
+Overrides the user agent, the accept language, the platform and the client hints the page reports, in the request
+headers and in `navigator`. The options you don't pass keep their previous values, `nil` brings one back to the browser's default.
 Setting `User-Agent` or `Accept-Language` with [headers](https://github.com/rubycdp/ferrum#headers) goes through
 here too, the last one set wins.
 
@@ -239,10 +239,24 @@ here too, the last one set wins.
     * :user_agent `String` the `User-Agent` header and `navigator.userAgent`
     * :accept_language `String` the `Accept-Language` header and `navigator.language`
     * :platform `String` `navigator.platform`, e.g. `"Win32"`
+    * :metadata `Hash` the client hints (`Sec-CH-UA-*` headers and `navigator.userAgentData`), needs all of
+      `:platform`, `:platform_version`, `:architecture`, `:model` and `:mobile`. `:brands` and `:full_version_list` take
+      an array of `{ brand:, version: }`, `:full_version`, `:bitness`, `:wow64` and `:form_factors` are optional
 
 ```ruby
 page.network.emulate(platform: "Win32", accept_language: "de-DE")
 page.go_to("https://github.com/")
+```
+
+While an override is active Chrome stops sending client hints, so a user agent that says Windows Chrome with no hints
+stands out. Pass `:metadata` with it to keep them, the other options leave the hints off:
+
+```ruby
+page.network.emulate(
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130.0.0.0 Safari/537.36",
+  platform: "Win32",
+  metadata: { platform: "Windows", platform_version: "15.0.0", architecture: "x86", model: "", mobile: false }
+)
 ```
 
 #### cache(disable: `Boolean`)

@@ -1,7 +1,9 @@
 module Ferrum
   class Network
     CLEAR_TYPE: ::Array[:traffic | :cache]
-    EMULATE_KEYS: ::Array[:user_agent | :accept_language | :platform]
+    EMULATE_KEYS: ::Array[:user_agent | :accept_language | :platform | :metadata]
+    METADATA_REQUIRED: ::Array[Symbol]
+    METADATA_OPTIONAL: ::Array[Symbol]
 
     AUTHORIZE_TYPE: ::Array[:server | :proxy]
 
@@ -59,9 +61,15 @@ module Ferrum
 
     def offline_mode: () -> untyped
 
-    def emulate: (?user_agent: String?, ?accept_language: String?, ?platform: String?) -> self
+    def emulate: (?user_agent: String?, ?accept_language: String?, ?platform: String?, ?metadata: ::Hash[Symbol, untyped]?) -> self
 
     private
+
+    def validate_metadata: (::Hash[Symbol, untyped] metadata) -> void
+
+    def camelize: (untyped value) -> untyped
+
+    def camel_case: ((String | Symbol) key) -> Symbol
 
     def subscribe_request_will_be_sent: () -> untyped
 
