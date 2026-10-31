@@ -285,9 +285,9 @@ module Ferrum
 
     # Not currently implemented.
     #
-    # @raise [NotImplementedError] always
+    # @raise [Ferrum::NotImplementedError] always
     def hover
-      raise NotImplementedError
+      raise Ferrum::NotImplementedError
     end
 
     #

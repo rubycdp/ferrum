@@ -13,8 +13,6 @@ module Ferrum
   class BinaryNotFoundError < Error; end
   # Raised when a required file path option is empty.
   class EmptyPathError      < Error; end
-  # Raised when the browser process server fails to start or crashes.
-  class ServerError         < Error; end
 
   # Raised when a request fails to reach the server, e.g. due to DNS or
   # connectivity issues.

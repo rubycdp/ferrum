@@ -21,9 +21,6 @@ module Ferrum
     def initialize: (String url, ?String? message) -> void
   end
 
-  class ServerError < Error
-  end
-
   %a{deprecated} class PendingConnectionsError < StatusError
     attr_reader pendings: ::Array[String]
 

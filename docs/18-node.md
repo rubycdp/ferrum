@@ -149,7 +149,7 @@ page.at_css("canvas").click(offset: { x: 10, y: 20, position: :center })
 
 #### hover
 
-Not implemented yet, raises `NotImplementedError`. Move the mouse to the node instead:
+Not implemented yet, raises `Ferrum::NotImplementedError`. Move the mouse to the node instead:
 
 ```ruby
 x, y = page.at_css("a").find_position
