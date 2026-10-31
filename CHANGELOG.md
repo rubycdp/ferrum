@@ -8,6 +8,8 @@
   pending, when the page doesn't load in time
 
 ### Changed
+- `NoSuchPageError` is a `NoSuchTargetError` now, so rescuing `NoSuchTargetError` covers a target Chrome no longer
+  knows, like a closed page, as well as one Ferrum doesn't track
 - Every script runs the new way: keyword arguments are named parameters, promises and thenables are awaited, all
   statements run and the last one's value is returned, and `Node#evaluate` returns nodes and dates, see
   [upgrading](docs/13-javascript.md#upgrading-to-021) [#673]

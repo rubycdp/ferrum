@@ -8,6 +8,13 @@ describe Ferrum::Client do
     end
   end
 
+  describe "an unknown target" do
+    it "raises NoSuchTargetError" do
+      expect { page.command("Target.activateTarget", targetId: "missing") }
+        .to raise_error(Ferrum::NoSuchTargetError)
+    end
+  end
+
   describe "a dead connection" do
     let(:remote) { Ferrum::Browser.new(base_url: base_url, timeout: 10, protocol_timeout: 10) }
 

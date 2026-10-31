@@ -2,10 +2,10 @@ module Ferrum
   class Error < StandardError
   end
 
-  class NoSuchPageError < Error
+  class NoSuchTargetError < Error
   end
 
-  class NoSuchTargetError < Error
+  class NoSuchPageError < NoSuchTargetError
   end
 
   class NotImplementedError < Error

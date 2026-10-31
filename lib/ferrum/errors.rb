@@ -3,10 +3,10 @@
 module Ferrum
   # Base class for all errors raised by Ferrum.
   class Error               < StandardError; end
-  # Raised when the referenced page no longer exists.
-  class NoSuchPageError     < Error; end
   # Raised when the referenced browser target cannot be found.
   class NoSuchTargetError   < Error; end
+  # Raised when Chrome reports that the referenced page no longer exists, a {NoSuchTargetError} for pages.
+  class NoSuchPageError     < NoSuchTargetError; end
   # Raised when a requested feature isn't implemented for the current setup.
   class NotImplementedError < Error; end
   # Raised when no browser binary can be found at the configured path.
