@@ -95,8 +95,8 @@ page.at_css("#modal").wait_for_stop_moving
 
 #### moving?(delay: `Float`) : `Boolean`
 
-Whether the node's position changes within `delay` seconds, `0.05` by default. A shorter delay can miss a node that
-moves slowly.
+Whether the node's position changes within `delay` seconds, `0.05` by default or `FERRUM_NODE_MOVING_CHECK` when set. A
+shorter delay can miss a node that moves slowly.
 
 ```ruby
 page.at_css(".animated").moving? # => true

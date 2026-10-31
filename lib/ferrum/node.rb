@@ -13,7 +13,7 @@ module Ferrum
   class Node
     MOVING_WAIT_DELAY = ENV.fetch("FERRUM_NODE_MOVING_WAIT", 0.01).to_f
     MOVING_WAIT_ATTEMPTS = ENV.fetch("FERRUM_NODE_MOVING_ATTEMPTS", 50).to_i
-    MOVING_CHECK_DELAY = 0.05
+    MOVING_CHECK_DELAY = ENV.fetch("FERRUM_NODE_MOVING_CHECK", 0.05).to_f
 
     # @return [Page] the page the node belongs to.
     attr_reader :page

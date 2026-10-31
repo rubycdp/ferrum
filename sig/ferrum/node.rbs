@@ -1,9 +1,9 @@
 module Ferrum
   class Node
-    MOVING_WAIT_DELAY: untyped
+    MOVING_WAIT_DELAY: ::Float
     MOVING_CHECK_DELAY: ::Float
 
-    MOVING_WAIT_ATTEMPTS: untyped
+    MOVING_WAIT_ATTEMPTS: ::Integer
 
     @node_id: untyped
     @document_version: ::Integer

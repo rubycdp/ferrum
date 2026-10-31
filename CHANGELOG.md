@@ -27,14 +27,14 @@
   set. Now it clears them in Chrome right away
 - `headers.add` and `headers.set` reset a user agent or language set with `network.emulate`, and made Chrome stop
   sending client hints, even for headers like `X-Trace`. They touch the user agent and language only when given one
-- `Node#moving?` missed a slowly moving node with its 10ms default delay, now it waits 50ms
 - `pdf(path:)` returned `true` while `screenshot(path:)` and `mhtml(path:)` return the number of bytes written, now it
   returns the byte count too
 - `mouse.scroll_by` and `scroll_to` animated on a page with `scroll-behavior: smooth` in a Chrome without
   `--disable-smooth-scrolling`, so the position was mid-scroll when they returned. They scroll instantly now
 - `at_css`, `css`, `at_xpath` and `xpath` on a node inside an iframe raised `NodeNotFoundError`, now they search the
   node's own frame
-- `Node#moving?` returned `true` for a node that wasn't moving and `false` for one that was
+- `Node#moving?` returned `true` for a node that wasn't moving and `false` for one that was. Its default delay is now
+  50ms instead of 10ms, which missed a slowly moving node, set it with `FERRUM_NODE_MOVING_CHECK`
 
 ### Removed
 - `#evaluate_async`, `#evaluate_func` and `#evaluate_on`, use `#evaluate` and `Node#evaluate`, and
