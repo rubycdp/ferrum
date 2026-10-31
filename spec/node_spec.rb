@@ -339,7 +339,7 @@ describe Ferrum::Node do
 
     context "when selector is not <select>" do
       it "raises JavaScriptError with proper message" do
-        expect { browser.at_xpath("//*[@id='customer_name']").select(anything) }
+        expect { browser.at_xpath("//*[@id='customer_name']").select("Ruby") }
           .to raise_exception(Ferrum::JavaScriptError, /Element is not a <select> element/)
       end
     end

@@ -54,6 +54,9 @@ module Ferrum
     #
     # @return [Hash{String => Object}]
     #
+    # @example
+    #   page.at_css("a").description["nodeName"] # => "A"
+    #
     def description
       @description ||= page.command("DOM.describeNode", backendNodeId: backend_node_id)["node"]
     end
@@ -63,6 +66,9 @@ module Ferrum
     # node, e.g. `"#text"`.
     #
     # @return [String]
+    #
+    # @example
+    #   page.at_css("#nav").tag_name # => "div"
     #
     def tag_name
       @tag_name ||= description["nodeName"].downcase
@@ -93,6 +99,11 @@ module Ferrum
     # Whether this is an element node, as opposed to e.g. a text node.
     #
     # @return [Boolean]
+    #
+    # @example
+    #   page.at_css("a").node? # => true
+    #   page.xpath("//a/text()").first.node? # => false
+    #
     def node?
       node_type == 1 # nodeType: 3, nodeName: "#text" e.g.
     end
@@ -150,8 +161,15 @@ module Ferrum
     # @param [Integer] attempts
     #   Maximum number of attempts before raising.
     #
-    # @return [Array]
-    #   The content quads of the node once it has stopped moving.
+    # @return [Array<Array<Float>>]
+    #   The content quads of the node once it has stopped moving, each one as
+    #   the eight coordinates of its four corners.
+    #
+    # @raise [NodeMovingError]
+    #
+    # @example
+    #   page.at_css("#modal").wait_for_stop_moving
+    #   # => [[50.2, 390.9, 203.2, 390.9, 203.2, 411.9, 50.2, 411.9]]
     #
     def wait_for_stop_moving(delay: MOVING_WAIT_DELAY, attempts: MOVING_WAIT_ATTEMPTS)
       Utils::Attempt.with_retry(errors: NodeMovingError, max: attempts, wait: 0) do
@@ -170,6 +188,11 @@ module Ferrum
     #   Seconds to wait between the two position checks.
     #
     # @return [Boolean]
+    #
+    # @example
+    #   page.at_css(".animated").moving? # => true
+    #   page.at_css("#nav").moving? # => false
+    #
     def moving?(delay: MOVING_CHECK_DELAY)
       previous, current = content_quads_with(delay: delay)
       previous != current
@@ -179,6 +202,9 @@ module Ferrum
     # Removes focus from the node.
     #
     # @return [self]
+    #
+    # @example
+    #   page.at_css("input[name='q']").focus.blur
     #
     def blur
       tap { evaluate("this.blur()") }
@@ -200,9 +226,41 @@ module Ferrum
       tap { page.keyboard.type(*keys) }
     end
 
-    # mode: (:left | :right | :double)
-    # keys: (:alt, (:ctrl | :control), (:meta | :command), :shift)
-    # offset: { :x, :y, :position (:top | :center) }
+    #
+    # Clicks the node at its center, or at an offset from it, by moving the
+    # mouse there first. Waits for the node to stop moving, see
+    # {#wait_for_stop_moving}.
+    #
+    # @param [:left, :right, :double] mode
+    #   Which click to make, `:double` is a double click with the left button.
+    #
+    # @param [Array<Symbol>] keys
+    #   Modifier keys to hold while clicking: `:alt`, `:ctrl` (or `:control`),
+    #   `:meta` (or `:command`) and `:shift`.
+    #
+    # @param [Hash{Symbol => Object}] offset
+    #   Where to click instead of the center, needs both `:x` and `:y`.
+    #
+    # @option offset [Integer] :x
+    #
+    # @option offset [Integer] :y
+    #
+    # @option offset [:top, :center] :position (:top)
+    #   What `:x` and `:y` are measured from: the node's top-left corner or its
+    #   center.
+    #
+    # @param [Float] delay
+    #   Delay between mouse down and mouse up events.
+    #
+    # @return [self]
+    #
+    # @example
+    #   page.at_css("a").click
+    #   page.at_css("a").click(mode: :right)
+    #   page.at_css("a").click(keys: [:ctrl, :shift])
+    #   page.at_css("canvas").click(offset: { x: 10, y: 20 })
+    #   page.at_css("canvas").click(offset: { x: 10, y: 20, position: :center })
+    #
     def click(mode: :left, keys: [], offset: {}, delay: 0)
       x, y = find_position(**offset)
       modifiers = page.keyboard.modifiers(keys)
@@ -247,6 +305,12 @@ module Ferrum
     #   An element to use as the visible bounds instead of the window.
     #
     # @return [Boolean]
+    #
+    # @example
+    #   page.at_css("#footer").in_viewport? # => false
+    #   page.at_css("#footer").scroll_into_view.in_viewport? # => true
+    #   page.at_css("#row").in_viewport?(of: page.at_css("#table")) # => true
+    #
     def in_viewport?(of: nil)
       evaluate(<<~JS, of)
         function(scope) {
@@ -354,7 +418,17 @@ module Ferrum
       evaluate("this.textContent")
     end
 
-    # FIXME: clear API for text and inner_text
+    #
+    # The node's rendered text, i.e. `innerText`. Unlike {#text}, it follows
+    # the layout: text hidden by CSS is left out and line breaks are kept.
+    #
+    # @return [String]
+    #
+    # @example
+    #   # <p>Hello <span style="display: none">hidden</span>world</p>
+    #   page.at_css("p").text # => "Hello hiddenworld"
+    #   page.at_css("p").inner_text # => "Hello world"
+    #
     def inner_text
       evaluate("this.innerText")
     end
@@ -364,6 +438,9 @@ module Ferrum
     # `select` and `textarea`.
     #
     # @return [Object]
+    #
+    # @example
+    #   page.at_css("input[name='q']").value # => "ferrum"
     #
     def value
       evaluate("this.value")
@@ -404,6 +481,11 @@ module Ferrum
     # Returns the selected `option` nodes of a `select` element.
     #
     # @return [Array<Node>]
+    #
+    # @raise [JavaScriptError] when the node is not a `select`.
+    #
+    # @example
+    #   page.at_css("select#title").selected.map(&:text) # => ["Mrs"]
     #
     def selected
       evaluate(<<~JS)
@@ -486,6 +568,11 @@ module Ferrum
     # @option (see Frame::Runtime#evaluate)
     #
     # @return [RemoteObject, Node, Object]
+    #   A {Node} for a node and the value itself for a primitive.
+    #
+    # @example
+    #   page.at_css("form").evaluate_handle("this.dataset") # => RemoteObject
+    #   page.at_css("form").evaluate_handle("this") # => Node
     #
     def evaluate_handle(expression, *positional, **keywords)
       @runtime.evaluate_in(self, expression, positional, keywords, mode: :handle)
@@ -550,7 +637,12 @@ module Ferrum
     #   `:top` to offset from the node's top-left corner, `:center` to offset
     #   from its center.
     #
-    # @return [(Integer, Integer)]
+    # @return [(Float, Float)]
+    #
+    # @example
+    #   page.at_css("input").find_position # => [126.7, 401.4]
+    #   page.at_css("input").find_position(x: 5, y: 5) # => [55.2, 395.9]
+    #   page.at_css("input").find_position(x: 5, y: 5, position: :center) # => [131.7, 406.4]
     #
     def find_position(x: nil, y: nil, position: :top)
       points = wait_for_stop_moving.map { |q| to_points(q) }.first
@@ -562,7 +654,14 @@ module Ferrum
       [x, y]
     end
 
-    # Returns a hash of the computed styles for the node
+    #
+    # The computed CSS styles of the node.
+    #
+    # @return [Hash{String => String}]
+    #
+    # @example
+    #   page.at_css("a").computed_style["display"] # => "inline"
+    #
     def computed_style
       page
         .command("CSS.getComputedStyleForNode", nodeId: node_id)["computedStyle"]
@@ -573,6 +672,10 @@ module Ferrum
     # element is ignored by the accessibility tree.
     #
     # @return [Accessibility::AXNode, nil]
+    #
+    # @example
+    #   page.at_css("a").axnode.role # => "link"
+    #
     def axnode
       page.accessibility.node_for(self)
     end
@@ -592,6 +695,12 @@ module Ferrum
     # Whether the node still exists in the DOM.
     #
     # @return [Boolean]
+    #
+    # @example
+    #   node = page.at_css("#ad")
+    #   node.remove
+    #   node.exists? # => false
+    #
     def exists?
       page.command("DOM.resolveNode", nodeId: node_id)
       true

@@ -9,9 +9,9 @@ module Ferrum
     @document_version: ::Integer
     @runtime: Frame::Runtime
 
-    attr_reader page: untyped
+    attr_reader page: Page
 
-    attr_reader target_id: untyped
+    attr_reader target_id: String
 
     @backend_node_id: Integer
     @node_type: Integer
@@ -29,55 +29,59 @@ module Ferrum
 
     def tag_name: () -> String
 
-    def node?: () -> untyped
+    def node?: () -> bool
 
     attr_reader frame_id: String?
 
-    def frame: () -> untyped
+    def frame: () -> Frame?
 
-    def focus: () -> untyped
+    def focus: () -> self
 
     def focusable?: () -> bool
 
-    def node_id: -> untyped
+    def node_id: () -> Integer
 
-    def wait_for_stop_moving: (?delay: untyped, ?attempts: untyped) -> untyped
+    def wait_for_stop_moving: (?delay: ::Numeric, ?attempts: ::Integer) -> ::Array[::Array[::Numeric]]
 
     def moving?: (?delay: ::Numeric) -> bool
 
-    def blur: () -> untyped
+    def blur: () -> self
 
-    def type: (*untyped keys) -> untyped
+    def type: (*untyped keys) -> self
 
-    def click: (?mode: ::Symbol, ?keys: untyped, ?offset: ::Hash[untyped, untyped], ?delay: ::Integer) -> self
+    def click: (?mode: ::Symbol, ?keys: ::Array[::Symbol], ?offset: ::Hash[::Symbol, untyped], ?delay: ::Numeric) -> self
 
-    def hover: () -> untyped
+    def hover: () -> bot
 
-    def select_file: (untyped value) -> untyped
+    def scroll_into_view: () -> self
 
-    def at_xpath: (untyped selector) -> untyped
+    def in_viewport?: (?of: Node?) -> bool
 
-    def at_css: (untyped selector) -> untyped
+    def select_file: ((String | ::Array[String]) value) -> ::Hash[String, untyped]
 
-    def xpath: (untyped selector) -> untyped
+    def at_xpath: (String selector) -> Node?
 
-    def css: (untyped selector) -> untyped
+    def at_css: (String selector) -> Node?
 
-    def text: () -> untyped
+    def xpath: (String selector) -> ::Array[Node]
 
-    def inner_text: () -> untyped
+    def css: (String selector) -> ::Array[Node]
+
+    def text: () -> String
+
+    def inner_text: () -> String
 
     def value: () -> untyped
 
-    def property: (untyped name) -> untyped
+    def property: (String name) -> untyped
 
     alias [] property
 
-    def attribute: (untyped name) -> untyped
+    def attribute: (String name) -> String?
 
-    def selected: () -> untyped
+    def selected: () -> ::Array[Node]
 
-    def select: (*untyped values, ?by: ::Symbol) -> untyped
+    def select: (*(String | ::Array[String]) values, ?by: ::Symbol) -> self
 
     def evaluate: (untyped expression, *untyped positional, **untyped keywords) -> untyped
 
@@ -85,15 +89,19 @@ module Ferrum
 
     def execute: (untyped expression, *untyped positional, **untyped keywords) -> true
 
-    def ==: (untyped other) -> (false | untyped)
+    def ==: (untyped other) -> bool
 
     def inspect: () -> ::String
 
-    def find_position: (?x: untyped?, ?y: untyped?, ?position: ::Symbol) -> untyped
+    def find_position: (?x: ::Numeric?, ?y: ::Numeric?, ?position: ::Symbol) -> [::Numeric, ::Numeric]
 
-    def computed_style: () -> untyped
+    def computed_style: () -> ::Hash[String, String]
 
     def axnode: () -> Accessibility::AXNode?
+
+    def remove: () -> ::Hash[String, untyped]
+
+    def exists?: () -> bool
 
     private
 
