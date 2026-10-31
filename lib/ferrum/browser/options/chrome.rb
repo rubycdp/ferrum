@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require "singleton"
+require "open3"
+
 module Ferrum
   class Browser
     class Options
@@ -9,7 +12,9 @@ module Ferrum
       # hardened defaults (disabling background networking, extensions,
       # infobars, etc.) applied unless the user opts out.
       #
-      class Chrome < Base
+      class Chrome
+        include Singleton
+
         DEFAULT_OPTIONS = {
           "allow-pre-commit-input" => nil,
           "disable-background-networking" => nil,
@@ -84,6 +89,58 @@ module Ferrum
           windows: WINDOWS_BIN_PATH,
           linux: LINUX_BIN_PATH
         }.freeze
+
+        #
+        # Singleton instance holding the browser's default options.
+        #
+        # @return [Chrome]
+        #
+        def self.options
+          instance
+        end
+
+        # The installed browser's version string, obtained by running its
+        # binary with `--version`.
+        #
+        # @return [String, nil]
+        #   The version output, or `nil` if the binary can't be found/run.
+        def self.version
+          out, = Open3.capture2(instance.detect_path, "--version")
+          out.strip
+        rescue Errno::ENOENT
+          nil
+        end
+
+        #
+        # Default CLI flags for the browser.
+        #
+        # @return [Hash{String => Object}]
+        #
+        def to_h
+          DEFAULT_OPTIONS
+        end
+
+        #
+        # Default CLI flags excluding the given keys.
+        #
+        # @param [Array<String>] keys
+        #   Flag names to exclude.
+        #
+        # @return [Hash{String => Object}]
+        #
+        def except(*keys)
+          to_h.except(*keys)
+        end
+
+        #
+        # Locates the browser executable on the system.
+        #
+        # @return [String, nil]
+        #   Absolute path to the browser binary, or `nil` if not found.
+        #
+        def detect_path
+          Binary.find(PLATFORM_PATH[Utils::Platform.platform_name])
+        end
 
         #
         # Merges CLI flags required for Chrome to work with CDP.

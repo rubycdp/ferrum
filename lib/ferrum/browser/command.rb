@@ -5,7 +5,7 @@ module Ferrum
     #
     # Builds the OS-level command used to spawn the browser process: resolves
     # the executable path and merges the browser-specific required/default
-    # flags (see {Options::Base}) with any user-supplied ones into a single
+    # flags (see {Options::Chrome}) with any user-supplied ones into a single
     # argument list.
     #
     class Command

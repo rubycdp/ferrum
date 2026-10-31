@@ -37,6 +37,7 @@
 - `#evaluate_async`, `#evaluate_func` and `#evaluate_on`, use `#evaluate` and `Node#evaluate`, and
   `page.wait_for_navigation! { }` for `evaluate_on`'s `wait:` [#673]
 - `FERRUM_JS_API` [#673]
+- `Browser::Options::Base`, Chrome is the only browser, `Browser::Options::Chrome` has everything it had
 
 
 ## [0.20.1](https://github.com/rubycdp/ferrum/compare/v0.20.0...v0.20.1) (October 29, 2026) ##

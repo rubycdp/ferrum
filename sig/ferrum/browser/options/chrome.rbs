@@ -1,7 +1,9 @@
 module Ferrum
   class Browser
     class Options
-      class Chrome < Base
+      class Chrome
+        include Singleton
+
         DEFAULT_OPTIONS: ::Hash[::String, untyped]
 
         MAC_BIN_PATH: ::Array["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" | "/Applications/Chromium.app/Contents/MacOS/Chromium"]
@@ -11,6 +13,16 @@ module Ferrum
         WINDOWS_BIN_PATH: ::Array["C:/Program Files/Google/Chrome/Application/chrome.exe" | "C:/Program Files/Google/Chrome Dev/Application/chrome.exe"]
 
         PLATFORM_PATH: { mac: untyped, windows: untyped, linux: untyped }
+
+        def self.options: () -> Chrome
+
+        def self.version: () -> ::String?
+
+        def to_h: () -> ::Hash[::String, untyped]
+
+        def except: (*::String keys) -> ::Hash[::String, untyped]
+
+        def detect_path: () -> ::String?
 
         def merge_required: (untyped flags, untyped options, untyped user_data_dir) -> untyped
 
