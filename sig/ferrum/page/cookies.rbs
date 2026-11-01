@@ -1,0 +1,24 @@
+module Ferrum
+  class Page
+    class Cookies
+      include Ferrum::Cookies::Collection
+
+      @page: Page
+
+      def initialize: (Page page) -> void
+
+      def each: (?urls: ::Array[String]?) { (Ferrum::Cookies::Cookie) -> void } -> void
+              | (?urls: ::Array[String]?) -> Enumerator[Ferrum::Cookies::Cookie, void]
+
+      def set: ((Ferrum::Cookies::Cookie | Hash[Symbol | String, untyped]) options) -> bool
+
+      def remove: (name: String, ?domain: String?, ?url: String?, ?path: String?) -> true
+
+      def clear: () -> true
+
+      private
+
+      def default_domain: () -> String?
+    end
+  end
+end

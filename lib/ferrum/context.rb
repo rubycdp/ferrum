@@ -42,6 +42,13 @@ module Ferrum
       @default_target ||= create_target
     end
 
+    # The cookies of the context, which every page in it shares.
+    #
+    # @return [Cookies]
+    def cookies
+      @cookies ||= Cookies.new(@client, @id)
+    end
+
     # Connects to and returns the {#default_target}'s page.
     #
     # @return [Page]

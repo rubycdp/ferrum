@@ -1,0 +1,17 @@
+module Ferrum
+  class Cookies
+    module Collection : _Each[Cookies::Cookie]
+      include Enumerable[Cookies::Cookie]
+
+      %a{deprecated} def all: (**untyped options) -> ::Hash[String, Cookies::Cookie]
+
+      def []: (String name, ?domain: String?, ?path: String?) -> Cookies::Cookie?
+
+      private
+
+      def cookie_params: (Cookies::Cookie | Hash[Symbol | String, untyped] options) -> Hash[Symbol, untyped]
+
+      def base_domain: (Addressable::URI? base_url) -> String?
+    end
+  end
+end
