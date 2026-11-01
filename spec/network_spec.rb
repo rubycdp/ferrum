@@ -135,51 +135,63 @@ describe Ferrum::Network do
     end
   end
 
-  it "#total_connections" do
-    expect(network.total_connections).to eq(0)
+  describe "#total_connections" do
+    it "counts every connection of the page" do
+      expect(network.total_connections).to eq(0)
 
-    page.go_to("/with_ajax_connection_refused")
-    network.wait_for_idle
+      page.go_to("/with_ajax_connection_refused")
+      network.wait_for_idle
 
-    expect(network.total_connections).to eq(3)
+      expect(network.total_connections).to eq(3)
+    end
   end
 
-  it "#finished_connections" do
-    expect(network.finished_connections).to eq(0)
+  describe "#finished_connections" do
+    it "counts the finished connections" do
+      expect(network.finished_connections).to eq(0)
 
-    page.go_to("/with_ajax_connection_refused")
-    network.wait_for_idle
+      page.go_to("/with_ajax_connection_refused")
+      network.wait_for_idle
 
-    expect(network.finished_connections).to eq(3)
+      expect(network.finished_connections).to eq(3)
+    end
   end
 
-  it "#pending_connections" do
-    expect(network.pending_connections).to eq(0)
+  describe "#pending_connections" do
+    it "counts the pending connections" do
+      expect(network.pending_connections).to eq(0)
 
-    page.go_to("/with_slow_ajax_connection")
-    expect(network.pending_connections).to eq(1)
+      page.go_to("/with_slow_ajax_connection")
+      expect(network.pending_connections).to eq(1)
 
-    network.wait_for_idle
-    expect(network.pending_connections).to eq(0)
+      network.wait_for_idle
+      expect(network.pending_connections).to eq(0)
+    end
   end
 
-  it "#request" do
-    page.go_to("/with_js")
+  describe "#request" do
+    it "returns the main document request" do
+      page.go_to("/with_js")
 
-    expect(network.request.url).to eq(base_url("/with_js"))
+      expect(network.request.url).to eq(base_url("/with_js"))
+    end
   end
 
-  it "#response" do
-    page.go_to("/with_js")
+  describe "#response" do
+    it "returns the main document response" do
+      page.go_to("/with_js")
 
-    expect(network.response.url).to eq(base_url("/with_js"))
-    expect(network.response.status).to eq(200)
+      expect(network.response.url).to eq(base_url("/with_js"))
+      expect(network.response.status).to eq(200)
+    end
   end
 
-  it "#status" do
-    page.go_to("/arbitrary_path/404/missing")
+  describe "#status" do
+    it "returns the main document status" do
+      page.go_to("/arbitrary_path/404/missing")
 
-    expect(network.status).to eq(404)
+      expect(network.status).to eq(404)
+    end
   end
 
   describe "#clear" do
@@ -420,40 +432,36 @@ describe Ferrum::Network do
       expect(frame.body).to include("hello")
     end
 
-    context "with :resource_type argument" do
-      it "raises an error with wrong type" do
-        expect { network.intercept(resource_type: :BlaBla) }.to raise_error(ArgumentError)
-      end
-
-      it "intercepts only given type" do
-        network.intercept(resource_type: :Document)
-        page.on(:request) do |request|
-          request.respond(body: "<h1>hello</h1>")
-        end
-
-        page.go_to("/non_existing")
-
-        expect(network.status).to eq(200)
-        expect(page.body).to include("hello")
-      end
+    it "raises an error for an unknown :resource_type" do
+      expect { network.intercept(resource_type: :BlaBla) }.to raise_error(ArgumentError)
     end
 
-    context "with :request_stage argument" do
-      it "raises an error with wrong stage" do
-        expect { network.intercept(request_stage: :BlaBla) }.to raise_error(ArgumentError)
+    it "intercepts only the given :resource_type" do
+      network.intercept(resource_type: :Document)
+      page.on(:request) do |request|
+        request.respond(body: "<h1>hello</h1>")
       end
 
-      it "intercepts only given stage" do
-        network.intercept(request_stage: :Response)
-        page.on(:request) do |request|
-          request.respond(body: "<h1>hello</h1>")
-        end
+      page.go_to("/non_existing")
 
-        page.go_to("/index")
+      expect(network.status).to eq(200)
+      expect(page.body).to include("hello")
+    end
 
-        expect(network.status).to eq(200)
-        expect(page.body).to include("hello")
+    it "raises an error for an unknown :request_stage" do
+      expect { network.intercept(request_stage: :BlaBla) }.to raise_error(ArgumentError)
+    end
+
+    it "intercepts only the given :request_stage" do
+      network.intercept(request_stage: :Response)
+      page.on(:request) do |request|
+        request.respond(body: "<h1>hello</h1>")
       end
+
+      page.go_to("/index")
+
+      expect(network.status).to eq(200)
+      expect(page.body).to include("hello")
     end
 
     it "supports custom responses" do
@@ -466,50 +474,6 @@ describe Ferrum::Network do
 
       expect(network.status).to eq(200)
       expect(page.body).to include("custom content that is more than 45 characters")
-    end
-  end
-
-  describe "#on(:response)" do
-    it "yields the exchange once its response is fully loaded" do
-      exchanges = []
-      page.on(:response) { |exchange, _index, _total| exchanges << exchange }
-
-      page.go_to("/foo")
-
-      expect(exchanges.size).to eq(1)
-      expect(exchanges.first.response.loaded?).to eq(true)
-      expect(exchanges.first.response.body).to eq("Another World")
-    end
-
-    it "fires once per exchange that finishes loading" do
-      exchanges = []
-      page.on(:response) { |exchange, _index, _total| exchanges << exchange }
-
-      page.go_to("/with_js")
-
-      expect(exchanges.map(&:url)).to match_array(traffic.map(&:url))
-    end
-
-    it "does not fire for requests that fail to load" do
-      exchanges = []
-      page.on(:response) { |exchange, _index, _total| exchanges << exchange }
-
-      page.go_to("/with_ajax_connection_refused")
-      network.wait_for_idle
-
-      expect(traffic.size).to eq(3)
-      expect(exchanges.size).to eq(2)
-      expect(exchanges).not_to include(traffic.find(&:error))
-    end
-
-    it "does not require request interception to be set up" do
-      expect(page.subscribed?("Fetch.requestPaused")).to eq(false)
-
-      exchange = nil
-      page.on(:response) { |e, _index, _total| exchange = e }
-      page.go_to("/foo")
-
-      expect(exchange).to be
     end
   end
 
@@ -594,13 +558,15 @@ describe Ferrum::Network do
     end
   end
 
-  it "#emulate_network_conditions" do
-    page.network.emulate_network_conditions(latency: 500)
+  describe "#emulate_network_conditions" do
+    it "delays requests by the given latency" do
+      page.network.emulate_network_conditions(latency: 500)
 
-    start = Ferrum::Utils::ElapsedTime.monotonic_time
-    page.go_to("/with_js")
+      start = Ferrum::Utils::ElapsedTime.monotonic_time
+      page.go_to("/with_js")
 
-    expect(Ferrum::Utils::ElapsedTime.elapsed_time(start)).to be >= 0.5
+      expect(Ferrum::Utils::ElapsedTime.elapsed_time(start)).to be >= 0.5
+    end
   end
 
   describe "#emulate" do
@@ -728,14 +694,16 @@ describe Ferrum::Network do
     end
   end
 
-  it "#offline_mode" do
-    page.network.offline_mode
+  describe "#offline_mode" do
+    it "fails requests while offline" do
+      page.network.offline_mode
 
-    expect { page.go_to("/with_js") }.to raise_error(
-      Ferrum::StatusError,
-      %r{Request to http://.*/with_js failed \(net::ERR_INTERNET_DISCONNECTED\)}
-    )
+      expect { page.go_to("/with_js") }.to raise_error(
+        Ferrum::StatusError,
+        %r{Request to http://.*/with_js failed \(net::ERR_INTERNET_DISCONNECTED\)}
+      )
 
-    expect(page.at_css("body").text.downcase).to match("no internet")
+      expect(page.at_css("body").text.downcase).to match("no internet")
+    end
   end
 end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 describe Ferrum::RGBA do
-  describe "#new" do
+  describe ".new" do
     it "raises ArgumentError for Integer value of alpha" do
       expect do
         Ferrum::RGBA.new(0, 0, 0, 0)
@@ -40,7 +40,9 @@ describe Ferrum::RGBA do
   end
 
   describe "#to_h" do
-    it { expect(Ferrum::RGBA.new(0, 0, 0, 0.0).to_h).to eq({ r: 0, g: 0, b: 0, a: 0.0 }) }
-    it { expect(Ferrum::RGBA.new(255, 255, 255, 1.0).to_h).to eq({ r: 255, g: 255, b: 255, a: 1.0 }) }
+    it "returns the channels as a hash" do
+      expect(Ferrum::RGBA.new(0, 0, 0, 0.0).to_h).to eq({ r: 0, g: 0, b: 0, a: 0.0 })
+      expect(Ferrum::RGBA.new(255, 255, 255, 1.0).to_h).to eq({ r: 255, g: 255, b: 255, a: 1.0 })
+    end
   end
 end

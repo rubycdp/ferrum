@@ -158,10 +158,10 @@ describe Ferrum::Node do
       end
     end
 
-    context "can double click" do
+    context "with mode: :double" do
       before { page.go_to("/double_click_test") }
 
-      it "double clicks properly" do
+      it "double-clicks the node" do
         log = browser.at_css("#log")
 
         instructions = %w[one four one two three]
@@ -170,6 +170,82 @@ describe Ferrum::Node do
           expect(log.text).to eq(instruction)
         end
       end
+    end
+
+    it "raises NodeNotFoundError for a node from before a refresh" do
+      browser.go_to("/index")
+      shallow_node = browser.at_xpath(".//a")
+
+      browser.refresh
+      expect { shallow_node.click }.to raise_error(Ferrum::NodeNotFoundError)
+
+      node = browser.at_xpath(".//a")
+      expect { node.click }.not_to raise_error
+    end
+
+    it "finishes a form submission that opens an inline PDF" do
+      page.go_to("/inline_pdf")
+      page.at_css("button").click
+
+      expect(page.url).to eq(base_url("/inline.pdf"))
+      expect(page.network.response.content_type).to eq("application/pdf")
+    end
+
+    it "keeps waiting for a loading frame when another one is removed" do
+      page.go_to("/removed_iframe")
+      page.at_css("button").click
+
+      expect(page.evaluate("document.querySelector('iframe').contentWindow.location.pathname"))
+        .to eq("/show_cookies/set_cookie_slow")
+    end
+
+    it "waits for a navigation it starts after removing a loaded frame" do
+      page.go_to("/remove_iframe_and_navigate")
+      page.at_css("button").click
+
+      expect(page.evaluate("location.pathname")).to eq("/slow")
+    end
+
+    it "clicks a node in a frame with padding" do
+      page.go_to
+      page.execute <<-JS
+      document.body.innerHTML += "<iframe src='/click_test' name='padded_frame' style='padding:100px;'>"
+      JS
+      sleep 0.5
+      frame = page.at_xpath("//iframe[@name = 'padded_frame']").frame
+
+      log = frame.at_css("#log")
+      frame.at_css("#one").scroll_into_view.click
+      expect(log.text).to eq("one")
+    end
+
+    it "clicks a node in a frame nested in a frame" do
+      page.go_to
+
+      # The padding on the frame here is to differ the sizes of the two
+      # frames, ensuring that their offsets are being calculated separately.
+      # This avoids a false positive where the same frame"s offset is
+      # calculated twice, but the click still works because both frames had
+      # the same offset.
+      page.execute <<-JS
+      document.body.innerHTML += "<iframe src='/nested_frame_test' name='outer_frame' style='padding:200px'>"
+      JS
+
+      sleep 0.5
+
+      inner_frame = page.frame_by(name: "inner_frame")
+      log = inner_frame.at_css("#log")
+      inner_frame.at_css("#one").scroll_into_view.click
+      expect(log.text).to eq("one")
+    end
+
+    it "does not block when its handler attaches a lazy iframe" do
+      page.go_to("/lazy_iframe")
+
+      expect { page.at_css("#add_iframe").click }.not_to raise_error
+
+      states = page.frames.reject(&:main?).map(&:state)
+      expect(states).to eq(%i[stopped_loading stopped_loading stopped_loading])
     end
   end
 
@@ -270,23 +346,17 @@ describe Ferrum::Node do
       expect(frame.at_xpath("//*[@id='select']").selected.map(&:text)).to eq(["One"])
     end
 
-    context "when options exists but no selected option" do
-      it "returns first option text as default value" do
-        expect(browser.at_xpath("//*[@id='form_title']").selected.map(&:text)).to eq(["Mrs"])
-      end
+    it "returns the first option text when no option is selected" do
+      expect(browser.at_xpath("//*[@id='form_title']").selected.map(&:text)).to eq(["Mrs"])
     end
 
-    context "when no selected options" do
-      it "returns empty array" do
-        expect(browser.at_xpath("//*[@id='form_tendency']").selected.map(&:text)).to eq([])
-      end
+    it "returns an empty array without selected options" do
+      expect(browser.at_xpath("//*[@id='form_tendency']").selected.map(&:text)).to eq([])
     end
 
-    context "when selector is not <select>" do
-      it "raises JavaScriptError with proper message" do
-        expect { browser.at_xpath("//*[@id='customer_name']").selected.map(&:text) }
-          .to raise_exception(Ferrum::JavaScriptError, /Element is not a <select> element/)
-      end
+    it "raises JavaScriptError for an element that isn't a <select>" do
+      expect { browser.at_xpath("//*[@id='customer_name']").selected.map(&:text) }
+        .to raise_exception(Ferrum::JavaScriptError, /Element is not a <select> element/)
     end
   end
 
@@ -299,77 +369,63 @@ describe Ferrum::Node do
       expect(browser.at_xpath("//*[@id='form_title']").select("Miss").selected.map(&:text)).to eq(["Miss"])
     end
 
-    shared_examples "clears selected options with no exception" do |options|
-      it "clears selected options with no exception" do
-        expect(browser.at_xpath("//*[@id='form_title']").selected.map(&:text)).to eq(["Mrs"])
-        expect(browser.at_xpath("//*[@id='form_title']").select(options).selected.map(&:text)).to eq([])
-      end
+    def expect_select_to_clear(options)
+      expect(browser.at_xpath("//*[@id='form_title']").selected.map(&:text)).to eq(["Mrs"])
+      expect(browser.at_xpath("//*[@id='form_title']").select(options).selected.map(&:text)).to eq([])
     end
 
-    context "when option with provided text does not exist" do
-      include_examples "clears selected options with no exception", "Gotcha"
+    it "clears selected options for a text that doesn't exist" do
+      expect_select_to_clear("Gotcha")
     end
 
-    context "when provided empty array" do
-      include_examples "clears selected options with no exception", []
+    it "clears selected options for an empty array" do
+      expect_select_to_clear([])
     end
 
-    context "when provided empty string" do
-      include_examples "clears selected options with no exception", ""
+    it "clears selected options for an empty string" do
+      expect_select_to_clear("")
     end
 
-    context "when one of option with provided texts does not exist" do
-      it "picks only existed options with no exception" do
-        expect(browser.at_xpath("//*[@id='form_title']").selected.map(&:text)).to eq(["Mrs"])
-        expect(browser.at_xpath("//*[@id='form_title']").select(%w[Mrs SQL]).selected.map(&:text)).to eq(["Mrs"])
-      end
+    it "picks only the existing options when one of the texts doesn't exist" do
+      expect(browser.at_xpath("//*[@id='form_title']").selected.map(&:text)).to eq(["Mrs"])
+      expect(browser.at_xpath("//*[@id='form_title']").select(%w[Mrs SQL]).selected.map(&:text)).to eq(["Mrs"])
     end
 
-    context "when select has multiple property" do
-      it "picks options in select by match arguments as array" do
-        expect(browser.at_xpath("//*[@id='form_languages']").select(%w[SQL Ruby]).selected.map(&:text))
-          .to eq(%w[Ruby SQL])
-      end
-
-      it "picks options in select by match arguments as strings" do
-        expect(browser.at_xpath("//*[@id='form_languages']").select("SQL", "Ruby").selected.map(&:text))
-          .to eq(%w[Ruby SQL])
-      end
+    it "picks options of a multiple select by an array" do
+      expect(browser.at_xpath("//*[@id='form_languages']").select(%w[SQL Ruby]).selected.map(&:text))
+        .to eq(%w[Ruby SQL])
     end
 
-    context "when selector is not <select>" do
-      it "raises JavaScriptError with proper message" do
-        expect { browser.at_xpath("//*[@id='customer_name']").select("Ruby") }
-          .to raise_exception(Ferrum::JavaScriptError, /Element is not a <select> element/)
-      end
+    it "picks options of a multiple select by strings" do
+      expect(browser.at_xpath("//*[@id='form_languages']").select("SQL", "Ruby").selected.map(&:text))
+        .to eq(%w[Ruby SQL])
     end
 
-    context "when provided texts of disabled option" do
-      it "picks disabled option with no exception" do
-        expect(browser.at_xpath("//*[@id='form_title']").select(["Other"]).selected.map(&:text)).to eq(["Other"])
-      end
+    it "raises JavaScriptError for an element that isn't a <select>" do
+      expect { browser.at_xpath("//*[@id='customer_name']").select("Ruby") }
+        .to raise_exception(Ferrum::JavaScriptError, /Element is not a <select> element/)
     end
 
-    context "when option with text and value" do
-      it "picks option in select by matched text" do
-        expect(browser.at_xpath("//select[@id='form_locale']").select("Swedish", by: :text).selected.map(&:value))
-          .to eq(["sv"])
-      end
+    it "picks a disabled option" do
+      expect(browser.at_xpath("//*[@id='form_title']").select(["Other"]).selected.map(&:text)).to eq(["Other"])
     end
 
-    context "when option with empty text/value" do
-      it "picks option in select by match string argument" do
-        expect(browser.at_xpath("//select[@id='empty_option']").select("AU").selected.map(&:value)).to eq(["AU"])
-      end
+    it "picks an option by its text with by: :text" do
+      expect(browser.at_xpath("//select[@id='form_locale']").select("Swedish", by: :text).selected.map(&:value))
+        .to eq(["sv"])
+    end
 
-      it "picks empty option by match empty value argument" do
-        expect(browser.at_xpath("//select[@id='empty_option']").select("").selected.map(&:value)).to eq([""])
-      end
+    it "picks an option of a select with an empty option" do
+      expect(browser.at_xpath("//select[@id='empty_option']").select("AU").selected.map(&:value)).to eq(["AU"])
+    end
 
-      it "picks empty option by match empty text argument" do
-        expect(browser.at_xpath("//select[@id='empty_option']").select("", by: :text).selected.map(&:text))
-          .to eq([""])
-      end
+    it "picks the empty option by an empty value" do
+      expect(browser.at_xpath("//select[@id='empty_option']").select("").selected.map(&:value)).to eq([""])
+    end
+
+    it "picks the empty option by an empty text" do
+      expect(browser.at_xpath("//select[@id='empty_option']").select("", by: :text).selected.map(&:text))
+        .to eq([""])
     end
 
     it "picks option within frame" do
@@ -436,12 +492,12 @@ describe Ferrum::Node do
       browser.go_to("/form")
     end
 
-    context "with hidden input" do
-      it { expect(browser.at_css("#hidden_input").focusable?).to eq(false) }
+    it "returns false for a hidden input" do
+      expect(browser.at_css("#hidden_input").focusable?).to eq(false)
     end
 
-    context "with regular input" do
-      it { expect(browser.at_css("#form_name").focusable?).to eq(true) }
+    it "returns true for a regular input" do
+      expect(browser.at_css("#form_name").focusable?).to eq(true)
     end
 
     it "leaves the node focused" do
@@ -476,6 +532,17 @@ describe Ferrum::Node do
 
     it "returns nil for an ignored element" do
       expect(browser.at_css("#hidden").axnode).to be_nil
+    end
+
+    it "returns the AXNode of a node in an iframe" do
+      browser.go_to("/accessibility_iframe")
+      frame_node = browser.page.at_css("iframe").frame.at_css("#child_btn")
+
+      ax = frame_node.axnode
+
+      expect(ax).to be_a(Ferrum::Accessibility::AXNode)
+      expect(ax.role).to eq("button")
+      expect(ax.name).to eq("Frame button")
     end
   end
 
@@ -512,28 +579,6 @@ describe Ferrum::Node do
       node.remove
 
       expect(node.exists?).to be_falsey
-    end
-  end
-
-  context "with whitespace" do
-    before do
-      browser.go_to("/filter_text_test")
-    end
-
-    it "gets text" do
-      expect(browser.at_css("#foo").text).to eq "foo"
-    end
-
-    it "gets inner text with stripped whitespace" do
-      expect(browser.at_css("#bar").inner_text).to eq "bar"
-    end
-
-    it "keeps non-breaking spaces in inner text" do
-      expect(browser.at_css("#baz").inner_text).to eq "\u00a0baz \u00a0 \u00a0"
-    end
-
-    it "keeps all whitespace in text" do
-      expect(browser.at_css("#qux").text).to eq " \u00a0 \u3000 qux  \u3000 \u00a0 \u3000  "
     end
   end
 
@@ -611,6 +656,27 @@ describe Ferrum::Node do
         expect(browser.at_css("tspan").text).to eq("svg foo")
       end
     end
+
+    it "returns the text with surrounding whitespace stripped" do
+      browser.go_to("/filter_text_test")
+
+      expect(browser.at_css("#foo").text).to eq "foo"
+    end
+
+    it "keeps all whitespace in the text" do
+      browser.go_to("/filter_text_test")
+
+      expect(browser.at_css("#qux").text).to eq " \u00a0 \u3000 qux  \u3000 \u00a0 \u3000  "
+    end
+
+    it "raises NodeNotFoundError for a node from a previous page" do
+      browser.go_to("/index")
+      node = browser.at_xpath(".//a")
+
+      browser.execute "window.location = 'about:blank'"
+
+      expect { node.text }.to raise_error(Ferrum::NodeNotFoundError)
+    end
   end
 
   describe "#inner_text" do
@@ -619,6 +685,18 @@ describe Ferrum::Node do
       el = browser.at_css("#break")
 
       expect(el.inner_text).to eq("Foo\nBar")
+    end
+
+    it "returns the inner text with stripped whitespace" do
+      browser.go_to("/filter_text_test")
+
+      expect(browser.at_css("#bar").inner_text).to eq "bar"
+    end
+
+    it "keeps non-breaking spaces in the inner text" do
+      browser.go_to("/filter_text_test")
+
+      expect(browser.at_css("#baz").inner_text).to eq "\u00a0baz \u00a0 \u00a0"
     end
   end
 
@@ -966,25 +1044,36 @@ describe Ferrum::Node do
     end
   end
 
-  context "with disappearing node" do
-    it "raises an error if the element was on a previous page" do
-      browser.go_to("/index")
-      node = browser.at_xpath(".//a")
+  describe "#evaluate" do
+    before { browser.go_to("/index") }
 
-      browser.execute "window.location = 'about:blank'"
-
-      expect { node.text }.to raise_error(Ferrum::NodeNotFoundError)
+    it "binds this to the node" do
+      expect(browser.at_xpath(".//a").evaluate("this.getAttribute('href')")).to eq("js_redirect")
     end
 
-    it "works for a new node after refresh" do
-      browser.go_to("/index")
-      shallow_node = browser.at_xpath(".//a")
+    it "accepts named arguments" do
+      expect(browser.at_xpath(".//a").evaluate("this.getAttribute(name)", name: "href")).to eq("js_redirect")
+    end
 
-      browser.refresh
-      expect { shallow_node.click }.to raise_error(Ferrum::NodeNotFoundError)
+    it "resolves nodes returned by a function declaration" do
+      expect(browser.at_xpath(".//a").evaluate("function() { return this.parentNode }")).to be_a(Ferrum::Node)
+    end
+  end
 
+  describe "#execute" do
+    before { browser.go_to("/index") }
+
+    it "calls a named function" do
+      browser.execute("function setup() { window.ran = true }")
+
+      expect(browser.evaluate("window.ran")).to be(true)
+    end
+
+    it "runs statements" do
       node = browser.at_xpath(".//a")
-      expect { node.click }.not_to raise_error
+      node.execute("this.dataset.touched = value", value: "yes")
+
+      expect(node.evaluate("this.dataset.touched")).to eq("yes")
     end
   end
 end

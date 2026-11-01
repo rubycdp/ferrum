@@ -22,31 +22,31 @@ describe Ferrum::Browser::VersionInfo do
   subject { described_class.new(properties) }
 
   describe "#protocol_version" do
-    it "must return the protocolVersion property" do
+    it "returns the protocolVersion property" do
       expect(subject.protocol_version).to eq(properties["protocolVersion"])
     end
   end
 
   describe "#product" do
-    it "must return the product property" do
+    it "returns the product property" do
       expect(subject.product).to eq(properties["product"])
     end
   end
 
   describe "#revision" do
-    it "must return the revision property" do
+    it "returns the revision property" do
       expect(subject.revision).to eq(properties["revision"])
     end
   end
 
   describe "#user_agent" do
-    it "must return the userAgent property" do
+    it "returns the userAgent property" do
       expect(subject.user_agent).to eq(properties["userAgent"])
     end
   end
 
   describe "#js_version" do
-    it "must return the jsVersion property" do
+    it "returns the jsVersion property" do
       expect(subject.js_version).to eq(properties["jsVersion"])
     end
   end
