@@ -18,6 +18,7 @@ require "ferrum/page/screenshot"
 require "ferrum/page/animation"
 require "ferrum/page/tracing"
 require "ferrum/page/stream"
+require "ferrum/page/cookies"
 
 module Ferrum
   #
@@ -84,9 +85,9 @@ module Ferrum
     # @return [Headers]
     attr_reader :headers
 
-    # Cookie store.
+    # The cookies the page sees, `context.cookies` has all of the context's.
     #
-    # @return [Cookies]
+    # @return [Page::Cookies]
     attr_reader :cookies
 
     # Downloads object.

@@ -22,7 +22,7 @@ module Ferrum
     attr_reader console: Console
     attr_reader accessibility: Accessibility
     attr_reader headers: Headers
-    attr_reader cookies: Cookies
+    attr_reader cookies: Page::Cookies
     attr_reader downloads: Downloads
     attr_reader document_version: ::Integer
     attr_reader client: (Client | SessionClient)
@@ -37,7 +37,7 @@ module Ferrum
     @mouse: Mouse
     @keyboard: Keyboard
     @headers: Headers
-    @cookies: Cookies
+    @cookies: Page::Cookies
     @network: Network
     @console: Console
     @tracing: Page::Tracing

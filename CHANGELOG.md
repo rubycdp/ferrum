@@ -1,6 +1,8 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.20.1...main) ##
 
 ### Added
+- `cookies[name, domain:, path:]` picks one of the cookies sharing a name
+- `context.cookies` with every cookie in the context whatever its domain, `browser.cookies` is the default context's
 - `network.emulate(user_agent:, accept_language:, platform:, metadata:)` overrides what the page reports in the request
   headers and in `navigator`, `platform` had no way to be set before, and `metadata` keeps the client hints Chrome
   otherwise stops sending once the user agent is overridden
@@ -8,6 +10,9 @@
   pending, when the page doesn't load in time
 
 ### Changed
+- `page.cookies` is the cookies the page sees, the ones sent to its URL and its frames' URLs, or `each(urls:)`. It
+  returned every cookie in the context, use `browser.cookies` or `browser.contexts[page.context_id].cookies` for that.
+  `set` and `remove` default to the page's host, `clear` keeps other domains, `store`/`load` are on the context only
 - `NoSuchPageError` is a `NoSuchTargetError` now, so rescuing `NoSuchTargetError` covers a target Chrome no longer
   knows, like a closed page, as well as one Ferrum doesn't track
 - Every script runs the new way: keyword arguments are named parameters, promises and thenables are awaited, all
@@ -15,6 +20,8 @@
   [upgrading](docs/13-javascript.md#upgrading-to-021) [#673]
 
 ### Deprecated
+- `cookies.all`, will be removed in 0.22. Keyed by name, it kept one of the cookies sharing a name, use `to_a`, or
+  `map(&:name)` for the names
 - `current_url` and `current_title` on pages and frames, will be removed in 0.22. Use `url` and `title`, or
   `frame.page.url` for the top window from a frame, `frame.url` is the frame's own
 - `:js_errors`, will be removed in 0.22. Uncaught exceptions are in `page.console` with `source: :exception`, use it or

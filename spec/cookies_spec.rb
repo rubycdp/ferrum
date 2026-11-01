@@ -55,11 +55,18 @@ describe Ferrum::Cookies do
   end
 
   describe "#all" do
-    it "returns cookie object" do
+    around do |example|
+      Ferrum::Utils::Deprecate.reset!
+      example.run
+      Ferrum::Utils::Deprecate.reset!
+    end
+
+    it "returns cookies by name and warns that it is deprecated" do
       browser.go_to("/set_cookie")
 
-      cookies = browser.cookies.all
-
+      cookies = nil
+      expect { cookies = browser.cookies.all }
+        .to output(/cookies\.all will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
       expect(cookies).to eq({ "stealth" => Ferrum::Cookies::Cookie.new("name" => "stealth",
                                                                        "value" => "test_cookie",
                                                                        "domain" => "127.0.0.1",
@@ -72,6 +79,24 @@ describe Ferrum::Cookies do
                                                                        "priority" => "Medium",
                                                                        "sourceScheme" => "NonSecure",
                                                                        "sourcePort" => server.port) })
+    end
+  end
+
+  describe "context scope" do
+    it "returns the cookies of every domain in the context" do
+      browser.cookies.set(name: "stealth", value: "local", domain: "127.0.0.1")
+      browser.cookies.set(name: "other", value: "elsewhere", domain: "localhost")
+
+      expect(browser.cookies.map(&:name)).to contain_exactly("stealth", "other")
+    end
+
+    it "keeps the cookies of other contexts apart" do
+      browser.cookies.set(name: "stealth", value: "local")
+      context = browser.contexts.create
+
+      expect(context.cookies.to_a).to eq([])
+    ensure
+      context&.dispose
     end
   end
 
@@ -89,6 +114,23 @@ describe Ferrum::Cookies do
       expect(cookie.httponly?).to be false
       expect(cookie.session?).to be true
       expect(cookie.expires).to be_nil
+    end
+
+    it "narrows the cookies with the same name down by domain" do
+      browser.cookies.set(name: "stealth", value: "local", domain: "127.0.0.1")
+      browser.cookies.set(name: "stealth", value: "elsewhere", domain: "localhost")
+
+      expect(browser.cookies["stealth", domain: "localhost"].value).to eq("elsewhere")
+      expect(browser.cookies["stealth", domain: "127.0.0.1"].value).to eq("local")
+      expect(browser.cookies["stealth", domain: "example.com"]).to be_nil
+    end
+
+    it "narrows the cookies with the same name down by path" do
+      browser.cookies.set(name: "stealth", value: "root")
+      browser.cookies.set(name: "stealth", value: "custom", path: "/custom")
+
+      expect(browser.cookies["stealth", path: "/custom"].value).to eq("custom")
+      expect(browser.cookies["stealth", path: "/"].value).to eq("root")
     end
   end
 
@@ -244,6 +286,15 @@ describe Ferrum::Cookies do
       browser.go_to("/get_cookie")
       expect(browser.body).to_not include("test_cookie")
     end
+
+    it "removes the cookie sent to the given URL" do
+      browser.cookies.set(name: "stealth", value: "local", domain: "127.0.0.1")
+      browser.cookies.set(name: "stealth", value: "elsewhere", domain: "localhost")
+
+      browser.cookies.remove(name: "stealth", url: base_url("/get_cookie"))
+
+      expect(browser.cookies.map(&:domain)).to eq(["localhost"])
+    end
   end
 
   describe "#clear" do
@@ -262,9 +313,9 @@ describe Ferrum::Cookies do
 
   describe "#store" do
     it "stores cookies" do
-      page.go_to("/set_cookie")
+      browser.go_to("/set_cookie")
 
-      page.cookies.store("test.yml")
+      browser.cookies.store("test.yml")
 
       cookies = YAML.load_file("test.yml")
       expect(cookies.size).to eq(1)
@@ -280,10 +331,10 @@ describe Ferrum::Cookies do
     it "stores cookies" do
       cookie = { "name" => "stealth", "value" => "hello world", "domain" => "127.0.0.1", "path" => "/" }
       File.write("test.yml", [cookie].to_yaml)
-      page.cookies.load("test.yml")
+      browser.cookies.load("test.yml")
 
-      page.go_to("/get_cookie")
-      expect(page.body).to include("hello world")
+      browser.go_to("/get_cookie")
+      expect(browser.body).to include("hello world")
     ensure
       File.delete("test.yml")
     end
