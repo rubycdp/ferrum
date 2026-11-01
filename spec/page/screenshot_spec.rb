@@ -6,112 +6,6 @@ require "chunky_png"
 require "ferrum/rgba"
 
 describe Ferrum::Page::Screenshot do
-  shared_examples "screenshot screen" do
-    it "supports screenshotting the whole of a page that goes outside the viewport" do
-      browser.go_to("/long_page")
-
-      create_screenshot(path: file)
-
-      File.open(file, "rb") do |f|
-        expect(ImageSize.new(f.read).size).to eq(browser.viewport_size.map { |s| s * device_pixel_ratio })
-      end
-
-      create_screenshot(path: file, full: true)
-
-      File.open(file, "rb") do |f|
-        size = browser.evaluate("[document.documentElement.clientWidth, document.documentElement.clientHeight]")
-        expect(ImageSize.new(f.read).size).to eq(size.map { |s| s * device_pixel_ratio })
-      end
-    end
-
-    it "supports screenshotting the entire window when documentElement has no height" do
-      browser.go_to("/fixed_positioning")
-
-      create_screenshot(path: file, full: true)
-
-      File.open(file, "rb") do |f|
-        expect(ImageSize.new(f.read).size).to eq(browser.viewport_size.map { |s| s * device_pixel_ratio })
-      end
-    end
-
-    it "supports screenshotting just the selected element" do
-      browser.go_to("/long_page")
-
-      create_screenshot(path: file, selector: "#penultimate")
-
-      File.open(file, "rb") do |f|
-        size = browser.evaluate <<-JS
-          function() {
-            var ele  = document.getElementById("penultimate");
-            var rect = ele.getBoundingClientRect();
-            return [rect.width, rect.height];
-          }();
-        JS
-        expect(ImageSize.new(f.read).size).to eq(size.map { |s| s * device_pixel_ratio })
-      end
-    end
-
-    it "ignores :selector and :area in #save_screenshot if full: true" do
-      browser.go_to("/long_page")
-      expect(browser.page).to receive(:warn).with(/Ignoring :selector or :area/)
-
-      create_screenshot(path: file, full: true, selector: "#penultimate")
-
-      File.open(file, "rb") do |f|
-        size = browser.evaluate("[document.documentElement.clientWidth, document.documentElement.clientHeight]")
-        expect(ImageSize.new(f.read).size).to eq(size.map { |s| s * device_pixel_ratio })
-      end
-    end
-
-    it "ignores :area in #save_screenshot if selector is set" do
-      browser.go_to("/long_page")
-      expect(browser.page).to receive(:warn).with(/Ignoring :area/)
-
-      create_screenshot(path: file, selector: "#penultimate", area: { x: 0, y: 0, width: 200, height: 100 })
-
-      File.open(file, "rb") do |f|
-        size = browser.evaluate <<-JS
-          function() {
-            var ele  = document.getElementById("penultimate");
-            var rect = ele.getBoundingClientRect();
-            return [rect.width, rect.height];
-          }();
-        JS
-        expect(ImageSize.new(f.read).size).to eq(size.map { |s| s * device_pixel_ratio })
-      end
-    end
-
-    it "resets element positions after" do
-      browser.go_to("/long_page")
-      el = browser.at_css("#middleish")
-      # make the page scroll an element into view
-      el.click
-      position_script = "document.querySelector('#middleish').getBoundingClientRect()"
-      offset = browser.evaluate(position_script)
-      browser.screenshot(path: file)
-      expect(browser.evaluate(position_script)).to eq offset
-    end
-  end
-
-  shared_examples "when scale is set" do
-    it "changes image dimensions" do
-      browser.go_to("/zoom_test")
-
-      black_pixels_count = lambda { |file|
-        img = ChunkyPNG::Image.from_file(file)
-        img.pixels.inject(0) { |i, p| p > 255 ? i + 1 : i }
-      }
-
-      create_screenshot(path: file)
-      before = black_pixels_count[file]
-
-      create_screenshot(path: file, scale: scale)
-      after = black_pixels_count[file]
-
-      expect((after.to_f / before).round(2)).to eq(scale**2)
-    end
-  end
-
   describe "#screenshot" do
     let(:format) { :png }
     let(:file) { "#{PROJECT_ROOT}/spec/tmp/screenshot.#{format}" }
@@ -123,12 +17,94 @@ describe Ferrum::Page::Screenshot do
       expect(browser.screenshot(path: file)).to eq(File.size(file))
     end
 
-    def create_screenshot(**options)
-      browser.screenshot(**options)
+    after do
+      FileUtils.rm_f(["#{PROJECT_ROOT}/spec/tmp/screenshot.png", "#{PROJECT_ROOT}/spec/tmp/screenshot.jpeg"])
     end
 
-    after do
-      FileUtils.rm_f("#{PROJECT_ROOT}/spec/tmp/screenshot.png")
+    def create_screenshot(encoding: :binary, format: :png, **options)
+      path = "#{PROJECT_ROOT}/spec/tmp/screenshot.#{format}"
+      if encoding == :base64
+        File.binwrite(path, Base64.decode64(browser.screenshot(format: format, encoding: :base64, **options)))
+      else
+        browser.screenshot(path: path, **options)
+      end
+      path
+    end
+
+    def image_size(path)
+      File.open(path, "rb") { |f| ImageSize.new(f.read).size }
+    end
+
+    def element_size(selector)
+      browser.evaluate(<<~JS, selector: selector)
+        (() => {
+          const rect = document.querySelector(selector).getBoundingClientRect();
+          return [rect.width, rect.height];
+        })()
+      JS
+    end
+
+    def document_size
+      browser.evaluate("[document.documentElement.clientWidth, document.documentElement.clientHeight]")
+    end
+
+    def scaled(size)
+      size.map { |s| s * device_pixel_ratio }
+    end
+
+    def expect_page_outside_viewport_screenshot(**variant)
+      browser.go_to("/long_page")
+
+      expect(image_size(create_screenshot(**variant))).to eq(scaled(browser.viewport_size))
+
+      path = create_screenshot(**variant, full: true)
+      expect(image_size(path)).to eq(scaled(document_size))
+    end
+
+    def expect_window_without_document_height_screenshot(**variant)
+      browser.go_to("/fixed_positioning")
+
+      path = create_screenshot(**variant, full: true)
+
+      expect(image_size(path)).to eq(scaled(browser.viewport_size))
+    end
+
+    def expect_selected_element_screenshot(**variant)
+      browser.go_to("/long_page")
+
+      path = create_screenshot(**variant, selector: "#penultimate")
+
+      expect(image_size(path)).to eq(scaled(element_size("#penultimate")))
+    end
+
+    def expect_full_screenshot_ignoring_selector(**variant)
+      browser.go_to("/long_page")
+      expect(browser.page).to receive(:warn).with(/Ignoring :selector or :area/)
+
+      path = create_screenshot(**variant, full: true, selector: "#penultimate")
+
+      expect(image_size(path)).to eq(scaled(document_size))
+    end
+
+    def expect_selector_screenshot_ignoring_area(**variant)
+      browser.go_to("/long_page")
+      expect(browser.page).to receive(:warn).with(/Ignoring :area/)
+
+      path = create_screenshot(**variant, selector: "#penultimate", area: { x: 0, y: 0, width: 200, height: 100 })
+
+      expect(image_size(path)).to eq(scaled(element_size("#penultimate")))
+    end
+
+    def expect_scaled_screenshot(scale)
+      browser.go_to("/zoom_test")
+      black_pixels_count = lambda { |path|
+        ChunkyPNG::Image.from_file(path).pixels.inject(0) { |i, p| p > 255 ? i + 1 : i }
+      }
+
+      before = black_pixels_count[create_screenshot]
+      after = black_pixels_count[create_screenshot(scale: scale)]
+
+      expect((after.to_f / before).round(2)).to eq(scale**2)
     end
 
     it "supports screenshotting the page" do
@@ -189,182 +165,220 @@ describe Ferrum::Page::Screenshot do
       end
     end
 
-    include_examples "screenshot screen"
-
-    context "with fullscreen" do
-      it "supports screenshotting of fullscreen" do
-        browser.go_to("/custom_html_size")
-        expect(browser.viewport_size).to eq([1024, 681])
-
-        browser.screenshot(path: file, full: true)
-
-        File.open(file, "rb") do |f|
-          expect(ImageSize.new(f.read).size).to eq([1280, 1024].map { |s| s * device_pixel_ratio })
-        end
-        expect(browser.viewport_size).to eq([1024, 681])
-      end
-
-      it "keeps current viewport" do
-        browser.go_to
-        browser.resize(width: 800, height: 200)
-
-        browser.screenshot(path: file, full: true)
-
-        expect(File.exist?(file)).to be(true)
-        expect(browser.viewport_size).to eq([800, 200])
-      end
-
-      it "keeps previous viewport when exception is raised" do
-        browser.go_to("/custom_html_size")
-        browser.resize(width: 100, height: 100)
-
-        allow(browser.page).to receive(:command).and_call_original
-        expect(browser.page).to receive(:command)
-          .with("Page.captureScreenshot",
-                timeout: Ferrum::Page::Screenshot::DEFAULT_RENDER_TIMEOUT,
-                format: "png", clip: { x: 0, y: 0, width: 1280, height: 1024, scale: 1.0 },
-                captureBeyondViewport: true)
-          .and_raise(StandardError)
-        expect { browser.screenshot(path: file, full: true) }
-          .to raise_exception(StandardError)
-
-        # Fix Ruby 3 `and_call_original` bug
-        RSpec::Mocks.space.proxy_for(browser.page).reset
-
-        expect(File.exist?(file)).not_to be
-        expect(browser.viewport_size).to eq([100, 100])
-      end
-
-      it "does not mutate window state (no native macOS fullscreen transition)" do
-        browser.go_to("/long_page")
-
-        client = browser.page.client
-        commands = []
-        allow(client).to receive(:command).and_wrap_original do |m, name, **opts|
-          commands << [name, opts]
-          m.call(name, **opts)
-        end
-
-        browser.screenshot(path: file, full: true)
-
-        # Fix Ruby 3 `and_call_original` bug
-        RSpec::Mocks.space.proxy_for(client).reset
-
-        bounds_calls = commands.select { |(name, _)| name == "Browser.setWindowBounds" }
-        expect(bounds_calls).to be_empty
-      end
-
-      it "forwards captureBeyondViewport: true to Page.captureScreenshot" do
-        browser.go_to("/long_page")
-
-        client = browser.page.client
-        capture_opts = nil
-        allow(client).to receive(:command).and_wrap_original do |m, name, **opts|
-          capture_opts = opts if name == "Page.captureScreenshot"
-          m.call(name, **opts)
-        end
-
-        browser.screenshot(path: file, full: true)
-
-        # Fix Ruby 3 `and_call_original` bug
-        RSpec::Mocks.space.proxy_for(client).reset
-
-        expect(capture_opts).to include(captureBeyondViewport: true)
-      end
+    it "supports screenshotting the whole of a page that goes outside the viewport" do
+      expect_page_outside_viewport_screenshot
     end
 
-    context "with area screenshot" do
-      it "supports screenshotting of an area" do
-        browser.go_to("/custom_html_size")
-        expect(browser.viewport_size).to eq([1024, 681])
-
-        browser.screenshot(path: file, area: { x: 0, y: 0, width: 300, height: 200 })
-
-        File.open(file, "rb") do |f|
-          expect(ImageSize.new(f.read).size).to eq([300, 200].map { |s| s * device_pixel_ratio })
-        end
-        expect(browser.viewport_size).to eq([1024, 681])
-      end
-
-      it "keeps current viewport" do
-        browser.go_to
-        browser.set_viewport(width: 800, height: 200)
-
-        browser.screenshot(path: file, area: { x: 0, y: 0, width: 300, height: 200 })
-
-        expect(File.exist?(file)).to be(true)
-        expect(browser.viewport_size).to eq([800, 200])
-      end
+    it "supports screenshotting the entire window when documentElement has no height" do
+      expect_window_without_document_height_screenshot
     end
 
-    context "with :background_color option" do
-      it "supports screenshotting page with the specific background color" do
-        file = "#{PROJECT_ROOT}/spec/tmp/screenshot.jpeg"
-        browser.go_to
-        browser.screenshot(path: file)
-        content = File.read(file)
-        browser.screenshot(path: file, background_color: Ferrum::RGBA.new(0, 0, 0, 0.0))
-        content_with_specific_bc = File.read(file)
-        expect(content).not_to eq(content_with_specific_bc)
-      ensure
-        FileUtils.rm_f([file])
-      end
-
-      it "raises ArgumentError with proper message" do
-        browser.go_to
-        expect do
-          browser.screenshot(path: file, background_color: "#FFF")
-        end.to raise_exception(ArgumentError, "Accept Ferrum::RGBA class only")
-      end
+    it "supports screenshotting just the selected element" do
+      expect_selected_element_screenshot
     end
 
-    context "zoom in" do
-      let(:scale) { 2 }
-      include_examples "when scale is set"
+    it "ignores :selector and :area in #save_screenshot if full: true" do
+      expect_full_screenshot_ignoring_selector
     end
 
-    context "zoom out" do
-      let(:scale) { 0.5 }
-      include_examples "when scale is set"
+    it "ignores :area in #save_screenshot if selector is set" do
+      expect_selector_screenshot_ignoring_area
     end
 
-    context "when encoding is base64" do
-      let(:file) { "#{PROJECT_ROOT}/spec/tmp/screenshot.#{format}" }
+    it "resets element positions after" do
+      browser.go_to("/long_page")
+      el = browser.at_css("#middleish")
+      # make the page scroll an element into view
+      el.click
+      position_script = "document.querySelector('#middleish').getBoundingClientRect()"
+      offset = browser.evaluate(position_script)
+      browser.screenshot(path: file)
+      expect(browser.evaluate(position_script)).to eq offset
+    end
 
-      def create_screenshot(path:, **options)
-        image = browser.screenshot(format: format, encoding: :base64, **options)
-        File.binwrite(path, Base64.decode64(image))
+    it "supports screenshotting the whole of a page that goes outside the viewport as base64 png" do
+      expect_page_outside_viewport_screenshot(encoding: :base64)
+    end
+
+    it "supports screenshotting the entire window when documentElement has no height as base64 png" do
+      expect_window_without_document_height_screenshot(encoding: :base64)
+    end
+
+    it "supports screenshotting just the selected element as base64 png" do
+      expect_selected_element_screenshot(encoding: :base64)
+    end
+
+    it "ignores :selector and :area in #save_screenshot if full: true as base64 png" do
+      expect_full_screenshot_ignoring_selector(encoding: :base64)
+    end
+
+    it "ignores :area in #save_screenshot if selector is set as base64 png" do
+      expect_selector_screenshot_ignoring_area(encoding: :base64)
+    end
+
+    it "supports screenshotting the whole of a page that goes outside the viewport as base64 jpeg" do
+      expect_page_outside_viewport_screenshot(encoding: :base64, format: :jpeg)
+    end
+
+    it "supports screenshotting the entire window when documentElement has no height as base64 jpeg" do
+      expect_window_without_document_height_screenshot(encoding: :base64, format: :jpeg)
+    end
+
+    it "supports screenshotting just the selected element as base64 jpeg" do
+      expect_selected_element_screenshot(encoding: :base64, format: :jpeg)
+    end
+
+    it "ignores :selector and :area in #save_screenshot if full: true as base64 jpeg" do
+      expect_full_screenshot_ignoring_selector(encoding: :base64, format: :jpeg)
+    end
+
+    it "ignores :area in #save_screenshot if selector is set as base64 jpeg" do
+      expect_selector_screenshot_ignoring_area(encoding: :base64, format: :jpeg)
+    end
+
+    it "changes image dimensions with :scale above 1" do
+      expect_scaled_screenshot(2)
+    end
+
+    it "changes image dimensions with :scale below 1" do
+      expect_scaled_screenshot(0.5)
+    end
+
+    it "supports screenshotting with full: true" do
+      browser.go_to("/custom_html_size")
+      expect(browser.viewport_size).to eq([1024, 681])
+
+      browser.screenshot(path: file, full: true)
+
+      File.open(file, "rb") do |f|
+        expect(ImageSize.new(f.read).size).to eq([1280, 1024].map { |s| s * device_pixel_ratio })
+      end
+      expect(browser.viewport_size).to eq([1024, 681])
+    end
+
+    it "keeps the current viewport with full: true" do
+      browser.go_to
+      browser.resize(width: 800, height: 200)
+
+      browser.screenshot(path: file, full: true)
+
+      expect(File.exist?(file)).to be(true)
+      expect(browser.viewport_size).to eq([800, 200])
+    end
+
+    it "keeps the previous viewport with full: true when an exception is raised" do
+      browser.go_to("/custom_html_size")
+      browser.resize(width: 100, height: 100)
+
+      allow(browser.page).to receive(:command).and_call_original
+      expect(browser.page).to receive(:command)
+        .with("Page.captureScreenshot",
+              timeout: Ferrum::Page::Screenshot::DEFAULT_RENDER_TIMEOUT,
+              format: "png", clip: { x: 0, y: 0, width: 1280, height: 1024, scale: 1.0 },
+              captureBeyondViewport: true)
+        .and_raise(StandardError)
+      expect { browser.screenshot(path: file, full: true) }
+        .to raise_exception(StandardError)
+
+      # Fix Ruby 3 `and_call_original` bug
+      RSpec::Mocks.space.proxy_for(browser.page).reset
+
+      expect(File.exist?(file)).not_to be
+      expect(browser.viewport_size).to eq([100, 100])
+    end
+
+    it "does not mutate window state with full: true (no native macOS fullscreen transition)" do
+      browser.go_to("/long_page")
+
+      client = browser.page.client
+      commands = []
+      allow(client).to receive(:command).and_wrap_original do |m, name, **opts|
+        commands << [name, opts]
+        m.call(name, **opts)
       end
 
-      it "defaults to base64 when path isn't set" do
-        browser.go_to
+      browser.screenshot(path: file, full: true)
 
-        screenshot = browser.screenshot(format: format)
+      # Fix Ruby 3 `and_call_original` bug
+      RSpec::Mocks.space.proxy_for(client).reset
 
-        expect(screenshot.length).to be > 100
+      bounds_calls = commands.select { |(name, _)| name == "Browser.setWindowBounds" }
+      expect(bounds_calls).to be_empty
+    end
+
+    it "forwards captureBeyondViewport: true to Page.captureScreenshot with full: true" do
+      browser.go_to("/long_page")
+
+      client = browser.page.client
+      capture_opts = nil
+      allow(client).to receive(:command).and_wrap_original do |m, name, **opts|
+        capture_opts = opts if name == "Page.captureScreenshot"
+        m.call(name, **opts)
       end
 
-      it "supports screenshotting the page in base64" do
-        browser.go_to
+      browser.screenshot(path: file, full: true)
 
-        screenshot = browser.screenshot(encoding: :base64)
+      # Fix Ruby 3 `and_call_original` bug
+      RSpec::Mocks.space.proxy_for(client).reset
 
-        expect(screenshot.length).to be > 100
+      expect(capture_opts).to include(captureBeyondViewport: true)
+    end
+
+    it "supports screenshotting of an area" do
+      browser.go_to("/custom_html_size")
+      expect(browser.viewport_size).to eq([1024, 681])
+
+      browser.screenshot(path: file, area: { x: 0, y: 0, width: 300, height: 200 })
+
+      File.open(file, "rb") do |f|
+        expect(ImageSize.new(f.read).size).to eq([300, 200].map { |s| s * device_pixel_ratio })
       end
+      expect(browser.viewport_size).to eq([1024, 681])
+    end
 
-      context "with png" do
-        let(:format) { :png }
-        after { FileUtils.rm_f(file) }
+    it "keeps the current viewport with :area" do
+      browser.go_to
+      browser.set_viewport(width: 800, height: 200)
 
-        include_examples "screenshot screen"
-      end
+      browser.screenshot(path: file, area: { x: 0, y: 0, width: 300, height: 200 })
 
-      context "with jpeg" do
-        let(:format) { :jpeg }
-        after { FileUtils.rm_f(file) }
+      expect(File.exist?(file)).to be(true)
+      expect(browser.viewport_size).to eq([800, 200])
+    end
 
-        include_examples "screenshot screen"
-      end
+    it "supports screenshotting page with the specific background color" do
+      file = "#{PROJECT_ROOT}/spec/tmp/screenshot.jpeg"
+      browser.go_to
+      browser.screenshot(path: file)
+      content = File.read(file)
+      browser.screenshot(path: file, background_color: Ferrum::RGBA.new(0, 0, 0, 0.0))
+      content_with_specific_bc = File.read(file)
+      expect(content).not_to eq(content_with_specific_bc)
+    ensure
+      FileUtils.rm_f([file])
+    end
+
+    it "raises ArgumentError for a wrong :background_color" do
+      browser.go_to
+      expect do
+        browser.screenshot(path: file, background_color: "#FFF")
+      end.to raise_exception(ArgumentError, "Accept Ferrum::RGBA class only")
+    end
+
+    it "defaults to base64 when path isn't set" do
+      browser.go_to
+
+      screenshot = browser.screenshot(format: format)
+
+      expect(screenshot.length).to be > 100
+    end
+
+    it "supports screenshotting the page in base64" do
+      browser.go_to
+
+      screenshot = browser.screenshot(encoding: :base64)
+
+      expect(screenshot.length).to be > 100
     end
   end
 
@@ -382,83 +396,79 @@ describe Ferrum::Page::Screenshot do
       expect(browser.pdf(path: file)).to eq(File.size(file))
     end
 
-    context "when :paper_width and :paper_height are set" do
-      it "changes pdf size" do
-        browser.go_to("/long_page")
+    it "changes pdf size with :paper_width and :paper_height" do
+      browser.go_to("/long_page")
 
-        browser.pdf(path: file, paper_width: 1.0, paper_height: 1.0)
+      browser.pdf(path: file, paper_width: 1.0, paper_height: 1.0)
 
-        reader = PDF::Reader.new(file)
-        reader.pages.each do |page|
-          bbox = page.attributes[:MediaBox]
-          width = (bbox[2] - bbox[0]) / 72
-          expect(width).to eq(1)
-        end
+      reader = PDF::Reader.new(file)
+      reader.pages.each do |page|
+        bbox = page.attributes[:MediaBox]
+        width = (bbox[2] - bbox[0]) / 72
+        expect(width).to eq(1)
       end
     end
 
-    context "when format is passed" do
-      it "changes pdf size to A0" do
-        browser.go_to("/long_page")
+    it "changes pdf size to A0 with :format" do
+      browser.go_to("/long_page")
 
-        browser.pdf(path: file, format: :A0)
+      browser.pdf(path: file, format: :A0)
 
-        reader = PDF::Reader.new(file)
-        reader.pages.each do |page|
-          bbox = page.attributes[:MediaBox]
-          width = (bbox[2] - bbox[0]) / 72
-          expect(width.round(1)).to eq(33.1)
-        end
+      reader = PDF::Reader.new(file)
+      reader.pages.each do |page|
+        bbox = page.attributes[:MediaBox]
+        width = (bbox[2] - bbox[0]) / 72
+        expect(width.round(1)).to eq(33.1)
       end
+    end
 
-      it "specifying format and paperWidth will cause exception" do
-        browser.go_to("/long_page")
+    it "raises ArgumentError with both :format and :paper_width" do
+      browser.go_to("/long_page")
 
-        expect do
-          browser.pdf(path: file, format: :A0, paper_width: 1.0)
-        end.to raise_error(ArgumentError)
-      end
+      expect do
+        browser.pdf(path: file, format: :A0, paper_width: 1.0)
+      end.to raise_error(ArgumentError)
+    end
 
-      it "convert case correct" do
-        browser.go_to("/long_page")
+    it "converts options to Page.printToPDF parameters" do
+      browser.go_to("/long_page")
 
-        allow(browser.page).to receive(:command).with("Page.printToPDF", hash_including(
-                                                                           displayHeaderFooter: false,
-                                                                           ignoreInvalidPageRanges: false,
-                                                                           landscape: false,
-                                                                           marginBottom: 0.4,
-                                                                           marginLeft: 0.4,
-                                                                           marginRight: 0.4,
-                                                                           marginTop: 0.4,
-                                                                           pageRanges: "",
-                                                                           paperHeight: 11,
-                                                                           paperWidth: 8.5,
-                                                                           path: file,
-                                                                           preferCSSPageSize: false,
-                                                                           printBackground: false,
-                                                                           scale: 1
-                                                                         )) { { "stream" => "1" } }
+      allow(browser.page).to receive(:command).with("Page.printToPDF", hash_including(
+                                                                         displayHeaderFooter: false,
+                                                                         ignoreInvalidPageRanges: false,
+                                                                         landscape: false,
+                                                                         marginBottom: 0.4,
+                                                                         marginLeft: 0.4,
+                                                                         marginRight: 0.4,
+                                                                         marginTop: 0.4,
+                                                                         pageRanges: "",
+                                                                         paperHeight: 11,
+                                                                         paperWidth: 8.5,
+                                                                         path: file,
+                                                                         preferCSSPageSize: false,
+                                                                         printBackground: false,
+                                                                         scale: 1
+                                                                       )) { { "stream" => "1" } }
 
-        allow(browser.page).to receive(:command).with("IO.read", hash_including(handle: "1")) {
-          { "data" => "", "base64Encoded" => false, "eof" => true }
-        }
-        allow(browser.page).to receive(:command).with("IO.close", handle: "1").and_return({})
+      allow(browser.page).to receive(:command).with("IO.read", hash_including(handle: "1")) {
+        { "data" => "", "base64Encoded" => false, "eof" => true }
+      }
+      allow(browser.page).to receive(:command).with("IO.close", handle: "1").and_return({})
 
-        browser.pdf(path: file,
-                    landscape: false,
-                    display_header_footer: false,
-                    print_background: false,
-                    scale: 1,
-                    paper_width: 8.5,
-                    paper_height: 11,
-                    margin_top: 0.4,
-                    margin_bottom: 0.4,
-                    margin_left: 0.4,
-                    margin_right: 0.4,
-                    page_ranges: "",
-                    ignore_invalid_page_ranges: false,
-                    prefer_css_page_size: false)
-      end
+      browser.pdf(path: file,
+                  landscape: false,
+                  display_header_footer: false,
+                  print_background: false,
+                  scale: 1,
+                  paper_width: 8.5,
+                  paper_height: 11,
+                  margin_top: 0.4,
+                  margin_bottom: 0.4,
+                  margin_left: 0.4,
+                  margin_right: 0.4,
+                  page_ranges: "",
+                  ignore_invalid_page_ranges: false,
+                  prefer_css_page_size: false)
     end
   end
 

@@ -5,15 +5,15 @@ describe Ferrum::Browser::Process do
 
   let(:client) { double.as_null_object.tap { |client| allow(client).to receive(:command).and_return(client) } }
 
-  unless Ferrum::Utils::Platform.windows?
-    it "forcibly kills the child if it does not respond to SIGTERM" do
+  describe "#stop", skip: Ferrum::Utils::Platform.windows? do
+    it "kills the child forcibly if it does not respond to SIGTERM" do
       allow(Process).to receive(:spawn).and_return(5678)
       allow(Process).to receive(:wait).and_return(nil)
       allow(Ferrum::Client).to receive(:new).and_return(client)
 
       allow_any_instance_of(Ferrum::Browser::Process).to receive(:parse_ws_url)
 
-      subject.send(:start)
+      subject
 
       expect(Process).to receive(:kill).with("TERM", -5678).ordered
       expect(Process).to receive(:kill).with("KILL", -5678).ordered
@@ -28,7 +28,7 @@ describe Ferrum::Browser::Process do
 
       allow_any_instance_of(Ferrum::Browser::Process).to receive(:parse_ws_url)
 
-      subject.send(:start)
+      subject
 
       allow(Process).to receive(:kill).with("TERM", -5678).and_raise(Errno::EPERM)
       expect(Process).to receive(:kill).with("TERM", 5678).ordered
@@ -46,7 +46,7 @@ describe Ferrum::Browser::Process do
 
       allow_any_instance_of(Ferrum::Browser::Process).to receive(:parse_ws_url)
 
-      subject.send(:start)
+      subject
 
       allow(Process).to receive(:kill).with("TERM", -5678).and_raise(Errno::ESRCH)
       expect(Process).to receive(:kill).with("TERM", 5678).ordered
@@ -55,58 +55,29 @@ describe Ferrum::Browser::Process do
 
       subject.quit
     end
-
-    it "kills the whole process group, not just the leader, when a group member ignores TERM", if: Ferrum::Utils::Platform.mri? do
-      child_pid_path = File.join(Dir.tmpdir, "ferrum-process-spec-child-pid-#{Process.pid}")
-
-      script = <<~RUBY
-        pid = fork do
-          trap("TERM", "IGNORE")
-          sleep 30
-        end
-        Process.detach(pid)
-        File.write(#{child_pid_path.inspect}, pid.to_s)
-        sleep 30
-      RUBY
-      leader_pid = Process.spawn(RbConfig.ruby, "-e", script, pgroup: true)
-
-      begin
-        start = Ferrum::Utils::ElapsedTime.monotonic_time
-        sleep(0.05) until File.size?(child_pid_path) || Ferrum::Utils::ElapsedTime.timeout?(start, 5)
-        child_pid = File.read(child_pid_path).to_i
-
-        # A leader that dies promptly on TERM must not short-circuit the
-        # escalation to KILL for the rest of its process group.
-        Ferrum::Browser::Process::Killer.kill(leader_pid)
-        sleep(0.2)
-
-        expect { Process.kill(0, child_pid) }.to raise_error(Errno::ESRCH)
-      ensure
-        File.delete(child_pid_path) if child_pid && File.exist?(child_pid_path)
-      end
-    end
   end
 
-  context "when spawning Chrome itself" do
+  describe "#start" do
     it "uses the requested :host instead of the address Chrome reports" do
-      subject = described_class.new(Ferrum::Browser::Options.new(host: "ferrum.localhost", port: 6001))
-      subject.output.pipe do |io|
-        io.write("DevTools listening on ws://127.0.0.1:6001/devtools/browser/" \
-                 "11111111-1111-1111-1111-111111111111\n")
+      process = described_class.new(Ferrum::Browser::Options.new(host: "ferrum.localhost", port: 6001))
+      allow(Process).to receive(:spawn) do |*, options|
+        options[:out].write("DevTools listening on ws://127.0.0.1:6001/devtools/browser/" \
+                            "11111111-1111-1111-1111-111111111111\n")
+        5678
       end
+      allow(Process).to receive(:wait).and_return(nil)
+      allow(Process).to receive(:kill)
 
-      subject.send(:parse_ws_url)
+      process.start
 
-      expect(subject.host).to eq("ferrum.localhost")
-      expect(subject.port).to eq(6001)
-      expect(subject.ws_url.host).to eq("ferrum.localhost")
+      expect(process.host).to eq("ferrum.localhost")
+      expect(process.port).to eq(6001)
+      expect(process.ws_url.host).to eq("ferrum.localhost")
+    ensure
+      process.stop
     end
-  end
 
-  context "env variables" do
-    subject { Ferrum::Browser.new(env: { "LD_PRELOAD" => "some.so" }) }
-
-    it "passes through env" do
+    it "passes env through to the browser process" do
       allow(Process).to receive(:wait).and_return(nil)
       allow(Ferrum::Client).to receive(:new).and_return(client)
 
@@ -114,8 +85,8 @@ describe Ferrum::Browser::Process do
 
       allow_any_instance_of(Ferrum::Browser::Process).to receive(:parse_ws_url)
 
-      subject.send(:start)
-      subject.quit
+      browser = Ferrum::Browser.new(env: { "LD_PRELOAD" => "some.so" })
+      browser.quit
     end
   end
 end

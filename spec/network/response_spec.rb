@@ -93,17 +93,8 @@ describe Ferrum::Network::Response do
     end
   end
 
-  describe "#error" do
-    it "captures errors" do
-      page.go_to("/with_ajax_fail")
-      page.network.wait_for_idle!
-
-      expect(last_exchange.error).to be
-    end
-  end
-
   describe "#redirect?" do
-    it "captures errors" do
+    it "returns true for a redirect response" do
       page.go_to("/redirect_again")
 
       expect(page.body).to include("You landed")
@@ -129,7 +120,7 @@ describe Ferrum::Network::Response do
   end
 
   describe "#to_h" do
-    it "must return #params" do
+    it "returns #params" do
       page.go_to("/with_js")
 
       expect(last_exchange.response.to_h).to eq(last_exchange.response.params)

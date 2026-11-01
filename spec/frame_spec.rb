@@ -1,523 +1,88 @@
 # frozen_string_literal: true
 
 describe Ferrum::Frame do
-  describe "#at_xpath" do
-    it "works correctly when JSON is overwritten" do
-      page.go_to("/index")
-      page.execute("JSON = {};")
-      expect { page.at_xpath("//a[text() = 'JS redirect']") }.not_to raise_error
+  describe "#url" do
+    it "returns the url of a frame selected by index" do
+      page.go_to("/frames")
+      frame = page.at_xpath("//iframe").frame
+      expect(frame.url).to end_with("/slow")
     end
-  end
 
-  it "supports selection by index" do
-    page.go_to("/frames")
-    frame = page.at_xpath("//iframe").frame
-    expect(frame.url).to end_with("/slow")
-  end
+    it "returns the url of a frame selected by element" do
+      page.go_to("/frames")
+      frame = page.at_css("iframe[name]").frame
+      expect(frame.url).to end_with("/slow")
+    end
 
-  it "supports selection by element" do
-    page.go_to("/frames")
-    frame = page.at_css("iframe[name]").frame
-    expect(frame.url).to end_with("/slow")
-  end
+    it "returns the url of a frame without name or id" do
+      page.go_to("/frames")
+      frame = page.at_css("iframe:not([name]):not([id])").frame
+      expect(frame.url).to end_with("/headers")
+    end
 
-  it "supports selection by element without name or id" do
-    page.go_to("/frames")
-    frame = page.at_css("iframe:not([name]):not([id])").frame
-    expect(frame.url).to end_with("/headers")
-  end
+    it "returns the url of a frame with id but no name" do
+      page.go_to("/frames")
+      frame = page.at_css("iframe[id]:not([name])").frame
+      expect(frame.url).to end_with("/get_cookie")
+    end
 
-  it "supports selection by element with id but no name" do
-    page.go_to("/frames")
-    frame = page.at_css("iframe[id]:not([name])").frame
-    expect(frame.url).to end_with("/get_cookie")
-  end
+    it "returns the url of the main frame of a popup" do
+      browser.go_to("/popup_frames")
 
-  it "finds main frame properly" do
-    browser.go_to("/popup_frames")
+      browser.at_xpath("//a[text()='pop up']").click
 
-    browser.at_xpath("//a[text()='pop up']").click
+      expect(browser.pages.size).to eq(2)
+      opened_page = browser.pages.last
+      expect(opened_page.main_frame.url).to end_with("/frames")
+    end
 
-    expect(browser.pages.size).to eq(2)
-    opened_page = browser.pages.last
-    expect(opened_page.main_frame.url).to end_with("/frames")
-  end
-
-  it "finds parent frame properly" do
-    page.go_to("/frames")
-    parent_frame = page.at_xpath("//iframe").frame.parent
-    expect(parent_frame.url).to end_with("/frames")
-  end
-
-  it "waits for the frame to load" do
-    page.go_to
-    page.execute <<-JS
+    it "returns the url of a frame once it loads" do
+      page.go_to
+      page.execute <<-JS
       document.body.innerHTML += "<iframe src='/slow' name='frame'>"
-    JS
-
-    frame = page.at_xpath("//iframe[@name='frame']").frame
-    expect(frame.url).to end_with("/slow")
-    expect(frame.body).to include("slow page")
-
-    expect(page.main_frame.url).to end_with("/")
-  end
-
-  it "waits for the cross-domain frame to load" do
-    page.go_to("/frames")
-    expect(page.url).to eq(base_url("/frames"))
-    frame = page.at_xpath("//iframe[@name='frame']").frame
-
-    expect(frame.url).to end_with("/slow")
-    expect(frame.body).to include("slow page")
-
-    expect(page.url).to end_with("/frames")
-  end
-
-  context "with src == about:blank" do
-    it "doesn't hang if no document created" do
-      page.go_to
-      page.execute <<-JS
-        document.body.innerHTML += "<iframe src='about:blank' name='frame'>"
       JS
+
       frame = page.at_xpath("//iframe[@name='frame']").frame
-      expect(frame.body).to eq("<html><head></head><body></body></html>")
-    end
-
-    it "doesn't hang if built by JS" do
-      page.go_to
-      page.execute <<-JS
-        document.body.innerHTML += "<iframe src='about:blank' name='frame'>";
-        var iframeDocument = document.querySelector("iframe[name='frame']").contentWindow.document;
-        var content = "<html><body><p>Hello Frame</p></body></html>";
-        iframeDocument.open("text/html", "replace");
-        iframeDocument.write(content);
-        iframeDocument.close();
-      JS
-      frame = page.at_xpath("//iframe[@name='frame']").frame
-      expect(frame.body).to include("Hello Frame")
-    end
-  end
-
-  context "with no src attribute" do
-    it "doesn't hang if the srcdoc attribute is used" do
-      page.go_to
-      page.execute <<-JS
-        document.body.innerHTML += "<iframe srcdoc='<p>Hello Frame</p>' name='frame'>"
-      JS
-      frame = page.at_xpath("//iframe[@name='frame']").frame
-      expect(frame.body).to include("Hello Frame")
-    end
-
-    it "doesn't hang if the frame is filled by JS" do
-      page.go_to
-      page.execute <<-JS
-        document.body.innerHTML += "<iframe id='frame' name='frame'>"
-      JS
-      page.execute <<-JS
-        var iframeDocument = document.querySelector("#frame").contentWindow.document;
-        var content = "<html><body><p>Hello Frame</p></body></html>";
-        iframeDocument.open("text/html", "replace");
-        iframeDocument.write(content);
-        iframeDocument.close();
-      JS
-      frame = page.at_xpath("//iframe[@name='frame']").frame
-      expect(frame.body).to include("Hello Frame")
-    end
-  end
-
-  it "finishes a form submission that opens an inline PDF" do
-    page.go_to("/inline_pdf")
-    page.at_css("button").click
-
-    expect(page.url).to eq(base_url("/inline.pdf"))
-    expect(page.network.response.content_type).to eq("application/pdf")
-  end
-
-  it "keeps waiting for a loading frame when another one is removed" do
-    page.go_to("/removed_iframe")
-    page.at_css("button").click
-
-    expect(page.evaluate("document.querySelector('iframe').contentWindow.location.pathname"))
-      .to eq("/show_cookies/set_cookie_slow")
-  end
-
-  it "waits for a navigation a click starts after removing a loaded frame" do
-    page.go_to("/remove_iframe_and_navigate")
-    page.at_css("button").click
-
-    expect(page.evaluate("location.pathname")).to eq("/slow")
-  end
-
-  context "with lazy loading iframes" do
-    it "does not block visit on lazy iframe" do
-      expect { page.go_to("/lazy_iframe") }.not_to raise_error
-
-      states = page.frames.reject(&:main?).map(&:state)
-      expect(states).to eq(%i[stopped_loading stopped_loading])
-    end
-
-    it "does not block click whose handler attaches a lazy iframe" do
-      page.go_to("/lazy_iframe")
-
-      expect { page.at_css("#add_iframe").click }.not_to raise_error
-
-      states = page.frames.reject(&:main?).map(&:state)
-      expect(states).to eq(%i[stopped_loading stopped_loading stopped_loading])
-    end
-
-    it "loads in-viewport lazy iframes" do
-      page.go_to("/lazy_iframe")
-      frame = page.frame_by(name: "lazy_in_viewport")
-
-      states = page.frames.reject(&:main?).map(&:state)
+      expect(frame.url).to end_with("/slow")
       expect(frame.body).to include("slow page")
-      expect(states).to eq(%i[stopped_loading stopped_loading])
-    end
-  end
 
-  it "supports clicking in a frame with padding" do
-    page.go_to
-    page.execute <<-JS
-      document.body.innerHTML += "<iframe src='/click_test' name='padded_frame' style='padding:100px;'>"
-    JS
-    sleep 0.5
-    frame = page.at_xpath("//iframe[@name = 'padded_frame']").frame
-
-    log = frame.at_css("#log")
-    frame.at_css("#one").scroll_into_view.click
-    expect(log.text).to eq("one")
-  end
-
-  it "supports clicking in a frame nested in a frame" do
-    page.go_to
-
-    # The padding on the frame here is to differ the sizes of the two
-    # frames, ensuring that their offsets are being calculated separately.
-    # This avoids a false positive where the same frame"s offset is
-    # calculated twice, but the click still works because both frames had
-    # the same offset.
-    page.execute <<-JS
-      document.body.innerHTML += "<iframe src='/nested_frame_test' name='outer_frame' style='padding:200px'>"
-    JS
-
-    sleep 0.5
-
-    inner_frame = page.frame_by(name: "inner_frame")
-    log = inner_frame.at_css("#log")
-    inner_frame.at_css("#one").scroll_into_view.click
-    expect(log.text).to eq("one")
-  end
-
-  it "does not wait forever for the frame to load" do
-    page.go_to
-
-    frame = page.frame_by(name: "omg")
-
-    expect(frame).to be_nil
-  end
-
-  it "can get the frames url" do
-    page.go_to("/frames")
-
-    frame = page.at_xpath("//iframe").frame
-    expect(frame.url).to end_with("/slow")
-    expect(page.url).to end_with("/frames")
-  end
-
-  describe "#current_url and #current_title" do
-    around do |example|
-      Ferrum::Utils::Deprecate.reset!
-      example.run
-      Ferrum::Utils::Deprecate.reset!
+      expect(page.main_frame.url).to end_with("/")
     end
 
-    it "return the top window's and warn that they are deprecated" do
-      page.go_to
-      page.execute(%(document.body.innerHTML += "<iframe src='/slow' name='frame'>"))
+    it "returns the url of a cross-domain frame once it loads" do
+      page.go_to("/frames")
+      expect(page.url).to eq(base_url("/frames"))
       frame = page.at_xpath("//iframe[@name='frame']").frame
 
-      expect { expect(frame.current_url).to eq(page.url) }
-        .to output(/#current_url will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      expect { expect(frame.current_title).to eq(page.title) }
-        .to output(/#current_title will be removed in Ferrum 0\.22/).to_stderr
-    end
-  end
+      expect(frame.url).to end_with("/slow")
+      expect(frame.body).to include("slow page")
 
-  it "can set page content" do
-    page.content = "<html><head></head><body>Voila! <a href='#'>Link</a></body></html>"
-
-    expect(page.body).to include("Voila!")
-    expect(page.at_css("a").text).to eq("Link")
-  end
-
-  it "gets page doctype" do
-    page.go_to("/frames")
-    expect(page.doctype).to eq("<!DOCTYPE html>")
-
-    doctype40 = %(<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">)
-    page.content = "#{doctype40}<html><head></head><body>Voila!</body></html>"
-    expect(page.doctype).to eq(doctype40)
-
-    page.content = ""
-    expect(page.doctype).to be_nil
-  end
-
-  context "#frame_element" do
-    it "gets the frame element" do
-      page.go_to("/frame_parent")
-
-      frame_element = page.at_xpath("//iframe")
-      frame = frame_element.frame
-      expect(frame.frame_element).to eq(frame_element)
-      expect(frame.frame_element.frame_id).to eq frame.id
-      expect(frame.frame_element.attribute(:src)).to eq("/frame_child")
+      expect(page.url).to end_with("/frames")
     end
 
-    it "returns nil for a cross-origin frame" do
+    it "returns the url of the frame, not of the page" do
       page.go_to("/frames")
 
       frame = page.at_xpath("//iframe").frame
-      expect(frame.frame_element).to be_nil
+      expect(frame.url).to end_with("/slow")
+      expect(page.url).to end_with("/frames")
     end
+  end
 
-    it "returns nil if main frame" do
+  describe "#parent" do
+    it "returns the parent frame" do
       page.go_to("/frames")
-
       parent_frame = page.at_xpath("//iframe").frame.parent
-      expect(parent_frame).to be_main
-      expect(parent_frame.frame_element).to be_nil
-    end
-
-    it "supports nested frames" do
-      page.go_to("/frames")
-      page.execute <<-JS
-        document.body.innerHTML += "<iframe src='/nested_frame_test' name='outer_frame' style='padding:200px'>"
-      JS
-      page.network.wait_for_idle
-
-      outer_frame_element = page.at_xpath("//iframe[@name='outer_frame']")
-      outer_frame = outer_frame_element.frame
-
-      inner_frame_element = outer_frame.at_xpath("//iframe")
-      inner_frame = inner_frame_element.frame
-
-      expect(outer_frame.frame_element).to eq(outer_frame_element)
-      expect(inner_frame.frame_element).to eq(inner_frame_element)
+      expect(parent_frame.url).to end_with("/frames")
     end
   end
 
-  context "#xpath" do
-    it "returns given nodes" do
-      page.go_to("/with_js")
-      p = page.xpath("//p[@id='remove_me']")
+  describe "#content=" do
+    it "sets the page content" do
+      page.content = "<html><head></head><body>Voila! <a href='#'>Link</a></body></html>"
 
-      expect(p.size).to eq(1)
-    end
-
-    it "supports within" do
-      page.go_to("/with_js")
-      p = page.xpath("//p[@id='with_content']").first
-
-      links = page.xpath("./a", within: p)
-
-      expect(links.size).to eq(1)
-      expect(links.first.attribute(:id)).to eq("open-match")
-    end
-
-    it "throws an error on a wrong xpath" do
-      page.go_to("/with_js")
-
-      expect do
-        page.xpath("#remove_me")
-      end.to raise_error(Ferrum::JavaScriptError)
-    end
-
-    it "supports inside a given frame" do
-      page.go_to("/frames")
-      page.execute <<-JS
-        document.body.innerHTML += "<iframe src='/buttons' id='buttons_frame'>"
-      JS
-      page.network.wait_for_idle
-
-      frame = page.at_xpath("//iframe[@id='buttons_frame']").frame
-      expect(frame.xpath("//button").size).to eq(3)
-    end
-  end
-
-  context "#at_xpath" do
-    it "returns given nodes" do
-      page.go_to("/with_js")
-      p = page.at_xpath("//p[@id='remove_me']")
-
-      expect(p).not_to be_nil
-    end
-
-    it "supports within" do
-      page.go_to("/with_js")
-      p = page.at_xpath("//p[@id='with_content']")
-
-      link = page.at_xpath("./a", within: p)
-
-      expect(link).not_to be_nil
-      expect(link.attribute(:id)).to eq("open-match")
-    end
-
-    it "throws an error on a wrong xpath" do
-      page.go_to("/with_js")
-
-      expect do
-        page.at_xpath("#remove_me")
-      end.to raise_error(Ferrum::JavaScriptError)
-    end
-
-    it "supports inside a given frame" do
-      page.go_to("/frames")
-      page.execute <<-JS
-        document.body.innerHTML += "<iframe src='/buttons' id='buttons_frame'>"
-      JS
-      page.network.wait_for_idle
-
-      frame = page.at_xpath("//iframe[@id='buttons_frame']").frame
-      expect(frame.at_xpath("//button[@id='click_me_123']")).not_to be_nil
-    end
-  end
-
-  context "#css" do
-    it "returns given nodes" do
-      page.go_to("/with_js")
-      p = page.css("p#remove_me")
-
-      expect(p.size).to eq(1)
-    end
-
-    it "supports within" do
-      page.go_to("/with_js")
-      p = page.css("p#with_content").first
-
-      links = page.css("a", within: p)
-
-      expect(links.size).to eq(1)
-      expect(links.first.attribute(:id)).to eq("open-match")
-    end
-
-    it "throws an error on an invalid selector" do
-      page.go_to("/table")
-
-      expect do
-        page.css("table tr:last")
-      end.to raise_error(Ferrum::JavaScriptError)
-    end
-
-    it "supports inside a given frame" do
-      page.go_to("/frames")
-      page.execute <<-JS
-        document.body.innerHTML += "<iframe src='/buttons' id='buttons_frame'>"
-      JS
-      page.network.wait_for_idle
-
-      frame = page.at_css("iframe#buttons_frame").frame
-      expect(frame.css("button").size).to eq(3)
-    end
-  end
-
-  context "#at_css" do
-    it "returns given nodes" do
-      page.go_to("/with_js")
-      p = page.at_css("p#remove_me")
-
-      expect(p).not_to be_nil
-    end
-
-    it "supports within" do
-      page.go_to("/with_js")
-      p = page.at_css("p#with_content")
-
-      link = page.at_css("a", within: p)
-
-      expect(link).not_to be_nil
-      expect(link.attribute(:id)).to eq("open-match")
-    end
-
-    it "throws an error on an invalid selector" do
-      page.go_to("/table")
-
-      expect do
-        page.at_css("table tr:last")
-      end.to raise_error(Ferrum::JavaScriptError)
-    end
-
-    it "supports inside a given frame" do
-      page.go_to("/frames")
-      page.execute <<-JS
-        document.body.innerHTML += "<iframe src='/buttons' id='buttons_frame'>"
-      JS
-      page.network.wait_for_idle
-
-      frame = page.at_css("iframe#buttons_frame").frame
-      expect(frame.at_css("button#click_me_123")).not_to be_nil
-    end
-  end
-
-  describe "#wait_for_selector" do
-    it "returns the node immediately when it's already present" do
-      page.go_to("/with_js")
-
-      expect(page.wait_for_selector(css: "p#remove_me")).not_to be_nil
-    end
-
-    it "waits for a css selector to appear" do
-      page.go_to("/with_js")
-      page.execute <<-JS
-        setTimeout(function () {
-          var div = document.createElement("div");
-          div.id = "appears_later";
-          document.body.appendChild(div);
-        }, 300);
-      JS
-
-      expect(page.wait_for_selector(css: "div#appears_later", timeout: 2)).not_to be_nil
-    end
-
-    it "waits for an xpath selector to appear" do
-      page.go_to("/with_js")
-      page.execute <<-JS
-        setTimeout(function () {
-          var div = document.createElement("div");
-          div.id = "appears_later";
-          document.body.appendChild(div);
-        }, 300);
-      JS
-
-      expect(page.wait_for_selector(xpath: "//div[@id='appears_later']", timeout: 2)).not_to be_nil
-    end
-
-    it "returns nil once timeout elapses without a match" do
-      page.go_to("/with_js")
-
-      started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      node = page.wait_for_selector(css: "div#never_appears", timeout: 0.3, interval: 0.05)
-      elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
-
-      expect(node).to be_nil
-      expect(elapsed).to be >= 0.3
-    end
-
-    it "supports within" do
-      page.go_to("/with_js")
-      p = page.at_css("p#with_content")
-
-      link = page.wait_for_selector(css: "a", within: p)
-
-      expect(link).not_to be_nil
-      expect(link.attribute(:id)).to eq("open-match")
-    end
-
-    it "raises when neither css nor xpath is given" do
-      expect { page.wait_for_selector }.to raise_error(ArgumentError)
-    end
-
-    it "raises when both css and xpath are given" do
-      expect { page.wait_for_selector(css: "a", xpath: "//a") }.to raise_error(ArgumentError)
+      expect(page.body).to include("Voila!")
+      expect(page.at_css("a").text).to eq("Link")
     end
   end
 end

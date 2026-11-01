@@ -28,7 +28,7 @@ describe Ferrum::Browser::Binary do
     ENV["PATHEXT"] = @original_env_pathext
   end
 
-  describe "#find" do
+  describe ".find" do
     it "finds one binary" do
       expect(Ferrum::Browser::Binary.find("bin1")).to eq(bin1)
     end
@@ -62,7 +62,7 @@ describe Ferrum::Browser::Binary do
     end
   end
 
-  describe "#all" do
+  describe ".all" do
     it "finds one binary" do
       expect(Ferrum::Browser::Binary.all("bin1")).to eq([bin1])
     end
@@ -90,7 +90,7 @@ describe Ferrum::Browser::Binary do
     end
   end
 
-  describe "#lazy_find" do
+  describe ".lazy_find" do
     it "works lazily" do
       enum = Ferrum::Browser::Binary.lazy_find([%w[ls which none]])
 

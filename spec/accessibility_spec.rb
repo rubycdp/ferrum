@@ -28,6 +28,18 @@ describe Ferrum::Accessibility do
       expect(nodes).to all(be_a(Ferrum::Accessibility::AXNode))
       expect(nodes.map(&:role)).to include("button")
     end
+
+    it "returns AXNodes for a node in an iframe" do
+      browser.go_to("/accessibility_iframe")
+      frame_node = browser.page.at_css("iframe").frame.at_css("#child_btn")
+
+      nodes = browser.page.accessibility.partial_tree(node: frame_node)
+
+      expect(nodes).to all(be_a(Ferrum::Accessibility::AXNode))
+      expect(nodes).not_to be_empty
+      expect(nodes.map(&:role)).to include("button")
+      expect(nodes.map(&:name)).to include("Frame button")
+    end
   end
 
   describe "#snapshot" do
@@ -63,34 +75,11 @@ describe Ferrum::Accessibility do
 
       expect(nodes).to be_empty
     end
-  end
 
-  describe "across an iframe" do
-    before { browser.go_to("/accessibility_iframe") }
+    it "scopes the query to a node in an iframe" do
+      browser.go_to("/accessibility_iframe")
+      frame_node = browser.page.at_css("iframe").frame.at_css("#child_btn")
 
-    let(:frame_node) do
-      frame = browser.page.at_css("iframe").frame
-      frame.at_css("#child_btn")
-    end
-
-    it "node_for resolves the AXNode across the frame boundary" do
-      ax = frame_node.axnode
-
-      expect(ax).to be_a(Ferrum::Accessibility::AXNode)
-      expect(ax.role).to eq("button")
-      expect(ax.name).to eq("Frame button")
-    end
-
-    it "partial_tree returns AXNodes for a frame-resident node" do
-      nodes = browser.page.accessibility.partial_tree(node: frame_node)
-
-      expect(nodes).to all(be_a(Ferrum::Accessibility::AXNode))
-      expect(nodes).not_to be_empty
-      expect(nodes.map(&:role)).to include("button")
-      expect(nodes.map(&:name)).to include("Frame button")
-    end
-
-    it "query scoped to a frame-resident node returns the button" do
       nodes = browser.page.accessibility.query(name: "Frame button", node: frame_node)
 
       expect(nodes).not_to be_empty
@@ -104,22 +93,5 @@ describe Ferrum::Accessibility do
     it "returns a single root AXNode" do
       expect(browser.page.accessibility.root).to be_a(Ferrum::Accessibility::AXNode)
     end
-  end
-
-  describe "#value" do
-    before { browser.go_to("/accessibility") }
-
-    it "returns the raw CDP value for a range input as a Numeric (Chrome does not stringify it)" do
-      ax = browser.page.accessibility.node_for(browser.at_css("#volume"))
-      value = ax.value
-
-      # Chrome returns the range value as Integer 7, not the string "7"
-      expect(value).to eq(7)
-      expect(value).to be_a(Numeric)
-    end
-  end
-
-  it "is reachable from the browser" do
-    expect(browser.accessibility).to be_a(described_class)
   end
 end

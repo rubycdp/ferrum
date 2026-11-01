@@ -26,7 +26,7 @@ describe Ferrum::Network::Exchange do
   end
 
   describe "#intercepted_request" do
-    it "returns request" do
+    it "returns the intercepted request" do
       request_id = nil
       network.intercept
       page.on(:request) do |r|
@@ -70,7 +70,7 @@ describe Ferrum::Network::Exchange do
   end
 
   describe "#request" do
-    it "returns request" do
+    it "returns the request" do
       page.go_to
 
       expect(last_exchange.request).to be
@@ -79,7 +79,7 @@ describe Ferrum::Network::Exchange do
   end
 
   describe "#response" do
-    it "returns request" do
+    it "returns the response" do
       page.go_to
 
       expect(last_exchange.response).to be
@@ -88,6 +88,13 @@ describe Ferrum::Network::Exchange do
   end
 
   describe "#error" do
+    it "captures failed request errors" do
+      page.go_to("/with_ajax_fail")
+      page.network.wait_for_idle!
+
+      expect(last_exchange.error).to be
+    end
+
     it "captures refused connection errors" do
       page.go_to("/with_ajax_connection_refused")
       expect(page.at_xpath("//h1[text() = 'Error']")).to be

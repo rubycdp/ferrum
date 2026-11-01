@@ -3,7 +3,7 @@
 describe Ferrum::Cookies do
   describe "#each" do
     context "when a block is given" do
-      it "must yield each Cookie" do
+      it "yields each cookie" do
         browser.go_to("/set_cookie")
 
         yielded_cookies = []
@@ -28,10 +28,26 @@ describe Ferrum::Cookies do
           ]
         )
       end
+
+      it "yields the cookies of every domain in the context" do
+        browser.cookies.set(name: "stealth", value: "local", domain: "127.0.0.1")
+        browser.cookies.set(name: "other", value: "elsewhere", domain: "localhost")
+
+        expect(browser.cookies.map(&:name)).to contain_exactly("stealth", "other")
+      end
+
+      it "leaves out the cookies of other contexts" do
+        browser.cookies.set(name: "stealth", value: "local")
+        context = browser.contexts.create
+
+        expect(context.cookies.to_a).to eq([])
+      ensure
+        context&.dispose
+      end
     end
 
     context "when no block is given" do
-      it "must return an Enumerator" do
+      it "returns an enumerator" do
         browser.go_to("/set_cookie")
 
         expect(browser.cookies.each.to_a).to eq(
@@ -82,26 +98,8 @@ describe Ferrum::Cookies do
     end
   end
 
-  describe "context scope" do
-    it "returns the cookies of every domain in the context" do
-      browser.cookies.set(name: "stealth", value: "local", domain: "127.0.0.1")
-      browser.cookies.set(name: "other", value: "elsewhere", domain: "localhost")
-
-      expect(browser.cookies.map(&:name)).to contain_exactly("stealth", "other")
-    end
-
-    it "keeps the cookies of other contexts apart" do
-      browser.cookies.set(name: "stealth", value: "local")
-      context = browser.contexts.create
-
-      expect(context.cookies.to_a).to eq([])
-    ensure
-      context&.dispose
-    end
-  end
-
   describe "#[]" do
-    it "returns cookie object" do
+    it "returns the cookie with the given name" do
       browser.go_to("/set_cookie")
 
       cookie = browser.cookies["stealth"]
@@ -259,7 +257,7 @@ describe Ferrum::Cookies do
       expect(browser.body).to include("127.0.0.1")
     end
 
-    it "sets cookies correctly with :domain option when base_url isn't set", :launch do
+    it "sets cookies for given domain when base_url isn't set", :launch do
       browser = Ferrum::Browser.new
       browser.cookies.set(name: "stealth", value: "123456", domain: "localhost")
 
@@ -328,7 +326,7 @@ describe Ferrum::Cookies do
   end
 
   describe "#load" do
-    it "stores cookies" do
+    it "loads cookies" do
       cookie = { "name" => "stealth", "value" => "hello world", "domain" => "127.0.0.1", "path" => "/" }
       File.write("test.yml", [cookie].to_yaml)
       browser.cookies.load("test.yml")

@@ -48,22 +48,20 @@ describe Ferrum::Page::Screencast do
   end
 
   describe "#stop_screencast" do
-    context "when the page content continually changes" do
-      it "stops screencasting frames when the page has finished rendering" do
-        browser.go_to "/animation"
+    it "stops screencasting frames of a continually changing page" do
+      browser.go_to "/animation"
 
-        count = 0
-        browser.start_screencast(format: format) do |data|
-          Base64.decode64(data)
-          count += 1
-        end
-        sleep 2
-        expect(count).to be > 50
-        browser.stop_screencast
-        sleep 2 # wait for events on the fly to land
-
-        expect { sleep 2 }.not_to(change { count })
+      count = 0
+      browser.start_screencast(format: format) do |data|
+        Base64.decode64(data)
+        count += 1
       end
+      sleep 2
+      expect(count).to be > 50
+      browser.stop_screencast
+      sleep 2 # wait for events on the fly to land
+
+      expect { sleep 2 }.not_to(change { count })
     end
   end
 end

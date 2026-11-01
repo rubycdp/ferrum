@@ -13,6 +13,22 @@ describe Ferrum::Page do
         page.timeout = 4
         expect { page.go_to("/really_slow") }.not_to raise_error
       end
+
+      it "does not block on a lazy iframe" do
+        expect { page.go_to("/lazy_iframe") }.not_to raise_error
+
+        states = page.frames.reject(&:main?).map(&:state)
+        expect(states).to eq(%i[stopped_loading stopped_loading])
+      end
+
+      it "loads in-viewport lazy iframes" do
+        page.go_to("/lazy_iframe")
+        frame = page.frame_by(name: "lazy_in_viewport")
+
+        states = page.frames.reject(&:main?).map(&:state)
+        expect(frame.body).to include("slow page")
+        expect(states).to eq(%i[stopped_loading stopped_loading])
+      end
     end
 
     context "with failing response" do
@@ -202,7 +218,7 @@ describe Ferrum::Page do
   end
 
   describe "#bypass_csp" do
-    it "can bypass csp headers" do
+    it "bypasses CSP headers" do
       page.go_to("/csp")
       page.add_script_tag(content: "window.__injected = 42")
       expect(page.evaluate("window.__injected")).to be_nil
@@ -286,90 +302,159 @@ describe Ferrum::Page do
       page.evaluate("'ontouchstart' in window || navigator.maxTouchPoints > 0")
     end
 
-    context "when mobile is true" do
-      it "enables touch/mobile emulation without changing the window size" do
-        page.go_to("/")
+    it "enables touch/mobile emulation with mobile: true without changing the window size" do
+      page.go_to("/")
 
-        expect do
-          page.set_viewport(mobile: true)
-          page.reload
-        end.to change { is_mobile? }.to(true)
-      end
-    end
-
-    context "when mobile is false" do
-      it "does not enable touch/mobile emulation" do
-        page.go_to("/")
-
-        expect do
-          page.set_viewport(mobile: false)
-          page.reload
-        end.not_to(change { is_mobile? })
-      end
-    end
-
-    context "when mobile is not given" do
-      it "keeps the pointer type set with --blink-settings", :launch do
-        browser = Ferrum::Browser.new(browser_options: { "blink-settings" => "primaryPointerType=2,availablePointerTypes=2" })
-        browser.go_to(base_url)
-
-        expect do
-          browser.set_viewport(width: 500, height: 300)
-        end.not_to(change { browser.evaluate("matchMedia('(pointer: coarse)').matches") }.from(true))
-      ensure
-        browser&.quit
-      end
-    end
-
-    context "when mobile was true before" do
-      it "disables touch/mobile emulation again" do
-        page.go_to("/")
+      expect do
         page.set_viewport(mobile: true)
         page.reload
+      end.to change { is_mobile? }.to(true)
+    end
 
-        expect do
-          page.set_viewport(mobile: false)
-          page.reload
-        end.to change { is_mobile? }.from(true).to(false)
-      end
+    it "does not enable touch/mobile emulation with mobile: false" do
+      page.go_to("/")
+
+      expect do
+        page.set_viewport(mobile: false)
+        page.reload
+      end.not_to(change { is_mobile? })
+    end
+
+    it "keeps the pointer type set with --blink-settings when mobile is not given", :launch do
+      browser = Ferrum::Browser.new(browser_options: { "blink-settings" => "primaryPointerType=2,availablePointerTypes=2" })
+      browser.go_to(base_url)
+
+      expect do
+        browser.set_viewport(width: 500, height: 300)
+      end.not_to(change { browser.evaluate("matchMedia('(pointer: coarse)').matches") }.from(true))
+    ensure
+      browser&.quit
+    end
+
+    it "disables touch/mobile emulation with mobile: false after mobile: true" do
+      page.go_to("/")
+      page.set_viewport(mobile: true)
+      page.reload
+
+      expect do
+        page.set_viewport(mobile: false)
+        page.reload
+      end.to change { is_mobile? }.from(true).to(false)
     end
   end
 
   describe "#on" do
-    it "subscribes to an event" do
-      message = nil
+    context "with a CDP event" do
+      it "subscribes to the event" do
+        message = nil
 
-      page.on("Runtime.consoleAPICalled") do |params|
-        message = params.dig("args", 0, "value")
+        page.on("Runtime.consoleAPICalled") do |params|
+          message = params.dig("args", 0, "value")
+        end
+
+        page.evaluate("console.log('hello')")
+        wait_for { message }.to eq("hello")
+      end
+    end
+
+    context "with :response" do
+      it "yields the exchange once its response is fully loaded" do
+        exchanges = []
+        page.on(:response) { |exchange, _index, _total| exchanges << exchange }
+
+        page.go_to("/foo")
+
+        expect(exchanges.size).to eq(1)
+        expect(exchanges.first.response.loaded?).to eq(true)
+        expect(exchanges.first.response.body).to eq("Another World")
       end
 
-      page.evaluate("console.log('hello')")
-      wait_for { message }.to eq("hello")
+      it "fires once per exchange that finishes loading" do
+        exchanges = []
+        page.on(:response) { |exchange, _index, _total| exchanges << exchange }
+
+        page.go_to("/with_js")
+
+        expect(exchanges.map(&:url)).to match_array(traffic.map(&:url))
+      end
+
+      it "does not fire for requests that fail to load" do
+        exchanges = []
+        page.on(:response) { |exchange, _index, _total| exchanges << exchange }
+
+        page.go_to("/with_ajax_connection_refused")
+        network.wait_for_idle
+
+        expect(traffic.size).to eq(3)
+        expect(exchanges.size).to eq(2)
+        expect(exchanges).not_to include(traffic.find(&:error))
+      end
+
+      it "does not require request interception to be set up" do
+        expect(page.subscribed?("Fetch.requestPaused")).to eq(false)
+
+        exchange = nil
+        page.on(:response) { |e, _index, _total| exchange = e }
+        page.go_to("/foo")
+
+        expect(exchange).to be
+      end
+    end
+
+    context "with :console" do
+      it "yields new messages" do
+        messages = []
+        page.on(:console) { |message| messages << message.text }
+
+        page.go_to("/console_log")
+        page.execute(%(console.warn("later")))
+
+        wait_for { messages }.to eq(["Hello world", "later"])
+      end
     end
   end
 
   describe "#off" do
-    it "unsubscribes a specific event handler" do
-      message_a = nil
-      message_b = nil
+    context "with a CDP event" do
+      it "unsubscribes a specific event handler" do
+        message_a = nil
+        message_b = nil
 
-      handler = page.on("Runtime.consoleAPICalled") do |params|
-        message_a = params.dig("args", 0, "value")
+        handler = page.on("Runtime.consoleAPICalled") do |params|
+          message_a = params.dig("args", 0, "value")
+        end
+
+        page.on("Runtime.consoleAPICalled") do |params|
+          message_b = params.dig("args", 0, "value")
+        end
+
+        page.evaluate("console.log('hello')")
+        wait_for { message_a }.to eq("hello")
+        wait_for { message_b }.to eq("hello")
+
+        page.off("Runtime.consoleAPICalled", handler)
+        page.evaluate("console.log('goodbye')")
+
+        expect(message_a).to eq("hello")
+        wait_for { message_b }.to eq("goodbye")
       end
+    end
 
-      page.on("Runtime.consoleAPICalled") do |params|
-        message_b = params.dig("args", 0, "value")
+    context "with :console" do
+      it "stops yielding console messages" do
+        messages = []
+        id = page.on(:console) { |message| messages << message.text }
+
+        page.go_to
+        page.execute(%(console.log("first")))
+        wait_for { messages }.to eq(["first"])
+
+        page.off(:console, id)
+        page.execute(%(console.log("second")))
+        wait_for { page.console.size }.to eq(2)
+
+        expect(messages).to eq(["first"])
       end
-
-      page.evaluate("console.log('hello')")
-      wait_for { message_a }.to eq("hello")
-      wait_for { message_b }.to eq("hello")
-
-      page.off("Runtime.consoleAPICalled", handler)
-      page.evaluate("console.log('goodbye')")
-
-      expect(message_a).to eq("hello")
-      wait_for { message_b }.to eq("goodbye")
     end
   end
 end

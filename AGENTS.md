@@ -35,6 +35,36 @@ The suite boots a real Chrome and a Sinatra/Puma test app (`spec/support/applica
   `lib/ferrum/contexts.rb` -> `spec/unit/contexts_spec.rb`, `lib/ferrum/client/web_socket.rb` ->
   `spec/unit/client/web_socket_spec.rb`. Never add them to the feature spec files in `spec/`.
 - Don't test private methods; cover them through the public API.
+- Structure every spec file in one of two shapes, nothing else:
+
+  ```ruby
+  describe Ferrum::Context do
+    describe "#windows" do
+      it "waits for the window to load" do
+  ```
+
+  ```ruby
+  describe Ferrum::Cookies do
+    describe "#each" do
+      context "when a block is given" do
+        it "yields each cookie" do
+  ```
+
+  The top `describe` is the class, and the file path mirrors that class's path in `lib/`, for feature and unit
+  specs alike: `Ferrum::Page::Screenshot` -> `spec/page/screenshot_spec.rb`, `Ferrum::Browser::Process` ->
+  `spec/unit/browser/process_spec.rb`. Each nested `describe` names one public method (`"#method"`, `".method"` for
+  class methods), never a topic like `"context scope"`.
+- A `describe` holds either only examples or only contexts, never a mix. Use contexts only for contrasting groups,
+  at least two that oppose each other (`"when a block is given"` / `"when no block is given"`). A single condition
+  next to plain examples isn't a context: keep the examples flat and put the condition in the example name, e.g.
+  `it "sets cookies for given domain when base_url isn't set"`. The one exception: a single context is fine when it
+  carries `let`, hooks (`before`/`after`/`around`) or tags that its examples share.
+- Every example must be runnable alone with `rspec spec/file_spec.rb:LINE`, so each one gets its own `it` on its
+  own line. No `shared_examples`/`include_examples` and no loops that generate examples. Share the steps and
+  assertions through a helper method in the `describe` instead, and call it from one-line examples, one per
+  variant. The only exception is the data-table loops in `spec/unit/frame/script_spec.rb`.
+- Start every example name with a verb in the third person: "yields each cookie", "returns the cookie with the
+  given name". Never "must ...", "should ..." or a bare noun.
 - Almost no comments in specs; the example name says what is checked.
 - For a bug fix, make sure the new spec fails without the fix and passes with it.
 

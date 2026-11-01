@@ -4,62 +4,66 @@ require "stringio"
 require "logger"
 
 describe Ferrum::Browser do
-  it "logs requests and responses with native Logger" do
-    custom_logger = Class.new do
-      def initialize(logger)
-        @logger = logger
-      end
+  describe ".new" do
+    it "logs requests and responses with native Logger" do
+      custom_logger = Class.new do
+        def initialize(logger)
+          @logger = logger
+        end
 
-      def puts(*args)
-        @logger << args
+        def puts(*args)
+          @logger << args
+        end
       end
+      file_path = "test.log"
+      logger = custom_logger.new(Logger.new(file_path))
+      browser = Ferrum::Browser.new(logger: logger)
+      browser.body
+      file_log = File.read(file_path)
+      expect(file_log).to include("document.documentElement?.outerHTML")
+      expect(file_log).to include("<html><head></head><body></body></html>")
+    ensure
+      FileUtils.rm_f(file_path)
+      browser.quit
     end
-    file_path = "test.log"
-    logger = custom_logger.new(Logger.new(file_path))
-    browser = Ferrum::Browser.new(logger: logger)
-    browser.body
-    file_log = File.read(file_path)
-    expect(file_log).to include("document.documentElement?.outerHTML")
-    expect(file_log).to include("<html><head></head><body></body></html>")
-  ensure
-    FileUtils.rm_f(file_path)
-    browser.quit
+
+    it "logs requests and responses" do
+      logger = StringIO.new
+      browser = Ferrum::Browser.new(logger: logger)
+
+      browser.body
+
+      expect(logger.string).to include("document.documentElement?.outerHTML")
+      expect(logger.string).to include("<html><head></head><body></body></html>")
+    ensure
+      browser.quit
+    end
+
+    it "passes browser_options to the command line" do
+      browser = Ferrum::Browser.new(browser_options: { "blink-settings" => "imagesEnabled=false" })
+
+      arguments = browser.command("Browser.getBrowserCommandLine")["arguments"]
+
+      expect(arguments).to include("--blink-settings=imagesEnabled=false")
+    ensure
+      browser.quit
+    end
   end
 
-  it "logs requests and responses" do
-    logger = StringIO.new
-    browser = Ferrum::Browser.new(logger: logger)
+  describe "#restart" do
+    it "restarts a browser whose previous start died after the client was built" do
+      browser = Ferrum::Browser.new
 
-    browser.body
+      error = StandardError.new
+      allow(Ferrum::Contexts).to receive(:new).and_raise(error)
+      expect { browser.restart }.to raise_error(error)
 
-    expect(logger.string).to include("document.documentElement?.outerHTML")
-    expect(logger.string).to include("<html><head></head><body></body></html>")
-  ensure
-    browser.quit
-  end
+      allow(Ferrum::Contexts).to receive(:new).and_call_original
 
-  it "shows command line options passed" do
-    browser = Ferrum::Browser.new(browser_options: { "blink-settings" => "imagesEnabled=false" })
-
-    arguments = browser.command("Browser.getBrowserCommandLine")["arguments"]
-
-    expect(arguments).to include("--blink-settings=imagesEnabled=false")
-  ensure
-    browser.quit
-  end
-
-  it "restarts a browser whose previous start died after the client was built" do
-    browser = Ferrum::Browser.new
-
-    error = StandardError.new
-    allow(Ferrum::Contexts).to receive(:new).and_raise(error)
-    expect { browser.restart }.to raise_error(error)
-
-    allow(Ferrum::Contexts).to receive(:new).and_call_original
-
-    expect { browser.restart }.not_to raise_error
-    expect(browser.contexts).not_to be_nil
-  ensure
-    browser&.quit
+      expect { browser.restart }.not_to raise_error
+      expect(browser.contexts).not_to be_nil
+    ensure
+      browser&.quit
+    end
   end
 end

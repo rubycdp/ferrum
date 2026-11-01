@@ -1,6 +1,11 @@
 # frozen_string_literal: true
 
 describe Ferrum::Mouse do
+  let(:smooth_browser) do
+    defaults = Ferrum::Browser::Options::Chrome.options.except("disable-smooth-scrolling")
+    Ferrum::Browser.new(ignore_default_browser_options: true, browser_options: defaults.merge("no-sandbox" => nil))
+  end
+
   describe "#click" do
     it "supports clicking precise coordinates" do
       browser.go_to("/click_coordinates")
@@ -30,6 +35,32 @@ describe Ferrum::Mouse do
       browser.at_xpath("//a[text() = 'Link']").click
       expect(browser.body).to include("Hello world")
     end
+
+    context "on the click test page" do
+      before do
+        browser.go_to("/click_test")
+      end
+
+      after do
+        browser.resize(width: 1024, height: 768)
+        browser.reset
+      end
+
+      it "clicks elements scrolled into view" do
+        browser.resize(width: 200, height: 200)
+        log = browser.at_css("#log")
+
+        instructions = %w[one four one two three]
+        instructions.each do |instruction|
+          browser.at_css("##{instruction}").scroll_into_view.click
+          expect(log.text).to eq(instruction)
+        end
+      end
+
+      it "clicks an element inside an svg" do
+        expect { browser.at_css("#myrect").click }.not_to raise_error
+      end
+    end
   end
 
   describe "#scroll_by" do
@@ -43,30 +74,20 @@ describe Ferrum::Mouse do
         browser.evaluate("[window.scrollX, window.scrollY]")
       ).to eq([10, 20])
     end
-  end
 
-  context "with smooth scrolling", :launch do
-    let(:smooth_browser) do
-      defaults = Ferrum::Browser::Options::Chrome.options.except("disable-smooth-scrolling")
-      Ferrum::Browser.new(ignore_default_browser_options: true, browser_options: defaults.merge("no-sandbox" => nil))
-    end
+    context "with smooth scrolling", :launch do
+      before do
+        smooth_browser.go_to(base_url("/long_page"))
+        smooth_browser.resize(width: 10, height: 10)
+        smooth_browser.execute("document.documentElement.style.scrollBehavior = 'smooth'")
+      end
 
-    before do
-      smooth_browser.go_to(base_url("/long_page"))
-      smooth_browser.resize(width: 10, height: 10)
-      smooth_browser.execute("document.documentElement.style.scrollBehavior = 'smooth'")
-    end
+      after { smooth_browser.quit }
 
-    after { smooth_browser.quit }
-
-    it "scrolls by instantly" do
-      smooth_browser.mouse.scroll_by(30, 70)
-      expect(smooth_browser.evaluate("[window.scrollX, window.scrollY]")).to eq([30, 70])
-    end
-
-    it "scrolls to instantly" do
-      smooth_browser.mouse.scroll_to(200, 100)
-      expect(smooth_browser.evaluate("[window.scrollX, window.scrollY]")).to eq([200, 100])
+      it "scrolls instantly" do
+        smooth_browser.mouse.scroll_by(30, 70)
+        expect(smooth_browser.evaluate("[window.scrollX, window.scrollY]")).to eq([30, 70])
+      end
     end
   end
 
@@ -78,6 +99,21 @@ describe Ferrum::Mouse do
       expect(
         browser.evaluate("[window.scrollX, window.scrollY]")
       ).to eq([200, 100])
+    end
+
+    context "with smooth scrolling", :launch do
+      before do
+        smooth_browser.go_to(base_url("/long_page"))
+        smooth_browser.resize(width: 10, height: 10)
+        smooth_browser.execute("document.documentElement.style.scrollBehavior = 'smooth'")
+      end
+
+      after { smooth_browser.quit }
+
+      it "scrolls instantly" do
+        smooth_browser.mouse.scroll_to(200, 100)
+        expect(smooth_browser.evaluate("[window.scrollX, window.scrollY]")).to eq([200, 100])
+      end
     end
   end
 
@@ -162,32 +198,6 @@ describe Ferrum::Mouse do
         ["up",   107, 108, 0], # right up
         ["move", 109, 110, 0] # none pressed
       ])
-    end
-  end
-
-  context "mouse support" do
-    before do
-      browser.go_to("/click_test")
-    end
-
-    after do
-      browser.resize(width: 1024, height: 768)
-      browser.reset
-    end
-
-    it "clicks elements scrolled into view" do
-      browser.resize(width: 200, height: 200)
-      log = browser.at_css("#log")
-
-      instructions = %w[one four one two three]
-      instructions.each do |instruction|
-        browser.at_css("##{instruction}").scroll_into_view.click
-        expect(log.text).to eq(instruction)
-      end
-    end
-
-    it "can click an element inside an svg" do
-      expect { browser.at_css("#myrect").click }.not_to raise_error
     end
   end
 end

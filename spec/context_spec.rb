@@ -14,7 +14,7 @@ describe Ferrum::Context do
       popup.close
     end
 
-    it "can access a second window of the same name" do
+    it "opens a second window under the same name" do
       browser.go_to
 
       browser.execute <<-JS
@@ -65,6 +65,95 @@ describe Ferrum::Context do
       expect(page.evaluate("window.runs")).to eq(1)
     ensure
       browser&.quit
+    end
+
+    it "connects to a service worker on demand, keeping it alive" do
+      page.go_to
+      page.evaluate(%(await navigator.serviceWorker.register("/sw.js")), timeout: 5)
+
+      target = wait_for_target(&:service_worker?)
+      browser.attach_target(target.id)
+
+      expect(target.worker.evaluate("1 + 1")).to eq(2)
+    end
+  end
+
+  describe "#workers" do
+    it "returns a connected dedicated worker" do
+      page.go_to
+
+      page.execute <<~JS
+        new Worker(URL.createObjectURL(new Blob(
+          ["self.onmessage = () => self.postMessage(1 + 1)"],
+          { type: "application/javascript" }
+        )))
+      JS
+
+      target = wait_for_target(&:worker?)
+
+      expect(target.url).to start_with("blob:")
+      expect(target.connected?).to eq(true)
+      expect(browser.workers).to contain_exactly(target.worker)
+      expect(target.worker.evaluate("1 + 1")).to eq(2)
+    end
+
+    it "returns a connected shared worker" do
+      page.go_to
+
+      page.execute <<~JS
+        new SharedWorker(URL.createObjectURL(new Blob(
+          ["self.onconnect = () => {}"],
+          { type: "application/javascript" }
+        )))
+      JS
+
+      target = wait_for_target(&:shared_worker?)
+
+      expect(target.connected?).to eq(true)
+      expect(browser.workers).to contain_exactly(target.worker)
+      expect(target.worker.evaluate("1 + 1")).to eq(2)
+    end
+
+    it "leaves out a detached worker" do
+      page.go_to
+
+      page.execute <<~JS
+        new Worker(URL.createObjectURL(new Blob(
+          ["self.onmessage = () => {}"],
+          { type: "application/javascript" }
+        )))
+      JS
+
+      target = wait_for_target(&:worker?)
+      wait_for { browser.workers }.to contain_exactly(target.worker)
+      page.command("Target.detachFromTarget", sessionId: target.session_id)
+
+      wait_for { browser.workers }.to be_empty
+    end
+  end
+
+  describe "#service_workers" do
+    it "returns registered service workers without connecting to them" do
+      page.go_to
+      page.evaluate(%(await navigator.serviceWorker.register("/sw.js")), timeout: 5)
+
+      target = wait_for_target(&:service_worker?)
+
+      expect(target.url).to end_with("/sw.js")
+      expect(target.connected?).to eq(false)
+      expect(browser.service_workers).to contain_exactly(target)
+    end
+
+    it "detaches from them so Chrome can terminate them" do
+      page.go_to
+      page.execute(%(await navigator.serviceWorker.register("/sw.js")), timeout: 5)
+      target = wait_for_target(&:service_worker?)
+
+      wait_for do
+        browser.client.command("Target.getTargets")["targetInfos"]
+               .select { |info| info["type"] == "service_worker" }.map { |info| info["attached"] }
+      end.to eq([false])
+      expect(target.session_id).to be_nil
     end
   end
 end

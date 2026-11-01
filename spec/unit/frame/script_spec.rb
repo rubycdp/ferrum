@@ -5,6 +5,46 @@ describe Ferrum::Frame::Script do
     described_class.new(source)
   end
 
+  describe ".new" do
+    [
+      "function() {",
+      "function() { return 1",
+      "function(a, b",
+      "function(a, b) }",
+      "() =>",
+      "(a, b) =>",
+      "=> 1",
+      "}}}",
+      ")))",
+      "]]]",
+      "{[(",
+      "'unterminated",
+      "\"unterminated",
+      "`unterminated",
+      "`unterminated ${",
+      "`${`${`${",
+      "/unterminated",
+      "/[unterminated",
+      "a /* unterminated",
+      "\\",
+      "@#%^&",
+      "\u0000",
+      "😀 => 😀",
+      "function café(é) { return é }",
+      "a" * 10_000,
+      "(" * 1_000,
+      "function() { #{'{' * 500}#{'}' * 500} }",
+      "#{'`${' * 200}#{'}`' * 200}"
+    ].each do |source|
+      it "reads #{source[0, 30].inspect} without raising" do
+        result = script(source)
+
+        expect { [result.code, result.declaration?, result.awaits?] }
+          .not_to raise_error
+      end
+    end
+  end
+
   describe "#declaration?" do
     {
       "function() { return 1 }" => true,
@@ -88,6 +128,29 @@ describe Ferrum::Frame::Script do
         expect(script(source).declaration?).to be(expected)
       end
     end
+
+    {
+      "function() {" => false,
+      "function() { return 1" => false,
+      "function(a, b) }" => false,
+      "}}}" => false,
+      "'unterminated" => false
+    }.each do |source, expected|
+      it "doesn't treat #{source.inspect} as a declaration" do
+        expect(script(source).declaration?).to be(expected)
+      end
+    end
+
+    it "reads a declaration after non-ASCII text" do
+      result = script("/* ü */ function(é, b) { return 'ä' } // ö")
+
+      expect(result.declaration?).to be(true)
+      expect(result.code).to eq("function(é, b) { return 'ä' }")
+    end
+
+    it "reads an ASCII string in another encoding" do
+      expect(script("(a) => a".b).declaration?).to be(true)
+    end
   end
 
   describe "#code" do
@@ -131,6 +194,51 @@ describe Ferrum::Frame::Script do
       JS
 
       expect(script(source).code).to eq("const a = 1;\nconst b = { c: '}' };\nreturn a + b.c")
+    end
+
+    {
+      "\"é\" + 1" => "\"é\" + 1",
+      "// café\n1 + 1" => "1 + 1",
+      "/* ü */ document.title // ä" => "document.title",
+      "'日本語' // コメント" => "'日本語'",
+      "`😀 ${a}` // 😀" => "`😀 ${a}`"
+    }.each do |source, expected|
+      it "reads the code of #{source.inspect}" do
+        expect(script(source).code).to eq(expected)
+      end
+    end
+
+    it "leaves a script that isn't UTF-8 as it is" do
+      source = "(a) => 'é'".encode("UTF-16LE")
+
+      expect([script(source).code, script(source).declaration?]).to eq([source, false])
+    end
+
+    it "leaves a script with invalid bytes as it is" do
+      source = "1 + \xFF".dup.force_encoding("UTF-8")
+      result = script(source)
+
+      expect(result.code.bytes).to eq(source.bytes)
+      expect([result.declaration?, result.awaits?]).to eq([false, false])
+    end
+
+    {
+      "a / b / c" => "a / b / c",
+      "(a) / 2 // half" => "(a) / 2",
+      "a[0] / 2 // half" => "a[0] / 2",
+      "x = /ab+c/i // regexp" => "x = /ab+c/i",
+      "return /a/ // regexp" => "return /a/",
+      "typeof /a/" => "typeof /a/",
+      "[/a/, /b/]" => "[/a/, /b/]",
+      "a ? /x/ : /y/" => "a ? /x/ : /y/",
+      "s.replace(/'/g, '\"') // quote" => "s.replace(/'/g, '\"')",
+      "s.match(/[/]/) // slash" => "s.match(/[/]/)",
+      "s.split(/\\//) // escaped" => "s.split(/\\//)",
+      "1 / 2 / '//' // comment" => "1 / 2 / '//'"
+    }.each do |source, expected|
+      it "reads #{source.inspect}" do
+        expect(script(source).code).to eq(expected)
+      end
     end
   end
 
@@ -190,118 +298,6 @@ describe Ferrum::Frame::Script do
     }.each do |source, expected|
       it "is #{expected.inspect} for #{source.inspect}" do
         expect(script(source).split_last_statement).to eq(expected)
-      end
-    end
-  end
-
-  describe "broken input" do
-    [
-      "function() {",
-      "function() { return 1",
-      "function(a, b",
-      "function(a, b) }",
-      "() =>",
-      "(a, b) =>",
-      "=> 1",
-      "}}}",
-      ")))",
-      "]]]",
-      "{[(",
-      "'unterminated",
-      "\"unterminated",
-      "`unterminated",
-      "`unterminated ${",
-      "`${`${`${",
-      "/unterminated",
-      "/[unterminated",
-      "a /* unterminated",
-      "\\",
-      "@#%^&",
-      "\u0000",
-      "😀 => 😀",
-      "function café(é) { return é }",
-      "a" * 10_000,
-      "(" * 1_000,
-      "function() { #{'{' * 500}#{'}' * 500} }",
-      "#{'`${' * 200}#{'}`' * 200}"
-    ].each do |source|
-      it "reads #{source[0, 30].inspect} without raising" do
-        result = script(source)
-
-        expect { [result.code, result.declaration?, result.awaits?] }
-          .not_to raise_error
-      end
-    end
-
-    {
-      "function() {" => false,
-      "function() { return 1" => false,
-      "function(a, b) }" => false,
-      "}}}" => false,
-      "'unterminated" => false
-    }.each do |source, expected|
-      it "doesn't treat #{source.inspect} as a declaration" do
-        expect(script(source).declaration?).to be(expected)
-      end
-    end
-  end
-
-  describe "non-ASCII scripts" do
-    {
-      "\"é\" + 1" => "\"é\" + 1",
-      "// café\n1 + 1" => "1 + 1",
-      "/* ü */ document.title // ä" => "document.title",
-      "'日本語' // コメント" => "'日本語'",
-      "`😀 ${a}` // 😀" => "`😀 ${a}`"
-    }.each do |source, expected|
-      it "reads the code of #{source.inspect}" do
-        expect(script(source).code).to eq(expected)
-      end
-    end
-
-    it "reads a declaration after non-ASCII text" do
-      result = script("/* ü */ function(é, b) { return 'ä' } // ö")
-
-      expect(result.declaration?).to be(true)
-      expect(result.code).to eq("function(é, b) { return 'ä' }")
-    end
-
-    it "reads an ASCII string in another encoding" do
-      expect(script("(a) => a".b).declaration?).to be(true)
-    end
-
-    it "leaves a script that isn't UTF-8 as it is" do
-      source = "(a) => 'é'".encode("UTF-16LE")
-
-      expect([script(source).code, script(source).declaration?]).to eq([source, false])
-    end
-
-    it "leaves a script with invalid bytes as it is" do
-      source = "1 + \xFF".dup.force_encoding("UTF-8")
-      result = script(source)
-
-      expect(result.code.bytes).to eq(source.bytes)
-      expect([result.declaration?, result.awaits?]).to eq([false, false])
-    end
-  end
-
-  describe "division and regular expressions" do
-    {
-      "a / b / c" => "a / b / c",
-      "(a) / 2 // half" => "(a) / 2",
-      "a[0] / 2 // half" => "a[0] / 2",
-      "x = /ab+c/i // regexp" => "x = /ab+c/i",
-      "return /a/ // regexp" => "return /a/",
-      "typeof /a/" => "typeof /a/",
-      "[/a/, /b/]" => "[/a/, /b/]",
-      "a ? /x/ : /y/" => "a ? /x/ : /y/",
-      "s.replace(/'/g, '\"') // quote" => "s.replace(/'/g, '\"')",
-      "s.match(/[/]/) // slash" => "s.match(/[/]/)",
-      "s.split(/\\//) // escaped" => "s.split(/\\//)",
-      "1 / 2 / '//' // comment" => "1 / 2 / '//'"
-    }.each do |source, expected|
-      it "reads #{source.inspect}" do
-        expect(script(source).code).to eq(expected)
       end
     end
   end
