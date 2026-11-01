@@ -607,7 +607,7 @@ describe Ferrum::Node do
     it "raises NodeMovingError for a node that keeps moving" do
       browser.go_to("/animation")
 
-      expect { browser.at_css(".animated").wait_for_stop_moving(attempts: 2) }
+      expect { browser.at_css(".animated").wait_for_stop_moving(delay: 0.1, attempts: 2) }
         .to raise_error(Ferrum::NodeMovingError, /is moving/)
     end
   end
