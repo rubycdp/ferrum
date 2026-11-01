@@ -115,6 +115,20 @@ describe Ferrum::Network::Exchange do
     end
   end
 
+  describe "#loader_id" do
+    it "returns the loader id of the request" do
+      page.go_to
+
+      expect(last_exchange.loader_id).to eq(page.main_frame.loader_id)
+    end
+
+    it "returns nil when request is blank" do
+      exchange = Ferrum::Network::Exchange.new(page, "1")
+
+      expect(exchange.loader_id).to be_nil
+    end
+  end
+
   describe "#blank?" do
     it "determines if exchange is empty" do
       page.go_to
@@ -182,6 +196,20 @@ describe Ferrum::Network::Exchange do
     end
   end
 
+  describe "#xhr?" do
+    it "returns true for XHR requests" do
+      page.go_to("/headers_with_ajax")
+
+      expect(last_exchange.xhr?).to be(true)
+    end
+
+    it "returns false for document requests" do
+      page.go_to("/headers_with_ajax")
+
+      expect(first_exchange.xhr?).to be(false)
+    end
+  end
+
   describe "#redirect?" do
     it "determines if exchange is a redirect" do
       page.go_to("/redirect_again")
@@ -197,6 +225,23 @@ describe Ferrum::Network::Exchange do
 
       exchange.request = Ferrum::Network::Request.new({ "type" => "Ping" })
       expect(exchange.ping?).to be true
+    end
+  end
+
+  describe "#blob?" do
+    it "returns true for blob requests" do
+      exchange = Ferrum::Network::Exchange.new(page, "1")
+      exchange.request = Ferrum::Network::Request.new(
+        { "type" => "Document", "request" => { "url" => "blob:null/75787aaf-a81f-4237-98d7-0d51fe6cfcba" } }
+      )
+
+      expect(exchange.blob?).to be(true)
+    end
+
+    it "returns false for http requests" do
+      page.go_to
+
+      expect(last_exchange.blob?).to be(false)
     end
   end
 

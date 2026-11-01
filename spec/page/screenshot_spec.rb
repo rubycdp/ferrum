@@ -525,4 +525,27 @@ describe Ferrum::Page::Screenshot do
       browser&.quit
     end
   end
+
+  describe "#device_pixel_ratio" do
+    it "returns 1 by default" do
+      page.go_to
+
+      expect(page.device_pixel_ratio).to eq(1)
+    end
+
+    it "returns the emulated scale factor" do
+      page.go_to
+      page.set_viewport(width: 500, height: 300, scale_factor: 3)
+
+      expect(page.device_pixel_ratio).to eq(3)
+    end
+  end
+
+  describe "#document_size" do
+    it "returns the full size of the document beyond the viewport" do
+      page.go_to("/custom_html_size")
+
+      expect(page.document_size).to eq([1280, 1024])
+    end
+  end
 end

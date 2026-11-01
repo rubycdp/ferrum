@@ -33,6 +33,38 @@ describe Ferrum::Keyboard do
     end
   end
 
+  describe "#type" do
+    before { browser.go_to("/type") }
+
+    it "types text into the focused element" do
+      input = browser.at_css("#empty_input").focus
+
+      browser.keyboard.type("Hello")
+
+      expect(input.value).to eq("Hello")
+    end
+
+    it "types a key combination given as an array" do
+      input = browser.at_css("#empty_input").focus
+
+      browser.keyboard.type([:shift, "s"], "tring")
+
+      expect(input.value).to eq("String")
+    end
+
+    it "presses special keys given as symbols" do
+      input = browser.at_css("#filled_input").focus
+
+      browser.keyboard.type(:end, :backspace)
+
+      expect(input.value).to eq("Tex")
+    end
+
+    it "returns itself" do
+      expect(browser.keyboard.type("a")).to eq(browser.keyboard)
+    end
+  end
+
   describe "#hold" do
     before do
       browser.go_to("/type")
@@ -105,6 +137,20 @@ describe Ferrum::Keyboard do
     it "rejects keys that are not modifiers" do
       expect { browser.keyboard.hold(:enter) { nil } }.to raise_error(ArgumentError, "not a modifier key: :enter")
       expect { browser.keyboard.hold(:shift) }.to raise_error(ArgumentError, "block is required")
+    end
+  end
+
+  describe "#modifiers" do
+    it "returns the bitfield of the given keys" do
+      expect(browser.keyboard.modifiers(%i[alt ctrl meta shift])).to eq(15)
+    end
+
+    it "accepts the aliases of modifier keys" do
+      expect(browser.keyboard.modifiers(%i[control command])).to eq(6)
+    end
+
+    it "ignores keys that aren't modifiers" do
+      expect(browser.keyboard.modifiers(%i[enter shift])).to eq(8)
     end
   end
 end

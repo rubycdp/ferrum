@@ -74,6 +74,27 @@ describe Ferrum::Page do
     end
   end
 
+  describe "#close" do
+    it "closes the page's target" do
+      page.go_to
+      target_id = page.target_id
+
+      expect(page.close).to be(true)
+
+      wait_for { browser.targets.key?(target_id) }.to be(false)
+    end
+  end
+
+  describe "#position" do
+    it "returns the left and top coordinates of the window" do
+      skip if Ferrum::Utils::Platform.mac? && !browser.options.headless
+
+      page.window_bounds = { left: 30, top: 40 }
+
+      expect(page.position).to eq([30, 40])
+    end
+  end
+
   describe "#position=" do
     it "allows the window to be positioned" do
       skip if Ferrum::Utils::Platform.mac? && !browser.options.headless
@@ -83,6 +104,73 @@ describe Ferrum::Page do
       end.to change {
         page.position
       }.to([10, 20])
+    end
+  end
+
+  describe "#window_bounds=" do
+    it "resizes the window" do
+      page.window_bounds = { width: 800, height: 600 }
+
+      expect(page.window_bounds).to include("width" => 800, "height" => 600)
+    end
+
+    it "changes the window state" do
+      page.go_to
+
+      page.window_bounds = { window_state: "fullscreen" }
+
+      expect(page.window_bounds["windowState"]).to eq("fullscreen")
+    end
+  end
+
+  describe "#window_bounds" do
+    it "returns the bounds and state of the window" do
+      expect(page.window_bounds).to include(
+        "left" => an_instance_of(Integer),
+        "top" => an_instance_of(Integer),
+        "width" => an_instance_of(Integer),
+        "height" => an_instance_of(Integer),
+        "windowState" => "normal"
+      )
+    end
+  end
+
+  describe "#window_id" do
+    it "returns the same id for pages in the same window" do
+      other = browser.create_page
+
+      expect(page.window_id).to be_an(Integer)
+      expect(page.window_id).to eq(other.window_id)
+    end
+
+    it "returns another id for a page in another context" do
+      other = browser.create_page(new_context: true)
+
+      expect(page.window_id).not_to eq(other.window_id)
+    end
+  end
+
+  describe "#refresh" do
+    it "reloads the page and waits for it to load" do
+      page.go_to("/slow")
+      page.execute("window.marker = 'set'")
+
+      page.refresh
+
+      expect(page.evaluate("window.marker")).to be_nil
+      expect(page.body).to include("slow page")
+    end
+  end
+
+  describe "#stop" do
+    it "stops the pending navigation" do
+      page.go_to("/simple")
+      page.execute("location.href = '/really_slow'")
+
+      page.stop
+
+      expect(page.url).to eq(base_url("/simple"))
+      expect(page.at_css("title").text).to eq("Test")
     end
   end
 
@@ -251,16 +339,55 @@ describe Ferrum::Page do
 
       expect(page.evaluate("window.secret")).to eq("top")
     end
+  end
 
-    it "stops running removed JavaScript" do
+  describe "#remove_script_on_new_document" do
+    it "stops running the removed JavaScript in new documents" do
       id = page.evaluate_on_new_document("window.secret = 'top'")
       page.go_to("/simple")
       expect(page.evaluate("window.secret")).to eq("top")
 
-      page.remove_script_on_new_document(id)
+      expect(page.remove_script_on_new_document(id)).to be(true)
       page.reload
 
       expect(page.evaluate("window.secret")).to be_nil
+    end
+  end
+
+  describe "#activate" do
+    it "brings the page to the front" do
+      page.go_to
+      other = browser.create_page
+      other.go_to
+      other.activate
+      wait_for { page.evaluate("document.visibilityState") }.to eq("hidden")
+
+      expect(page.activate).to be(true)
+
+      wait_for { page.evaluate("document.visibilityState") }.to eq("visible")
+    end
+  end
+
+  describe "#command" do
+    it "sends a CDP command and returns its result" do
+      result = page.command("Runtime.evaluate", expression: "1 + 1")
+
+      expect(result.dig("result", "value")).to eq(2)
+    end
+
+    it "waits for the navigation the command starts with wait:" do
+      page.go_to
+      loaded = false
+      page.on("Page.loadEventFired") { loaded = true }
+
+      page.command("Page.navigate", wait: 1, url: base_url("/slow"))
+
+      expect(loaded).to be(true)
+    end
+
+    it "raises when the response doesn't come within timeout:" do
+      expect { page.command("Runtime.evaluate", timeout: 0.5, expression: "new Promise(() => {})", awaitPromise: true) }
+        .to raise_error(Ferrum::TimeoutError)
     end
   end
 
@@ -455,6 +582,20 @@ describe Ferrum::Page do
 
         expect(messages).to eq(["first"])
       end
+    end
+  end
+
+  describe "#document_node_id" do
+    it "returns the node id of the document" do
+      page.go_to
+
+      expect(page.document_node_id).to be_a(Integer).and be_positive
+    end
+
+    it "returns true when sent asynchronously" do
+      page.go_to
+
+      expect(page.document_node_id(async: true)).to be(true)
     end
   end
 end

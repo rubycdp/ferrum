@@ -80,6 +80,75 @@ describe Ferrum::Console do
       expect(console.size).to eq(described_class::LIMIT)
       expect(console.first.text).to eq("5")
     end
+
+    it "returns an enumerator when no block is given" do
+      page.go_to
+      page.execute(%(console.log("a"); console.log("b")))
+
+      wait_for { console.size }.to eq(2)
+      enumerator = console.each
+      expect(enumerator.size).to eq(2)
+      expect(enumerator.map(&:text)).to eq(%w[a b])
+    end
+  end
+
+  describe "#to_a" do
+    it "returns the collected messages oldest first" do
+      page.go_to
+      page.execute(%(console.log("a"); console.log("b")))
+
+      wait_for { console.to_a.map(&:text) }.to eq(%w[a b])
+    end
+
+    it "returns a copy that doesn't change the console" do
+      page.go_to("/console_log")
+      wait_for { console.size }.to eq(1)
+
+      console.to_a.clear
+
+      expect(console.size).to eq(1)
+    end
+  end
+
+  describe "#last" do
+    it "returns the most recent message" do
+      page.go_to
+      page.execute(%(console.log("a"); console.log("b")))
+
+      wait_for { console.size }.to eq(2)
+      expect(console.last.text).to eq("b")
+    end
+
+    it "returns nil when no message was collected" do
+      page.go_to
+
+      expect(console.last).to be_nil
+    end
+  end
+
+  describe "#size" do
+    it "returns the number of collected messages" do
+      page.go_to
+      expect(console.size).to eq(0)
+
+      page.execute(%(console.log("a"); console.log("b")))
+
+      wait_for { console.size }.to eq(2)
+    end
+  end
+
+  describe "#empty?" do
+    it "returns true when no message was collected" do
+      page.go_to
+
+      expect(console).to be_empty
+    end
+
+    it "returns false once a message is collected" do
+      page.go_to("/console_log")
+
+      wait_for { console.empty? }.to be(false)
+    end
   end
 
   describe "#clear" do
@@ -92,6 +161,41 @@ describe Ferrum::Console do
 
       page.execute(%(console.log("again")))
       wait_for { console.map(&:text) }.to eq(["again"])
+    end
+  end
+
+  describe "#on" do
+    it "calls the block for every new message" do
+      texts = Concurrent::Array.new
+      console.on { |message| texts << message.text }
+
+      page.go_to
+      page.execute(%(console.log("a"); console.log("b")))
+
+      wait_for { texts }.to eq(%w[a b])
+    end
+
+    it "returns a distinct id for every listener" do
+      first = console.on { nil }
+      second = console.on { nil }
+
+      expect(first).not_to eq(second)
+    end
+  end
+
+  describe "#off" do
+    it "stops calling the removed listener" do
+      removed = Concurrent::Array.new
+      kept = Concurrent::Array.new
+      id = console.on { |message| removed << message.text }
+      console.on { |message| kept << message.text }
+
+      console.off(id)
+      page.go_to
+      page.execute(%(console.log("a")))
+
+      wait_for { kept }.to eq(["a"])
+      expect(removed).to be_empty
     end
   end
 end
