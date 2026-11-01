@@ -6,6 +6,16 @@ describe Ferrum::Mouse do
     Ferrum::Browser.new(ignore_default_browser_options: true, browser_options: defaults.merge("no-sandbox" => nil))
   end
 
+  def record_mouse_buttons
+    browser.go_to("/simple")
+    browser.execute(<<~JS)
+      window.events = [];
+      ["mousedown", "mouseup"].forEach(type =>
+        document.addEventListener(type, e => events.push(`${type}:${e.button}:${e.detail}`)));
+    JS
+    browser.mouse.move(x: 10, y: 10)
+  end
+
   describe "#click" do
     it "supports clicking precise coordinates" do
       browser.go_to("/click_coordinates")
@@ -114,6 +124,58 @@ describe Ferrum::Mouse do
         smooth_browser.mouse.scroll_to(200, 100)
         expect(smooth_browser.evaluate("[window.scrollX, window.scrollY]")).to eq([200, 100])
       end
+    end
+  end
+
+  describe "#down" do
+    it "presses the left button by default" do
+      record_mouse_buttons
+
+      browser.mouse.down
+
+      expect(browser.evaluate("events")).to eq(["mousedown:0:1"])
+    end
+
+    it "presses the given button with the given click count" do
+      record_mouse_buttons
+
+      browser.mouse.down(button: :right, count: 2)
+
+      expect(browser.evaluate("events")).to eq(["mousedown:2:2"])
+    end
+
+    it "raises for an unknown button" do
+      expect { browser.mouse.down(button: :wheel) }.to raise_error(RuntimeError, "Invalid button: wheel")
+    end
+
+    it "returns itself" do
+      expect(browser.mouse.down).to eq(browser.mouse)
+    end
+  end
+
+  describe "#up" do
+    it "releases the left button by default" do
+      record_mouse_buttons
+
+      browser.mouse.down.up
+
+      expect(browser.evaluate("events")).to eq(%w[mousedown:0:1 mouseup:0:1])
+    end
+
+    it "releases the given button with the given click count" do
+      record_mouse_buttons
+
+      browser.mouse.down(button: :right, count: 2).up(button: :right, count: 2)
+
+      expect(browser.evaluate("events")).to eq(%w[mousedown:2:2 mouseup:2:2])
+    end
+
+    it "raises for an unknown button" do
+      expect { browser.mouse.up(button: :wheel) }.to raise_error(RuntimeError, "Invalid button: wheel")
+    end
+
+    it "returns itself" do
+      expect(browser.mouse.down.up).to eq(browser.mouse)
     end
   end
 

@@ -1,6 +1,142 @@
 # frozen_string_literal: true
 
 describe Ferrum::Node do
+  describe "#description" do
+    it "returns Chrome's description of the node" do
+      browser.go_to("/simple")
+
+      description = browser.at_css("#nav").description
+
+      expect(description).to include("nodeName" => "A", "localName" => "a")
+      expect(description["attributes"]).to include("id", "nav")
+    end
+  end
+
+  describe "#tag_name" do
+    before { browser.go_to("/simple") }
+
+    it "returns the lowercased tag name of an element" do
+      expect(browser.at_css("#nav").tag_name).to eq("a")
+    end
+
+    it "returns the node name of a text node" do
+      expect(browser.at_xpath("//a[@id='nav']/text()").tag_name).to eq("#text")
+    end
+  end
+
+  describe "#node?" do
+    before { browser.go_to("/simple") }
+
+    it "returns true for an element" do
+      expect(browser.at_css("#nav").node?).to eq(true)
+    end
+
+    it "returns false for a text node" do
+      expect(browser.at_xpath("//a[@id='nav']/text()").node?).to eq(false)
+    end
+  end
+
+  describe "#frame" do
+    before { browser.go_to("/frame_parent") }
+
+    it "returns the frame an iframe element contains" do
+      frame = browser.at_css("#childFrame").frame
+
+      expect(frame).to be_a(Ferrum::Frame)
+      expect(frame.at_css("#childBody")).to be_a(described_class)
+    end
+
+    it "returns nil for an element that isn't a frame" do
+      expect(browser.at_css("#parentBody").frame).to be_nil
+    end
+  end
+
+  describe "#focus" do
+    before { browser.go_to("/form") }
+
+    it "focuses the node" do
+      browser.at_css("#form_name").focus
+
+      expect(browser.evaluate("document.activeElement.id")).to eq("form_name")
+    end
+
+    it "returns the node" do
+      node = browser.at_css("#form_name")
+
+      expect(node.focus).to be(node)
+    end
+  end
+
+  describe "#blur" do
+    before { browser.go_to("/form") }
+
+    it "removes focus from the node" do
+      browser.at_css("#form_name").focus.blur
+
+      expect(browser.evaluate("document.activeElement.tagName")).to eq("BODY")
+    end
+
+    it "returns the node" do
+      node = browser.at_css("#form_name")
+
+      expect(node.blur).to be(node)
+    end
+  end
+
+  describe "#hover" do
+    it "raises NotImplementedError" do
+      browser.go_to("/simple")
+
+      expect { browser.at_css("#nav").hover }.to raise_error(Ferrum::NotImplementedError)
+    end
+  end
+
+  describe "#scroll_into_view" do
+    before { browser.go_to("/scroll") }
+
+    it "scrolls the node into the window" do
+      link = browser.at_xpath("//a[*//text() = 'Below the fold']")
+
+      link.scroll_into_view
+
+      expect(link.in_viewport?).to eq(true)
+    end
+
+    it "scrolls the node into its scrollable parent" do
+      link = browser.at_xpath("//a[text() = 'Link outside viewport']")
+      box = browser.at_css("#overflow-box")
+
+      link.scroll_into_view
+
+      expect(link.in_viewport?(of: box)).to eq(true)
+    end
+
+    it "returns the node" do
+      link = browser.at_xpath("//a[*//text() = 'Below the fold']")
+
+      expect(link.scroll_into_view).to be(link)
+    end
+  end
+
+  describe "#in_viewport?" do
+    before { browser.go_to("/scroll") }
+
+    it "returns true for a node within the window" do
+      expect(browser.at_css("#overflow-box").in_viewport?).to eq(true)
+    end
+
+    it "returns false for a node below the fold" do
+      expect(browser.at_xpath("//a[*//text() = 'Below the fold']").in_viewport?).to eq(false)
+    end
+
+    it "returns false for a node outside the bounds of the element given in of:" do
+      link = browser.at_xpath("//a[text() = 'Link outside viewport']")
+
+      expect(link.in_viewport?).to eq(true)
+      expect(link.in_viewport?(of: browser.at_css("#overflow-box"))).to eq(false)
+    end
+  end
+
   describe "#click" do
     it "hovers an element before clicking it" do
       browser.go_to("/with_js")
@@ -435,32 +571,15 @@ describe Ferrum::Node do
   end
 
   describe "#[]" do
-    before do
-      browser.go_to("/attributes_properties")
+    before { browser.go_to("/attributes_properties") }
+
+    it "returns the property with the given name" do
+      expect(browser.at_css(".some_other_class")["innerHTML"]).to eq "<p>foobar</p>"
     end
 
-    it "gets normalized href" do
-      expect(browser.at_xpath("//a[text() = 'Loop']").attribute("href"))
-        .to eq("/attributes_properties")
-    end
-
-    it "gets innerHTML" do
-      expect(browser.at_css(".some_other_class").property("innerHTML")).to eq "<p>foobar</p>"
-    end
-
-    it "gets an attribute whose name has a quote" do
-      expect(browser.at_css("#my_link").attribute("it's")).to be_nil
-    end
-
-    it "gets attribute" do
-      link = browser.at_xpath("//a[text() = 'Loop']")
-      expect(link.attribute("data-random")).to eq "42"
-      expect(link.attribute("onclick")).to eq "return false;"
-    end
-
-    it "gets boolean attributes as booleans" do
-      expect(browser.at_css("input#checked").property("checked")).to be true
-      expect(browser.at_css("input#unchecked").property("checked")).to be false
+    it "returns boolean properties as booleans" do
+      expect(browser.at_css("input#checked")["checked"]).to be true
+      expect(browser.at_css("input#unchecked")["checked"]).to be false
     end
   end
 
@@ -472,6 +591,24 @@ describe Ferrum::Node do
       el2 = browser.at_css("#filled_div")
       expect(el2 == el1).to be_falsey
       expect(el1 == el2).to be_falsey
+    end
+  end
+
+  describe "#wait_for_stop_moving" do
+    it "returns the content quads of a static node" do
+      browser.go_to("/simple")
+
+      quads = browser.at_css("#nav").wait_for_stop_moving
+
+      expect(quads.size).to eq(1)
+      expect(quads.first.size).to eq(8)
+    end
+
+    it "raises NodeMovingError for a node that keeps moving" do
+      browser.go_to("/animation")
+
+      expect { browser.at_css(".animated").wait_for_stop_moving(delay: 0.1, attempts: 2) }
+        .to raise_error(Ferrum::NodeMovingError, /is moving/)
     end
   end
 
@@ -582,6 +719,23 @@ describe Ferrum::Node do
     end
   end
 
+  describe "#value" do
+    before { browser.go_to("/form") }
+
+    it "returns the value of an input" do
+      expect(browser.at_css("#form_name").value).to eq("John Smith")
+    end
+
+    it "returns the value the user typed" do
+      input = browser.at_css("#form_name")
+      input.execute("this.value = ''")
+
+      input.focus.type("Jane")
+
+      expect(input.value).to eq("Jane")
+    end
+  end
+
   describe "#property" do
     before do
       browser.go_to("/attributes_properties")
@@ -618,6 +772,32 @@ describe Ferrum::Node do
     end
   end
 
+  describe "#attribute" do
+    before { browser.go_to("/attributes_properties") }
+
+    it "returns the attribute as written in markup rather than the live property" do
+      link = browser.at_xpath("//a[text() = 'Loop']")
+
+      expect(link.attribute("href")).to eq("/attributes_properties")
+      expect(link.property("href")).to eq(base_url("/attributes_properties"))
+    end
+
+    it "returns custom attributes" do
+      link = browser.at_xpath("//a[text() = 'Loop']")
+
+      expect(link.attribute("data-random")).to eq "42"
+      expect(link.attribute("onclick")).to eq "return false;"
+    end
+
+    it "returns nil for a missing attribute" do
+      expect(browser.at_css("#my_link").attribute("missing")).to be_nil
+    end
+
+    it "returns nil for an attribute whose name has a quote" do
+      expect(browser.at_css("#my_link").attribute("it's")).to be_nil
+    end
+  end
+
   describe "#text" do
     it "skips BR" do
       browser.go_to("/simple")
@@ -647,14 +827,10 @@ describe Ferrum::Node do
       expect(node.text).to eq("😀 and ☀")
     end
 
-    context "SVG tests" do
-      before do
-        browser.go_to("/svg_test")
-      end
+    it "gets text from an SVG tspan node" do
+      browser.go_to("/svg_test")
 
-      it "gets text from tspan node" do
-        expect(browser.at_css("tspan").text).to eq("svg foo")
-      end
+      expect(browser.at_css("tspan").text).to eq("svg foo")
     end
 
     it "returns the text with surrounding whitespace stripped" do
@@ -1057,6 +1233,70 @@ describe Ferrum::Node do
 
     it "resolves nodes returned by a function declaration" do
       expect(browser.at_xpath(".//a").evaluate("function() { return this.parentNode }")).to be_a(Ferrum::Node)
+    end
+  end
+
+  describe "#evaluate_handle" do
+    before { browser.go_to("/index") }
+
+    it "returns a remote object bound to the node" do
+      handle = browser.at_xpath(".//a").evaluate_handle("this.attributes")
+
+      expect(handle).to be_a(Ferrum::RemoteObject)
+      expect(handle.description).to eq("NamedNodeMap")
+    end
+
+    it "returns a node for a node" do
+      node = browser.at_xpath(".//a")
+
+      expect(node.evaluate_handle("this")).to eq(node)
+    end
+
+    it "returns a primitive as is" do
+      expect(browser.at_xpath(".//a").evaluate_handle("this.getAttribute('href')")).to eq("js_redirect")
+    end
+  end
+
+  describe "#find_position" do
+    before { browser.go_to("/simple") }
+
+    def rect
+      browser.at_css("#nav").evaluate("this.getBoundingClientRect().toJSON()")
+    end
+
+    it "returns the center of the node" do
+      x, y = browser.at_css("#nav").find_position
+
+      expect(x).to be_within(0.5).of(rect["left"] + (rect["width"] / 2))
+      expect(y).to be_within(0.5).of(rect["top"] + (rect["height"] / 2))
+    end
+
+    it "returns the offset from the top-left corner of the node" do
+      x, y = browser.at_css("#nav").find_position(x: 5, y: 3)
+
+      expect(x).to be_within(0.5).of(rect["left"] + 5)
+      expect(y).to be_within(0.5).of(rect["top"] + 3)
+    end
+
+    it "returns the offset from the center of the node with position: :center" do
+      x, y = browser.at_css("#nav").find_position(x: 5, y: 3, position: :center)
+
+      expect(x).to be_within(0.5).of(rect["left"] + (rect["width"] / 2) + 5)
+      expect(y).to be_within(0.5).of(rect["top"] + (rect["height"] / 2) + 3)
+    end
+
+    it "returns the center of the node when only one offset is given" do
+      x, y = browser.at_css("#nav").find_position(x: 5)
+
+      expect(x).to be_within(0.5).of(rect["left"] + (rect["width"] / 2))
+      expect(y).to be_within(0.5).of(rect["top"] + (rect["height"] / 2))
+    end
+
+    it "raises CoordinatesNotFoundError for a hidden node" do
+      node = browser.at_css("#nav")
+      node.execute("this.style.display = 'none'")
+
+      expect { node.find_position }.to raise_error(Ferrum::CoordinatesNotFoundError)
     end
   end
 

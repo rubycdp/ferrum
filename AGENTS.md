@@ -54,11 +54,11 @@ The suite boots a real Chrome and a Sinatra/Puma test app (`spec/support/applica
   specs alike: `Ferrum::Page::Screenshot` -> `spec/page/screenshot_spec.rb`, `Ferrum::Browser::Process` ->
   `spec/unit/browser/process_spec.rb`. Each nested `describe` names one public method (`"#method"`, `".method"` for
   class methods), never a topic like `"context scope"`.
-- A `describe` holds either only examples or only contexts, never a mix. Use contexts only for contrasting groups,
-  at least two that oppose each other (`"when a block is given"` / `"when no block is given"`). A single condition
-  next to plain examples isn't a context: keep the examples flat and put the condition in the example name, e.g.
-  `it "sets cookies for given domain when base_url isn't set"`. The one exception: a single context is fine when it
-  carries `let`, hooks (`before`/`after`/`around`) or tags that its examples share.
+- Use contexts only for contrasting groups, at least two that oppose each other (`"when a block is given"` /
+  `"when no block is given"`). A single condition isn't a context: keep the examples flat and put the condition in
+  the example name, e.g. `it "sets cookies for given domain when base_url isn't set"`. The exception is a context
+  that carries `let`, hooks (`before`/`after`/`around`) or tags its examples share; it may sit next to plain
+  examples. Never nest contexts.
 - Every example must be runnable alone with `rspec spec/file_spec.rb:LINE`, so each one gets its own `it` on its
   own line. No `shared_examples`/`include_examples` and no loops that generate examples. Share the steps and
   assertions through a helper method in the `describe` instead, and call it from one-line examples, one per

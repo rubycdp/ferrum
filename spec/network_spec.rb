@@ -706,4 +706,26 @@ describe Ferrum::Network do
       expect(page.at_css("body").text.downcase).to match("no internet")
     end
   end
+
+  describe "#cache" do
+    it "loads resources from the network when the cache is disabled" do
+      network.cache(disable: true)
+
+      expect(cached_on_second_visit?).to be_falsey
+    end
+
+    it "loads resources from the cache when the cache is enabled" do
+      network.cache(disable: true)
+      network.cache(disable: false)
+
+      expect(cached_on_second_visit?).to be_truthy
+    end
+
+    def cached_on_second_visit?
+      page.go_to("/cacheable")
+      page.at_xpath("//a").click
+      expect(traffic.length).to eq(2)
+      last_exchange.response.params.dig("response", "fromDiskCache")
+    end
+  end
 end

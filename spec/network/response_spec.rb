@@ -1,6 +1,27 @@
 # frozen_string_literal: true
 
 describe Ferrum::Network::Response do
+  describe "#id" do
+    it "returns the id of the exchange" do
+      page.go_to
+
+      expect(last_exchange.response.id).to eq(last_exchange.id)
+    end
+  end
+
+  describe "#url" do
+    it "returns the url of the response" do
+      page.go_to("/with_js")
+
+      expect(last_exchange.response.url).to eq(base_url("/test.js"))
+    end
+
+    it "returns the url the request was redirected from for a redirect response" do
+      page.go_to("/redirect_again")
+
+      expect(first_exchange.response.url).to eq(base_url("/redirect_again"))
+    end
+  end
   describe "#status" do
     it "captures responses" do
       page.go_to("/with_js")
@@ -39,6 +60,53 @@ describe Ferrum::Network::Response do
       browser.at_xpath("//a[text() = 'Go to 402']").click
 
       expect(browser.network.status).to eq(402)
+    end
+  end
+
+  describe "#status_text" do
+    it "returns the status text" do
+      page.go_to("/status/404")
+
+      expect(first_exchange.response.status_text).to eq("Not Found")
+    end
+  end
+
+  describe "#headers" do
+    it "returns the response headers" do
+      page.go_to("/cacheable")
+
+      expect(last_exchange.response.headers).to include("etag" => '"deadbeef"')
+    end
+  end
+
+  describe "#headers_size" do
+    it "returns the number of bytes received for the headers" do
+      page.go_to
+
+      expect(last_exchange.response.headers_size).to be_a(Integer).and be_positive
+    end
+  end
+
+  describe "#type" do
+    it "returns the resource type" do
+      page.go_to("/with_js")
+
+      expect(traffic.map { |e| e.response.type }).to eq(%w[Document Script Script Script])
+    end
+  end
+
+  describe "#content_type" do
+    it "returns the content type without parameters" do
+      page.go_to("/with_js")
+
+      expect(first_exchange.response.headers["content-type"]).to eq("text/html;charset=utf-8")
+      expect(first_exchange.response.content_type).to eq("text/html")
+    end
+
+    it "returns nil when there is no content type header" do
+      page.go_to("/status/204")
+
+      expect(first_exchange.response.content_type).to be_nil
     end
   end
 
@@ -93,6 +161,34 @@ describe Ferrum::Network::Response do
     end
   end
 
+  describe "#main?" do
+    it "returns true for the response of the main document" do
+      page.go_to("/with_js")
+
+      expect(first_exchange.response.main?).to be(true)
+    end
+
+    it "returns false for the response of a subresource" do
+      page.go_to("/with_js")
+
+      expect(last_exchange.response.main?).to be(false)
+    end
+  end
+
+  describe "#loaded?" do
+    it "returns true once the response body is loaded" do
+      page.go_to
+
+      expect(last_exchange.response.loaded?).to be(true)
+    end
+
+    it "returns falsey before the response body is loaded" do
+      response = Ferrum::Network::Response.new(page, { "response" => {} })
+
+      expect(response.loaded?).to be_falsey
+    end
+  end
+
   describe "#redirect?" do
     it "returns true for a redirect response" do
       page.go_to("/redirect_again")
@@ -116,6 +212,23 @@ describe Ferrum::Network::Response do
       resources_size.each do |resource, size|
         expect(responses.find { |r| r.url[resource] }.body_size).to eq(size)
       end
+    end
+  end
+
+  describe "#==" do
+    it "returns true for responses with the same id" do
+      page.go_to
+
+      response = last_exchange.response
+      copy = Ferrum::Network::Response.new(page, response.params)
+
+      expect(response).to eq(copy)
+    end
+
+    it "returns false for responses with different ids" do
+      page.go_to("/with_js")
+
+      expect(first_exchange.response).not_to eq(last_exchange.response)
     end
   end
 

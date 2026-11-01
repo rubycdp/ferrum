@@ -7,6 +7,7 @@ describe Ferrum::Cookies::Cookie do
       "value" => "-19027681:",
       "domain" => ".google.com",
       "path" => "/",
+      "sameSite" => "Lax",
       "expires" => 1_691_287_370,
       "size" => 13,
       "httpOnly" => false,
@@ -42,6 +43,12 @@ describe Ferrum::Cookies::Cookie do
   describe "#path" do
     it "returns the 'path' attribute" do
       expect(subject.path).to eq(attributes["path"])
+    end
+  end
+
+  describe "#samesite" do
+    it "returns the 'sameSite' attribute" do
+      expect(subject.samesite).to eq(attributes["sameSite"])
     end
   end
 
