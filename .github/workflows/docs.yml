@@ -1,0 +1,19 @@
+name: Docs
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger docs.rubycdp.com sync
+        env:
+          GH_TOKEN: ${{ secrets.DOCS_DISPATCH_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh api repos/rubycdp/docs.rubycdp.com/dispatches \
+            -f event_type=docs-release \
+            -f client_payload[project]=ferrum \
+            -f client_payload[tag]="$TAG"
