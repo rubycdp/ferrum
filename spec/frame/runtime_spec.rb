@@ -269,6 +269,32 @@ describe Ferrum::Frame::Runtime do
         expect(browser.evaluate("window")).to eq({})
       end
 
+      it "returns a node shared with a map" do
+        browser.go_to("/index")
+
+        result = browser.evaluate("(() => { const el = document.body; return [new Map([['k', el]]), { el }] })()")
+
+        expect(result.first).to eq({})
+        expect(result.last["el"]).to be_a(Ferrum::Node).and have_attributes(tag_name: "body")
+      end
+
+      it "returns a node shared with a set" do
+        browser.go_to("/index")
+
+        result = browser.evaluate("(() => { const el = document.body; return [new Set([el]), [el]] })()")
+
+        expect(result.first).to eq({})
+        expect(result.last.first).to be_a(Ferrum::Node).and have_attributes(tag_name: "body")
+      end
+
+      it "returns a node shared with a map nested in an object" do
+        browser.go_to("/index")
+
+        result = browser.evaluate("(() => { const el = document.body; return { m: new Map([[1, { n: el }]]), el } })()")
+
+        expect(result["el"]).to be_a(Ferrum::Node)
+      end
+
       it "fetches the whole result tree with one command" do
         allow(browser.page).to receive(:command).and_call_original
 

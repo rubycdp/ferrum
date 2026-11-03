@@ -449,6 +449,9 @@ module Ferrum
           value.to_h { |k, v| [k, deserialize(v, references, path, converted)] }
         when "node"
           Node.new(self, value)
+        when "map", "set"
+          value.flatten(1).each { |v| deserialize(v, references, path, converted) if v.is_a?(Hash) }
+          {}
         else
           {}
         end
