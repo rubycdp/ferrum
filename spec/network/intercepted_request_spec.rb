@@ -74,7 +74,7 @@ describe Ferrum::Network::InterceptedRequest do
       page.go_to
 
       expect(network.status).to eq(201)
-      expect(last_exchange.response.headers).to include("X-Ferrum" => "yes")
+      expect(network.response.headers).to include("X-Ferrum" => "yes")
       expect(page.body).to include("created")
     end
 

@@ -1294,7 +1294,7 @@ describe Ferrum::Node do
 
     it "raises CoordinatesNotFoundError for a hidden node" do
       node = browser.at_css("#nav")
-      node.execute("this.style.display = 'none'")
+      node.execute("this.style.display = 'none'; this.offsetHeight")
 
       expect { node.find_position }.to raise_error(Ferrum::CoordinatesNotFoundError)
     end
