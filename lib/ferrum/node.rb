@@ -251,7 +251,8 @@ module Ferrum
     #
     # @param [Numeric] wait
     #   Seconds to watch for a navigation started by a left click, then wait for
-    #   it to load. `0` returns as soon as the click is dispatched.
+    #   it to load. Ignored for `:right` and `:double`, which never wait. `0`
+    #   returns as soon as the click is dispatched.
     #
     # @return [self]
     #
