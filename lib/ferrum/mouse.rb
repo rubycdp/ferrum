@@ -72,7 +72,9 @@ module Ferrum
     # @param [Float] delay
     #   Delay between mouse down and mouse up events.
     #
-    # @param [Float] wait
+    # @param [Numeric] wait
+    #   Seconds to watch for a navigation started by the click, then wait for it
+    #   to load. `0` returns as soon as the click is dispatched.
     #
     # @param [Hash{Symbol => Object}] options
     #   Additional keyword arguments.
