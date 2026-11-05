@@ -701,7 +701,7 @@ describe Ferrum::Browser do
 
       after { browser.quit }
 
-      it "saves an attachment" do
+      it "saves an attachment", :launch do
         browser.go_to("/#{filename}")
         browser.downloads.wait
 
