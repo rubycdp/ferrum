@@ -92,7 +92,7 @@ jobs:
 
   build:
     name: Build ${{ matrix.browser }} (${{ matrix.arch }})
-    needs: [test, versions]
+    needs: [versions]
     if: needs.versions.outputs.browsers != '[]'
     strategy:
       fail-fast: false
@@ -147,6 +147,8 @@ jobs:
           bundler-cache: true
 
       - name: Run the Ferrum suite against the image
+        id: suite
+        continue-on-error: ${{ github.event_name != 'pull_request' }}
         timeout-minutes: 20
         env:
           FERRUM_DEFAULT_TIMEOUT: 15
@@ -156,6 +158,13 @@ jobs:
             -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -v /tmp:/tmp ${{ matrix.browser }}:test
           for i in $(seq 1 30); do curl -sf http://127.0.0.1:3000/health && break; sleep 1; done
           FERRUM_URL=http://127.0.0.1:3000 bundle exec rspec --exclude-pattern "spec/unit/**/*_spec.rb"
+
+      - name: Report suite failure
+        if: steps.suite.outcome == 'failure' && github.event_name != 'pull_request'
+        run: |
+          echo "::warning::The Ferrum suite failed against ${{ matrix.browser }} ${{ matrix.arch }}, the image is published anyway"
+          mkdir -p /tmp/meta
+          touch "/tmp/meta/suite-failed-${{ matrix.browser }}-${{ matrix.arch }}"
 
       - name: Driver logs
         if: always()
@@ -241,3 +250,50 @@ jobs:
           fi
           docker buildx imagetools create "${tags[@]}" $(printf "$IMAGE@sha256:%s " $(ls digests))
           docker buildx imagetools inspect "$IMAGE:latest"
+
+  notify:
+    name: Report problems
+    if: always() && github.event_name != 'pull_request'
+    needs: [versions, build, publish]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      issues: write
+    steps:
+      - name: Download metadata
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: meta-*
+          path: /tmp/meta
+          merge-multiple: true
+
+      - name: Open or update the issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          VERSIONS_RESULT: ${{ needs.versions.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          PUBLISH_RESULT: ${{ needs.publish.result }}
+        run: |
+          problems=()
+          [ "$VERSIONS_RESULT" = "failure" ] && problems+=("Looking up the newest browser versions failed")
+          [ "$BUILD_RESULT" = "failure" ] && problems+=("Building an image failed, nothing was published")
+          [ "$PUBLISH_RESULT" = "failure" ] && problems+=("Publishing an image failed")
+          for marker in $(ls /tmp/meta 2>/dev/null | grep '^suite-failed-'); do
+            problems+=("The Ferrum suite failed against ${marker#suite-failed-}, the image was published anyway")
+          done
+          [ ${#problems[@]} -eq 0 ] && exit 0
+
+          body="Scheduled or manual Docker run: $RUN_URL"$'\n\n'
+          for problem in "${problems[@]}"; do body+="- $problem"$'\n'; done
+
+          gh label create docker-release --color B60205 --description "Browser image release problems" 2>/dev/null || true
+          existing=$(gh issue list --label docker-release --state open --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --label docker-release --title "Docker browser image release has problems" --body "$body"
+          fi
