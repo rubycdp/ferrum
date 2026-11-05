@@ -64,10 +64,10 @@ ARG BROWSER_PIN=
 ARG SNAPSHOT=https://snapshot.debian.org
 RUN if [ -n "$BROWSER_PIN" ]; then \
         for pkg in chromium chromium-common; do \
-            hash=$(curl -fsSL --retry 5 --retry-all-errors "$SNAPSHOT/mr/binary/$pkg/${BROWSER_PIN}-1~deb13u1/binfiles" \
+            hash=$(curl -fsSL --retry 10 --retry-delay 15 --retry-all-errors "$SNAPSHOT/mr/binary/$pkg/${BROWSER_PIN}-1~deb13u1/binfiles" \
                 | tr '{' '\n' | grep "\"architecture\": *\"${TARGETARCH}\"" | sed -n 's/.*"hash": *"\([0-9a-f]*\)".*/\1/p') \
             && [ -n "$hash" ] \
-            && curl -fsSL --retry 5 --retry-all-errors -o "/tmp/$pkg.deb" "$SNAPSHOT/file/$hash" \
+            && curl -fsSL --retry 10 --retry-delay 15 --retry-all-errors -o "/tmp/$pkg.deb" "$SNAPSHOT/file/$hash" \
             || exit 1; \
         done \
         && apt-get update && apt-get install -y /tmp/chromium.deb /tmp/chromium-common.deb; \
