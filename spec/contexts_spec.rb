@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 describe Ferrum::Contexts do
-  # Chrome opens two `chrome://omnibox-popup.top-chrome/` (`browser_ui`) targets per
-  # browser context. Auto-attach runs with `waitForDebuggerOnStart`, so they arrive
+  # Chrome opens `chrome://omnibox-popup.top-chrome/` (`browser_ui`) targets per
+  # browser context, one or two depending on the version. Auto-attach runs with `waitForDebuggerOnStart`, so they arrive
   # paused, and nothing resumes a type we don't track: left alone they stay attached
   # and paused for the lifetime of the browser.
   describe ".new" do
@@ -18,7 +18,7 @@ describe Ferrum::Contexts do
 
       browser.contexts.create.create_page
 
-      wait(5).for { untracked.size }.to be >= 2
+      wait(5).for { untracked.size }.to be >= 1
       wait(5).for { untracked - detached }.to be_empty
     ensure
       browser.client.off("Target.attachedToTarget", attached_id)
