@@ -58,15 +58,32 @@ COPY deploy/fonts.conf /etc/fonts/local.conf
 RUN fc-cache -f
 
 FROM base AS chromium
+ARG TARGETARCH
 ARG BROWSER_VERSION
-RUN apt-get update && apt-get install -y chromium \
-    && rm -rf /var/lib/apt/lists/*
+ARG BROWSER_PIN=
+ARG SNAPSHOT=https://snapshot.debian.org
+RUN if [ -n "$BROWSER_PIN" ]; then \
+        for pkg in chromium chromium-common; do \
+            hash=$(curl -fsSL --retry 5 --retry-all-errors "$SNAPSHOT/mr/binary/$pkg/${BROWSER_PIN}-1~deb13u1/binfiles" \
+                | tr '{' '\n' | grep "\"architecture\": *\"${TARGETARCH}\"" | sed -n 's/.*"hash": *"\([0-9a-f]*\)".*/\1/p') \
+            && [ -n "$hash" ] \
+            && curl -fsSL --retry 5 --retry-all-errors -o "/tmp/$pkg.deb" "$SNAPSHOT/file/$hash" \
+            || exit 1; \
+        done \
+        && apt-get update && apt-get install -y /tmp/chromium.deb /tmp/chromium-common.deb; \
+    else \
+        apt-get update && apt-get install -y chromium; \
+    fi \
+    && rm -rf /var/lib/apt/lists/* /tmp/*.deb
 ENV BROWSER_PATH=/usr/bin/chromium
 
 FROM base AS chrome
 ARG TARGETARCH
 ARG BROWSER_VERSION
-RUN curl -fsSL --retry 5 --retry-all-errors -o /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_${TARGETARCH}.deb \
+ARG BROWSER_PIN=
+RUN url=https://dl.google.com/linux/direct/google-chrome-stable_current_${TARGETARCH}.deb \
+    && if [ -n "$BROWSER_PIN" ]; then url=https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${BROWSER_PIN}-1_${TARGETARCH}.deb; fi \
+    && curl -fsSL --retry 5 --retry-all-errors -o /tmp/chrome.deb "$url" \
     && apt-get update && apt-get install -y /tmp/chrome.deb \
     && rm -rf /var/lib/apt/lists/* /tmp/chrome.deb
 ENV BROWSER_PATH=/usr/bin/google-chrome
