@@ -1128,6 +1128,7 @@ describe Ferrum::Node do
       end
 
       it "fires the change event on blur" do
+        wait_until { change_me.value == "Hello!" }
         change_me.blur
 
         expect(browser.at_css("#changes").text).to eq("Hello!")

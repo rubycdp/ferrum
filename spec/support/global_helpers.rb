@@ -45,6 +45,16 @@ RSpec.shared_context "Global helpers" do
     target
   end
 
+  def wait_until
+    start = Ferrum::Utils::ElapsedTime.monotonic_time
+
+    until yield
+      raise Ferrum::TimeoutError if Ferrum::Utils::ElapsedTime.timeout?(start, browser.timeout)
+
+      sleep 0.05
+    end
+  end
+
   def reset
     @browser.reset
     @page = nil
