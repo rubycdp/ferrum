@@ -10,6 +10,28 @@ describe Ferrum::Client do
     client.instance_variable_set(:@command_id_mutex, Mutex.new)
   end
 
+  describe "#close" do
+    it "stops every client resource when the websocket close handshake raises" do
+      error = StandardError.new("websocket close failed")
+      ws = double(force_close: true)
+      thread = double(join: false, kill: true)
+      subscriber = double(close: true)
+      client.instance_variable_set(:@ws, ws)
+      client.instance_variable_set(:@pendings, {})
+      client.instance_variable_set(:@thread, thread)
+      client.instance_variable_set(:@subscriber, subscriber)
+
+      allow(ws).to receive(:close).and_raise(error)
+
+      expect(thread).to receive(:join).with(1)
+      expect(thread).to receive(:kill)
+      expect(subscriber).to receive(:close)
+      expect(ws).to receive(:force_close)
+
+      expect { client.close }.to raise_error(error)
+    end
+  end
+
   describe "#build_message" do
     it "carries the method and params" do
       expect(client.build_message("Page.enable", foo: 1)).to include(method: "Page.enable", params: { foo: 1 })
