@@ -82,7 +82,7 @@ describe Ferrum::Browser::Process do
       user_data_dir = process.instance_variable_get(:@user_data_dir)
       temp_dir = File.join(user_data_dir, "tmp")
 
-      expect(Dir).to exist(temp_dir)
+      expect(Dir.exist?(temp_dir)).to be true
       expect(Process).to receive(:spawn) do |env, *|
         expect(env["TMPDIR"]).to eq(temp_dir)
         expect(env["LD_PRELOAD"]).to be_nil
@@ -94,7 +94,7 @@ describe Ferrum::Browser::Process do
       process.start
       process.stop
 
-      expect(Dir).not_to exist(user_data_dir)
+      expect(Dir.exist?(user_data_dir)).to be false
     ensure
       process&.stop
     end
