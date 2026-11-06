@@ -30,6 +30,11 @@
   `go_to` instead
 
 ### Fixed
+- Browser GC finalization closes the CDP socket without running thread or queue operations in finalizer context
+- Unquit browsers close their CDP connections and stop their browser process when garbage-collected
+- WebSocket connections now close their local socket and writer when the peer disconnects unexpectedly
+- Chromium's Linux temporary files now live inside each browser's Ferrum user-data directory and are removed with it
+- `Browser#quit` and `Client#close` continue cleanup when an earlier close step raises
 - `AuthRequest#abort` raised `BrowserError` and left the page hanging, it cancels the auth challenge now
 - `InterceptedRequest#navigation_request?` and `AuthRequest#navigation_request?` always returned `nil`, they are true
   for document requests now
