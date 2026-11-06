@@ -77,11 +77,34 @@ describe Ferrum::Browser::Process do
       process.stop
     end
 
+    it "keeps Chromium temporary files inside the browser user data directory", if: Ferrum::Utils::Platform.platform_name == :linux do
+      process = described_class.new(Ferrum::Browser::Options.new)
+      user_data_dir = process.instance_variable_get(:@user_data_dir)
+      temp_dir = File.join(user_data_dir, "tmp")
+
+      expect(Dir).to exist(temp_dir)
+      expect(Process).to receive(:spawn) do |env, *|
+        expect(env["TMPDIR"]).to eq(temp_dir)
+        expect(env["LD_PRELOAD"]).to be_nil
+        5678
+      end
+      allow(Process).to receive(:kill)
+      allow(Process).to receive(:wait).and_return(5678)
+      allow_any_instance_of(described_class).to receive(:parse_ws_url)
+
+      process.start
+      process.stop
+
+      expect(Dir).not_to exist(user_data_dir)
+    ensure
+      process&.stop
+    end
+
     it "passes env through to the browser process" do
       allow(Process).to receive(:wait).and_return(nil)
       allow(Ferrum::Client).to receive(:new).and_return(client)
 
-      allow(Process).to receive(:spawn).with({ "LD_PRELOAD" => "some.so" }, any_args).and_return(123_456_789)
+      allow(Process).to receive(:spawn).with(hash_including("LD_PRELOAD" => "some.so"), any_args).and_return(123_456_789)
 
       allow_any_instance_of(Ferrum::Browser::Process).to receive(:parse_ws_url)
 
