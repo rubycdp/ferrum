@@ -88,8 +88,7 @@ describe Ferrum::Browser::Process do
         expect(env["LD_PRELOAD"]).to be_nil
         5678
       end
-      allow(Process).to receive(:kill)
-      allow(Process).to receive(:wait).and_return(5678)
+      allow(Ferrum::Browser::Process::Killer).to receive(:kill)
       allow_any_instance_of(described_class).to receive(:parse_ws_url)
 
       process.start
