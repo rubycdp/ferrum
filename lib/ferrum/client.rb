@@ -301,11 +301,21 @@ module Ferrum
     #
     def close
       @ws.close
-      # Give a thread some time to handle a tail of messages
-      @pendings.clear
-      @thread.kill unless @thread.join(1)
-      @subscriber.close
-      @ws.force_close
+    ensure
+      begin
+        # Give a thread some time to handle a tail of messages
+        @pendings.clear
+      ensure
+        begin
+          @thread.kill unless @thread.join(1)
+        ensure
+          begin
+            @subscriber.close
+          ensure
+            @ws.force_close
+          end
+        end
+      end
     end
 
     #
