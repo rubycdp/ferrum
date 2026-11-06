@@ -50,6 +50,46 @@ describe Ferrum::Browser do
     end
   end
 
+  describe "#quit" do
+    it "stops the process even when context cleanup raises" do
+      error = StandardError.new("context cleanup failed")
+      contexts = double(close_connections: true)
+      client = double(close: true)
+      process = double(stop: nil)
+      browser = described_class.allocate
+      browser.instance_variable_set(:@contexts, contexts)
+      browser.instance_variable_set(:@client, client)
+      browser.instance_variable_set(:@process, process)
+
+      allow(contexts).to receive(:close_connections).and_raise(error)
+
+      expect(client).to receive(:close)
+      expect(process).to receive(:stop).with(wait: true)
+
+      expect { browser.quit }.to raise_error(error)
+      expect(browser.client).to be_nil
+      expect(browser.process).to be_nil
+      expect(browser.contexts).to be_nil
+    end
+
+    it "stops the process even when client cleanup raises" do
+      error = StandardError.new("client cleanup failed")
+      contexts = double(close_connections: true)
+      client = double
+      process = double(stop: nil)
+      browser = described_class.allocate
+      browser.instance_variable_set(:@contexts, contexts)
+      browser.instance_variable_set(:@client, client)
+      browser.instance_variable_set(:@process, process)
+
+      allow(client).to receive(:close).and_raise(error)
+
+      expect(process).to receive(:stop).with(wait: true)
+
+      expect { browser.quit }.to raise_error(error)
+    end
+  end
+
   describe "#restart" do
     it "restarts a browser whose previous start died after the client was built" do
       browser = Ferrum::Browser.new
