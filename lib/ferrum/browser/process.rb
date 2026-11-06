@@ -66,6 +66,13 @@ module Ferrum
         @env = Hash(options.env)
 
         @user_data_dir = Dir.mktmpdir("ferrum_user_data_dir_")
+        if Utils::Platform.platform_name == :linux
+          # Chromium uses TMPDIR for files such as its process-singleton
+          # socket. Keep them inside this browser's directory so stop can
+          # remove them without touching another browser's files.
+          @temp_dir = File.join(@user_data_dir, "tmp")
+          Dir.mkdir(@temp_dir)
+        end
         @command = Command.build(options, @user_data_dir)
       end
 
@@ -143,6 +150,7 @@ module Ferrum
         process_options = { in: File::NULL, out: io, err: io }
         process_options[:pgroup] = true unless Utils::Platform.windows?
         env = Hash(@xvfb&.to_env).merge(@env)
+        env["TMPDIR"] = @temp_dir if @temp_dir
 
         @pid = ::Process.spawn(env, *@command.to_a, process_options)
         ObjectSpace.define_finalizer(self, Killer.finalizer([@pid, @xvfb&.pid], @user_data_dir))
