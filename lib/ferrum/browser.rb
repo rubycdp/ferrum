@@ -230,13 +230,21 @@ module Ferrum
     #   The background cleanup thread when `wait: false`, `nil` otherwise.
     #
     def quit(wait: true)
-      return unless @client
+      return unless @client || @process
 
-      contexts&.close_connections
-
-      @client.close
-      thread = @process.stop(wait: wait)
+      client, process, contexts = @client, @process, @contexts
       @client = @process = @contexts = nil
+
+      thread = nil
+      begin
+        contexts&.close_connections
+      ensure
+        begin
+          client&.close
+        ensure
+          thread = process&.stop(wait: wait)
+        end
+      end
       thread
     end
 
