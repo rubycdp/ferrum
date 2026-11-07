@@ -236,6 +236,8 @@ module Ferrum
           warn("Ferrum: websocket reader stopped, #{e.class}: #{e.message}\n  #{e.backtrace&.first}")
         ensure
           @messages.close
+          @outgoing.close
+          force_close
         end
       end
 
