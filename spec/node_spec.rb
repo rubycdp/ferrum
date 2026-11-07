@@ -192,6 +192,17 @@ describe Ferrum::Node do
 
         expect(browser.url).to eq(base_url("/"))
       end
+
+      it "clicks the element by its bounding rect when it's transformed" do
+        browser.go_to("/simple")
+        link = browser.at_css("#nav")
+        # Rotated, the link covers the center of its bounding rect, but little else of it.
+        link.execute("this.style.cssText = 'display: inline-block; width: 200px; height: 20px; transform: rotate(45deg)'")
+
+        link.click
+
+        expect(browser.url).to eq(base_url("/"))
+      end
     end
 
     it "synchronizes page loads properly" do

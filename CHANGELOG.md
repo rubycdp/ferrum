@@ -43,6 +43,9 @@
   node's own frame
 - `Node#moving?` returned `true` for a node that wasn't moving and `false` for one that was. Its default delay is now
   50ms instead of 10ms, which missed a slowly moving node, set it with `FERRUM_NODE_MOVING_CHECK`
+- `Node#click` and `#find_position` on a CSS-transformed node whose content quads can't be computed aimed by its
+  untransformed size and could miss it, now they aim at the center of its bounding rect. An SVG node raised
+  `JSON::GeneratorError` there [#695]
 
 ### Removed
 - `#evaluate_async`, `#evaluate_func` and `#evaluate_on`, use `#evaluate` and `Node#evaluate`, and

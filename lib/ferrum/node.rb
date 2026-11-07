@@ -714,9 +714,11 @@ module Ferrum
     private
 
     def bounding_rect_coordinates
-      evaluate <<~JS
-        [this.getBoundingClientRect().left + (this.offsetWidth / 2),
-         this.getBoundingClientRect().top + (this.offsetHeight / 2)]
+      evaluate(<<~JS)
+        function() {
+          const { left, top, width, height } = this.getBoundingClientRect();
+          return [left + (width / 2), top + (height / 2)];
+        }
       JS
     end
 
