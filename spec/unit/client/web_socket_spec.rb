@@ -37,6 +37,33 @@ describe Ferrum::Client::WebSocket do
     web_socket.instance_variable_set(:@encoded, [])
   end
 
+  describe "reader cleanup" do
+    it "closes the socket and writer when the peer closes the connection" do
+      socket, peer = Socket.pair(:UNIX, :STREAM, 0)
+      messages = Queue.new
+      outgoing = Queue.new
+      web_socket.instance_variable_set(:@sock, socket)
+      web_socket.instance_variable_set(:@messages, messages)
+      web_socket.instance_variable_set(:@outgoing, outgoing)
+
+      web_socket.send(:start_writer)
+      web_socket.send(:start)
+      reader = web_socket.instance_variable_get(:@thread)
+      writer = web_socket.instance_variable_get(:@writer)
+
+      peer.close
+
+      expect(reader.join(1)).to eq(reader)
+      expect(writer.join(1)).to eq(writer)
+      expect(socket).to be_closed
+      expect(messages).to be_closed
+      expect(outgoing).to be_closed
+    ensure
+      peer&.close unless peer&.closed?
+      socket&.close unless socket&.closed?
+    end
+  end
+
   describe "#send_message" do
     it "hands the driver the message as JSON" do
       web_socket.send_message(id: 1)
