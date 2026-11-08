@@ -77,10 +77,11 @@ module Ferrum
       end
 
       #
-      # Cancels the authentication challenge and the request.
+      # Cancels the authentication challenge, so the request completes with
+      # the unauthorized response.
       #
       def abort
-        @page.command("Fetch.failRequest", requestId: request_id, errorReason: "BlockedByClient")
+        continue(authChallengeResponse: { response: "CancelAuth" })
       end
 
       #

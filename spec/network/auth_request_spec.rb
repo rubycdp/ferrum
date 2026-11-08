@@ -54,6 +54,19 @@ describe Ferrum::Network::AuthRequest do
     end
   end
 
+  describe "#abort" do
+    it "cancels the auth challenge and lets the page load the unauthorized response" do
+      network.intercept
+      page.on(:request) { |request, _index, _total| request.continue }
+      page.on(:auth) { |request, _index, _total| request.abort }
+
+      page.go_to("/basic_auth")
+
+      expect(network.status).to eq(401)
+      expect(page.body).not_to include("Welcome, authenticated client")
+    end
+  end
+
   describe "#url" do
     it "returns the url of the request" do
       expect(auth_request("/basic_auth").url).to eq(base_url("/basic_auth"))
