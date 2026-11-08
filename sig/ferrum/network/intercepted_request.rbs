@@ -15,7 +15,7 @@ module Ferrum
 
       def status?: (untyped value) -> untyped
 
-      def navigation_request?: () -> untyped
+      def navigation_request?: () -> bool
 
       def match?: (untyped regexp) -> untyped
 

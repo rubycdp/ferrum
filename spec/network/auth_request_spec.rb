@@ -11,6 +11,20 @@ describe Ferrum::Network::AuthRequest do
     }
   end
 
+  describe "#navigation_request?" do
+    it "returns true for a document request" do
+      request = described_class.new(nil, params.merge("resourceType" => "Document"))
+
+      expect(request.navigation_request?).to be(true)
+    end
+
+    it "returns false for a subresource request" do
+      request = described_class.new(nil, params.merge("resourceType" => "Script"))
+
+      expect(request.navigation_request?).to be(false)
+    end
+  end
+
   describe "#match?" do
     it "matches regular expressions" do
       expect(request.match?(/pattern\.svg\?\d/)).to be(true)
