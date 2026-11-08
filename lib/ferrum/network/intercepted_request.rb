@@ -45,7 +45,7 @@ module Ferrum
       # @return [Boolean]
       #
       def navigation_request?
-        @params["isNavigationRequest"]
+        resource_type == "Document"
       end
 
       #
