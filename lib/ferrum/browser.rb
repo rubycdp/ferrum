@@ -232,6 +232,7 @@ module Ferrum
     def quit(wait: true)
       return unless @client || @process
 
+      ObjectSpace.undefine_finalizer(self)
       client, process, contexts = @client, @process, @contexts
       @client = @process = @contexts = nil
 
@@ -305,11 +306,38 @@ module Ferrum
         @client = Client.new(@process.ws_url, options)
         @options.default_user_agent = version.user_agent
         @contexts = Contexts.new(@client)
+        ObjectSpace.define_finalizer(self, self.class.send(:finalizer, @contexts, @client, @process))
       rescue StandardError
         @process.stop
         raise
       end
     end
+
+    # The finalizer must not capture the Browser instance itself. It owns
+    # only the resources needed to perform the same best-effort shutdown as
+    # #quit. Explicit #quit unregisters it before taking ownership of cleanup.
+    def self.finalizer(contexts, client, process)
+      proc do
+        begin
+          contexts&.close_connections
+        rescue StandardError => e
+          warn("[Ferrum] GC cleanup: closing contexts failed: #{e.class}: #{e.message}")
+        ensure
+          begin
+            client&.close
+          rescue StandardError => e
+            warn("[Ferrum] GC cleanup: closing client failed: #{e.class}: #{e.message}")
+          ensure
+            begin
+              process&.stop
+            rescue StandardError => e
+              warn("[Ferrum] GC cleanup: stopping browser process failed: #{e.class}: #{e.message}")
+            end
+          end
+        end
+      end
+    end
+    private_class_method :finalizer
 
     def debug_url
       response = JSON.parse(Net::HTTP.get(URI(build_remote_debug_url(path: "/json"))))
