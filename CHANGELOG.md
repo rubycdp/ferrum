@@ -30,6 +30,7 @@
   `go_to` instead
 
 ### Fixed
+- `AuthRequest#abort` raised `BrowserError` and left the page hanging, it cancels the auth challenge now
 - `InterceptedRequest#navigation_request?` and `AuthRequest#navigation_request?` always returned `nil`, they are true
   for document requests now
 - `evaluate` raised `NoMethodError` when a node inside a `Map` or `Set` was also referenced elsewhere in the result
