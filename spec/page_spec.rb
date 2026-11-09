@@ -484,6 +484,30 @@ describe Ferrum::Page do
       end
     end
 
+    context "with :request" do
+      it "continues the request when given the continue method as a block" do
+        network.intercept
+        page.on(:request, &:continue)
+
+        page.go_to("/foo")
+
+        expect(page.body).to include("Another World")
+      end
+
+      it "yields the request with its index and total to a regular block" do
+        network.intercept
+        args = nil
+        page.on(:request) do |request, index, total|
+          args ||= [index, total]
+          request.continue
+        end
+
+        page.go_to("/foo")
+
+        expect(args).to eq([0, 1])
+      end
+    end
+
     context "with :response" do
       it "yields the exchange once its response is fully loaded" do
         exchanges = []

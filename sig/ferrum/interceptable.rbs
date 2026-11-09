@@ -9,5 +9,9 @@ module Ferrum
     def off: (Symbol | String name, Integer id) -> void
 
     def subscribed?: (String event) -> bool
+
+    private
+
+    def yield_event: (Proc block, untyped object, Integer index, Integer total) -> untyped
   end
 end

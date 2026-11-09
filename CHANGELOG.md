@@ -30,6 +30,9 @@
   `go_to` instead
 
 ### Fixed
+- `page.on(:request, &:continue)` never continued the request, it called `continue(index, total)` and the error was
+  dropped. Symbol procs and lambdas taking one argument get only the object now, for `:request`, `:response`, `:auth`
+  and `:dialog`
 - `AuthRequest#abort` raised `BrowserError` and left the page hanging, it cancels the auth challenge now
 - `InterceptedRequest#navigation_request?` and `AuthRequest#navigation_request?` always returned `nil`, they are true
   for document requests now

@@ -41,17 +41,17 @@ module Ferrum
           request = Network::InterceptedRequest.new(client, params)
           exchange = network.find_or_build_exchange(request.network_id)
           exchange.intercepted_request = request
-          block.call(request, index, total)
+          yield_event(block, request, index, total)
         end
       when :response
         client.on("Network.loadingFinished") do |params, index, total|
           exchange = network.select(params["requestId"]).last
-          block.call(exchange, index, total) if exchange
+          yield_event(block, exchange, index, total) if exchange
         end
       when :auth
         client.on("Fetch.authRequired") do |params, index, total|
           request = Network::AuthRequest.new(self, params)
-          block.call(request, index, total)
+          yield_event(block, request, index, total)
         end
       else
         client.on(name, &block)
@@ -88,6 +88,14 @@ module Ferrum
     # @return [Boolean]
     def subscribed?(event)
       client.subscribed?(event)
+    end
+
+    private
+
+    def yield_event(block, object, index, total)
+      return block.call(object) if block.lambda? && (block.arity == 1 || block.parameters == [%i[req], %i[rest]])
+
+      block.call(object, index, total)
     end
   end
 end

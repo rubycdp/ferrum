@@ -576,7 +576,7 @@ module Ferrum
 
       client.on("Page.javascriptDialogOpening") do |params, index, total|
         dialog = Dialog.new(self, params)
-        block.call(dialog, index, total)
+        yield_event(block, dialog, index, total)
       end
     end
 
