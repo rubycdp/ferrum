@@ -299,6 +299,12 @@ module Ferrum
     #
     # @return [void]
     #
+    # Closes the socket without touching queues, locks or threads. Safe for
+    # Browser's GC finalizer; the reader/dispatch threads complete cleanup.
+    def finalize
+      @ws.finalize
+    end
+
     def close
       @ws.close
     ensure
@@ -365,7 +371,11 @@ module Ferrum
         warn("Ferrum: dispatch stopped, #{e.class}: #{e.message}\n  #{e.backtrace&.first}")
         @ws.messages.close
       ensure
-        release_pendings
+        begin
+          release_pendings
+        ensure
+          @subscriber.close
+        end
       end
     end
 
