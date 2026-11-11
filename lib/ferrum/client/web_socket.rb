@@ -167,6 +167,16 @@ module Ferrum
       #
       # @return [void]
       #
+      # Closes only the underlying socket. This deliberately avoids queues,
+      # mutexes and thread operations so it can be called from a GC finalizer.
+      # The reader and writer threads perform their normal queue cleanup when
+      # the socket close wakes them.
+      def finalize
+        @sock.close unless @sock.closed?
+      rescue IOError, SystemCallError
+        # The socket may already have been closed by either worker thread.
+      end
+
       def force_close
         @outgoing.close
         @sock.close unless @sock.closed?
