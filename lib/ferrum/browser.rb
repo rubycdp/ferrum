@@ -306,33 +306,27 @@ module Ferrum
         @client = Client.new(@process.ws_url, options)
         @options.default_user_agent = version.user_agent
         @contexts = Contexts.new(@client)
-        ObjectSpace.define_finalizer(self, self.class.send(:finalizer, @contexts, @client, @process))
+        ObjectSpace.define_finalizer(self, self.class.send(:finalizer, @client, @process))
       rescue StandardError
         @process.stop
         raise
       end
     end
 
-    # The finalizer must not capture the Browser instance itself. It owns
-    # only the resources needed to perform the same best-effort shutdown as
-    # #quit. Explicit #quit unregisters it before taking ownership of cleanup.
-    def self.finalizer(contexts, client, process)
+    # The finalizer must not capture the Browser instance itself. Client#finalize
+    # only closes the socket; its reader and dispatch threads finish cleanup in
+    # their own thread contexts. Process#stop handles the local browser process.
+    def self.finalizer(client, process)
       proc do
         begin
-          contexts&.close_connections
+          client&.finalize
         rescue StandardError => e
-          warn("[Ferrum] GC cleanup: closing contexts failed: #{e.class}: #{e.message}")
+          warn("[Ferrum] GC cleanup: closing client socket failed: #{e.class}: #{e.message}")
         ensure
           begin
-            client&.close
+            process&.stop
           rescue StandardError => e
-            warn("[Ferrum] GC cleanup: closing client failed: #{e.class}: #{e.message}")
-          ensure
-            begin
-              process&.stop
-            rescue StandardError => e
-              warn("[Ferrum] GC cleanup: stopping browser process failed: #{e.class}: #{e.message}")
-            end
+            warn("[Ferrum] GC cleanup: stopping browser process failed: #{e.class}: #{e.message}")
           end
         end
       end
