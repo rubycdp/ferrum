@@ -161,6 +161,40 @@ describe Ferrum::Browser::Process::Killer do
   end
 
   describe ".kill", if: Ferrum::Utils::Platform.mri? && !Ferrum::Utils::Platform.windows? do
+    it "still kills the process group when the leader was already reaped" do
+      child_pid_path = File.join(Dir.tmpdir, "ferrum-process-spec-reaped-child-#{Process.pid}")
+      script = <<~RUBY
+        pid = fork do
+          trap("TERM", "IGNORE")
+          sleep 30
+        end
+        Process.detach(pid)
+        File.write(#{child_pid_path.inspect}, pid.to_s)
+        sleep 30
+      RUBY
+      leader_pid = Process.spawn(RbConfig.ruby, "-e", script, pgroup: true)
+
+      begin
+        start = Ferrum::Utils::ElapsedTime.monotonic_time
+        sleep(0.05) until File.size?(child_pid_path) || Ferrum::Utils::ElapsedTime.timeout?(start, 5)
+        child_pid = File.read(child_pid_path).to_i
+
+        allow(Process).to receive(:wait).and_raise(Errno::ECHILD)
+        described_class.kill(leader_pid)
+        allow(Process).to receive(:wait).and_call_original
+
+        expect { Process.kill(0, child_pid) }.to raise_error(Errno::ESRCH)
+      ensure
+        allow(Process).to receive(:wait).and_call_original
+        begin
+          Process.kill("KILL", -leader_pid) if leader_pid
+        rescue Errno::ESRCH
+          nil
+        end
+        File.delete(child_pid_path) if File.exist?(child_pid_path)
+      end
+    end
+
     it "kills the whole process group, not just the leader, when a group member ignores TERM" do
       child_pid_path = File.join(Dir.tmpdir, "ferrum-process-spec-child-pid-#{Process.pid}")
 
