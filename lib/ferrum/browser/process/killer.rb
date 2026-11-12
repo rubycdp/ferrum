@@ -51,7 +51,16 @@ module Ferrum
             # renderer/zygote that ignores TERM. Reaping the leader must not
             # by itself end the loop, or that child is orphaned forever
             # since KILL is only ever sent from the timeout branch below.
-            leader_exited ||= !::Process.wait(pid, ::Process::WNOHANG).nil?
+            unless leader_exited
+              begin
+                leader_exited = !::Process.wait(pid, ::Process::WNOHANG).nil?
+              rescue Errno::ECHILD
+                # Another thread or a SIGCHLD handler may already have reaped
+                # the leader. The process group can still contain live Chrome
+                # children, so keep checking it and escalate to KILL if needed.
+                leader_exited = true
+              end
+            end
             break if leader_exited && !process_group_alive?(pid)
 
             sleep(WAIT_KILLED)
@@ -61,8 +70,8 @@ module Ferrum
             wait_reaped(pid) unless leader_exited
             break
           end
-        rescue Errno::ESRCH, Errno::ECHILD
-          # nop
+        rescue Errno::ESRCH
+          # The process and its group are already gone.
         end
 
         #
