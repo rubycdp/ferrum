@@ -91,8 +91,7 @@ describe Ferrum::Browser do
   end
 
   describe "GC cleanup" do
-    it "closes contexts and client and stops the process when finalized" do
-      contexts = double(close_connections: true)
+    it "closes the client socket and stops the process when finalized" do
       client = double(finalize: true)
       process = double(stop: nil)
       finalizer = described_class.send(:finalizer, client, process)
@@ -102,13 +101,12 @@ describe Ferrum::Browser do
       finalizer.call
     end
 
-    it "continues cleanup when an earlier finalizer step raises" do
-      contexts = double
-      client = double(finalize: true)
+    it "stops the process even when closing the client socket raises" do
+      client = double
       process = double(stop: nil)
+      allow(client).to receive(:finalize).and_raise(StandardError, "socket cleanup failed")
       finalizer = described_class.send(:finalizer, client, process)
 
-      expect(client).to receive(:finalize)
       expect(process).to receive(:stop)
       expect { finalizer.call }.not_to raise_error
     end
