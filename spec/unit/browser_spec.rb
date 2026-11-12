@@ -93,24 +93,22 @@ describe Ferrum::Browser do
   describe "GC cleanup" do
     it "closes contexts and client and stops the process when finalized" do
       contexts = double(close_connections: true)
-      client = double(close: true)
+      client = double(finalize: true)
       process = double(stop: nil)
-      finalizer = described_class.send(:finalizer, contexts, client, process)
+      finalizer = described_class.send(:finalizer, client, process)
 
-      expect(contexts).to receive(:close_connections)
-      expect(client).to receive(:close)
+      expect(client).to receive(:finalize)
       expect(process).to receive(:stop)
       finalizer.call
     end
 
     it "continues cleanup when an earlier finalizer step raises" do
       contexts = double
-      client = double(close: true)
+      client = double(finalize: true)
       process = double(stop: nil)
-      allow(contexts).to receive(:close_connections).and_raise(StandardError, "context cleanup failed")
-      finalizer = described_class.send(:finalizer, contexts, client, process)
+      finalizer = described_class.send(:finalizer, client, process)
 
-      expect(client).to receive(:close)
+      expect(client).to receive(:finalize)
       expect(process).to receive(:stop)
       expect { finalizer.call }.not_to raise_error
     end
