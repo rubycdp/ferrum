@@ -179,13 +179,25 @@ describe Ferrum::Browser::Process::Killer do
         sleep(0.05) until File.size?(child_pid_path) || Ferrum::Utils::ElapsedTime.timeout?(start, 5)
         child_pid = File.read(child_pid_path).to_i
 
-        allow(Process).to receive(:wait).and_raise(Errno::ECHILD)
-        described_class.kill(leader_pid)
-        allow(Process).to receive(:wait).and_call_original
+        # Reap the leader for real while its detached child remains in the
+        # same process group. This reproduces ECHILD without stubbing wait.
+        Process.kill("TERM", leader_pid)
+        expect(Process.wait(leader_pid)).to eq(leader_pid)
 
-        expect { Process.kill(0, child_pid) }.to raise_error(Errno::ESRCH)
+        described_class.kill(leader_pid)
+
+        start = Ferrum::Utils::ElapsedTime.monotonic_time
+        loop do
+          begin
+            Process.kill(0, child_pid)
+          rescue Errno::ESRCH
+            break
+          end
+          raise "process group child survived KILL" if Ferrum::Utils::ElapsedTime.timeout?(start, 5)
+
+          sleep(0.05)
+        end
       ensure
-        allow(Process).to receive(:wait).and_call_original
         begin
           Process.kill("KILL", -leader_pid) if leader_pid
         rescue Errno::ESRCH
