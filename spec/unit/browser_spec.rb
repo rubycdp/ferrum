@@ -108,7 +108,9 @@ describe Ferrum::Browser do
       finalizer = described_class.send(:finalizer, client, process)
 
       expect(process).to receive(:stop)
-      expect { finalizer.call }.not_to raise_error
+      expect { finalizer.call }.to output(
+        "[Ferrum] GC cleanup: closing client socket failed: StandardError: socket cleanup failed\n"
+      ).to_stderr
     end
   end
 
