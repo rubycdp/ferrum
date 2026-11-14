@@ -203,7 +203,7 @@ describe Ferrum::Browser::Process::Killer do
         rescue Errno::ESRCH
           nil
         end
-        File.delete(child_pid_path) if File.exist?(child_pid_path)
+        FileUtils.rm_f(child_pid_path)
       end
     end
 

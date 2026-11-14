@@ -233,10 +233,11 @@ module Ferrum
       return unless @client || @process
 
       ObjectSpace.undefine_finalizer(self)
-      client, process, contexts = @client, @process, @contexts
+      client = @client
+      process = @process
+      contexts = @contexts
       @client = @process = @contexts = nil
 
-      thread = nil
       begin
         contexts&.close_connections
       ensure
@@ -318,16 +319,14 @@ module Ferrum
     # their own thread contexts. Process#stop handles the local browser process.
     def self.finalizer(client, process)
       proc do
+        client&.finalize
+      rescue StandardError => e
+        warn("[Ferrum] GC cleanup: closing client socket failed: #{e.class}: #{e.message}")
+      ensure
         begin
-          client&.finalize
+          process&.stop
         rescue StandardError => e
-          warn("[Ferrum] GC cleanup: closing client socket failed: #{e.class}: #{e.message}")
-        ensure
-          begin
-            process&.stop
-          rescue StandardError => e
-            warn("[Ferrum] GC cleanup: stopping browser process failed: #{e.class}: #{e.message}")
-          end
+          warn("[Ferrum] GC cleanup: stopping browser process failed: #{e.class}: #{e.message}")
         end
       end
     end
