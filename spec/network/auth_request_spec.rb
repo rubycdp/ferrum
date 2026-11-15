@@ -42,8 +42,8 @@ describe Ferrum::Network::AuthRequest do
   describe "#continue" do
     it "answers the auth challenge with the given response" do
       network.intercept
-      page.on(:request) { |request, _index, _total| request.continue }
-      page.on(:auth) do |request, _index, _total|
+      page.on(:request, &:continue)
+      page.on(:auth) do |request|
         request.continue(authChallengeResponse: { response: "ProvideCredentials", username: "login", password: "pass" })
       end
 
@@ -57,8 +57,8 @@ describe Ferrum::Network::AuthRequest do
   describe "#abort" do
     it "cancels the auth challenge and lets the page load the unauthorized response" do
       network.intercept
-      page.on(:request) { |request, _index, _total| request.continue }
-      page.on(:auth) { |request, _index, _total| request.abort }
+      page.on(:request, &:continue)
+      page.on(:auth, &:abort)
 
       page.go_to("/basic_auth")
 
@@ -90,8 +90,8 @@ describe Ferrum::Network::AuthRequest do
   def auth_request(path)
     challenged = nil
     network.intercept
-    page.on(:request) { |request, _index, _total| request.continue }
-    page.on(:auth) do |request, _index, _total|
+    page.on(:request, &:continue)
+    page.on(:auth) do |request|
       challenged ||= request
       request.continue(authChallengeResponse: { response: "CancelAuth" })
     end

@@ -2,7 +2,7 @@
 
 describe Ferrum::Dialog do
   def open_prompt(&block)
-    browser.on(:dialog) { |dialog, _index, _total| block.call(dialog) }
+    browser.on(:dialog) { |dialog| block.call(dialog) }
     browser.go_to
     browser.execute(%(setTimeout(() => window.result = prompt("Your name?", "Bob"))))
   end
@@ -34,7 +34,7 @@ describe Ferrum::Dialog do
   describe "#accept" do
     it "works with nested modals" do
       browser.go_to("/with_js")
-      browser.on(:dialog) do |dialog, _index, _total|
+      browser.on(:dialog) do |dialog|
         if dialog.match?("Are you sure?")
           dialog.accept
         else
@@ -56,9 +56,7 @@ describe Ferrum::Dialog do
 
       popup, = browser.windows(:last)
 
-      popup.on(:dialog) do |dialog, _index, _total|
-        dialog.accept
-      end
+      popup.on(:dialog, &:accept)
       popup.at_css("a#open-match").click
       expect(popup.at_xpath("//a[@id='open-match' and @confirmed='true']")).to be
 
@@ -88,9 +86,7 @@ describe Ferrum::Dialog do
 
       popup, = browser.windows(:last)
 
-      popup.on(:dialog) do |dialog, _index, _total|
-        dialog.dismiss
-      end
+      popup.on(:dialog, &:dismiss)
       popup.at_css("a#open-match").click
       expect(popup.at_xpath("//a[@id='open-match' and @confirmed='true']")).not_to be
 
@@ -108,7 +104,7 @@ describe Ferrum::Dialog do
   describe "#match?" do
     it "matches on partial strings" do
       browser.go_to("/with_js")
-      browser.on(:dialog) do |dialog, _index, _total|
+      browser.on(:dialog) do |dialog|
         if dialog.match?("[reg.exp] (chara©+er$)")
           dialog.accept
         else
@@ -123,7 +119,7 @@ describe Ferrum::Dialog do
 
     it "treats string patterns literally instead of as regexps" do
       browser.go_to("/with_js")
-      browser.on(:dialog) do |dialog, _index, _total|
+      browser.on(:dialog) do |dialog|
         if dialog.match?("[reg.exp?]")
           dialog.accept
         else
@@ -138,7 +134,7 @@ describe Ferrum::Dialog do
 
     it "matches on regular expressions" do
       browser.go_to("/with_js")
-      browser.on(:dialog) do |dialog, _index, _total|
+      browser.on(:dialog) do |dialog|
         if dialog.match?(/^.t.ext.*\[\w{3}\.\w{3}\]/i)
           dialog.accept
         else

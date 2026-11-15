@@ -92,8 +92,10 @@ Subscribes to a CDP event, or to one of the following pseudo-events. Returns a
 subscription id you can pass to `off` to unsubscribe.
 
 * `:request` an intercepted request, see `intercept` below. Requires `network.intercept` to be set up first.
+  Callbacks run in the order they were added and the rest are skipped once one handles the request.
 * `:response` a request's response once it's fully loaded, see below. Works without `intercept`.
 * `:auth` a proxy/basic auth challenge, see `authorize` below. Requires `network.intercept` to be set up first.
+  Works like `:request`, an unhandled challenge gets Chrome's default response.
 * `:dialog` a JS dialog (`alert`/`confirm`/`prompt`), see [Dialogs](./16-dialogs.md).
 * anything else is passed straight through as a raw CDP event name, e.g. `page.on("Page.frameNavigated") { |params| ... }`.
 
@@ -133,8 +135,16 @@ Set request interception for given options. This method is only sets request
 interception, you should use `on` callback to catch requests and abort or
 continue them.
 
-Every paused request has to be continued, aborted or responded to by one of your `on(:request)` callbacks, including
-ones that only log or inspect it. A request nobody handles stays paused, and the page waits for it until it times out.
+`on(:request)` callbacks run in the order they were added and receive only the request. The first one that continues,
+responds to or aborts it handles it and the rest are skipped, so a callback that doesn't care about a request just
+returns. A request no callback handled is continued.
+
+```ruby
+page.on(:request) { |request| request.abort if request.match?(/ads/) }
+page.on(:request) { |request| request.respond(body: "stub") if request.match?(/api/) }
+```
+
+`request.handled?` tells whether it was already handled.
 
 * options `Hash`
     * :pattern `String` \* by default

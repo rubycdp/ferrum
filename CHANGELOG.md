@@ -10,6 +10,10 @@
   pending, when the page doesn't load in time
 
 ### Changed
+- `page.on(:request)`, `on(:auth)` and `on(:dialog)` callbacks form a chain: they run in order and the rest are skipped
+  once one continues, responds to, aborts, accepts or dismisses, and an unhandled request is continued. They receive
+  only the object, not `index` and `total`, use `handled?` to check whether a previous callback took it. A callback
+  that holds a request to answer later gets it continued, and one registered after the handler no longer sees it
 - `page.cookies` is the cookies the page sees, the ones sent to its URL and its frames' URLs, or `each(urls:)`. It
   returned every cookie in the context, use `browser.cookies` or `browser.contexts[page.context_id].cookies` for that.
   `set` and `remove` default to the page's host, `clear` keeps other domains, `store`/`load` are on the context only
@@ -30,6 +34,9 @@
   `go_to` instead
 
 ### Fixed
+- `page.on(:request, &:continue)` never continued the request, it called `continue(index, total)` and the error was
+  dropped. Symbol procs and lambdas taking one argument get only the object now, for `:request`, `:response`, `:auth`
+  and `:dialog`
 - `AuthRequest#abort` raised `BrowserError` and left the page hanging, it cancels the auth challenge now
 - `InterceptedRequest#navigation_request?` and `AuthRequest#navigation_request?` always returned `nil`, they are true
   for document requests now

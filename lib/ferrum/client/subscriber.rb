@@ -78,7 +78,7 @@ module Ferrum
       # @return [Boolean]
       #
       def subscribed?(event)
-        @on.key?(event)
+        @on[event].to_a.any?
       end
 
       #

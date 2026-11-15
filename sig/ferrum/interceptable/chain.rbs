@@ -1,0 +1,33 @@
+module Ferrum
+  module Interceptable
+    class Chain[T < _Handleable]
+      interface _Handleable
+        def handled?: () -> bool
+      end
+
+      @client: untyped
+      @event: String
+      @build: ^(Hash[String, untyped]) -> T
+      @default: ^(T) -> untyped
+      @handlers: Concurrent::Hash[Integer, ^(T) -> untyped]
+      @sequence: Concurrent::AtomicFixnum
+      @subscription: Integer?
+      @persistent: bool
+      @mutex: Mutex
+
+      def initialize: (untyped client, String event, build: ^(Hash[String, untyped]) -> T, default: ^(T) -> untyped, ?persistent: bool) -> void
+
+      def add: () { (T) -> untyped } -> Integer
+
+      def remove: (Integer id) -> void
+
+      private
+
+      def subscribe: () -> void
+
+      def run: (Hash[String, untyped] params) -> void
+
+      def call: (^(T) -> untyped handler, T object) -> void
+    end
+  end
+end

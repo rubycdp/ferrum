@@ -484,10 +484,63 @@ describe Ferrum::Page do
       end
     end
 
+    context "with :request" do
+      it "continues the request when given the continue method as a block" do
+        network.intercept
+        page.on(:request, &:continue)
+
+        page.go_to("/foo")
+
+        expect(page.body).to include("Another World")
+      end
+
+      it "skips the remaining callbacks once one handles the request" do
+        network.intercept
+        later = []
+        page.on(:request, &:abort)
+        page.on(:request) { |request| later << request.url }
+
+        expect { page.go_to("/foo") }.to raise_error(Ferrum::StatusError)
+
+        expect(later).to be_empty
+      end
+
+      it "passes the request to the next callback when one doesn't handle it" do
+        network.intercept
+        page.on(:request) { |request| request.abort if request.match?(/nothing/) }
+        page.on(:request, &:continue)
+
+        page.go_to("/foo")
+
+        expect(page.body).to include("Another World")
+      end
+
+      it "continues the request when no callback handles it" do
+        network.intercept
+        page.on(:request) { |request| request.match?(/nothing/) }
+
+        page.go_to("/foo")
+
+        expect(page.body).to include("Another World")
+      end
+
+      it "stops calling a callback once it is unsubscribed" do
+        network.intercept
+        seen = []
+        id = page.on(:request) { |request| seen << request.url }
+        page.on(:request, &:continue)
+
+        page.off(:request, id)
+        page.go_to("/foo")
+
+        expect(seen).to be_empty
+      end
+    end
+
     context "with :response" do
       it "yields the exchange once its response is fully loaded" do
         exchanges = []
-        page.on(:response) { |exchange, _index, _total| exchanges << exchange }
+        page.on(:response) { |exchange| exchanges << exchange }
 
         page.go_to("/foo")
 
@@ -498,7 +551,7 @@ describe Ferrum::Page do
 
       it "fires once per exchange that finishes loading" do
         exchanges = []
-        page.on(:response) { |exchange, _index, _total| exchanges << exchange }
+        page.on(:response) { |exchange| exchanges << exchange }
 
         page.go_to("/with_js")
 
@@ -507,7 +560,7 @@ describe Ferrum::Page do
 
       it "does not fire for requests that fail to load" do
         exchanges = []
-        page.on(:response) { |exchange, _index, _total| exchanges << exchange }
+        page.on(:response) { |exchange| exchanges << exchange }
 
         page.go_to("/with_ajax_connection_refused")
         network.wait_for_idle
@@ -521,7 +574,7 @@ describe Ferrum::Page do
         expect(page.subscribed?("Fetch.requestPaused")).to eq(false)
 
         exchange = nil
-        page.on(:response) { |e, _index, _total| exchange = e }
+        page.on(:response) { |e| exchange = e }
         page.go_to("/foo")
 
         expect(exchange).to be

@@ -1,13 +1,21 @@
 module Ferrum
   module Interceptable
-    def on: (:request) { (Network::InterceptedRequest, Integer, Integer) -> void } -> Integer
-          | (:response) { (Network::Exchange, Integer, Integer) -> void } -> Integer
-          | (:auth) { (Network::AuthRequest, Integer, Integer) -> void } -> Integer
+    def on: (:request) { (Network::InterceptedRequest) -> void } -> Integer
+          | (:response) { (Network::Exchange) -> void } -> Integer
+          | (:auth) { (Network::AuthRequest) -> void } -> Integer
           | (:console) { (Console::Message) -> void } -> Integer
-          | (Symbol | String name) { (*untyped) -> void } -> Integer
+          | (Symbol | String name) { (Hash[String, untyped], Integer, Integer) -> void } -> Integer
 
     def off: (Symbol | String name, Integer id) -> void
 
     def subscribed?: (String event) -> bool
+
+    private
+
+    @chains: Concurrent::Hash[Symbol, Chain[untyped]]
+
+    def chain: (Symbol name) -> Chain[untyped]
+
+    def build_chain: (Symbol name) -> Chain[untyped]
   end
 end

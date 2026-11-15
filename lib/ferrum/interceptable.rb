@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ferrum/interceptable/chain"
+
 module Ferrum
   # Shared by {Page} and {Worker}: subscribes to the CDP events behind the
   # `:request` (Fetch-domain request interception), `:response` (a request's
@@ -10,6 +12,11 @@ module Ferrum
   module Interceptable
     # Subscribes to a CDP event, or to `:request`/`:response`/`:auth`/`:console`.
     #
+    # `:request` and `:auth` callbacks form a chain: they run in the order they
+    # were added, and the rest are skipped as soon as one of them handles the
+    # object (`continue`, `respond`, `abort`). An object nobody handled is
+    # continued, an auth challenge gets Chrome's default response.
+    #
     # @param [Symbol, String] name
     #
     # @yieldparam [Network::InterceptedRequest, Network::Exchange, Network::AuthRequest, Console::Message, Hash] arg
@@ -17,41 +24,28 @@ module Ferrum
     #   `:response`, the finished {Network::Exchange}. For `:auth`, the
     #   {Network::AuthRequest} challenge. For `:console`, the new
     #   {Console::Message}. For any other (raw CDP) event name, the event's
-    #   params `Hash`.
-    #
-    # @yieldparam [Integer] index
-    #   This callback's position among all callbacks currently registered for
-    #   the event. Not passed for `:console`.
-    #
-    # @yieldparam [Integer] total
-    #   Total number of callbacks currently registered for the event. Not
-    #   passed for `:console`.
+    #   params `Hash`, followed by the callback's index and the total number
+    #   of callbacks registered for the event.
     #
     # @return [Integer]
     #   The subscription id, used to unsubscribe via {#off}.
     #
     # @example
     #   page.on(:console) { |message| warn(message) if message.error? }
+    #
+    # @example
+    #   page.on(:request) { |r| r.abort if r.match?(/ads/) }
+    #   page.on(:request) { |r| r.respond(body: "stub") if r.match?(/api/) }
     def on(name, &block)
       case name
       when :console
         console.on(&block)
-      when :request
-        client.on("Fetch.requestPaused") do |params, index, total|
-          request = Network::InterceptedRequest.new(client, params)
-          exchange = network.find_or_build_exchange(request.network_id)
-          exchange.intercepted_request = request
-          block.call(request, index, total)
-        end
+      when :request, :auth
+        chain(name).add(&block)
       when :response
-        client.on("Network.loadingFinished") do |params, index, total|
+        client.on("Network.loadingFinished") do |params|
           exchange = network.select(params["requestId"]).last
-          block.call(exchange, index, total) if exchange
-        end
-      when :auth
-        client.on("Fetch.authRequired") do |params, index, total|
-          request = Network::AuthRequest.new(self, params)
-          block.call(request, index, total)
+          block.call(exchange) if exchange
         end
       else
         client.on(name, &block)
@@ -70,12 +64,10 @@ module Ferrum
       case name
       when :console
         console.off(id)
-      when :request
-        client.off("Fetch.requestPaused", id)
+      when :request, :auth
+        chain(name).remove(id)
       when :response
         client.off("Network.loadingFinished", id)
-      when :auth
-        client.off("Fetch.authRequired", id)
       else
         client.off(name, id)
       end
@@ -88,6 +80,31 @@ module Ferrum
     # @return [Boolean]
     def subscribed?(event)
       client.subscribed?(event)
+    end
+
+    private
+
+    def chain(name)
+      @chains ||= Concurrent::Hash.new
+      @chains[name] ||= build_chain(name)
+    end
+
+    def build_chain(name)
+      case name
+      when :request
+        Chain.new(client, "Fetch.requestPaused",
+                  build: lambda do |params|
+                    request = Network::InterceptedRequest.new(client, params)
+                    exchange = network.find_or_build_exchange(request.network_id)
+                    exchange.intercepted_request = request
+                    request
+                  end,
+                  default: lambda(&:continue))
+      when :auth
+        Chain.new(client, "Fetch.authRequired",
+                  build: ->(params) { Network::AuthRequest.new(self, params) },
+                  default: ->(request) { request.continue(authChallengeResponse: { response: "Default" }) })
+      end
     end
   end
 end
