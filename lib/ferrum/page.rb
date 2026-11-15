@@ -554,14 +554,13 @@ module Ferrum
     #   page.command("Page.navigate", url: "https://github.com/")
     #
     def command(method, wait: 0, slowmoable: false, timeout: nil, **params)
-      if wait.positive?
-        result = nil
-        wait_for_navigation!(wait) { result = command(method, slowmoable:, timeout:, **params) }
-        return result
-      end
-
       sleep(@options.slowmo) if slowmoable && @options.slowmo.positive?
-      client.command(method, timeout: timeout || self.timeout, **params)
+      timeout ||= self.timeout
+      return client.command(method, timeout:, **params) unless wait.positive?
+
+      result = nil
+      wait_for_navigation!(wait) { result = client.command(method, timeout:, **params) }
+      result
     end
 
     # Subscribes to a CDP event, or to `:dialog`, `:request`, `:response`,
