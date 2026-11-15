@@ -17,12 +17,13 @@ module Ferrum
     # @return [Client, SessionClient]
     attr_reader :client
 
-    attr_reader :target_id, :url
+    attr_reader :target_id, :url, :type
 
-    def initialize(client, target_id:, url:)
+    def initialize(client, target_id:, url:, type: "worker")
       @client = client
       @target_id = target_id
       @url = url
+      @type = type
       @options = client.options
       @page = self
       @execution_id = Concurrent::MVar.new
@@ -64,11 +65,16 @@ module Ferrum
       nil
     end
 
-    # Closes the target in the browser, and its connection.
+    # Closes the worker in the browser, and its connection. Chrome refuses
+    # `Target.closeTarget` for a dedicated worker, so it closes itself instead.
     #
     # @return [Boolean]
     def close
-      client.command("Target.closeTarget", async: true, targetId: target_id)
+      if type == "worker"
+        client.command("Runtime.evaluate", async: true, expression: "self.close()")
+      else
+        client.command("Target.closeTarget", async: true, targetId: target_id)
+      end
       close_connection
 
       true
