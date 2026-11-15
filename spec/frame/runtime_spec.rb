@@ -231,6 +231,12 @@ describe Ferrum::Frame::Runtime do
       end
     end
 
+    it "raises ResultTooDeepError for a result nested over Chrome's limit" do
+      code = "(() => { let o = {}; let c = o; for (let i = 0; i < 200; i++) { c.a = {}; c = c.a } return o })()"
+
+      expect { browser.evaluate(code) }.to raise_error(Ferrum::ResultTooDeepError, /nested too deeply/)
+    end
+
     context "with a cyclic structure" do
       let(:cyclic) { Ferrum::CyclicObject.instance }
 

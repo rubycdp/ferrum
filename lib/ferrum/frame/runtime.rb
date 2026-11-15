@@ -361,6 +361,8 @@ module Ferrum
                       functionDeclaration: declaration, arguments: prepare_args(values), **target)
       rescue TimeoutError
         raise ScriptTimeoutError
+      rescue BrowserError => e
+        raise_deep_error(e)
       end
 
       # A promise, or a plain object that may be one, such as the promises of
@@ -380,6 +382,14 @@ module Ferrum
         response["result"]
       rescue TimeoutError
         raise ScriptTimeoutError
+      rescue BrowserError => e
+        raise_deep_error(e)
+      end
+
+      def raise_deep_error(error)
+        raise error unless error.message.to_s.include?("CBOR: stack limit exceeded")
+
+        raise ResultTooDeepError, error.response
       end
 
       def call_target(on)

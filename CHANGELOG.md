@@ -34,6 +34,8 @@
   `go_to` instead
 
 ### Fixed
+- `evaluate` of a result nested about 100 levels deep raised an opaque `BrowserError` about Chrome's CBOR stack limit,
+  it raises `ResultTooDeepError` now, a `BrowserError` that says to return less or use `evaluate_handle`
 - `worker.close` never closed a dedicated worker, Chrome refuses to close it from outside, it closes itself now
 - `page.on(:request, &:continue)` never continued the request, it called `continue(index, total)` and the error was
   dropped. Symbol procs and lambdas taking one argument get only the object now, for `:request`, `:response`, `:auth`
