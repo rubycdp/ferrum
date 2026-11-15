@@ -31,7 +31,7 @@ module Ferrum
       @frame = frame
       @page = frame.page
       @name = name
-      @execution_id = Concurrent::MVar.new
+      @execution_id = Utils::Cell.new
     end
 
     #
@@ -55,10 +55,7 @@ module Ferrum
     # @return [Integer, nil]
     #
     def execution_id
-      value = @execution_id.value
-      return if value.instance_of?(Object)
-
-      value
+      @execution_id.value
     end
 
     #
@@ -71,9 +68,9 @@ module Ferrum
     #
     def execution_id=(value)
       if value.nil?
-        @execution_id.try_take!
-      else
-        @execution_id.try_put!(value)
+        @execution_id.clear
+      elsif !@execution_id.set?
+        @execution_id.set(value)
       end
     end
 

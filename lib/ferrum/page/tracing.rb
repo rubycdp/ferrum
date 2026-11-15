@@ -54,7 +54,8 @@ module Ferrum
       def record(path: nil, encoding: :binary, timeout: nil, trace_config: nil, screenshots: false)
         @path = path
         @encoding = encoding
-        @pending = Concurrent::IVar.new
+        @pending = Utils::Cell.new
+        @failure = nil
         trace_config ||= DEFAULT_TRACE_CONFIG.dup
 
         if screenshots
@@ -68,7 +69,10 @@ module Ferrum
         yield
         stop
 
-        @pending.value!(Deadline.wrap(timeout || @page.timeout).remaining)
+        @pending.wait(timeout || @page.timeout)
+        raise @failure if @failure
+
+        @pending.value
       end
 
       private
@@ -89,7 +93,8 @@ module Ferrum
 
           @pending.set(stream_handle(event["stream"]))
         rescue StandardError => e
-          @pending.fail(e)
+          @failure = e
+          @pending.close
         end
 
         @subscribed_tracing_complete = true

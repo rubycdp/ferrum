@@ -9,6 +9,9 @@ module Ferrum
 
       DEFAULT_TRACE_CONFIG: { includedCategories: untyped, excludedCategories: untyped }
 
+      @pending: Utils::Cell
+      @failure: StandardError?
+
       def initialize: (untyped page) -> void
 
       def record: (?path: untyped?, ?encoding: ::Symbol, ?timeout: (::Numeric | Deadline)?, ?trace_config: untyped?, ?screenshots: bool) { () -> untyped } -> untyped

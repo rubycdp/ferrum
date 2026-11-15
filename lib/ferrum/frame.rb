@@ -62,7 +62,7 @@ module Ferrum
       @page = page
       @parent_id = parent_id
       @lifecycle_events = []
-      @execution_id = Concurrent::MVar.new
+      @execution_id = Utils::Cell.new
       @isolated_worlds = Concurrent::Map.new
     end
 
@@ -190,10 +190,8 @@ module Ferrum
     # @raise [NoExecutionContextError]
     #
     def execution_id!(timeout = nil)
-      value = @execution_id.borrow(Deadline.wrap(timeout || @page.timeout).remaining, &:itself)
-      raise NoExecutionContextError if value.instance_of?(Object)
-
-      value
+      @execution_id.wait(timeout || @page.timeout)
+      @execution_id.value || raise(NoExecutionContextError)
     end
 
     #
@@ -203,10 +201,7 @@ module Ferrum
     # @return [Integer, nil]
     #
     def execution_id
-      value = @execution_id.value
-      return if value.instance_of?(Object)
-
-      value
+      @execution_id.value
     end
 
     #
@@ -220,9 +215,9 @@ module Ferrum
     #
     def execution_id=(value)
       if value.nil?
-        @execution_id.try_take!
-      else
-        @execution_id.try_put!(value)
+        @execution_id.clear
+      elsif !@execution_id.set?
+        @execution_id.set(value)
       end
     end
 
@@ -267,7 +262,7 @@ module Ferrum
         "@loader_id=#{@loader_id.inspect} " \
         "@lifecycle_events=#{@lifecycle_events.inspect} " \
         "@state=#{@state.inspect} " \
-        "@execution_id=#{@execution_id.inspect}>"
+        "@execution_id=#{execution_id.inspect}>"
     end
   end
 end

@@ -48,7 +48,7 @@ module Ferrum
     include Interceptable
 
     attr_accessor :referrer
-    attr_reader :context_id, :target_id, :event, :tracing
+    attr_reader :context_id, :target_id, :idle, :tracing
 
     # Client connection.
     #
@@ -109,7 +109,7 @@ module Ferrum
 
       @frames = Concurrent::Map.new
       @main_frame = Frame.new(nil, self)
-      @event = Utils::Event.new.tap(&:set)
+      @idle = Utils::Cell.set(true)
       @document_version = 0
       self.proxy = proxy
 
@@ -427,9 +427,9 @@ module Ferrum
     #
     def wait_for_reload(timeout = 1)
       deadline = Deadline.wrap(timeout)
-      @event.reset if @event.set?
-      @event.wait(deadline.remaining)
-      @event.set
+      @idle.clear if @idle.set?
+      @idle.wait(deadline)
+      @idle.set(true)
     end
 
     #
@@ -454,10 +454,10 @@ module Ferrum
     #
     def wait_for_navigation(wait = Mouse::CLICK_WAIT, timeout: nil)
       deadline = Deadline.wrap(timeout || self.timeout)
-      iteration = @event.reset
+      generation = @idle.clear
       yield
-      @event.wait([wait, deadline.remaining].min)
-      iteration == @event.iteration || @event.wait(deadline.remaining)
+      @idle.wait([wait, deadline.remaining].min)
+      generation == @idle.generation || @idle.wait(deadline)
     end
 
     #

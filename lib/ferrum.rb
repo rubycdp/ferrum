@@ -2,11 +2,12 @@
 
 require "concurrent-ruby"
 require "ferrum/version"
-require "ferrum/utils/event"
 require "ferrum/utils/thread"
 require "ferrum/utils/platform"
 require "ferrum/utils/elapsed_time"
 require "ferrum/deadline"
+require "ferrum/utils/cell"
+require "ferrum/utils/awaitable_map"
 require "ferrum/utils/attempt"
 require "ferrum/utils/deprecate"
 require "ferrum/errors"

@@ -3,7 +3,7 @@ module Ferrum
     VALID_BEHAVIOR: ::Array[:deny | :allow | :allowAndName | :default]
 
     @page: Page
-    @event: Utils::Event
+    @idle: Utils::Cell
     @files: ::Hash[String, Hash[String, untyped]]
 
     def initialize: (Page) -> void

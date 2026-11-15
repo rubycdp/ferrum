@@ -51,7 +51,7 @@ describe Ferrum::Client do
 
   describe "#send_message" do
     before do
-      client.instance_variable_set(:@pendings, Concurrent::Hash.new)
+      client.instance_variable_set(:@responses, Ferrum::Utils::AwaitableMap.new)
     end
 
     it "waits up to protocol_timeout, independent of the page-level timeout" do
@@ -76,7 +76,7 @@ describe Ferrum::Client do
       allow(ws).to receive(:send_message) do |message|
         Thread.new do
           sleep 0.1
-          client.instance_variable_get(:@pendings)[message[:id]].set({ "result" => { "ok" => true } })
+          client.instance_variable_get(:@responses).fulfill(message[:id], { "result" => { "ok" => true } })
         end
         true
       end
@@ -107,7 +107,7 @@ describe Ferrum::Client do
 
       message = client.build_message("Page.navigate", {})
       expect { client.send_message(message, async: false) }.to raise_error(Ferrum::DeadBrowserError)
-      expect(client.instance_variable_get(:@pendings)).to be_empty
+      expect(client.instance_variable_get(:@responses)).not_to be_expecting(message[:id])
     end
   end
 end

@@ -13,7 +13,7 @@ module Ferrum
 
     def initialize(page)
       @page = page
-      @event = Utils::Event.new.tap(&:set)
+      @idle = Utils::Cell.set(true)
       @files = {}
     end
 
@@ -39,10 +39,10 @@ module Ferrum
     #
     def wait(timeout = 5)
       deadline = Deadline.wrap(timeout)
-      @event.reset
+      @idle.clear
       yield if block_given?
-      @event.wait(deadline.remaining)
-      @event.set
+      @idle.wait(deadline)
+      @idle.set(true)
     end
 
     #
@@ -88,7 +88,7 @@ module Ferrum
     #
     def subscribe_download_will_begin
       @page.on("Browser.downloadWillBegin") do |params|
-        @event.reset
+        @idle.clear
         @files[params["guid"]] = params
       end
     end
@@ -104,9 +104,9 @@ module Ferrum
 
         case params["state"]
         when "completed", "canceled"
-          @event.set
+          @idle.set(true)
         else
-          @event.reset
+          @idle.clear
         end
       end
     end

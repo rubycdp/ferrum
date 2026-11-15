@@ -41,7 +41,7 @@ module Ferrum
     @command_id: ::Integer
     @ws_url: (String | ::Addressable::URI)
     @options: Browser::Options
-    @pendings: ::Concurrent::Hash[::Integer, ::Concurrent::IVar]
+    @responses: Utils::AwaitableMap[::Integer, Hash[String, untyped]]
     @ws: Client::WebSocket
     @subscriber: Client::Subscriber
     @thread: ::Thread
@@ -74,7 +74,7 @@ module Ferrum
 
     def start: () -> void
 
-    def release_pendings: () -> void
+    def release_commands: () -> void
 
     def dead_browser_error: () -> DeadBrowserError
 

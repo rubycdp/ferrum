@@ -159,7 +159,7 @@ module Ferrum
       @command_id_mutex = Mutex.new
       @ws_url = ws_url
       @options = options
-      @pendings = Concurrent::Hash.new
+      @responses = Utils::AwaitableMap.new
       @ws = WebSocket.new(ws_url, options.ws_max_receive_size, options.log, options.protocol_timeout)
       @subscriber = Subscriber.new
 
@@ -224,13 +224,12 @@ module Ferrum
       else
         raise dead_browser_error if @ws.messages.closed?
 
-        pending = Concurrent::IVar.new
-        @pendings[message[:id]] = pending
+        @responses.expect(message[:id])
         begin
           @ws.send_message(message, deadline)
-          data = pending.value!(deadline.remaining)
+          data = @responses.await(message[:id], deadline)
         ensure
-          @pendings.delete(message[:id])
+          @responses.delete(message[:id])
         end
 
         raise dead_browser_error if data.nil? && @ws.messages.closed?
@@ -302,7 +301,7 @@ module Ferrum
     def close
       @ws.close
       # Give a thread some time to handle a tail of messages
-      @pendings.clear
+      @responses.close
       @thread.kill unless @thread.join(1)
       @subscriber.close
       @ws.force_close
@@ -316,7 +315,7 @@ module Ferrum
     def inspect
       "#<#{self.class} " \
         "@command_id=#{@command_id.inspect} " \
-        "@pendings=#{@pendings.inspect} " \
+        "@responses=#{@responses.inspect} " \
         "@ws=#{@ws.inspect}>"
     end
 
@@ -346,7 +345,7 @@ module Ferrum
           if message.key?("method")
             @subscriber << message
           else
-            @pendings[message["id"]]&.set(message)
+            @responses.fulfill(message["id"], message)
           end
         end
       rescue StandardError => e
@@ -355,14 +354,14 @@ module Ferrum
         warn("Ferrum: dispatch stopped, #{e.class}: #{e.message}\n  #{e.backtrace&.first}")
         @ws.messages.close
       ensure
-        release_pendings
+        release_commands
       end
     end
 
     # Nothing is going to answer the commands still in flight once the socket
     # is gone, release them instead of making each wait out its timeout.
-    def release_pendings
-      @pendings.each_value { |pending| pending.try_set(nil) }
+    def release_commands
+      @responses.close
     end
 
     def dead_browser_error
@@ -370,7 +369,7 @@ module Ferrum
     end
 
     # Locked so two concurrent commands never share an id and read each
-    # other's responses from @pendings.
+    # other's responses from @responses.
     def next_command_id
       @command_id_mutex.synchronize { @command_id += 1 }
     end

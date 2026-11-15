@@ -104,7 +104,7 @@ module Ferrum
             frame.execution_id = nil
           else
             @frames.delete(params["frameId"])
-            @event.set if @main_frame.idle? && frame&.idle? == false && frames.size == 1
+            @idle.set(true) if @main_frame.idle? && frame&.idle? == false && frames.size == 1
           end
         end
       end
@@ -125,7 +125,7 @@ module Ferrum
         on("Page.frameStartedLoading") do |params|
           frame = @frames[params["frameId"]]
           frame.state = :started_loading if frame
-          @event.reset
+          @idle.clear
         end
       end
 
@@ -148,14 +148,14 @@ module Ferrum
           # tree, and we save it in a variable because if we call that again root
           # node will change the id and all subsequent nodes have to change id too.
           if @main_frame.id == params["frameId"]
-            @event.set if idling?
+            @idle.set(true) if idling?
             document_node_id(async: true)
           end
 
           frame = @frames[params["frameId"]]
           frame&.state = :stopped_loading
 
-          @event.set if idling?
+          @idle.set(true) if idling?
         end
       end
 
@@ -181,14 +181,14 @@ module Ferrum
           # `init` and `networkIdle`. Without it `go_to` would wait for such iframe until it raises timeout.
           if event["name"] == "networkIdle" && !frame.main?
             frame.state = :stopped_loading
-            @event.set if idling?
+            @idle.set(true) if idling?
           end
         end
       end
 
       def subscribe_navigated_within_document
         on("Page.navigatedWithinDocument") do
-          @event.set if idling?
+          @idle.set(true) if idling?
         end
       end
 
@@ -198,7 +198,7 @@ module Ferrum
           # Document, Stylesheet, Image, Media, Font, Script, TextTrack, XHR,
           # Fetch, EventSource, WebSocket, Manifest, SignedExchange, Ping,
           # CSPViolationReport, Other
-          @event.reset if params["frameId"] == @main_frame.id && params["type"] == "Document"
+          @idle.clear if params["frameId"] == @main_frame.id && params["type"] == "Document"
         end
       end
 

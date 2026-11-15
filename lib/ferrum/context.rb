@@ -13,15 +13,14 @@ module Ferrum
   class Context
     POSITION = %i[first last].freeze
 
-    attr_reader :id, :targets
+    attr_reader :id
 
     def initialize(client, contexts, id, implicit: false)
       @id = id
       @implicit = implicit
       @client = client
       @contexts = contexts
-      @targets = Concurrent::Hash.new
-      @pendings = Concurrent::Map.new
+      @targets = Utils::AwaitableMap.new
     end
 
     # Whether this is the browser's implicit context, the one it puts its
@@ -54,6 +53,13 @@ module Ferrum
     # @return [Page]
     def page
       default_target.page
+    end
+
+    # The targets in this context by id, as they are at the time of the call.
+    #
+    # @return [Hash{String => Target}]
+    def targets
+      @targets.to_h
     end
 
     # All page targets in this context, connected to as {Page}s.
@@ -114,15 +120,7 @@ module Ferrum
       options = { browserContextId: @id } unless implicit?
       deadline = Deadline.after(@client.protocol_timeout)
       response = @client.command("Target.createTarget", timeout: deadline, url: "about:blank", **Hash(options))
-      target_id = response["targetId"]
-
-      new_pending = Concurrent::IVar.new
-      pending = @pendings.put_if_absent(target_id, new_pending) || new_pending
-      resolved = pending.value(deadline.remaining)
-      raise NoSuchTargetError unless resolved
-
-      @pendings.delete(target_id)
-      @targets[target_id]
+      @targets.await(response["targetId"], deadline) || raise(NoSuchTargetError)
     end
 
     # Registers a target discovered via a CDP `Target.*` event, or updates
@@ -140,15 +138,11 @@ module Ferrum
     # @return [Target]
     def add_target(params:, session_id: nil, attached: false)
       new_target = Target.new(@client, session_id, params, implicit: implicit?)
-      target = @targets[new_target.id] ||= new_target
+      target = @targets[new_target.id] || new_target
       # on first iteration session_id may be nil, then if session is present here we must set it to the target
       target.session_id = session_id if session_id && (attached || target.session_id.nil?)
       @default_target ||= target
-
-      new_pending = Concurrent::IVar.new
-      pending = @pendings.put_if_absent(target.id, new_pending) || new_pending
-      pending.try_set(true)
-      target
+      @targets[target.id] = target
     end
 
     # Updates a known target's params, e.g. on `Target.targetInfoChanged`.
