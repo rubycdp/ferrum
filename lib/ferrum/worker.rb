@@ -121,8 +121,8 @@ module Ferrum
       command("Runtime.runIfWaitingForDebugger")
     end
 
-    def execution_id!
-      value = @execution_id.borrow(timeout, &:itself)
+    def execution_id!(wait = nil)
+      value = @execution_id.borrow(Deadline.wrap(wait || timeout).remaining, &:itself)
       raise NoExecutionContextError if value.instance_of?(Object)
 
       value

@@ -10,7 +10,7 @@ module Ferrum
 
     def files: () -> ::Array[Hash[String, untyped]]
 
-    def wait: (?::Integer timeout) ?{ () -> void } -> void
+    def wait: (?(::Numeric | Deadline) timeout) ?{ () -> void } -> void
 
     def set_behavior: (save_path: String, ?behavior: :deny | :allow | :allowAndName | :default) -> void
 

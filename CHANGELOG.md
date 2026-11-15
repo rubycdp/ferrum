@@ -1,6 +1,7 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.20.1...main) ##
 
 ### Added
+- `timeout:` on `go_to`, `refresh` and `wait_for_navigation` bounds the whole call with a single `Ferrum::Deadline`
 - `cookies[name, domain:, path:]` picks one of the cookies sharing a name
 - `context.cookies` with every cookie in the context whatever its domain, `browser.cookies` is the default context's
 - `network.emulate(user_agent:, accept_language:, platform:, metadata:)` overrides what the page reports in the request
@@ -10,6 +11,7 @@
   pending, when the page doesn't load in time
 
 ### Changed
+- `go_to`, `refresh` and the script methods no longer restart the timeout for each step, one `timeout` covers the whole call
 - `page.on(:request)`, `on(:auth)` and `on(:dialog)` callbacks form a chain: they run in order and the rest are skipped
   once one continues, responds to, aborts, accepts or dismisses, and an unhandled request is continued. They receive
   only the object, not `index` and `total`, use `handled?` to check whether a previous callback took it. A callback

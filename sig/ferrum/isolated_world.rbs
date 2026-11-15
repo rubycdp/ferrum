@@ -12,7 +12,7 @@ module Ferrum
 
     def initialize: (Frame frame, String name) -> void
 
-    def execution_id!: () -> Integer
+    def execution_id!: (?(::Numeric | Deadline)? timeout) -> Integer
 
     def execution_id: () -> Integer?
 

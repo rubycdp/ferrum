@@ -182,12 +182,15 @@ module Ferrum
     # an error if an execution id hasn't been set yet, if id is set
     # returns immediately.
     #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long to wait for the id, defaults to the page's `timeout`.
+    #
     # @return [Integer]
     #
     # @raise [NoExecutionContextError]
     #
-    def execution_id!
-      value = @execution_id.borrow(@page.timeout, &:itself)
+    def execution_id!(timeout = nil)
+      value = @execution_id.borrow(Deadline.wrap(timeout || @page.timeout).remaining, &:itself)
       raise NoExecutionContextError if value.instance_of?(Object)
 
       value

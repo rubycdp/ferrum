@@ -112,11 +112,13 @@ module Ferrum
     # @raise [NoSuchTargetError]
     def create_target
       options = { browserContextId: @id } unless implicit?
-      target_id = @client.command("Target.createTarget", url: "about:blank", **Hash(options))["targetId"]
+      deadline = Deadline.after(@client.protocol_timeout)
+      response = @client.command("Target.createTarget", timeout: deadline, url: "about:blank", **Hash(options))
+      target_id = response["targetId"]
 
       new_pending = Concurrent::IVar.new
       pending = @pendings.put_if_absent(target_id, new_pending) || new_pending
-      resolved = pending.value(@client.protocol_timeout)
+      resolved = pending.value(deadline.remaining)
       raise NoSuchTargetError unless resolved
 
       @pendings.delete(target_id)

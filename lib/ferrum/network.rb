@@ -62,7 +62,7 @@ module Ferrum
     # @param [Float] duration
     #   Sleep for given amount of time and check again.
     #
-    # @param [Float] timeout
+    # @param [Numeric, Deadline] timeout
     #   During what time we try to check idle.
     #
     # @return [Boolean]
@@ -73,10 +73,10 @@ module Ferrum
     #   browser.network.wait_for_idle # => false
     #
     def wait_for_idle(connections: 0, duration: 0.05, timeout: @page.timeout)
-      start = Utils::ElapsedTime.monotonic_time
+      deadline = Deadline.wrap(timeout)
 
       until idle?(connections)
-        return false if Utils::ElapsedTime.timeout?(start, timeout)
+        return false if deadline.expired?
 
         sleep(duration)
       end

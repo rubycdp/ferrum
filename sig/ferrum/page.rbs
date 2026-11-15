@@ -49,7 +49,7 @@ module Ferrum
 
     def context: () -> Context?
 
-    def go_to: (?String? url, ?on_timeout: (:ignore | :raise)?) -> String?
+    def go_to: (?String? url, ?on_timeout: (:ignore | :raise)?, ?timeout: (::Numeric | Deadline)?) -> String?
     alias goto go_to
     alias go go_to
 
@@ -69,7 +69,7 @@ module Ferrum
 
     def window_bounds=: (Hash[Symbol, (::Integer | String)] bounds) -> Hash[String, untyped]
 
-    def refresh: () -> void
+    def refresh: (?timeout: (::Numeric | Deadline)?) -> void
     alias reload refresh
 
     def stop: () -> Hash[String, untyped]
@@ -78,11 +78,11 @@ module Ferrum
 
     def forward: () -> void
 
-    def wait_for_reload: (?::Numeric timeout) -> void
+    def wait_for_reload: (?(::Numeric | Deadline) timeout) -> void
 
-    def wait_for_navigation: (?::Numeric wait) { () -> void } -> bool
+    def wait_for_navigation: (?::Numeric wait, ?timeout: (::Numeric | Deadline)?) { () -> void } -> bool
 
-    def wait_for_navigation!: (?::Numeric wait) { () -> void } -> void
+    def wait_for_navigation!: (?::Numeric wait, ?timeout: (::Numeric | Deadline)?) { () -> void } -> void
 
     def bypass_csp: (?enabled: bool) -> Hash[String, untyped]
 
@@ -94,7 +94,7 @@ module Ferrum
 
     def set_window_bounds: (Hash[Symbol, (::Integer | String)] bounds) -> Hash[String, untyped]
 
-    def command: (String method, ?wait: ::Numeric?, ?slowmoable: bool, ?timeout: ::Numeric?, **untyped) -> Hash[String, untyped]
+    def command: (String method, ?wait: ::Numeric?, ?slowmoable: bool, ?timeout: (::Numeric | Deadline)?, **untyped) -> Hash[String, untyped]
 
     def on: (:dialog) { (Dialog) -> void } -> Integer
           | (:console) { (Console::Message) -> void } -> Integer

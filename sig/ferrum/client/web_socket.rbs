@@ -30,7 +30,7 @@ module Ferrum
 
       def on_close: (untyped event) -> void
 
-      def send_message: (Hash[Symbol, untyped] data, ?::Numeric? timeout) -> void
+      def send_message: (Hash[Symbol, untyped] data, ?(::Numeric | Deadline)? timeout) -> void
 
       def write: (String data) -> void
 
@@ -40,9 +40,9 @@ module Ferrum
 
       private
 
-      def drive: (?::Float? deadline) { () -> void } -> void
+      def drive: (?Deadline? deadline) { () -> void } -> void
 
-      def queue_encoded: (?::Float? deadline) -> void
+      def queue_encoded: (?Deadline? deadline) -> void
 
       def start_writer: () -> void
 

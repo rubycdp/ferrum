@@ -51,7 +51,7 @@ module Ferrum
     # @param [Hash] params
     #   The command's parameters.
     #
-    # @param [Numeric, nil] timeout
+    # @param [Numeric, Deadline, nil] timeout
     #   How long to wait for this command's response, overriding
     #   {Browser::Options#protocol_timeout}. See {Client#send_message}.
     #
@@ -178,7 +178,7 @@ module Ferrum
     # @param [Hash] params
     #   The command's parameters.
     #
-    # @param [Numeric, nil] timeout
+    # @param [Numeric, Deadline, nil] timeout
     #   How long to wait for this command's response, overriding
     #   {Browser::Options#protocol_timeout}. See {#send_message}.
     #
@@ -207,7 +207,7 @@ module Ferrum
     # @param [Boolean] async
     #   Whether to return immediately instead of waiting for a response.
     #
-    # @param [Numeric, nil] timeout
+    # @param [Numeric, Deadline, nil] timeout
     #   How long to wait for the response, counting the time the message waits
     #   to be sent. Defaults to `protocol_timeout`.
     #
@@ -216,10 +216,10 @@ module Ferrum
     #   from the response.
     #
     def send_message(message, async:, timeout: nil)
-      timeout ||= protocol_timeout
+      deadline = Deadline.wrap(timeout || protocol_timeout)
 
       if async
-        @ws.send_message(message, timeout)
+        @ws.send_message(message, deadline)
         true
       else
         raise dead_browser_error if @ws.messages.closed?
@@ -227,8 +227,8 @@ module Ferrum
         pending = Concurrent::IVar.new
         @pendings[message[:id]] = pending
         begin
-          @ws.send_message(message, timeout)
-          data = pending.value!(timeout)
+          @ws.send_message(message, deadline)
+          data = pending.value!(deadline.remaining)
         ensure
           @pendings.delete(message[:id])
         end

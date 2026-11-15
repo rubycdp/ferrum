@@ -139,6 +139,10 @@ module Ferrum
     #   `:raise` raises {NavigationTimeoutError}. `nil` follows the deprecated
     #   `:pending_connection_errors` option, which raises {PendingConnectionsError}.
     #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long the whole navigation may take, from sending the request to the
+    #   page loading. Defaults to the page's `timeout`.
+    #
     # @return [String, nil]
     #   The navigated frame's id, or `nil` when the timeout is reached.
     #
@@ -154,15 +158,17 @@ module Ferrum
     # @example
     #   page.go_to("https://github.com/")
     #   page.go_to("/slow", on_timeout: :raise)
+    #   page.go_to("/slow", timeout: 10)
     #
-    def go_to(url = nil, on_timeout: nil)
+    def go_to(url = nil, on_timeout: nil, timeout: nil)
       unless on_timeout.nil? || ON_TIMEOUT.include?(on_timeout)
         raise ArgumentError, "on_timeout should be one of #{ON_TIMEOUT.inspect}, got #{on_timeout.inspect}"
       end
 
       options = { url: combine_url!(url) }
       options.merge!(referrer: referrer) if referrer
-      response = command("Page.navigate", wait: GOTO_WAIT, **options)
+      deadline = Deadline.wrap(timeout || self.timeout)
+      response = command("Page.navigate", wait: GOTO_WAIT, timeout: deadline, **options)
       error_text = response["errorText"] # https://cs.chromium.org/chromium/src/net/base/net_error_list.h
       if error_text && error_text != "net::ERR_ABORTED" # Request aborted due to user action or download
         raise StatusError.new(options[:url], "Request to #{options[:url]} failed (#{error_text})")
@@ -362,12 +368,15 @@ module Ferrum
     #
     # Reloads the current page.
     #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long the whole reload may take. Defaults to the page's `timeout`.
+    #
     # @example
     #   page.go_to("https://github.com/")
     #   page.refresh
     #
-    def refresh
-      command("Page.reload", wait: timeout, slowmoable: true)
+    def refresh(timeout: nil)
+      command("Page.reload", wait: GOTO_WAIT, timeout: timeout, slowmoable: true)
     end
     alias reload refresh
 
@@ -410,15 +419,16 @@ module Ferrum
     #
     # Blocks until the page reloads or the timeout is reached.
     #
-    # @param [Numeric] timeout
+    # @param [Numeric, Deadline] timeout
     #   Maximum time in seconds to wait for a reload event.
     #
     # @example
     #   page.wait_for_reload
     #
     def wait_for_reload(timeout = 1)
+      deadline = Deadline.wrap(timeout)
       @event.reset if @event.set?
-      @event.wait(timeout)
+      @event.wait(deadline.remaining)
       @event.set
     end
 
@@ -430,20 +440,24 @@ module Ferrum
     # @param [Numeric] wait
     #   How many seconds to watch for a navigation after the block returns.
     #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long the block and the navigation it starts may take together.
+    #   Defaults to the page's `timeout`.
+    #
     # @yield The code that may start a navigation.
     #
     # @return [Boolean]
-    #   `false` when a navigation started but didn't finish within the page's
-    #   `timeout`.
+    #   `false` when a navigation started but didn't finish in time.
     #
     # @example
     #   page.wait_for_navigation { page.at_css("a").evaluate("this.click()") } # => true
     #
-    def wait_for_navigation(wait = Mouse::CLICK_WAIT)
+    def wait_for_navigation(wait = Mouse::CLICK_WAIT, timeout: nil)
+      deadline = Deadline.wrap(timeout || self.timeout)
       iteration = @event.reset
       yield
-      @event.wait(wait)
-      iteration == @event.iteration || @event.wait(timeout)
+      @event.wait([wait, deadline.remaining].min)
+      iteration == @event.iteration || @event.wait(deadline.remaining)
     end
 
     #
@@ -543,7 +557,7 @@ module Ferrum
     #   Whether to sleep for `Browser::Options#slowmo` seconds before sending
     #   the command.
     #
-    # @param [Numeric, nil] timeout
+    # @param [Numeric, Deadline, nil] timeout
     #   Overrides the timeout this command's response is bound by. Defaults
     #   to the page's `timeout`. Callers with their own budget (e.g. `#pdf`/
     #   `#screenshot`) pass it explicitly.
@@ -555,11 +569,11 @@ module Ferrum
     #
     def command(method, wait: 0, slowmoable: false, timeout: nil, **params)
       sleep(@options.slowmo) if slowmoable && @options.slowmo.positive?
-      timeout ||= self.timeout
-      return client.command(method, timeout:, **params) unless wait.positive?
+      deadline = Deadline.wrap(timeout || self.timeout)
+      return client.command(method, timeout: deadline, **params) unless wait.positive?
 
       result = nil
-      wait_for_navigation!(wait) { result = client.command(method, timeout:, **params) }
+      wait_for_navigation!(wait, timeout: deadline) { result = client.command(method, timeout: deadline, **params) }
       result
     end
 

@@ -271,7 +271,7 @@ module Ferrum
       # @param [Node, nil] within
       #   The parent node to search within.
       #
-      # @param [Float, Integer] timeout
+      # @param [Numeric, Deadline] timeout
       #   How long to keep retrying, in seconds.
       #
       # @param [Float, Integer] interval
@@ -293,10 +293,10 @@ module Ferrum
         selector, method_name = css ? [css, :at_css] : [xpath, :at_xpath]
         raise ArgumentError, "pass either `css:` or `xpath:`" unless selector
 
-        start = Utils::ElapsedTime.monotonic_time
+        deadline = Deadline.wrap(timeout)
 
         until (node = send(method_name, selector, within: within))
-          return nil if Utils::ElapsedTime.timeout?(start, timeout)
+          return nil if deadline.expired?
 
           sleep(interval)
         end

@@ -34,7 +34,7 @@ module Ferrum
       # @param [:binary, :base64] encoding
       #   Encode output as Base64 or plain text.
       #
-      # @param [Float, nil] timeout
+      # @param [Numeric, Deadline, nil] timeout
       #   Wait until file streaming finishes in the specified time or raise
       #   error.
       #
@@ -68,7 +68,7 @@ module Ferrum
         yield
         stop
 
-        @pending.value!(timeout || @page.timeout)
+        @pending.value!(Deadline.wrap(timeout || @page.timeout).remaining)
       end
 
       private

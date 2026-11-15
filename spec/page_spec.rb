@@ -57,6 +57,14 @@ describe Ferrum::Page do
         end
       end
 
+      it "bounds the navigation by the given timeout instead of the page timeout" do
+        started = Ferrum::Utils::ElapsedTime.monotonic_time
+
+        expect { page.go_to("/really_slow", timeout: 0.5, on_timeout: :raise) }
+          .to raise_error(Ferrum::NavigationTimeoutError)
+        expect(Ferrum::Utils::ElapsedTime.elapsed_time(started)).to be < 2
+      end
+
       it "rejects an unknown on_timeout" do
         expect { browser.go_to("/", on_timeout: :wait) }
           .to raise_error(ArgumentError, "on_timeout should be one of [:ignore, :raise], got :wait")
@@ -159,6 +167,12 @@ describe Ferrum::Page do
 
       expect(page.evaluate("window.marker")).to be_nil
       expect(page.body).to include("slow page")
+    end
+
+    it "raises when the given timeout is already used up" do
+      page.go_to("/slow")
+
+      expect { page.refresh(timeout: 0) }.to raise_error(Ferrum::TimeoutError)
     end
   end
 
@@ -281,6 +295,10 @@ describe Ferrum::Page do
       page.timeout = 1
 
       expect(page.wait_for_navigation { page.execute("location.href = '/really_slow'") }).to be(false)
+    end
+
+    it "returns false when the navigation doesn't finish within the given timeout" do
+      expect(page.wait_for_navigation(timeout: 0.5) { page.execute("location.href = '/really_slow'") }).to be(false)
     end
   end
 

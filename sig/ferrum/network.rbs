@@ -19,7 +19,7 @@ module Ferrum
 
     def initialize: (untyped page) -> void
 
-    def wait_for_idle: (?connections: ::Integer, ?duration: ::Float, ?timeout: untyped) -> untyped
+    def wait_for_idle: (?connections: ::Integer, ?duration: ::Float, ?timeout: (::Numeric | Deadline)) -> untyped
 
     def idle?: (?::Integer connections) -> untyped
 

@@ -13,10 +13,13 @@ Navigate page to.
 * options `Hash`
   * :on_timeout `Symbol` What to do when the timeout is reached: `:ignore` (default) returns `nil`,
     `:raise` raises `Ferrum::NavigationTimeoutError` naming the requests still pending.
+  * :timeout `Numeric` How long the whole navigation may take, sending the request and loading the page together,
+    the page timeout by default.
 
 ```ruby
 page.go_to("https://github.com/")
 page.go_to("https://github.com/", on_timeout: :raise)
+page.go_to("https://github.com/", timeout: 10)
 ```
 
 #### back
@@ -40,9 +43,11 @@ page.back
 page.forward
 ```
 
-#### refresh
+#### refresh(timeout: nil)
 
 Reload current page.
+
+* timeout `Numeric` how long the whole reload may take, the page timeout by default
 
 ```ruby
 page.go_to("https://github.com/")
@@ -65,6 +70,7 @@ if it doesn't load within the page timeout. `click` already does this, use it fo
 JavaScript.
 
 * wait `Numeric` seconds to watch for a navigation after the block, `FERRUM_CLICK_WAIT` or `0.1` by default
+* timeout `Numeric` how long the block and the navigation may take together, the page timeout by default
 
 ```ruby
 page.wait_for_navigation { page.at_css("a").evaluate("this.click()") } # => true

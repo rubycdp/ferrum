@@ -40,9 +40,10 @@ module Ferrum
     #
     # @return [Integer]
     #
-    def execution_id!
+    def execution_id!(timeout = nil)
       execution_id || begin
-        id = @page.command("Page.createIsolatedWorld", frameId: @frame.id, worldName: @name)["executionContextId"]
+        response = @page.command("Page.createIsolatedWorld", timeout: timeout, frameId: @frame.id, worldName: @name)
+        id = response["executionContextId"]
         self.execution_id = id
         execution_id || id
       end

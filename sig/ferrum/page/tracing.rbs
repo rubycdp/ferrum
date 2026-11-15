@@ -11,7 +11,7 @@ module Ferrum
 
       def initialize: (untyped page) -> void
 
-      def record: (?path: untyped?, ?encoding: ::Symbol, ?timeout: untyped?, ?trace_config: untyped?, ?screenshots: bool) { () -> untyped } -> untyped
+      def record: (?path: untyped?, ?encoding: ::Symbol, ?timeout: (::Numeric | Deadline)?, ?trace_config: untyped?, ?screenshots: bool) { () -> untyped } -> untyped
 
       private
 

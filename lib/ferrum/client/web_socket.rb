@@ -118,7 +118,7 @@ module Ferrum
       # @param [Hash] data
       #   The message to send, must include an `:id` key.
       #
-      # @param [Numeric, nil] timeout
+      # @param [Numeric, Deadline, nil] timeout
       #   How long the frame may wait in the queue. A frame still queued after
       #   that is dropped, nobody waits for its response anymore. `nil` keeps it
       #   until it's written.
@@ -127,7 +127,7 @@ module Ferrum
       #
       def send_message(data, timeout = nil)
         json = data.to_json
-        deadline = Utils::ElapsedTime.monotonic_time + timeout if timeout
+        deadline = Deadline.wrap(timeout) if timeout
         drive(deadline) { @driver.text(json) }
         @log&.sent(data, self)
       end
@@ -195,7 +195,7 @@ module Ferrum
         @writer = Utils::Thread.spawn do
           while (frame = @outgoing.pop)
             data, deadline = frame
-            write_frame(data) unless deadline && Utils::ElapsedTime.monotonic_time > deadline
+            write_frame(data) unless deadline&.expired?
           end
         rescue EOFError, Errno::ECONNRESET, Errno::EPIPE, Errno::EBADF, IOError # rubocop:disable Lint/ShadowedException
           # The browser went away, nothing to report.

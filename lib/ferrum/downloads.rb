@@ -29,7 +29,7 @@ module Ferrum
     #
     # Waits until the current download finishes.
     #
-    # @param [Integer] timeout
+    # @param [Numeric, Deadline] timeout
     #   How long to wait in seconds.
     #
     # @yield
@@ -38,9 +38,10 @@ module Ferrum
     # @return [void]
     #
     def wait(timeout = 5)
+      deadline = Deadline.wrap(timeout)
       @event.reset
       yield if block_given?
-      @event.wait(timeout)
+      @event.wait(deadline.remaining)
       @event.set
     end
 
