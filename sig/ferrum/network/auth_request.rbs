@@ -11,6 +11,10 @@ module Ferrum
 
       def initialize: (Page page, Hash[::String, untyped] params) -> void
 
+      @handled: bool
+
+      def handled?: () -> bool
+
       def navigation_request?: () -> bool
 
       def auth_challenge?: ((::String | ::Symbol) source) -> bool

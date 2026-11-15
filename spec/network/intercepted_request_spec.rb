@@ -109,7 +109,7 @@ describe Ferrum::Network::InterceptedRequest do
   describe "#continue" do
     it "lets the request through" do
       network.intercept
-      page.on(:request) { |request, _index, _total| request.continue }
+      page.on(:request, &:continue)
 
       page.go_to
 
@@ -132,7 +132,7 @@ describe Ferrum::Network::InterceptedRequest do
   describe "#abort" do
     it "fails the request as blocked by the client" do
       network.intercept
-      page.on(:request) { |request, _index, _total| request.abort }
+      page.on(:request, &:abort)
 
       expect { page.go_to }.to raise_error(Ferrum::StatusError, /net::ERR_BLOCKED_BY_CLIENT/)
       expect(last_exchange.blocked?).to be(true)

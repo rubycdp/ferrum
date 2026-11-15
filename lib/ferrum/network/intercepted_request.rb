@@ -39,6 +39,15 @@ module Ferrum
       end
 
       #
+      # Whether the request was continued, responded to or aborted.
+      #
+      # @return [Boolean]
+      #
+      def handled?
+        !@status.nil?
+      end
+
+      #
       # Whether this request is for the navigation of a frame, as opposed
       # to a subresource (script, image, XHR, etc).
       #

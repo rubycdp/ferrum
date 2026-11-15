@@ -14,6 +14,9 @@ Accept dialog with given text or default prompt if applicable
 
 Dismiss dialog
 
+Callbacks run in the order they were added and the rest are skipped once one accepts or dismisses the dialog. A dialog
+nobody handled is accepted with a warning.
+
 ```ruby
 page.on(:dialog) do |dialog|
   if dialog.match?(/bla-bla/)

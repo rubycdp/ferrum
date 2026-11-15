@@ -318,19 +318,15 @@ module Ferrum
 
       @page.on(:request, &block)
 
-      @page.on(:auth) do |request, index, total|
-        if request.auth_challenge?(type)
-          response = authorized_response(@authorized_ids[type],
-                                         request.request_id,
-                                         user, password)
+      @page.on(:auth) do |request|
+        next unless request.auth_challenge?(type)
 
-          @authorized_ids[type] << request.request_id
-          request.continue(authChallengeResponse: response)
-        elsif index + 1 < total
-          next # There are other callbacks that can handle this
-        else
-          request.abort
-        end
+        response = authorized_response(@authorized_ids[type],
+                                       request.request_id,
+                                       user, password)
+
+        @authorized_ids[type] << request.request_id
+        request.continue(authChallengeResponse: response)
       end
     end
 

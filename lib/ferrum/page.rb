@@ -571,13 +571,10 @@ module Ferrum
     #
     # @return [Integer]
     #   The subscription id, used to unsubscribe via {#off}.
-    def on(name, &block)
+    def on(name, &)
       return super unless name == :dialog
 
-      client.on("Page.javascriptDialogOpening") do |params, index, total|
-        dialog = Dialog.new(self, params)
-        block.call(dialog, index, total)
-      end
+      chain(:dialog).add(&)
     end
 
     # Unsubscribes a listener previously registered via {#on}.
@@ -591,7 +588,7 @@ module Ferrum
     def off(name, id)
       return super unless name == :dialog
 
-      client.off("Page.javascriptDialogOpening", id)
+      chain(:dialog).remove(id)
     end
 
     # Whether the page is configured to use a proxy.
@@ -644,13 +641,21 @@ module Ferrum
         end
       end
 
-      on(:dialog) do |dialog, _index, total|
-        if total == 1
-          warn "Dialog was shown but you didn't provide `on(:dialog)` callback, accepting it by default. " \
-               "Please take a look at https://github.com/rubycdp/ferrum#dialogs"
-          dialog.accept
-        end
-      end
+      chain(:dialog)
+    end
+
+    def build_chain(name)
+      return super unless name == :dialog
+
+      Chain.new(client, "Page.javascriptDialogOpening",
+                build: ->(params) { Dialog.new(self, params) },
+                default: method(:accept_dialog), persistent: true)
+    end
+
+    def accept_dialog(dialog)
+      warn "Dialog was shown but no `on(:dialog)` callback handled it, accepting it by default. " \
+           "Please take a look at https://github.com/rubycdp/ferrum#dialogs"
+      dialog.accept
     end
 
     def prepare_page
@@ -665,9 +670,7 @@ module Ferrum
       if use_authorized_proxy?
         network.authorize(user: @proxy_user,
                           password: @proxy_password,
-                          type: :proxy) do |request, _index, total|
-          request.continue if total == 1
-        end
+                          type: :proxy) { |_request| nil }
       end
 
       downloads.set_behavior(save_path: @options.save_path) if @options.save_path

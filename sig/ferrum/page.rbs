@@ -96,12 +96,12 @@ module Ferrum
 
     def command: (String method, ?wait: ::Numeric?, ?slowmoable: bool, ?timeout: ::Numeric?, **untyped) -> Hash[String, untyped]
 
-    def on: (:dialog) { (Dialog, Integer, Integer) -> void } -> Integer
+    def on: (:dialog) { (Dialog) -> void } -> Integer
           | (:console) { (Console::Message) -> void } -> Integer
-          | (:request) { (Network::InterceptedRequest, Integer, Integer) -> void } -> Integer
-          | (:response) { (Network::Exchange, Integer, Integer) -> void } -> Integer
-          | (:auth) { (Network::AuthRequest, Integer, Integer) -> void } -> Integer
-          | ((Symbol | String) event) { (*untyped) -> void } -> Integer
+          | (:request) { (Network::InterceptedRequest) -> void } -> Integer
+          | (:response) { (Network::Exchange) -> void } -> Integer
+          | (:auth) { (Network::AuthRequest) -> void } -> Integer
+          | ((Symbol | String) event) { (Hash[String, untyped], Integer, Integer) -> void } -> Integer
 
     def off: ((Symbol | String) event, Integer id) -> void
 
@@ -116,6 +116,10 @@ module Ferrum
     private
 
     def subscribe: () -> void
+
+    def build_chain: (Symbol name) -> Interceptable::Chain[untyped]
+
+    def accept_dialog: (Dialog dialog) -> Hash[String, untyped]
 
     def prepare_page: () -> void
 

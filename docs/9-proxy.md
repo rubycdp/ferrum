@@ -37,8 +37,8 @@ end
 ## Intercepting requests behind a proxy
 
 A proxy with `:user` and `:password` is authorized through request interception, so Ferrum continues every request
-for you as long as nothing else subscribes to `on(:request)`. Once you subscribe, or set `network.blacklist` or
-`network.whitelist`, your code takes over and has to continue or abort every request:
+nothing else handles. Your `on(:request)` callbacks, `network.blacklist` and `network.whitelist` run first and can
+continue, respond to or abort a request, the rest are continued:
 
 ```ruby
 browser = Ferrum::Browser.new(proxy: { host: "x.x.x.x", port: "8800", user: "user", password: "pa$$" })

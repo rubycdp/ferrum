@@ -14,6 +14,16 @@ module Ferrum
       @page = page
       @message = params["message"]
       @default_prompt = params["defaultPrompt"]
+      @handled = false
+    end
+
+    #
+    # Whether the dialog was accepted or dismissed.
+    #
+    # @return [Boolean]
+    #
+    def handled?
+      @handled
     end
 
     #
@@ -36,6 +46,7 @@ module Ferrum
       options = { accept: true }
       response = prompt_text || default_prompt
       options.merge!(promptText: response) if response
+      @handled = true
       @page.command("Page.handleJavaScriptDialog", slowmoable: true, **options)
     end
 
@@ -54,6 +65,7 @@ module Ferrum
     #   browser.go_to("https://google.com")
     #
     def dismiss
+      @handled = true
       @page.command("Page.handleJavaScriptDialog", slowmoable: true, accept: false)
     end
 

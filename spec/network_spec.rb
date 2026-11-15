@@ -323,7 +323,7 @@ describe Ferrum::Network do
     it "works with other subscriptions" do
       @intercepted_request = nil
 
-      page.on(:request) do |request, _index, _total|
+      page.on(:request) do |request|
         @intercepted_request ||= request
       end
 
@@ -488,9 +488,7 @@ describe Ferrum::Network do
 
     it "raises no error when authorize is with block" do
       expect do
-        network.authorize(user: "login", password: "pass") do |request, _index, _total|
-          request.continue
-        end
+        network.authorize(user: "login", password: "pass", &:continue)
       end.not_to raise_error
     end
 
@@ -512,9 +510,7 @@ describe Ferrum::Network do
     end
 
     it "allows with given credentials" do
-      network.authorize(user: "login", password: "pass") do |request, _index, _total|
-        request.continue
-      end
+      network.authorize(user: "login", password: "pass", &:continue)
 
       page.go_to("/basic_auth")
 
@@ -523,9 +519,7 @@ describe Ferrum::Network do
     end
 
     it "allows even overwriting headers" do
-      network.authorize(user: "login", password: "pass") do |request, _index, _total|
-        request.continue
-      end
+      network.authorize(user: "login", password: "pass", &:continue)
       page.headers.set("Cuprite" => "true")
 
       page.go_to("/basic_auth")
@@ -535,9 +529,7 @@ describe Ferrum::Network do
     end
 
     it "denies with wrong credentials" do
-      network.authorize(user: "user", password: "pass!") do |request, _index, _total|
-        request.continue
-      end
+      network.authorize(user: "user", password: "pass!", &:continue)
 
       page.go_to("/basic_auth")
 
@@ -546,9 +538,7 @@ describe Ferrum::Network do
     end
 
     it "allows on POST request" do
-      network.authorize(user: "login", password: "pass") do |request, _index, _total|
-        request.continue
-      end
+      network.authorize(user: "login", password: "pass", &:continue)
 
       page.go_to("/basic_auth")
       page.at_css(%([type="submit"])).click

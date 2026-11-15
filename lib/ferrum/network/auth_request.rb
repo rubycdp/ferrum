@@ -17,6 +17,16 @@ module Ferrum
         @frame_id = params["frameId"]
         @resource_type = params["resourceType"]
         @request = params["request"]
+        @handled = false
+      end
+
+      #
+      # Whether the challenge was answered or canceled.
+      #
+      # @return [Boolean]
+      #
+      def handled?
+        @handled
       end
 
       #
@@ -73,6 +83,7 @@ module Ferrum
       #
       def continue(**options)
         options = options.merge(requestId: request_id)
+        @handled = true
         @page.command("Fetch.continueWithAuth", **options)
       end
 

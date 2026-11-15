@@ -7,8 +7,11 @@ module Ferrum
     @page: Page
     @message: String
     @default_prompt: String?
+    @handled: bool
 
     def initialize: (Page page, Hash[String, untyped] params) -> void
+
+    def handled?: () -> bool
 
     def accept: (?String? prompt_text) -> Hash[String, untyped]
 
