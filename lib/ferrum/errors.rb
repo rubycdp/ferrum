@@ -242,6 +242,15 @@ module Ferrum
     end
   end
 
+  # Raised when an evaluated script returns a value nested too deeply for
+  # Chrome to serialize, around 100 levels.
+  class ResultTooDeepError < BrowserError
+    def initialize(response)
+      super(response.merge("message" => "The result is nested too deeply to be serialized, return less of it or " \
+                                        "use evaluate_handle"))
+    end
+  end
+
   # Raised when the browser reports that a DOM node no longer exists.
   class NodeNotFoundError < BrowserError; end
 

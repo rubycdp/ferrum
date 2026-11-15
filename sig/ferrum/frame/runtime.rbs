@@ -50,6 +50,8 @@ module Ferrum
 
       def handle_remote_object: (untyped result) -> untyped
 
+      def raise_deep_error: (BrowserError error) -> bot
+
       def handle_response: (Hash[String, untyped] response) -> untyped
 
       def deserialize: (Hash[String, untyped] serialized, ?Hash[Integer, Hash[String, untyped]] references, ?Array[Integer] path, ?Hash[Integer, untyped] converted) -> untyped

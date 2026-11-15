@@ -96,6 +96,10 @@ module Ferrum
     def data: () -> untyped
   end
 
+  class ResultTooDeepError < BrowserError
+    def initialize: (Hash[String, untyped] response) -> void
+  end
+
   class NodeNotFoundError < BrowserError
   end
 
