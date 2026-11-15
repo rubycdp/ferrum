@@ -41,4 +41,13 @@ describe Ferrum::Worker do
       expect(spawn_worker.main_frame).to be_nil
     end
   end
+
+  describe "#close" do
+    it "closes a dedicated worker" do
+      worker = spawn_worker
+      worker.close
+
+      wait_for { browser.targets.key?(worker.target_id) }.to be(false)
+    end
+  end
 end

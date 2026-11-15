@@ -89,7 +89,7 @@ module Ferrum
         raise NoSuchTargetError, "No session with #{type} #{id}, attach to it with Context#attach_target first"
       end
 
-      Worker.new(client, target_id: id, url: url)
+      Worker.new(client, target_id: id, url: url, type: type)
     end
 
     # Closes the WebSocket connection, without closing the target itself
