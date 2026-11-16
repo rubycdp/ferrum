@@ -34,6 +34,8 @@ module Ferrum
   end
 
   class Client
+    PROTOCOL_TIMEOUT: Integer
+
     extend Forwardable
 
     attr_reader ws_url: (String | ::Addressable::URI)
@@ -74,9 +76,6 @@ module Ferrum
 
     def timeout: () -> ::Numeric
 
-    def protocol_timeout: () -> ::Numeric
-
-    def protocol_timeout=: (::Numeric value) -> ::Numeric
 
     private
 

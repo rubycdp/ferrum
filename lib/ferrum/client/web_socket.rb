@@ -25,6 +25,7 @@ module Ferrum
       WEBSOCKET_BUG_SLEEP = 0.05
       DEFAULT_PORTS = { "ws" => 80, "wss" => 443 }.freeze
       WRITE_CHUNK_SIZE = 64 * 1024
+      WRITE_TIMEOUT = 30
       ESCAPE_OR_LONE_SURROGATE = /\\u[dD][89abAB]\h{2}\\u[dD][c-fC-F]\h{2}|\\u([dD][89a-fA-F]\h{2})|\\./
 
       attr_reader :url, :messages
@@ -33,7 +34,7 @@ module Ferrum
       #   Why Ferrum closed the connection itself, `nil` if it didn't.
       attr_reader :close_reason
 
-      def initialize(url, max_receive_size, log, write_timeout = nil)
+      def initialize(url, max_receive_size, log, write_timeout = WRITE_TIMEOUT)
         @url = url
         @log = log
         @write_timeout = write_timeout

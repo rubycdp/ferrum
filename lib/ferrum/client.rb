@@ -163,7 +163,9 @@ module Ferrum
   class Client
     extend Forwardable
 
-    delegate %i[timeout protocol_timeout protocol_timeout=] => :options
+    PROTOCOL_TIMEOUT = 5
+
+    delegate %i[timeout] => :options
 
     attr_reader :ws_url, :options, :subscriber
 
@@ -173,7 +175,7 @@ module Ferrum
       @ws_url = ws_url
       @options = options
       @responses = Utils::AwaitableMap.new
-      @ws = WebSocket.new(ws_url, options.ws_max_receive_size, options.log, options.protocol_timeout)
+      @ws = WebSocket.new(ws_url, options.ws_max_receive_size, options.log)
       @subscriber = Subscriber.new
 
       start

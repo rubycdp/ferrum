@@ -287,19 +287,19 @@ module Ferrum
 
     def silent_detach(session_id, parent)
       Utils::Thread.spawn do
-        @client.session(session_id).command("Runtime.runIfWaitingForDebugger", timeout: @client.protocol_timeout)
-        parent.command("Target.detachFromTarget", timeout: @client.protocol_timeout, sessionId: session_id)
+        @client.session(session_id).command("Runtime.runIfWaitingForDebugger", timeout: Client::PROTOCOL_TIMEOUT)
+        parent.command("Target.detachFromTarget", timeout: Client::PROTOCOL_TIMEOUT, sessionId: session_id)
       rescue Error
         nil
       end
     end
 
     def discover
-      @client.command("Target.setDiscoverTargets", timeout: @client.protocol_timeout, discover: true)
+      @client.command("Target.setDiscoverTargets", timeout: Client::PROTOCOL_TIMEOUT, discover: true)
     end
 
     def auto_attach
-      @client.command("Target.setAutoAttach", timeout: @client.protocol_timeout, autoAttach: true,
+      @client.command("Target.setAutoAttach", timeout: Client::PROTOCOL_TIMEOUT, autoAttach: true,
                                               waitForDebuggerOnStart: true, flatten: true)
     end
 
@@ -323,8 +323,8 @@ module Ferrum
     #
     # @return [Context, nil]
     def find_implicit_context
-      created_ids = @client.command("Target.getBrowserContexts", timeout: @client.protocol_timeout)["browserContextIds"]
-      target_infos = @client.command("Target.getTargets", timeout: @client.protocol_timeout)["targetInfos"]
+      created_ids = @client.command("Target.getBrowserContexts", timeout: Client::PROTOCOL_TIMEOUT)["browserContextIds"]
+      target_infos = @client.command("Target.getTargets", timeout: Client::PROTOCOL_TIMEOUT)["targetInfos"]
       implicit_id = (target_infos.filter_map { |t| t["browserContextId"] } - created_ids).first
       return unless implicit_id
 

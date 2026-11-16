@@ -47,8 +47,8 @@ module Ferrum
 
     attr_reader :client, :process, :contexts, :options
 
-    delegate %i[timeout timeout= protocol_timeout protocol_timeout=
-                base_url base_url= default_user_agent default_user_agent= extensions add_extension] => :options
+    delegate %i[timeout timeout= base_url base_url= default_user_agent default_user_agent=
+                extensions add_extension] => :options
 
     #
     # Initializes the browser.
@@ -90,11 +90,6 @@ module Ferrum
     # @option options [Numeric] :timeout (5)
     #   The number of seconds we'll wait for a response when communicating
     #   with the browser: navigations, JS evaluation, DOM queries, dispatching input, etc.
-    #
-    # @option options [Numeric] :protocol_timeout (5)
-    #   The number of seconds we'll wait for an individual internal CDP
-    #   bookkeeping call to respond, e.g. `Target.createTarget`,
-    #   `Target.attachToTarget`. These normally resolve in milliseconds.
     #
     # @option options [Boolean] :js_errors
     #   Deprecated, will be removed in Ferrum 0.22. When true, JavaScript

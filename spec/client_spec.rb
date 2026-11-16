@@ -29,7 +29,7 @@ describe Ferrum::Client do
     end
 
     context "when the connection is dead" do
-      let(:remote) { Ferrum::Browser.new(base_url: base_url, timeout: 10, protocol_timeout: 10) }
+      let(:remote) { Ferrum::Browser.new(base_url: base_url, timeout: 10) }
 
       after { remote.quit }
 
@@ -66,14 +66,16 @@ describe Ferrum::Client do
     end
 
     context "when the browser stops reading", skip: Ferrum::Utils::Platform.windows? do
-      let(:remote) { Ferrum::Browser.new(base_url: base_url, timeout: 1, protocol_timeout: 1) }
+      let(:remote) { Ferrum::Browser.new(base_url: base_url, timeout: 1) }
+
+      before { stub_const("Ferrum::Client::WebSocket::WRITE_TIMEOUT", 1) }
 
       after do
         Process.kill("CONT", remote.process.pid)
         remote.quit
       end
 
-      it "closes the connection once the browser takes no data for protocol_timeout", :launch do
+      it "closes the connection once the browser takes no data for the write timeout", :launch do
         page = remote.create_page
         Process.kill("STOP", remote.process.pid)
 
@@ -97,9 +99,9 @@ describe Ferrum::Client do
       end
     end
 
-    context "when the browser stops reading for less than protocol_timeout",
+    context "when the browser stops reading for less than the write timeout",
             skip: Ferrum::Utils::Platform.windows? do
-      let(:remote) { Ferrum::Browser.new(base_url: base_url, protocol_timeout: 5) }
+      let(:remote) { Ferrum::Browser.new(base_url: base_url) }
 
       after do
         Process.kill("CONT", remote.process.pid)
@@ -125,7 +127,7 @@ describe Ferrum::Client do
   end
 
   describe "#on" do
-    let(:remote) { Ferrum::Browser.new(base_url: base_url, timeout: 3, protocol_timeout: 3) }
+    let(:remote) { Ferrum::Browser.new(base_url: base_url, timeout: 3) }
 
     after { remote.quit }
 
@@ -144,7 +146,7 @@ describe Ferrum::Client do
   end
 
   describe "#close" do
-    let(:remote) { Ferrum::Browser.new(base_url: base_url, timeout: 10, protocol_timeout: 10) }
+    let(:remote) { Ferrum::Browser.new(base_url: base_url, timeout: 10) }
 
     after { remote.quit }
 

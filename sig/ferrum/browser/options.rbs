@@ -11,15 +11,11 @@ module Ferrum
 
       DEFAULT_TIMEOUT: ::Integer
 
-      DEFAULT_PROTOCOL_TIMEOUT: ::Integer
-
       PROCESS_TIMEOUT: ::Integer
 
       attr_reader window_size: ::Array[::Integer]
 
       attr_accessor timeout: ::Numeric
-
-      attr_accessor protocol_timeout: ::Numeric
 
       attr_accessor default_user_agent: String?
 
@@ -71,7 +67,6 @@ module Ferrum
       @port: String
       @host: String
       @timeout: ::Numeric
-      @protocol_timeout: ::Numeric
       @window_size: ::Array[::Integer]
       @js_errors: bool
       @headless: bool

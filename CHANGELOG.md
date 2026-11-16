@@ -15,7 +15,9 @@
 ### Changed
 - `client.command` needs a `timeout:` and has no `async: true`, use `client.notify` to send without waiting, and
   `browser.command` defaults to the browser's `timeout`
-- Creating pages and contexts follows `timeout`, not `protocol_timeout`
+- `:protocol_timeout` is removed and ignored: internal commands have a fixed 5 second timeout and the connection is
+  closed once the browser takes no data for 30 seconds
+- Creating pages and contexts follows `timeout`
 - `go_to`, `refresh` and the script methods no longer restart the timeout for each step, one `timeout` covers the whole call
 - `page.on(:request)`, `on(:auth)` and `on(:dialog)` callbacks form a chain: they run in order and the rest are skipped
   once one continues, responds to, aborts, accepts or dismisses, and an unhandled request is continued. They receive
