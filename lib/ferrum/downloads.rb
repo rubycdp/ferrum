@@ -39,10 +39,10 @@ module Ferrum
     #
     def wait(timeout = 5)
       deadline = Deadline.wrap(timeout)
-      @idle.clear
+      generation = @idle.clear
       yield if block_given?
       @idle.wait(deadline)
-      @idle.set(true)
+      @idle.set(true) if generation == @idle.generation
     end
 
     #

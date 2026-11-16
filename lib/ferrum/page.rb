@@ -449,9 +449,9 @@ module Ferrum
     #
     def wait_for_reload(timeout = 1)
       deadline = Deadline.wrap(timeout)
-      @idle.clear if @idle.set?
+      generation = @idle.clear if @idle.set?
       @idle.wait(deadline)
-      @idle.set(true)
+      @idle.set(true) if generation == @idle.generation
     end
 
     #
