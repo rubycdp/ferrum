@@ -15,6 +15,7 @@ module Ferrum
         @regular = Queue.new
         @priority = Queue.new
         @on = Concurrent::Hash.new
+        @sequence = Concurrent::AtomicFixnum.new
 
         start
       end
@@ -44,13 +45,14 @@ module Ferrum
       #   The event key, as built by {SessionClient.event_name}.
       #
       # @return [Integer]
-      #   The callback's index within the event's callback list, used to
-      #   unsubscribe via {#off}.
+      #   The callback's id, used to unsubscribe via {#off}. Ids are never
+      #   reused, so removing a callback doesn't change the others'.
       #
       def on(event, &block)
+        id = @sequence.increment
         @on[event] ||= Concurrent::Array.new
-        @on[event] << block
-        @on[event].index(block)
+        @on[event] << [id, block]
+        id
       end
 
       #
@@ -60,12 +62,12 @@ module Ferrum
       #   The event key, as built by {SessionClient.event_name}.
       #
       # @param [Integer] id
-      #   The callback's index, as returned by {#on}.
+      #   The callback's id, as returned by {#on}.
       #
       # @return [Boolean]
       #
       def off(event, id)
-        @on[event].delete_at(id)
+        @on[event]&.delete_if { |i, _| i == id }
         true
       end
 
@@ -130,7 +132,7 @@ module Ferrum
         event = SessionClient.event_name(method, session_id)
 
         total = @on[event]&.size.to_i
-        @on[event]&.each_with_index do |block, index|
+        @on[event]&.each_with_index do |(_, block), index|
           # In case of multiple callbacks we provide current index and total
           block.call(params, index, total)
         rescue StandardError => e

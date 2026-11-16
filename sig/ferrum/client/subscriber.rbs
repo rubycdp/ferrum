@@ -5,7 +5,8 @@ module Ferrum
 
       @regular: ::Queue
       @priority: ::Queue
-      @on: ::Concurrent::Hash[String, ::Concurrent::Array[Proc]]
+      @on: ::Concurrent::Hash[String, ::Concurrent::Array[[Integer, Proc]]]
+      @sequence: ::Concurrent::AtomicFixnum
       @regular_thread: ::Thread?
       @priority_thread: ::Thread?
 
