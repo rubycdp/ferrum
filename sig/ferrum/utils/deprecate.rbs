@@ -5,6 +5,10 @@ module Ferrum
 
       def self?.warn: (::String message, ?user_code: bool) -> void
 
+      def self?.renamed_env: (::String name, Array[::String] legacy, ::Float default) -> ::Float
+
+      def self?.renamed_keyword: (Symbol old, Symbol new, untyped value, untyped current) -> untyped
+
       def self?.reset!: () -> void
 
       def self?.skip?: (::String path, bool user_code) -> bool

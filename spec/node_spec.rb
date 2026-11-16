@@ -156,14 +156,20 @@ describe Ferrum::Node do
       expect(browser.network.traffic.length).to be <= 5
     end
 
-    it "returns without waiting for the navigation to load when wait is 0" do
+    it "warns when given the deprecated wait:" do
+      browser.go_to("/link_with_ping")
+
+      expect { browser.at_css("a").click(wait: 0) }.to output(/:wait is renamed to :navigation_wait/).to_stderr
+    end
+
+    it "returns without waiting for the navigation to load when navigation_wait is 0" do
       browser.go_to("/")
       browser.execute(<<~JS)
         document.body.innerHTML = '<a id="slow" href="/really_slow">Slow</a>'
       JS
       started_at = Ferrum::Utils::ElapsedTime.monotonic_time
 
-      browser.at_css("#slow").click(wait: 0)
+      browser.at_css("#slow").click(navigation_wait: 0)
 
       expect(Ferrum::Utils::ElapsedTime.monotonic_time - started_at).to be < 1
       expect(browser.network.wait_for_idle(timeout: 5)).to be(true)

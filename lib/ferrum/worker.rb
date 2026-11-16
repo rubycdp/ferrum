@@ -123,8 +123,8 @@ module Ferrum
       command("Runtime.runIfWaitingForDebugger")
     end
 
-    def execution_id!(wait = nil)
-      @execution_id.wait(wait || timeout)
+    def execution_id!(timeout = nil)
+      @execution_id.wait(timeout || self.timeout)
       @execution_id.value || raise(NoExecutionContextError)
     end
 

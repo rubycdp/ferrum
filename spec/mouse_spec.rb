@@ -17,6 +17,13 @@ describe Ferrum::Mouse do
   end
 
   describe "#click" do
+    it "warns when given the deprecated wait:" do
+      browser.go_to("/click_coordinates")
+
+      expect { browser.mouse.click(x: 100, y: 150, wait: 0) }
+        .to output(/:wait is renamed to :navigation_wait/).to_stderr
+    end
+
     it "supports clicking precise coordinates" do
       browser.go_to("/click_coordinates")
       browser.mouse.click(x: 100, y: 150)

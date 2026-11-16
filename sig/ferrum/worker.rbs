@@ -40,7 +40,7 @@ module Ferrum
 
     def prepare: () -> void
 
-    def execution_id!: (?(::Numeric | Deadline)? wait) -> untyped
+    def execution_id!: (?(::Numeric | Deadline)? timeout) -> untyped
 
     def execution_id=: (untyped value) -> untyped
   end

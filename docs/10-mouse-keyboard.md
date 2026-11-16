@@ -30,7 +30,7 @@ Click given coordinates, fires mouse move, down and up events.
     * :x `Integer`
     * :y `Integer`
     * :delay `Float` defaults to 0. Delay between mouse down and mouse up events
-    * :wait `Numeric` defaults to `Mouse::CLICK_WAIT`. Seconds to watch for a navigation started by the click, then
+    * :navigation_wait `Numeric` defaults to `Page::NAVIGATION_WAIT`. Seconds to watch for a navigation started by the click, then
       wait for it to load. `0` returns right after the click.
     * :button `Symbol` :left | :right, defaults to :left
     * :count `Integer` defaults to 1

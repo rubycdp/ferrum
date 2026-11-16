@@ -29,7 +29,9 @@ module Ferrum
   # JavaScript evaluation methods are ultimately delegated to from {Browser}.
   #
   class Page
-    GOTO_WAIT = ENV.fetch("FERRUM_GOTO_WAIT", 0.1).to_f
+    NAVIGATION_WAIT = Utils::Deprecate.renamed_env(
+      "FERRUM_NAVIGATION_WAIT", %w[FERRUM_CLICK_WAIT FERRUM_GOTO_WAIT], 0.1
+    )
     ON_TIMEOUT = %i[ignore raise].freeze
 
     extend Forwardable
@@ -168,7 +170,10 @@ module Ferrum
       options = { url: combine_url!(url) }
       options.merge!(referrer: referrer) if referrer
       deadline = Deadline.wrap(timeout || self.timeout)
-      response = command("Page.navigate", wait: GOTO_WAIT, timeout: deadline, **options)
+      response = nil
+      wait_for_navigation!(NAVIGATION_WAIT, timeout: deadline) do
+        response = command("Page.navigate", timeout: deadline, **options)
+      end
       error_text = response["errorText"] # https://cs.chromium.org/chromium/src/net/base/net_error_list.h
       if error_text && error_text != "net::ERR_ABORTED" # Request aborted due to user action or download
         raise StatusError.new(options[:url], "Request to #{options[:url]} failed (#{error_text})")
@@ -392,7 +397,10 @@ module Ferrum
     #   page.refresh
     #
     def refresh(timeout: nil)
-      command("Page.reload", wait: GOTO_WAIT, timeout: timeout, slowmoable: true)
+      deadline = Deadline.wrap(timeout || self.timeout)
+      wait_for_navigation!(NAVIGATION_WAIT, timeout: deadline) do
+        command("Page.reload", timeout: deadline, slowmoable: true)
+      end
     end
     alias reload refresh
 
@@ -456,10 +464,10 @@ module Ferrum
 
     #
     # Runs the block and, if it starts a navigation of the main frame within
-    # `wait` seconds, waits for that navigation to finish, e.g. after a click
-    # on a link made from JavaScript.
+    # `navigation_wait` seconds, waits for that navigation to finish, e.g. after
+    # a click on a link made from JavaScript.
     #
-    # @param [Numeric] wait
+    # @param [Numeric] navigation_wait
     #   How many seconds to watch for a navigation after the block returns.
     #
     # @param [Numeric, Deadline, nil] timeout
@@ -474,11 +482,11 @@ module Ferrum
     # @example
     #   page.wait_for_navigation { page.at_css("a").evaluate("this.click()") } # => true
     #
-    def wait_for_navigation(wait = Mouse::CLICK_WAIT, timeout: nil)
+    def wait_for_navigation(navigation_wait = NAVIGATION_WAIT, timeout: nil)
       deadline = Deadline.wrap(timeout || self.timeout)
       generation = @idle.clear
       yield
-      @idle.wait([wait, deadline.remaining].min)
+      @idle.wait([navigation_wait, deadline.remaining].min)
       generation == @idle.generation || @idle.wait(deadline)
     end
 
@@ -573,15 +581,11 @@ module Ferrum
     end
 
     #
-    # Sends a CDP command to the browser and optionally waits for network
-    # activity on the main frame to settle before returning.
+    # Sends a CDP command to the browser. To wait for a navigation it starts,
+    # wrap it in {#wait_for_navigation}.
     #
     # @param [String] method
     #   The CDP method name, e.g. `"Page.navigate"`.
-    #
-    # @param [Numeric] wait
-    #   How many seconds to wait for a network event on the main frame after
-    #   the command is sent. `0` disables waiting.
     #
     # @param [Boolean] slowmoable
     #   Whether to sleep for `Browser::Options#slowmo` seconds before sending
@@ -597,16 +601,11 @@ module Ferrum
     # @raise [TimeoutError]
     #
     # @example
-    #   page.command("Page.navigate", url: "https://github.com/")
+    #   page.command("Runtime.evaluate", expression: "1 + 1")
     #
-    def command(method, wait: 0, slowmoable: false, timeout: nil, **params)
+    def command(method, slowmoable: false, timeout: nil, **params)
       sleep(@options.slowmo) if slowmoable && @options.slowmo.positive?
-      deadline = Deadline.wrap(timeout || self.timeout)
-      return client.command(method, timeout: deadline, **params) unless wait.positive?
-
-      result = nil
-      wait_for_navigation!(wait, timeout: deadline) { result = client.command(method, timeout: deadline, **params) }
-      result
+      client.command(method, timeout: Deadline.wrap(timeout || self.timeout), **params)
     end
 
     # Subscribes to a CDP event, or to `:dialog`, `:request`, `:response`,
@@ -742,10 +741,10 @@ module Ferrum
       return unless entry
 
       # Potential wait because of network event
-      command("Page.navigateToHistoryEntry",
-              wait: Mouse::CLICK_WAIT,
-              slowmoable: true,
-              entryId: entry["id"])
+      deadline = Deadline.wrap(timeout)
+      wait_for_navigation!(NAVIGATION_WAIT, timeout: deadline) do
+        command("Page.navigateToHistoryEntry", timeout: deadline, slowmoable: true, entryId: entry["id"])
+      end
     end
 
     def combine_url!(url_or_path)

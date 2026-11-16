@@ -402,16 +402,6 @@ describe Ferrum::Page do
       expect(result.dig("result", "value")).to eq(2)
     end
 
-    it "waits for the navigation the command starts with wait:" do
-      page.go_to
-      loaded = false
-      page.on("Page.loadEventFired") { loaded = true }
-
-      page.command("Page.navigate", wait: 1, url: base_url("/slow"))
-
-      expect(loaded).to be(true)
-    end
-
     it "raises when the response doesn't come within timeout:" do
       expect { page.command("Runtime.evaluate", timeout: 0.5, expression: "new Promise(() => {})", awaitPromise: true) }
         .to raise_error(Ferrum::TimeoutError)

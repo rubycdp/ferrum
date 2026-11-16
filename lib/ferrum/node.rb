@@ -269,10 +269,13 @@ module Ferrum
     # @param [Float] delay
     #   Delay between mouse down and mouse up events.
     #
-    # @param [Numeric] wait
+    # @param [Numeric] navigation_wait
     #   Seconds to watch for a navigation started by a left click, then wait for
     #   it to load. Ignored for `:right` and `:double`, which never wait. `0`
     #   returns as soon as the click is dispatched.
+    #
+    # @param [Numeric, nil] wait
+    #   Deprecated, renamed to `navigation_wait`.
     #
     # @return [self]
     #
@@ -280,25 +283,26 @@ module Ferrum
     #
     # @example
     #   page.at_css("a").click
-    #   page.at_css("a").click(wait: 0)
+    #   page.at_css("a").click(navigation_wait: 0)
     #   page.at_css("a").click(mode: :right)
     #   page.at_css("a").click(keys: [:ctrl, :shift])
     #   page.at_css("canvas").click(offset: { x: 10, y: 20 })
     #   page.at_css("canvas").click(offset: { x: 10, y: 20, position: :center })
     #
-    def click(mode: :left, keys: [], offset: {}, delay: 0, wait: Mouse::CLICK_WAIT)
+    def click(mode: :left, keys: [], offset: {}, delay: 0, navigation_wait: Page::NAVIGATION_WAIT, wait: nil)
+      navigation_wait = Utils::Deprecate.renamed_keyword(:wait, :navigation_wait, wait, navigation_wait)
       x, y = find_position(**offset)
       modifiers = page.keyboard.modifiers(keys)
 
-      # `:right` and `:double` pass `wait: 0` to preserve the historical
+      # `:right` and `:double` pass `navigation_wait: 0` to preserve the historical
       # no-network-wait default of `Mouse#up` and `Mouse#down`
       case mode
       when :right
-        page.mouse.click(x:, y:, modifiers:, delay:, button: :right, wait: 0)
+        page.mouse.click(x:, y:, modifiers:, delay:, button: :right, navigation_wait: 0)
       when :double
-        page.mouse.click(x:, y:, modifiers:, delay:, count: 2, wait: 0)
+        page.mouse.click(x:, y:, modifiers:, delay:, count: 2, navigation_wait: 0)
       when :left
-        page.mouse.click(x:, y:, modifiers:, delay:, wait:)
+        page.mouse.click(x:, y:, modifiers:, delay:, navigation_wait:)
       end
 
       self

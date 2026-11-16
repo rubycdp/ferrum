@@ -1,6 +1,6 @@
 module Ferrum
   class Page
-    GOTO_WAIT: ::Float
+    NAVIGATION_WAIT: ::Float
 
     extend Forwardable
 
@@ -80,9 +80,9 @@ module Ferrum
 
     def wait_for_reload: (?(::Numeric | Deadline) timeout) -> void
 
-    def wait_for_navigation: (?::Numeric wait, ?timeout: (::Numeric | Deadline)?) { () -> void } -> bool
+    def wait_for_navigation: (?::Numeric navigation_wait, ?timeout: (::Numeric | Deadline)?) { () -> void } -> bool
 
-    def wait_for_navigation!: (?::Numeric wait, ?timeout: (::Numeric | Deadline)?) { () -> void } -> void
+    def wait_for_navigation!: (?::Numeric navigation_wait, ?timeout: (::Numeric | Deadline)?) { () -> void } -> void
 
     def bypass_csp: (?enabled: bool) -> Hash[String, untyped]
 
@@ -94,7 +94,7 @@ module Ferrum
 
     def set_window_bounds: (Hash[Symbol, (::Integer | String)] bounds) -> Hash[String, untyped]
 
-    def command: (String method, ?wait: ::Numeric?, ?slowmoable: bool, ?timeout: (::Numeric | Deadline)?, **untyped) -> Hash[String, untyped]
+    def command: (String method, ?slowmoable: bool, ?timeout: (::Numeric | Deadline)?, **untyped) -> Hash[String, untyped]
 
     def on: (:dialog) { (Dialog) -> void } -> Integer
           | (:console) { (Console::Message) -> void } -> Integer
@@ -123,7 +123,7 @@ module Ferrum
 
     def prepare_page: () -> void
 
-    def history_navigate: (::Integer delta) -> Hash[String, untyped]
+    def history_navigate: (::Integer delta) -> void
 
     def combine_url!: (String? url) -> String
 

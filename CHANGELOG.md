@@ -18,6 +18,10 @@
 - `:protocol_timeout` is removed and ignored: internal commands have a fixed 5 second timeout and the connection is
   closed once the browser takes no data for 30 seconds
 - Creating pages and contexts follows `timeout`
+- `wait:` of `click` is renamed to `navigation_wait:`, `wait:` still works and warns
+- `Mouse::CLICK_WAIT` and `Page::GOTO_WAIT` are merged into `Page::NAVIGATION_WAIT`, set by `FERRUM_NAVIGATION_WAIT`,
+  `FERRUM_CLICK_WAIT` and `FERRUM_GOTO_WAIT` still work and warn
+- `page.command` doesn't take `wait:` anymore, wrap it in `page.wait_for_navigation` to wait for a navigation it starts
 - `go_to`, `refresh` and the script methods no longer restart the timeout for each step, one `timeout` covers the whole call
 - `page.on(:request)`, `on(:auth)` and `on(:dialog)` callbacks form a chain: they run in order and the rest are skipped
   once one continues, responds to, aborts, accepts or dismisses, and an unhandled request is continued. They receive

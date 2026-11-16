@@ -8,7 +8,6 @@ module Ferrum
   # can be composed while reporting consistent state to Chrome.
   #
   class Mouse
-    CLICK_WAIT = ENV.fetch("FERRUM_CLICK_WAIT", 0.1).to_f
     BUTTON_MASKS = {
       "none" => 0,
       "left" => 1,
@@ -76,9 +75,12 @@ module Ferrum
     # @param [Float] delay
     #   Delay between mouse down and mouse up events.
     #
-    # @param [Numeric] wait
+    # @param [Numeric] navigation_wait
     #   Seconds to watch for a navigation started by the click, then wait for it
     #   to load. `0` returns as soon as the click is dispatched.
+    #
+    # @param [Numeric, nil] wait
+    #   Deprecated, renamed to `navigation_wait`.
     #
     # @param [Hash{Symbol => Object}] options
     #   Additional keyword arguments.
@@ -96,13 +98,14 @@ module Ferrum
     #
     # @raise [TimeoutError]
     #
-    def click(x:, y:, delay: 0, wait: CLICK_WAIT, **options)
+    def click(x:, y:, delay: 0, navigation_wait: Page::NAVIGATION_WAIT, wait: nil, **options)
+      navigation_wait = Utils::Deprecate.renamed_keyword(:wait, :navigation_wait, wait, navigation_wait)
       move(x: x, y: y, modifiers: options[:modifiers])
       down(**options)
       sleep(delay)
       # Potential wait because if some network event is triggered then we have
       # to wait until it's over and frame is loaded or failed to load.
-      up(wait: wait, **options)
+      up(navigation_wait: navigation_wait, **options)
       self
     end
 
@@ -196,12 +199,19 @@ module Ferrum
 
     private
 
-    def mouse_event(type:, button: :left, count: 1, modifiers: nil, wait: 0)
+    def mouse_event(type:, button: :left, count: 1, modifiers: nil, navigation_wait: 0)
       button = validate_button(button)
       register_event_button(type, button)
       options = { x: @x, y: @y, type: type, button: button, buttons: @buttons, clickCount: count,
                   modifiers: modifiers || @page.keyboard.held_modifiers }
-      @page.command("Input.dispatchMouseEvent", wait: wait, slowmoable: true, **options)
+      return @page.command("Input.dispatchMouseEvent", slowmoable: true, **options) unless navigation_wait.positive?
+
+      deadline = Deadline.wrap(@page.timeout)
+      result = nil
+      @page.wait_for_navigation!(navigation_wait, timeout: deadline) do
+        result = @page.command("Input.dispatchMouseEvent", slowmoable: true, timeout: deadline, **options)
+      end
+      result
     end
 
     def validate_button(button)
