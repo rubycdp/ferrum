@@ -35,7 +35,8 @@ module Ferrum
     def each
       return enum_for(__method__) unless block_given?
 
-      cookies = @client.command("Storage.getCookies", browserContextId: @context_id)["cookies"]
+      response = @client.command("Storage.getCookies", timeout: @client.timeout, browserContextId: @context_id)
+      cookies = response["cookies"]
 
       cookies.each do |c|
         yield Cookie.new(c)
@@ -140,7 +141,7 @@ module Ferrum
     #   browser.cookies.clear # => true
     #
     def clear
-      @client.command("Storage.clearCookies", browserContextId: @context_id)
+      @client.command("Storage.clearCookies", timeout: @client.timeout, browserContextId: @context_id)
       true
     end
 
@@ -173,7 +174,7 @@ module Ferrum
     private
 
     def write(cookie)
-      @client.command("Storage.setCookies", cookies: [cookie], browserContextId: @context_id)
+      @client.command("Storage.setCookies", timeout: @client.timeout, cookies: [cookie], browserContextId: @context_id)
     end
 
     def default_domain

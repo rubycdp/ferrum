@@ -7,16 +7,16 @@ describe Ferrum::Contexts do
       other = browser.contexts.create
       allow(browser.client).to receive(:command).and_call_original
       allow(browser.client).to receive(:command)
-        .with("Target.disposeBrowserContext", browserContextId: stuck.id)
+        .with("Target.disposeBrowserContext", timeout: anything, browserContextId: stuck.id)
         .and_raise(Ferrum::TimeoutError)
 
       expect { browser.reset }.to raise_error(Ferrum::TimeoutError)
       expect(browser.contexts[stuck.id]).to be_nil
       expect(browser.contexts[other.id]).to be_nil
-      expect(browser.client.command("Target.getBrowserContexts")["browserContextIds"]).not_to include(other.id)
+      expect(browser.command("Target.getBrowserContexts")["browserContextIds"]).not_to include(other.id)
 
       allow(browser.client).to receive(:command)
-        .with("Target.disposeBrowserContext", browserContextId: stuck.id)
+        .with("Target.disposeBrowserContext", timeout: anything, browserContextId: stuck.id)
         .and_raise(Ferrum::BrowserError, { "message" => "Disposal of browser context #{stuck.id} is already pending" })
 
       expect { browser.reset }.not_to raise_error

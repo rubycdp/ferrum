@@ -24,7 +24,7 @@ module Ferrum
 
     def timeout: () -> ::Numeric
 
-    def command: (*untyped) -> (bool | Hash[String, untyped])
+    def command: (String method, ?timeout: (::Numeric | Deadline)?, **untyped params) -> (bool | Hash[String, untyped])
 
     def main_frame: () -> nil
 

@@ -338,7 +338,7 @@ module Ferrum
       window_state = options.delete(:window_state)
       bounds = { windowState: window_state, **options }.compact
 
-      client.command("Browser.setWindowBounds", windowId: window_id, bounds: bounds)
+      command("Browser.setWindowBounds", windowId: window_id, bounds: bounds)
     end
 
     #
@@ -350,7 +350,7 @@ module Ferrum
     #   page.window_bounds # => { "left": 0, "top": 1286, "width": 10, "height": 10, "windowState": "normal" }
     #
     def window_bounds
-      client.command("Browser.getWindowBounds", windowId: window_id).fetch("bounds")
+      command("Browser.getWindowBounds", windowId: window_id).fetch("bounds")
     end
 
     #
@@ -362,7 +362,7 @@ module Ferrum
     #   page.window_id # => 1
     #
     def window_id
-      client.command("Browser.getWindowForTarget", targetId: target_id)["windowId"]
+      command("Browser.getWindowForTarget", targetId: target_id)["windowId"]
     end
 
     #

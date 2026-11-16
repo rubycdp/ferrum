@@ -55,8 +55,8 @@ module Ferrum
     #
     # @return [Boolean, Hash]
     #   `true` when sent asynchronously, otherwise the command's result.
-    def command(...)
-      client.command(...)
+    def command(method, timeout: nil, **params)
+      client.command(method, timeout: timeout || self.timeout, **params)
     end
 
     # Workers have a single execution context and no navigable document, so

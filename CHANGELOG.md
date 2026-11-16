@@ -11,6 +11,7 @@
   pending, when the page doesn't load in time
 
 ### Changed
+- `client.command` needs a `timeout:` unless it's `async: true`, `browser.command` defaults to the browser's `timeout`
 - `go_to`, `refresh` and the script methods no longer restart the timeout for each step, one `timeout` covers the whole call
 - `page.on(:request)`, `on(:auth)` and `on(:dialog)` callbacks form a chain: they run in order and the rest are skipped
   once one continues, responds to, aborts, accepts or dismisses, and an unhandled request is continued. They receive

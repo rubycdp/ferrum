@@ -211,8 +211,8 @@ module Ferrum
     #
     # @return [Boolean, Hash]
     #   `true` when sent asynchronously, otherwise the command's result.
-    def command(...)
-      client.command(...)
+    def command(method, timeout: nil, **params)
+      client.command(method, timeout: timeout || client.timeout, **params)
     end
 
     private

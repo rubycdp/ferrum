@@ -80,7 +80,7 @@ module Ferrum
     #
     # @return [Context]
     def create(**options)
-      response = @client.command("Target.createBrowserContext", **options)
+      response = @client.command("Target.createBrowserContext", timeout: @client.protocol_timeout, **options)
       context_id = response["browserContextId"]
       context = Context.new(@client, self, context_id)
       @contexts[context_id] = context
@@ -106,7 +106,7 @@ module Ferrum
 
       begin
         context.close_targets_connection
-        @client.command("Target.disposeBrowserContext", browserContextId: context.id)
+        @client.command("Target.disposeBrowserContext", timeout: @client.protocol_timeout, browserContextId: context.id)
       ensure
         @contexts.delete(context_id)
       end
@@ -130,7 +130,7 @@ module Ferrum
     # @raise [TimeoutError, BrowserError]
     def reset
       error = nil
-      context_ids = @client.command("Target.getBrowserContexts")["browserContextIds"]
+      context_ids = @client.command("Target.getBrowserContexts", timeout: @client.protocol_timeout)["browserContextIds"]
       @default_context = nil if context_ids.include?(@default_context&.id)
       (@contexts.keys & context_ids).each do |id|
         dispose(id)
@@ -285,19 +285,20 @@ module Ferrum
 
     def silent_detach(session_id, parent)
       Utils::Thread.spawn do
-        @client.session(session_id).command("Runtime.runIfWaitingForDebugger")
-        parent.command("Target.detachFromTarget", sessionId: session_id)
+        @client.session(session_id).command("Runtime.runIfWaitingForDebugger", timeout: @client.protocol_timeout)
+        parent.command("Target.detachFromTarget", timeout: @client.protocol_timeout, sessionId: session_id)
       rescue Error
         nil
       end
     end
 
     def discover
-      @client.command("Target.setDiscoverTargets", discover: true)
+      @client.command("Target.setDiscoverTargets", timeout: @client.protocol_timeout, discover: true)
     end
 
     def auto_attach
-      @client.command("Target.setAutoAttach", autoAttach: true, waitForDebuggerOnStart: true, flatten: true)
+      @client.command("Target.setAutoAttach", timeout: @client.protocol_timeout, autoAttach: true,
+                                              waitForDebuggerOnStart: true, flatten: true)
     end
 
     def add_context(context_id)
@@ -320,8 +321,8 @@ module Ferrum
     #
     # @return [Context, nil]
     def find_implicit_context
-      created_ids = @client.command("Target.getBrowserContexts")["browserContextIds"]
-      target_infos = @client.command("Target.getTargets")["targetInfos"]
+      created_ids = @client.command("Target.getBrowserContexts", timeout: @client.protocol_timeout)["browserContextIds"]
+      target_infos = @client.command("Target.getTargets", timeout: @client.protocol_timeout)["targetInfos"]
       implicit_id = (target_infos.filter_map { |t| t["browserContextId"] } - created_ids).first
       return unless implicit_id
 

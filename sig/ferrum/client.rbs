@@ -66,6 +66,8 @@ module Ferrum
 
     def build_message: (String method, Hash[Symbol, untyped] params) -> Hash[Symbol, untyped]
 
+    def timeout: () -> ::Numeric
+
     def protocol_timeout: () -> ::Numeric
 
     def protocol_timeout=: (::Numeric value) -> ::Numeric

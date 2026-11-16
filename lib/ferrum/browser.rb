@@ -49,7 +49,6 @@ module Ferrum
 
     delegate %i[timeout timeout= protocol_timeout protocol_timeout=
                 base_url base_url= default_user_agent default_user_agent= extensions add_extension] => :options
-    delegate %i[command] => :client
 
     #
     # Initializes the browser.
@@ -254,6 +253,25 @@ module Ferrum
     #
     def close
       command("Browser.close")
+    end
+
+    #
+    # Sends a CDP command to the browser.
+    #
+    # @param [String] method
+    #   The CDP method name, e.g. `"Browser.getVersion"`.
+    #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long to wait for the response, the browser's `timeout` by default.
+    #
+    # @param [Hash] params
+    #   The command's parameters, and `async: true` to not wait for a response.
+    #
+    # @return [Boolean, Hash]
+    #   `true` when sent asynchronously, otherwise the command's result.
+    #
+    def command(method, timeout: nil, **params)
+      client.command(method, timeout: timeout || self.timeout, **params)
     end
 
     #

@@ -139,7 +139,7 @@ describe Ferrum::Context do
       target = wait_for_target(&:service_worker?)
 
       wait_for do
-        browser.client.command("Target.getTargets")["targetInfos"]
+        browser.command("Target.getTargets")["targetInfos"]
                .select { |info| info["type"] == "service_worker" }.map { |info| info["attached"] }
       end.to eq([false])
       expect(target.session_id).to be_nil
@@ -248,8 +248,8 @@ describe Ferrum::Context do
 
       expect(context.dispose).to be(true)
       expect(browser.contexts[context.id]).to be_nil
-      expect(browser.client.command("Target.getBrowserContexts")["browserContextIds"]).not_to include(context.id)
-      target_ids = browser.client.command("Target.getTargets")["targetInfos"].map { |info| info["targetId"] }
+      expect(browser.command("Target.getBrowserContexts")["browserContextIds"]).not_to include(context.id)
+      target_ids = browser.command("Target.getTargets")["targetInfos"].map { |info| info["targetId"] }
       expect(target_ids).not_to include(page.target_id)
     end
 

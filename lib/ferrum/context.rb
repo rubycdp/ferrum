@@ -184,7 +184,8 @@ module Ferrum
       return target if target.session_id
 
       @contexts.manually_attached(target_id)
-      session = @client.command("Target.attachToTarget", targetId: target_id, flatten: true)
+      session = @client.command("Target.attachToTarget", timeout: @client.protocol_timeout,
+                                                         targetId: target_id, flatten: true)
       target.session_id = session["sessionId"]
       target
     end
