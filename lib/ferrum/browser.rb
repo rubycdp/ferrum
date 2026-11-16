@@ -167,6 +167,8 @@ module Ferrum
     # @return [Ferrum::Page]
     #   Created page.
     #
+    # @raise [TimeoutError]
+    #
     def create_page(new_context: false, proxy: nil)
       page = if new_context || proxy
                params = {}
@@ -193,6 +195,8 @@ module Ferrum
 
     #
     # Closes browser tabs opened by the `Browser` instance.
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   # connect to a long-running Chrome process
@@ -265,10 +269,12 @@ module Ferrum
     #   How long to wait for the response, the browser's `timeout` by default.
     #
     # @param [Hash] params
-    #   The command's parameters, and `async: true` to not wait for a response.
+    #   The command's parameters.
     #
-    # @return [Boolean, Hash]
-    #   `true` when sent asynchronously, otherwise the command's result.
+    # @return [Hash]
+    #   The command's result.
+    #
+    # @raise [TimeoutError]
     #
     def command(method, timeout: nil, **params)
       client.command(method, timeout: timeout || self.timeout, **params)
@@ -278,6 +284,8 @@ module Ferrum
     # Gets the version information from the browser.
     #
     # @return [VersionInfo]
+    #
+    # @raise [TimeoutError]
     #
     # @since 0.13
     #

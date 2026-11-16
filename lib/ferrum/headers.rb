@@ -33,6 +33,8 @@ module Ferrum
     #
     # @return [true]
     #
+    # @raise [TimeoutError]
+    #
     def set(headers)
       reset_overrides(keep: headers)
       @headers = {}
@@ -43,6 +45,8 @@ module Ferrum
     # Clear all headers, and the user agent and language they set.
     #
     # @return [true]
+    #
+    # @raise [TimeoutError]
     #
     def clear
       reset_overrides
@@ -60,6 +64,8 @@ module Ferrum
     # @param [Boolean] permanent
     #
     # @return [true]
+    #
+    # @raise [TimeoutError]
     #
     def add(headers, permanent: true)
       if headers["Referer"]

@@ -34,6 +34,8 @@ module Ferrum
     # @param [Integer] y
     #   The vertical pixel value that you want to scroll by.
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   browser.go_to("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
     #   browser.mouse.scroll_by(0, 400)
@@ -53,6 +55,8 @@ module Ferrum
     # @param [Integer] y
     #   The pixel along the vertical axis of the document that you want
     #   displayed in the upper left.
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   browser.go_to("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
@@ -90,6 +94,8 @@ module Ferrum
     #
     # @return [self]
     #
+    # @raise [TimeoutError]
+    #
     def click(x:, y:, delay: 0, wait: CLICK_WAIT, **options)
       move(x: x, y: y, modifiers: options[:modifiers])
       down(**options)
@@ -117,6 +123,8 @@ module Ferrum
     #
     # @return [self]
     #
+    # @raise [TimeoutError]
+    #
     def down(**options)
       tap { mouse_event(type: "mousePressed", **options) }
     end
@@ -138,6 +146,8 @@ module Ferrum
     #
     # @return [self]
     #
+    # @raise [TimeoutError]
+    #
     def up(**options)
       tap { mouse_event(type: "mouseReleased", **options) }
     end
@@ -157,6 +167,8 @@ module Ferrum
     #   If omitted, uses the keys held by `keyboard.hold`, or none outside of it.
     #
     # @return [self]
+    #
+    # @raise [TimeoutError]
     #
     def move(x:, y:, steps: 1, modifiers: nil)
       from_x = @x

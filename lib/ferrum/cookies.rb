@@ -32,6 +32,8 @@ module Ferrum
     # @return [Enumerator]
     #   If no block is given, an Enumerator object will be returned.
     #
+    # @raise [TimeoutError]
+    #
     def each
       return enum_for(__method__) unless block_given?
 
@@ -79,6 +81,8 @@ module Ferrum
     #
     # @raise [BrowserError] if neither `:domain`, `:url` nor `:base_url` is set.
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   browser.cookies.set(name: "stealth", value: "omg", domain: "google.com") # => true
     #
@@ -114,6 +118,8 @@ module Ferrum
     #
     # @return [true]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   browser.cookies.remove(name: "stealth", domain: "google.com") # => true
     #
@@ -137,6 +143,8 @@ module Ferrum
     #
     # @return [true]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   browser.cookies.clear # => true
     #
@@ -150,6 +158,8 @@ module Ferrum
     #
     # @return [Integer]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   browser.cookies.store # => Integer
     #
@@ -161,6 +171,8 @@ module Ferrum
     # Loads all cookies from the file and sets them in the context.
     #
     # @return [true]
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   browser.cookies.load # => true

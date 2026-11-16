@@ -51,6 +51,8 @@ module Ferrum
       #   When `path` is specified returns `true` and stores trace data into
       #   file.
       #
+      # @raise [TimeoutError]
+      #
       def record(path: nil, encoding: :binary, timeout: nil, trace_config: nil, screenshots: false)
         @path = path
         @encoding = encoding

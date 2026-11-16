@@ -1,13 +1,25 @@
 module Ferrum
   class Deadline
+    THREAD_KEY: Symbol
+
+    def self.current: () -> Deadline?
+
+    def self.within: [T] ((Deadline | Numeric) timeout) { () -> T } -> T
+
     def self.after: (Numeric seconds) -> Deadline
 
     def self.wrap: (Deadline | Numeric timeout) -> Deadline
 
     def initialize: (Float at) -> void
 
+    def min: (Deadline other) -> Deadline
+
     def remaining: () -> Float
 
     def expired?: () -> bool
+
+    protected
+
+    attr_reader at: Float
   end
 end

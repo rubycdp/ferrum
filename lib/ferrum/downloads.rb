@@ -59,6 +59,8 @@ module Ferrum
     # @raise [ArgumentError]
     # @raise [Ferrum::Error]
     #
+    # @raise [TimeoutError]
+    #
     def set_behavior(save_path:, behavior: :allow)
       raise ArgumentError unless VALID_BEHAVIOR.include?(behavior.to_sym)
       raise Error, "supply absolute path for `:save_path` option" unless Pathname.new(save_path.to_s).absolute?

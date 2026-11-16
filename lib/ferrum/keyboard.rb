@@ -53,6 +53,8 @@ module Ferrum
     #
     # @raise [ArgumentError] If the key is a modifier, use {#hold} instead.
     #
+    # @raise [TimeoutError]
+    #
     def down(key)
       reject_modifier(key)
       key = normalize_keys(Array(key)).first
@@ -71,6 +73,8 @@ module Ferrum
     #
     # @raise [ArgumentError] If the key is a modifier, use {#hold} instead.
     #
+    # @raise [TimeoutError]
+    #
     def up(key)
       reject_modifier(key)
       key = normalize_keys(Array(key)).first
@@ -86,6 +90,8 @@ module Ferrum
     #   The text to type into a focused element, `[:Shift, "s"], "tring"`.
     #
     # @return [self]
+    #
+    # @raise [TimeoutError]
     #
     def type(*keys)
       keys = normalize_keys(Array(keys))
@@ -111,6 +117,8 @@ module Ferrum
     # @return [Object] The block's value.
     #
     # @raise [ArgumentError] If no block is given or a key isn't a modifier.
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.keyboard.hold(:shift) do

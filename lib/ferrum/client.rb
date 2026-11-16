@@ -45,22 +45,35 @@ module Ferrum
     # @param [String] method
     #   The CDP method name, e.g. `"Page.navigate"`.
     #
-    # @param [Boolean] async
-    #   Whether to send the command without waiting for a response.
+    # @param [Numeric, Deadline] timeout
+    #   How long to wait for this command's response. See {Client#send_message}.
     #
     # @param [Hash] params
     #   The command's parameters.
     #
-    # @param [Numeric, Deadline, nil] timeout
-    #   How long to wait for this command's response, required unless `async` is true.
-    #   See {Client#send_message}.
+    # @return [Hash]
+    #   The command's result.
     #
-    # @return [Boolean, Hash]
-    #   `true` when sent asynchronously, otherwise the command's result.
+    # @raise [TimeoutError]
     #
-    def command(method, async: false, timeout: nil, **params)
+    def command(method, timeout:, **params)
       message = build_message(method, params)
-      @client.send_message(message, async: async, timeout: timeout)
+      @client.send_message(message, timeout: timeout)
+    end
+
+    #
+    # Sends a CDP command scoped to this session without waiting for a response.
+    #
+    # @param [String] method
+    #   The CDP method name, e.g. `"Runtime.runIfWaitingForDebugger"`.
+    #
+    # @param [Hash] params
+    #   The command's parameters.
+    #
+    # @return [true]
+    #
+    def notify(method, **params)
+      @client.send_notification(build_message(method, params))
     end
 
     #
@@ -172,71 +185,86 @@ module Ferrum
     # @param [String] method
     #   The CDP method name, e.g. `"Target.createTarget"`.
     #
-    # @param [Boolean] async
-    #   Whether to send the command without waiting for a response.
+    # @param [Numeric, Deadline] timeout
+    #   How long to wait for this command's response. See {#send_message}.
     #
     # @param [Hash] params
     #   The command's parameters.
     #
-    # @param [Numeric, Deadline, nil] timeout
-    #   How long to wait for this command's response, required unless `async` is true.
-    #   See {#send_message}.
+    # @return [Hash]
+    #   The command's result.
     #
-    # @return [Boolean, Hash]
-    #   `true` when sent asynchronously, otherwise the command's result.
-    #
-    def command(method, async: false, timeout: nil, **params)
+    def command(method, timeout:, **params)
       message = build_message(method, params)
-      send_message(message, async: async, timeout: timeout)
+      send_message(message, timeout: timeout)
     end
 
     #
-    # Sends a raw CDP message over the websocket. Synchronous calls block
-    # until a matching response arrives or `timeout` elapses, and have to say
-    # how long that is, so a caller sees the budget it runs under. Pass the
-    # {Deadline} of the surrounding operation to share its budget.
+    # Sends a CDP command to the browser-wide session without waiting for a response.
+    #
+    # @param [String] method
+    #   The CDP method name, e.g. `"Target.closeTarget"`.
+    #
+    # @param [Hash] params
+    #   The command's parameters.
+    #
+    # @return [true]
+    #
+    def notify(method, **params)
+      send_notification(build_message(method, params))
+    end
+
+    #
+    # Sends a raw CDP message over the websocket and blocks until a matching
+    # response arrives or `timeout` elapses. The caller says how long that is,
+    # so the budget it runs under is visible. Pass the {Deadline} of the
+    # surrounding operation to share its budget; inside {Deadline.within} the
+    # budget is also bound by the one that block sets.
     #
     # @param [Hash] message
     #   The message to send, must include an `:id` key.
     #
-    # @param [Boolean] async
-    #   Whether to return immediately instead of waiting for a response.
-    #
-    # @param [Numeric, Deadline, nil] timeout
+    # @param [Numeric, Deadline] timeout
     #   How long to wait for the response, counting the time the message waits
-    #   to be sent. Required unless `async` is true, where it only bounds the
-    #   time the message waits to be sent and defaults to `protocol_timeout`.
+    #   to be sent.
     #
-    # @return [Boolean, Hash]
-    #   `true` when sent asynchronously, otherwise the parsed `"result"`
-    #   from the response.
+    # @return [Hash]
+    #   The parsed `"result"` from the response.
     #
-    def send_message(message, async:, timeout: nil)
-      raise ArgumentError, "missing keyword: :timeout" if timeout.nil? && !async
+    def send_message(message, timeout:)
+      deadline = Deadline.wrap(timeout)
 
-      deadline = Deadline.wrap(timeout || protocol_timeout)
+      raise dead_browser_error if @ws.messages.closed?
 
-      if async
+      @responses.expect(message[:id])
+      begin
         @ws.send_message(message, deadline)
-        true
-      else
-        raise dead_browser_error if @ws.messages.closed?
-
-        @responses.expect(message[:id])
-        begin
-          @ws.send_message(message, deadline)
-          data = @responses.await(message[:id], deadline)
-        ensure
-          @responses.delete(message[:id])
-        end
-
-        raise dead_browser_error if data.nil? && @ws.messages.closed?
-        raise TimeoutError.new(message[:method], session_id: message[:sessionId]) unless data
-
-        error, response = data.values_at("error", "result")
-        raise_browser_error(error) if error
-        response
+        data = @responses.await(message[:id], deadline)
+      ensure
+        @responses.delete(message[:id])
       end
+
+      raise dead_browser_error if data.nil? && @ws.messages.closed?
+      raise TimeoutError.new(message[:method], session_id: message[:sessionId]) unless data
+
+      error, response = data.values_at("error", "result")
+      raise_browser_error(error) if error
+      response
+    end
+
+    #
+    # Sends a raw CDP message over the websocket without waiting for a
+    # response, which is dropped when it arrives. Nothing bounds it: a browser
+    # that stops reading is detected by the write watchdog.
+    #
+    # @param [Hash] message
+    #   The message to send, must include an `:id` key.
+    #
+    # @return [true]
+    #
+    def send_notification(message)
+      @ws.send_message(message)
+      true
     end
 
     #

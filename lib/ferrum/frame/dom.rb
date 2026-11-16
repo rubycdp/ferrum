@@ -70,6 +70,8 @@ module Ferrum
       # @return [String]
       #   The window's current URL.
       #
+      # @raise [TimeoutError]
+      #
       def current_url
         Utils::Deprecate.warn(
           "#current_url will be removed in Ferrum 0.22. Use page.url, or frame.page.url from a frame, " \
@@ -87,6 +89,8 @@ module Ferrum
       # @return [String]
       #   The window's current title.
       #
+      # @raise [TimeoutError]
+      #
       def current_title
         Utils::Deprecate.warn(
           "#current_title will be removed in Ferrum 0.22. Use page.title, or frame.page.title from a frame, " \
@@ -102,6 +106,8 @@ module Ferrum
       #   The serialized `<!DOCTYPE ...>` declaration, or +nil+ if the
       #   document has none.
       #
+      # @raise [TimeoutError]
+      #
       # @example
       #   browser.go_to("https://example.com")
       #   browser.doctype # => "<!DOCTYPE html>"
@@ -115,6 +121,8 @@ module Ferrum
       #
       # @return [String]
       #   The HTML source of the current page.
+      #
+      # @raise [TimeoutError]
       #
       # @example
       #   browser.go_to("https://google.com/")
@@ -130,6 +138,8 @@ module Ferrum
       # @return [Node, nil]
       #   The element in which the window is embedded, `nil` for the main frame
       #   and for a frame from a different origin than its parent.
+      #
+      # @raise [TimeoutError]
       #
       # @example
       #   browser.go_to("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
@@ -152,6 +162,8 @@ module Ferrum
       #
       # @return [Array<Node>]
       #   The matching nodes.
+      #
+      # @raise [TimeoutError]
       #
       # @example
       #   browser.go_to("https://github.com/")
@@ -187,6 +199,8 @@ module Ferrum
       # @return [Node, nil]
       #   The matching node.
       #
+      # @raise [TimeoutError]
+      #
       # @example
       #   browser.go_to("https://github.com/")
       #   browser.at_xpath("//a[@aria-label='Issues you created']") # => Node
@@ -214,6 +228,8 @@ module Ferrum
       # @return [Array<Node>]
       #   The matching nodes.
       #
+      # @raise [TimeoutError]
+      #
       # @example
       #   browser.go_to("https://github.com/")
       #   browser.css("a[aria-label='Issues you created']") # => [Node]
@@ -240,6 +256,8 @@ module Ferrum
       #
       # @return [Node, nil]
       #   The matching node.
+      #
+      # @raise [TimeoutError]
       #
       # @example
       #   browser.go_to("https://github.com/")
@@ -283,6 +301,8 @@ module Ferrum
       # @raise [ArgumentError]
       #   If neither or both of `css`/`xpath` are given.
       #
+      # @raise [TimeoutError]
+      #
       # @example
       #   browser.go_to("https://github.com/")
       #   browser.wait_for_selector(css: "a[aria-label='Issues you created']") # => Node
@@ -315,6 +335,8 @@ module Ferrum
       #
       # @param [String] type
       #
+      # @raise [TimeoutError]
+      #
       # @example
       #   browser.add_script_tag(url: "http://example.com/stylesheet.css") # => true
       #
@@ -340,6 +362,8 @@ module Ferrum
       # @param [String, nil] path
       #
       # @param [String, nil] content
+      #
+      # @raise [TimeoutError]
       #
       # @example
       #   browser.add_style_tag(content: "h1 { font-size: 40px; }") # => true

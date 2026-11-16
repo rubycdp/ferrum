@@ -185,6 +185,8 @@ module Ferrum
     #
     # @return [true]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   traffic = browser.network.traffic # => []
     #   browser.go_to("https://github.com/")
@@ -213,6 +215,8 @@ module Ferrum
     #   One or more patterns matched against the request's URL, see
     #   {InterceptedRequest#match?}.
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   browser.network.blacklist = /jquery/
     #   browser.go_to("https://example.com/")
@@ -231,6 +235,8 @@ module Ferrum
     # @param [String, Regexp, Array<String, Regexp>] patterns
     #   One or more patterns matched against the request's URL, see
     #   {InterceptedRequest#match?}.
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   browser.network.whitelist = /example/
@@ -251,6 +257,8 @@ module Ferrum
     #
     # @param [Symbol, nil] resource_type
     #   One of the [resource types](https://chromedevtools.github.io/devtools-protocol/tot/Network#type-ResourceType)
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   browser = Ferrum::Browser.new
@@ -300,6 +308,8 @@ module Ferrum
     #
     # @yieldparam [Request] request
     #   An HTTP request.
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   browser.network.authorize(user: "login", password: "pass") { |req| req.continue }
@@ -433,6 +443,8 @@ module Ferrum
     #   * `"wimax"`
     #   * `"other"`
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   browser.network.emulate_network_conditions(connection_type: "cellular2g")
     #   browser.go_to("https://github.com/")
@@ -454,6 +466,8 @@ module Ferrum
 
     #
     # Activates offline mode for a page.
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   browser.network.offline_mode
@@ -502,6 +516,8 @@ module Ferrum
     # @raise [ArgumentError] on any other option, or a `:metadata` that is
     #   missing a key or has an unknown one.
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   browser.network.emulate(platform: "Win32", accept_language: "de-DE")
     #   browser.go_to("https://github.com/")
@@ -531,6 +547,8 @@ module Ferrum
 
     #
     # Toggles ignoring cache for each request. If true, cache will not be used.
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   browser.network.cache(disable: true)

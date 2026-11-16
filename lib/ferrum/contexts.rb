@@ -79,8 +79,10 @@ module Ferrum
     #   Keyword arguments forwarded to `Target.createBrowserContext`.
     #
     # @return [Context]
+    #
+    # @raise [TimeoutError]
     def create(**options)
-      response = @client.command("Target.createBrowserContext", timeout: @client.protocol_timeout, **options)
+      response = @client.command("Target.createBrowserContext", timeout: @client.timeout, **options)
       context_id = response["browserContextId"]
       context = Context.new(@client, self, context_id)
       @contexts[context_id] = context
@@ -106,7 +108,7 @@ module Ferrum
 
       begin
         context.close_targets_connection
-        @client.command("Target.disposeBrowserContext", timeout: @client.protocol_timeout, browserContextId: context.id)
+        @client.command("Target.disposeBrowserContext", timeout: @client.timeout, browserContextId: context.id)
       ensure
         @contexts.delete(context_id)
       end
@@ -130,7 +132,7 @@ module Ferrum
     # @raise [TimeoutError, BrowserError]
     def reset
       error = nil
-      context_ids = @client.command("Target.getBrowserContexts", timeout: @client.protocol_timeout)["browserContextIds"]
+      context_ids = @client.command("Target.getBrowserContexts", timeout: @client.timeout)["browserContextIds"]
       @default_context = nil if context_ids.include?(@default_context&.id)
       (@contexts.keys & context_ids).each do |id|
         dispose(id)
@@ -218,7 +220,7 @@ module Ferrum
       return unless RECURSIVE_AUTO_ATTACH_TYPES.include?(type)
 
       client = @client.session(session_id)
-      client.command("Target.setAutoAttach", autoAttach: true, waitForDebuggerOnStart: true, flatten: true, async: true)
+      client.notify("Target.setAutoAttach", autoAttach: true, waitForDebuggerOnStart: true, flatten: true)
       subscribe_attached_target(client)
     end
 
@@ -240,9 +242,9 @@ module Ferrum
     def add_extensions_and_resume(session_id, waiting)
       extensions = @client.options.extensions
       session = @client.session(session_id)
-      session.command("Page.enable", async: true) if extensions.any?
+      session.notify("Page.enable") if extensions.any?
       extensions.each do |source|
-        session.command("Page.addScriptToEvaluateOnNewDocument", async: true, source: source)
+        session.notify("Page.addScriptToEvaluateOnNewDocument", source: source)
       end
       resume(session_id) if waiting
     end
@@ -275,7 +277,7 @@ module Ferrum
     end
 
     def resume(session_id)
-      @client.session(session_id).command("Runtime.runIfWaitingForDebugger", async: true)
+      @client.session(session_id).notify("Runtime.runIfWaitingForDebugger")
     end
 
     def forget_session(target_id, session_id)

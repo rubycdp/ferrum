@@ -31,6 +31,8 @@ module Ferrum
     #
     # @param [String, nil] prompt_text
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   browser = Ferrum::Browser.new
     #   browser.on(:dialog) do |dialog|
@@ -52,6 +54,8 @@ module Ferrum
 
     #
     # Dismiss dialog.
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   browser = Ferrum::Browser.new

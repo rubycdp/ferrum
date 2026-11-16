@@ -54,12 +54,6 @@ describe Ferrum::Client do
       client.instance_variable_set(:@responses, Ferrum::Utils::AwaitableMap.new)
     end
 
-    it "raises when a synchronous command has no timeout" do
-      message = client.build_message("Target.createTarget", {})
-
-      expect { client.send_message(message, async: false) }.to raise_error(ArgumentError, /timeout/)
-    end
-
     it "waits for a response that arrives within the given timeout" do
       ws = instance_double(Ferrum::Client::WebSocket, messages: Queue.new)
       allow(ws).to receive(:send_message) do |message|
@@ -72,7 +66,7 @@ describe Ferrum::Client do
       client.instance_variable_set(:@ws, ws)
 
       message = client.build_message("Target.createTarget", {})
-      expect(client.send_message(message, async: false, timeout: 5)).to eq({ "ok" => true })
+      expect(client.send_message(message, timeout: 5)).to eq({ "ok" => true })
     end
 
     it "times out once the given timeout is up" do
@@ -83,7 +77,7 @@ describe Ferrum::Client do
 
       message = client.build_message("Page.navigate", {})
       expect do
-        client.send_message(message, async: false, timeout: 0.05)
+        client.send_message(message, timeout: 0.05)
       end.to raise_error(Ferrum::TimeoutError)
     end
 
@@ -94,8 +88,20 @@ describe Ferrum::Client do
       client.instance_variable_set(:@ws, ws)
 
       message = client.build_message("Page.navigate", {})
-      expect { client.send_message(message, async: false, timeout: 5) }.to raise_error(Ferrum::DeadBrowserError)
+      expect { client.send_message(message, timeout: 5) }.to raise_error(Ferrum::DeadBrowserError)
       expect(client.instance_variable_get(:@responses)).not_to be_expecting(message[:id])
+    end
+  end
+
+  describe "#notify" do
+    it "sends the message without waiting, whatever the surrounding deadline" do
+      ws = instance_double(Ferrum::Client::WebSocket)
+      allow(ws).to receive(:send_message)
+      client.instance_variable_set(:@ws, ws)
+
+      Ferrum::Deadline.within(0) { expect(client.notify("Page.enable")).to be(true) }
+
+      expect(ws).to have_received(:send_message).with(hash_including(method: "Page.enable"))
     end
   end
 end

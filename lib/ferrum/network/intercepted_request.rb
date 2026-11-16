@@ -101,7 +101,7 @@ module Ferrum
         options = options.merge(body: Base64.strict_encode64(options.fetch(:body, ""))) if has_body
 
         @status = :responded
-        @client.command("Fetch.fulfillRequest", async: true, **options)
+        @client.notify("Fetch.fulfillRequest", **options)
       end
 
       #
@@ -128,7 +128,7 @@ module Ferrum
       def continue(**options)
         options = options.merge(requestId: request_id)
         @status = :continued
-        @client.command("Fetch.continueRequest", async: true, **options)
+        @client.notify("Fetch.continueRequest", **options)
       end
 
       #
@@ -139,7 +139,7 @@ module Ferrum
       #
       def abort
         @status = :aborted
-        @client.command("Fetch.failRequest", async: true, requestId: request_id, errorReason: "BlockedByClient")
+        @client.notify("Fetch.failRequest", requestId: request_id, errorReason: "BlockedByClient")
       end
 
       #

@@ -203,6 +203,8 @@ module Ferrum
       #
       # @return [RemoteObject, Node, Object]
       #
+      # @raise [TimeoutError]
+      #
       # @example
       #   list = page.evaluate_handle("document.querySelectorAll('li')")
       #   page.evaluate("Array.from(nodes).map(n => n.textContent)", nodes: list)
@@ -221,6 +223,8 @@ module Ferrum
       #
       # @return [Boolean]
       #   Always `true`.
+      #
+      # @raise [TimeoutError]
       #
       # @example
       #   browser.execute("window.scrollBy(0, 100)") # => true
@@ -248,6 +252,8 @@ module Ferrum
       #   `:value`, `:handle` or `:none`.
       #
       # @return [Object]
+      #
+      # @raise [TimeoutError]
       #
       def evaluate_in(object, expression, positional, keywords, mode: :value)
         run(expression, positional, keywords, mode: mode, on: object)

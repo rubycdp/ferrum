@@ -29,6 +29,8 @@ module Ferrum
       # @return [Enumerator]
       #   If no block is given, an Enumerator object will be returned.
       #
+      # @raise [TimeoutError]
+      #
       # @example
       #   page.cookies.each { |cookie| puts cookie.name }
       #   page.cookies.each(urls: ["https://accounts.google.com"]).map(&:name) # => ["SID"]
@@ -52,6 +54,8 @@ module Ferrum
       # @param [Hash{Symbol => Object}, Ferrum::Cookies::Cookie] options
       #
       # @return [Boolean]
+      #
+      # @raise [TimeoutError]
       #
       # @example
       #   page.cookies.set(name: "stealth", value: "omg") # => true
@@ -82,6 +86,8 @@ module Ferrum
       #
       # @return [true]
       #
+      # @raise [TimeoutError]
+      #
       # @example
       #   page.cookies.remove(name: "stealth") # => true
       #
@@ -101,6 +107,8 @@ module Ferrum
       # domains stay, `context.cookies.clear` removes them too.
       #
       # @return [true]
+      #
+      # @raise [TimeoutError]
       #
       # @example
       #   page.cookies.clear # => true

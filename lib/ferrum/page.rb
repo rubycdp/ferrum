@@ -196,7 +196,7 @@ module Ferrum
     #   page.close # => true
     #
     def close
-      client.command("Target.closeTarget", async: true, targetId: @target_id)
+      client.notify("Target.closeTarget", targetId: @target_id)
       close_connection
 
       true
@@ -226,6 +226,7 @@ module Ferrum
     #   a desktop and leaves touch emulation as is. Turning touch off resets hover and pointer to the detected input
     #   devices, which undoes `--blink-settings` overrides until the next navigation
     #
+    # @raise [TimeoutError]
     def set_viewport(width: 0, height: 0, scale_factor: 0, mobile: nil)
       command("Emulation.setTouchEmulationEnabled", enabled: mobile, maxTouchPoints: 1) unless mobile.nil?
 
@@ -253,6 +254,8 @@ module Ferrum
     #
     # @return [Hash{String => Object}]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.resize(width: 1024, height: 768)
     #
@@ -276,6 +279,7 @@ module Ferrum
     #
     # This doesn't prevent users evaluate JavaScript with Ferrum.
     #
+    # @raise [TimeoutError]
     def disable_javascript
       command("Emulation.setScriptExecutionDisabled", value: true)
     end
@@ -285,6 +289,8 @@ module Ferrum
     #
     # @return [(Integer, Integer)]
     #   The left, top coordinates of the window.
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.position # => [10, 20]
@@ -303,6 +309,8 @@ module Ferrum
     #
     # @option options [Integer] :top
     #   The number of pixels from the top of the screen.
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.position = { left: 10, top: 20 }
@@ -330,6 +338,8 @@ module Ferrum
     # @option options [String] :window_state
     #   The window state. Default to normal. Allowed Values: normal, minimized, maximized, fullscreen
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.window_bounds = { left: 10, top: 20, width: 1024, height: 768, window_state: "normal" }
     #
@@ -346,6 +356,8 @@ module Ferrum
     #
     # @return [Hash{String => (Integer, String)}]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.window_bounds # => { "left": 0, "top": 1286, "width": 10, "height": 10, "windowState": "normal" }
     #
@@ -357,6 +369,8 @@ module Ferrum
     # Current window id.
     #
     # @return [Integer]
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.window_id # => 1
@@ -371,6 +385,8 @@ module Ferrum
     # @param [Numeric, Deadline, nil] timeout
     #   How long the whole reload may take. Defaults to the page's `timeout`.
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.go_to("https://github.com/")
     #   page.refresh
@@ -383,6 +399,8 @@ module Ferrum
     #
     # Stop all navigations and loading pending resources on the page.
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.go_to("https://github.com/")
     #   page.stop
@@ -393,6 +411,8 @@ module Ferrum
 
     #
     # Navigates to the previous URL in the history.
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.go_to("https://github.com/")
@@ -405,6 +425,8 @@ module Ferrum
 
     #
     # Navigates to the next URL in the history.
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.go_to("https://github.com/")
@@ -477,6 +499,8 @@ module Ferrum
     #
     # @return [Boolean]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.bypass_csp # => true
     #   page.go_to("https://github.com/ruby-concurrency/concurrent-ruby/blob/master/docs-source/promises.in.md")
@@ -504,6 +528,8 @@ module Ferrum
     # @return [String]
     #   The script identifier, for {#remove_script_on_new_document}.
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.evaluate_on_new_document <<~JS
     #     Object.defineProperty(navigator, "languages", {
@@ -523,6 +549,8 @@ module Ferrum
     #
     # @return [true]
     #
+    # @raise [TimeoutError]
+    #
     def remove_script_on_new_document(identifier)
       command("Page.removeScriptToEvaluateOnNewDocument", identifier: identifier)
       true
@@ -533,6 +561,8 @@ module Ferrum
     # When you have multiple tabs you work with, and you need to switch a given one.
     #
     # @return [Boolean]
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.activate # => true
@@ -563,6 +593,8 @@ module Ferrum
     #   `#screenshot`) pass it explicitly.
     #
     # @return [Hash{String => Object}]
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.command("Page.navigate", url: "https://github.com/")
@@ -627,9 +659,11 @@ module Ferrum
     # @return [Integer, Boolean]
     #   The root node id, or `true` when sent asynchronously.
     #
+    # @raise [TimeoutError]
+    #
     def document_node_id(async: false)
       result = if async
-                 client.command("DOM.getDocument", async: true, depth: 0)
+                 client.notify("DOM.getDocument", depth: 0)
                else
                  command("DOM.getDocument", depth: 0).dig("root", "nodeId")
                end

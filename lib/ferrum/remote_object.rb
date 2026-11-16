@@ -50,6 +50,8 @@ module Ferrum
     #
     # @return [Object]
     #
+    # @raise [TimeoutError]
+    #
     def value
       @runtime.evaluate_in(self, "this", [], {})
     end
@@ -58,6 +60,8 @@ module Ferrum
     # Releases the browser-side reference. The handle is unusable afterwards.
     #
     # @return [void]
+    #
+    # @raise [TimeoutError]
     #
     def release
       @page.command("Runtime.releaseObject", objectId: @remote_id)

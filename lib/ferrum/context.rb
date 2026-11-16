@@ -51,6 +51,8 @@ module Ferrum
     # Connects to and returns the {#default_target}'s page.
     #
     # @return [Page]
+    #
+    # @raise [TimeoutError]
     def page
       default_target.page
     end
@@ -65,6 +67,8 @@ module Ferrum
     # All page targets in this context, connected to as {Page}s.
     #
     # @return [Array<Page>]
+    #
+    # @raise [TimeoutError]
     def pages
       @targets.values.select(&:page?).map(&:page)
     end
@@ -73,6 +77,8 @@ module Ferrum
     # leaving out the ones we have no session with, e.g. detached ones.
     #
     # @return [Array<Worker>]
+    #
+    # @raise [TimeoutError]
     def workers
       @targets.values.select { |t| (t.worker? || t.shared_worker?) && t.session_id }.map(&:worker)
     end
@@ -105,6 +111,8 @@ module Ferrum
     # @param [Hash] options
     #
     # @return [Page]
+    #
+    # @raise [TimeoutError]
     def create_page(**options)
       target = create_target
       target.page = target.build_page(**options)
@@ -116,9 +124,11 @@ module Ferrum
     # @return [Target]
     #
     # @raise [NoSuchTargetError]
+    #
+    # @raise [TimeoutError]
     def create_target
       options = { browserContextId: @id } unless implicit?
-      deadline = Deadline.after(@client.protocol_timeout)
+      deadline = Deadline.wrap(@client.timeout)
       response = @client.command("Target.createTarget", timeout: deadline, url: "about:blank", **Hash(options))
       @targets.await(response["targetId"], deadline) || raise(NoSuchTargetError)
     end
@@ -178,6 +188,8 @@ module Ferrum
     # @return [Target]
     #
     # @raise [NoSuchTargetError] if the context has no such target.
+    #
+    # @raise [TimeoutError]
     def attach_target(target_id)
       target = @targets[target_id]
       raise NoSuchTargetError unless target
@@ -212,6 +224,8 @@ module Ferrum
     # implicit context cannot be disposed, see {#implicit?}.
     #
     # @return [Boolean, nil]
+    #
+    # @raise [TimeoutError]
     def dispose
       @contexts.dispose(@id)
     end

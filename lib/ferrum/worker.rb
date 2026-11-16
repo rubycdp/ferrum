@@ -55,6 +55,8 @@ module Ferrum
     #
     # @return [Boolean, Hash]
     #   `true` when sent asynchronously, otherwise the command's result.
+    #
+    # @raise [TimeoutError]
     def command(method, timeout: nil, **params)
       client.command(method, timeout: timeout || self.timeout, **params)
     end
@@ -71,9 +73,9 @@ module Ferrum
     # @return [Boolean]
     def close
       if type == "worker"
-        client.command("Runtime.evaluate", async: true, expression: "self.close()")
+        client.notify("Runtime.evaluate", expression: "self.close()")
       else
-        client.command("Target.closeTarget", async: true, targetId: target_id)
+        client.notify("Target.closeTarget", targetId: target_id)
       end
       close_connection
 

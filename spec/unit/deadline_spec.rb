@@ -23,6 +23,63 @@ describe Ferrum::Deadline do
     end
   end
 
+  describe ".within" do
+    it "bounds the deadlines made in the block" do
+      described_class.within(0.05) do
+        expect(described_class.wrap(10).remaining).to be <= 0.05
+      end
+    end
+
+    it "doesn't change a deadline that expires sooner" do
+      described_class.within(10) do
+        expect(described_class.wrap(0.05).remaining).to be <= 0.05
+      end
+    end
+
+    it "shares the deadline passed in when it expires first" do
+      deadline = described_class.after(0.05)
+
+      described_class.within(10) { expect(described_class.wrap(deadline)).to be(deadline) }
+    end
+
+    it "only shortens the deadline of an enclosing block" do
+      described_class.within(0.05) do
+        described_class.within(10) { expect(described_class.current.remaining).to be <= 0.05 }
+      end
+    end
+
+    it "restores the previous deadline afterwards" do
+      described_class.within(10) { nil }
+
+      expect(described_class.current).to be_nil
+    end
+
+    it "restores the previous deadline when the block raises" do
+      expect { described_class.within(10) { raise ArgumentError } }.to raise_error(ArgumentError)
+      expect(described_class.current).to be_nil
+    end
+
+    it "returns what the block returns" do
+      expect(described_class.within(10) { :done }).to eq(:done)
+    end
+
+    it "isn't inherited by other threads" do
+      seen = described_class.within(10) { Thread.new { described_class.current }.value }
+
+      expect(seen).to be_nil
+    end
+  end
+
+  describe "#min" do
+    it "returns the deadline that expires first" do
+      sooner = described_class.after(1)
+      later = described_class.after(10)
+
+      expect(sooner.min(later)).to be(sooner)
+      expect(later.min(sooner)).to be(sooner)
+    end
+  end
+
   describe "#remaining" do
     it "counts down" do
       deadline = described_class.after(10)

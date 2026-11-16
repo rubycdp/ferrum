@@ -86,6 +86,8 @@ module Ferrum
     #
     # @return [String]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   browser.go_to("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
     #   frame = browser.frames[1]
@@ -99,6 +101,8 @@ module Ferrum
     # Returns current frame's title.
     #
     # @return [String]
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   browser.go_to("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
@@ -158,6 +162,8 @@ module Ferrum
     # Sets a content of a given frame.
     #
     # @param [String] html
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   browser.go_to("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
