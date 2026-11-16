@@ -9,7 +9,7 @@ module Ferrum
 
       BASE_URL_SCHEMA: ::Array[String]
 
-      DEFAULT_TIMEOUT: ::Integer
+      DEFAULT_TIMEOUT: ::Float
 
       PROCESS_TIMEOUT: ::Integer
 

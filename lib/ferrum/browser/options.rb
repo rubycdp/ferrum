@@ -15,7 +15,7 @@ module Ferrum
       BROWSER_HOST = "127.0.0.1"
       WINDOW_SIZE = [1024, 768].freeze
       BASE_URL_SCHEMA = %w[http https].freeze
-      DEFAULT_TIMEOUT = ENV.fetch("FERRUM_DEFAULT_TIMEOUT", 5).to_i
+      DEFAULT_TIMEOUT = ENV.fetch("FERRUM_DEFAULT_TIMEOUT", 5).to_f
       PROCESS_TIMEOUT = ENV.fetch("FERRUM_PROCESS_TIMEOUT", 10).to_i
 
       warn "Ferrum: FERRUM_DEBUG is deprecated, use FERRUM_LOG=* instead" if ENV.key?("FERRUM_DEBUG")
