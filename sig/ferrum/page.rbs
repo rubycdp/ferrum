@@ -14,7 +14,7 @@ module Ferrum
     attr_accessor referrer: String?
     attr_reader context_id: String?
     attr_reader target_id: String
-    attr_reader idle: Utils::Cell
+    attr_reader idle: Utils::Concurrency::Cell
     attr_reader tracing: Page::Tracing
     attr_reader mouse: Mouse
     attr_reader keyboard: Keyboard
@@ -33,7 +33,7 @@ module Ferrum
     @options: Browser::Options
     @frames: ::Concurrent::Map[String, Frame]
     @main_frame: Frame
-    @idle: Utils::Cell
+    @idle: Utils::Concurrency::Cell
     @mouse: Mouse
     @keyboard: Keyboard
     @headers: Headers

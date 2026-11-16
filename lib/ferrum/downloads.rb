@@ -13,7 +13,7 @@ module Ferrum
 
     def initialize(page)
       @page = page
-      @idle = Utils::Cell.set(true)
+      @idle = Utils::Concurrency::Cell.set(true)
       @files = {}
     end
 

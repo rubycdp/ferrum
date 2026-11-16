@@ -174,7 +174,7 @@ module Ferrum
       @command_id_mutex = Mutex.new
       @ws_url = ws_url
       @options = options
-      @responses = Utils::AwaitableMap.new
+      @responses = Utils::Concurrency::AwaitableMap.new
       @ws = WebSocket.new(ws_url, options.ws_max_receive_size, options.log)
       @subscriber = Subscriber.new
 

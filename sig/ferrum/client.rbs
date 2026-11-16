@@ -45,7 +45,7 @@ module Ferrum
     @command_id: ::Integer
     @ws_url: (String | ::Addressable::URI)
     @options: Browser::Options
-    @responses: Utils::AwaitableMap[::Integer, Hash[String, untyped]]
+    @responses: Utils::Concurrency::AwaitableMap[::Integer, Hash[String, untyped]]
     @ws: Client::WebSocket
     @subscriber: Client::Subscriber
     @thread: ::Thread

@@ -109,7 +109,7 @@ module Ferrum
 
       @frames = Concurrent::Map.new
       @main_frame = Frame.new(nil, self)
-      @idle = Utils::Cell.set(true)
+      @idle = Utils::Concurrency::Cell.set(true)
       @document_version = 0
       self.proxy = proxy
 

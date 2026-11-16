@@ -9,7 +9,7 @@ module Ferrum
 
       DEFAULT_TRACE_CONFIG: { includedCategories: untyped, excludedCategories: untyped }
 
-      @pending: Utils::Cell
+      @pending: Utils::Concurrency::Cell
       @failure: StandardError?
 
       def initialize: (untyped page) -> void
