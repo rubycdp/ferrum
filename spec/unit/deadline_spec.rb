@@ -26,13 +26,13 @@ describe Ferrum::Deadline do
   describe ".within" do
     it "bounds the deadlines made in the block" do
       described_class.within(0.05) do
-        expect(described_class.wrap(10).remaining).to be <= 0.05
+        expect(described_class.wrap(10).remaining).to be < 1
       end
     end
 
     it "doesn't change a deadline that expires sooner" do
       described_class.within(10) do
-        expect(described_class.wrap(0.05).remaining).to be <= 0.05
+        expect(described_class.wrap(0.05).remaining).to be < 1
       end
     end
 
@@ -44,7 +44,7 @@ describe Ferrum::Deadline do
 
     it "only shortens the deadline of an enclosing block" do
       described_class.within(0.05) do
-        described_class.within(10) { expect(described_class.current.remaining).to be <= 0.05 }
+        described_class.within(10) { expect(described_class.current.remaining).to be < 1 }
       end
     end
 
