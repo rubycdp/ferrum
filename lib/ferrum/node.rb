@@ -277,32 +277,41 @@ module Ferrum
     # @param [Numeric, nil] wait
     #   Deprecated, renamed to `navigation_wait`.
     #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long finding the node's position, the click and the page load it starts may take together, the page
+    #   timeout by default.
+    #
     # @return [self]
     #
     # @raise [TimeoutError]
     #
     # @example
     #   page.at_css("a").click
+    #   page.at_css("a").click(timeout: 30)
     #   page.at_css("a").click(navigation_wait: 0)
     #   page.at_css("a").click(mode: :right)
     #   page.at_css("a").click(keys: [:ctrl, :shift])
     #   page.at_css("canvas").click(offset: { x: 10, y: 20 })
     #   page.at_css("canvas").click(offset: { x: 10, y: 20, position: :center })
     #
-    def click(mode: :left, keys: [], offset: {}, delay: 0, navigation_wait: Page::NAVIGATION_WAIT, wait: nil)
+    def click(mode: :left, keys: [], offset: {}, delay: 0, navigation_wait: Page::NAVIGATION_WAIT, wait: nil, # rubocop:disable Metrics/ParameterLists
+              timeout: nil)
       navigation_wait = Utils::Deprecate.renamed_keyword(:wait, :navigation_wait, wait, navigation_wait)
-      x, y = find_position(**offset)
-      modifiers = page.keyboard.modifiers(keys)
+      deadline = Deadline.wrap(timeout || page.timeout)
+      Deadline.within(deadline) do
+        x, y = find_position(**offset)
+        modifiers = page.keyboard.modifiers(keys)
 
-      # `:right` and `:double` pass `navigation_wait: 0` to preserve the historical
-      # no-network-wait default of `Mouse#up` and `Mouse#down`
-      case mode
-      when :right
-        page.mouse.click(x:, y:, modifiers:, delay:, button: :right, navigation_wait: 0)
-      when :double
-        page.mouse.click(x:, y:, modifiers:, delay:, count: 2, navigation_wait: 0)
-      when :left
-        page.mouse.click(x:, y:, modifiers:, delay:, navigation_wait:)
+        # `:right` and `:double` pass `navigation_wait: 0` to preserve the historical
+        # no-network-wait default of `Mouse#up` and `Mouse#down`
+        case mode
+        when :right
+          page.mouse.click(x:, y:, modifiers:, delay:, button: :right, navigation_wait: 0, timeout: deadline)
+        when :double
+          page.mouse.click(x:, y:, modifiers:, delay:, count: 2, navigation_wait: 0, timeout: deadline)
+        when :left
+          page.mouse.click(x:, y:, modifiers:, delay:, navigation_wait:, timeout: deadline)
+        end
       end
 
       self

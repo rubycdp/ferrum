@@ -49,7 +49,7 @@ module Ferrum
 
     def type: (*untyped keys) -> self
 
-    def click: (?mode: ::Symbol, ?keys: ::Array[::Symbol], ?offset: ::Hash[::Symbol, untyped], ?delay: ::Numeric, ?navigation_wait: ::Numeric, ?wait: ::Numeric?) -> self
+    def click: (?mode: ::Symbol, ?keys: ::Array[::Symbol], ?offset: ::Hash[::Symbol, untyped], ?delay: ::Numeric, ?navigation_wait: ::Numeric, ?wait: ::Numeric?, ?timeout: (::Numeric | Deadline)?) -> self
 
     def hover: () -> bot
 

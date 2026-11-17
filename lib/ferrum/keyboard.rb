@@ -96,10 +96,12 @@ module Ferrum
     def type(*keys)
       keys = normalize_keys(Array(keys))
 
-      keys.each do |key|
-        type = key[:text] ? "keyDown" : "rawKeyDown"
-        @page.command("Input.dispatchKeyEvent", type: type, **key)
-        @page.command("Input.dispatchKeyEvent", slowmoable: true, type: "keyUp", **key)
+      Deadline.within(@page.timeout) do
+        keys.each do |key|
+          type = key[:text] ? "keyDown" : "rawKeyDown"
+          @page.command("Input.dispatchKeyEvent", type: type, **key)
+          @page.command("Input.dispatchKeyEvent", slowmoable: true, type: "keyUp", **key)
+        end
       end
 
       self

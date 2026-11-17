@@ -36,6 +36,15 @@ describe Ferrum::Keyboard do
   describe "#type" do
     before { browser.go_to("/type") }
 
+    it "raises when the commands it sends take longer than the timeout together" do
+      browser.at_css("#empty_input").focus
+
+      with_timeout(0.5) do
+        slow_commands(0.3)
+        expect { browser.keyboard.type("Hello") }.to raise_error(Ferrum::TimeoutError)
+      end
+    end
+
     it "types text into the focused element" do
       input = browser.at_css("#empty_input").focus
 

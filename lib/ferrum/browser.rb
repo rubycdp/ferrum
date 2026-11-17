@@ -88,8 +88,11 @@ module Ferrum
     #   changes.
     #
     # @option options [Numeric] :timeout (5)
-    #   The number of seconds we'll wait for a response when communicating
-    #   with the browser: navigations, JS evaluation, DOM queries, dispatching input, etc.
+    #   How long a call waits for the browser, in seconds: navigations, JS evaluation, DOM queries, dispatching
+    #   input, etc. `go_to`, `refresh` and `wait_for_navigation` wait for the page to load within it. A call that
+    #   only sends commands waits for the browser's answer. A call that runs out raises {TimeoutError}.
+    #   `FERRUM_DEFAULT_TIMEOUT` sets the default. Pass `timeout:` to `go_to`, `refresh` or `wait_for_navigation` to
+    #   change it for one call, or wrap calls in {Deadline.within} to bound them together.
     #
     # @option options [Boolean] :js_errors
     #   Deprecated, will be removed in Ferrum 0.22. When true, JavaScript

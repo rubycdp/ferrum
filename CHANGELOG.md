@@ -3,7 +3,8 @@
 ### Added
 - `Ferrum::Deadline.within(seconds) { ... }` bounds every call the block makes with one budget, `page.go_to`, `cookies`
   and `evaluate` included
-- `timeout:` on `go_to`, `refresh` and `wait_for_navigation` bounds the whole call with a single `Ferrum::Deadline`
+- `timeout:` on `go_to`, `refresh`, `back`, `forward`, `click` and `wait_for_navigation` bounds the whole call with a single
+  `Ferrum::Deadline`
 - `cookies[name, domain:, path:]` picks one of the cookies sharing a name
 - `context.cookies` with every cookie in the context whatever its domain, `browser.cookies` is the default context's
 - `network.emulate(user_agent:, accept_language:, platform:, metadata:)` overrides what the page reports in the request
@@ -25,6 +26,8 @@
 - `page.event` is `page.idle` and holds a `Ferrum::Concurrency::Cell`, not a `Concurrent::Event`
 - `browser.targets` and `context.targets` return a copy of the hash, it doesn't follow the targets that come and go
 - `go_to`, `refresh` and the script methods no longer restart the timeout for each step, one `timeout` covers the whole call
+- `click`, `mouse.move`, `keyboard.type`, `back`, `forward`, `wait_for_selector` and node scripts share one `timeout` across the
+  commands they send, they restarted it for each
 - `page.on(:request)`, `on(:auth)` and `on(:dialog)` callbacks form a chain: they run in order and the rest are skipped
   once one continues, responds to, aborts, accepts or dismisses, and an unhandled request is continued. They receive
   only the object, not `index` and `total`, use `handled?` to check whether a previous callback took it. A callback

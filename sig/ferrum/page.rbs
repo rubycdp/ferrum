@@ -74,9 +74,9 @@ module Ferrum
 
     def stop: () -> Hash[String, untyped]
 
-    def back: () -> void
+    def back: (?timeout: (::Numeric | Deadline)?) -> void
 
-    def forward: () -> void
+    def forward: (?timeout: (::Numeric | Deadline)?) -> void
 
     def wait_for_reload: (?(::Numeric | Deadline) timeout) -> void
 
@@ -123,7 +123,7 @@ module Ferrum
 
     def prepare_page: () -> void
 
-    def history_navigate: (::Integer delta) -> void
+    def history_navigate: (delta: ::Integer, ?timeout: (::Numeric | Deadline)?) -> void
 
     def combine_url!: (String? url) -> String
 

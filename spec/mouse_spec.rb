@@ -17,6 +17,32 @@ describe Ferrum::Mouse do
   end
 
   describe "#click" do
+    it "bounds the click by the given timeout" do
+      browser.go_to("/click_coordinates")
+
+      slow_commands(0.3)
+
+      expect { browser.mouse.click(x: 100, y: 150, timeout: 0.5) }.to raise_error(Ferrum::TimeoutError)
+    end
+
+    it "lets the given timeout exceed the page timeout" do
+      browser.go_to("/click_coordinates")
+
+      with_timeout(0.5) do
+        slow_commands(0.3)
+        expect { browser.mouse.click(x: 100, y: 150, timeout: 5) }.not_to raise_error
+      end
+    end
+
+    it "raises when the commands it sends take longer than the timeout together" do
+      browser.go_to("/click_coordinates")
+
+      with_timeout(0.5) do
+        slow_commands(0.3)
+        expect { browser.mouse.click(x: 100, y: 150) }.to raise_error(Ferrum::TimeoutError)
+      end
+    end
+
     it "warns when given the deprecated wait:" do
       browser.go_to("/click_coordinates")
 
@@ -187,6 +213,15 @@ describe Ferrum::Mouse do
   end
 
   describe "#move" do
+    it "raises when the commands it sends take longer than the timeout together" do
+      browser.go_to("/click_coordinates")
+
+      with_timeout(0.5) do
+        slow_commands(0.3)
+        expect { browser.mouse.move(x: 100, y: 150, steps: 3) }.to raise_error(Ferrum::TimeoutError)
+      end
+    end
+
     it "sends modifiers" do
       browser.go_to("/simple")
       browser.execute(<<~JS)

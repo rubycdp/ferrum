@@ -22,19 +22,24 @@ page.go_to("https://github.com/", on_timeout: :raise)
 page.go_to("https://github.com/", timeout: 10)
 ```
 
-#### back
+#### back(timeout: nil)
 
 Navigate to the previous page in history.
+
+* timeout `Numeric` how long the history lookup and the page load may take together, the page timeout by default
 
 ```ruby
 page.go_to("https://github.com/")
 page.at_xpath("//a").click
 page.back
+page.back(timeout: 10)
 ```
 
-#### forward
+#### forward(timeout: nil)
 
 Navigate to the next page in history.
+
+* timeout `Numeric` how long the history lookup and the page load may take together, the page timeout by default
 
 ```ruby
 page.go_to("https://github.com/")

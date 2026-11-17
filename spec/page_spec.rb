@@ -243,6 +243,35 @@ describe Ferrum::Page do
   end
 
   describe "#back" do
+    it "raises when the history query and the navigation take longer than the timeout together" do
+      page.go_to("/simple")
+      page.go_to("/with_js")
+
+      with_timeout(0.5) do
+        slow_commands(0.3)
+        expect { page.back }.to raise_error(Ferrum::TimeoutError)
+      end
+    end
+
+    it "bounds the history query and the navigation by the given timeout" do
+      page.go_to("/simple")
+      page.go_to("/with_js")
+
+      slow_commands(0.3)
+
+      expect { page.back(timeout: 0.5) }.to raise_error(Ferrum::TimeoutError)
+    end
+
+    it "lets the given timeout exceed the page timeout" do
+      page.go_to("/simple")
+      page.go_to("/with_js")
+
+      with_timeout(0.5) do
+        slow_commands(0.3)
+        expect { page.back(timeout: 5) }.not_to raise_error
+      end
+    end
+
     it "goes back when history state has been pushed" do
       page.go_to
 
@@ -255,6 +284,16 @@ describe Ferrum::Page do
   end
 
   describe "#forward" do
+    it "bounds the history query and the navigation by the given timeout" do
+      page.go_to("/simple")
+      page.go_to("/with_js")
+      page.back
+
+      slow_commands(0.3)
+
+      expect { page.forward(timeout: 0.5) }.to raise_error(Ferrum::TimeoutError)
+    end
+
     it "goes forward when history state is used" do
       page.go_to
 

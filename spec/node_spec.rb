@@ -138,6 +138,35 @@ describe Ferrum::Node do
   end
 
   describe "#click" do
+    it "bounds the click by the given timeout" do
+      browser.go_to("/with_js")
+      node = browser.at_css("#remove")
+
+      slow_commands(0.3)
+
+      expect { node.click(timeout: 0.5) }.to raise_error(Ferrum::TimeoutError)
+    end
+
+    it "lets the given timeout exceed the page timeout" do
+      browser.go_to("/with_js")
+      node = browser.at_css("#remove")
+
+      with_timeout(0.5) do
+        slow_commands(0.3)
+        expect { node.click(timeout: 5) }.not_to raise_error
+      end
+    end
+
+    it "raises when the commands it sends take longer than the timeout together" do
+      browser.go_to("/with_js")
+      node = browser.at_css("#remove")
+
+      with_timeout(0.5) do
+        slow_commands(0.3)
+        expect { node.click }.to raise_error(Ferrum::TimeoutError)
+      end
+    end
+
     it "hovers an element before clicking it" do
       browser.go_to("/with_js")
 
@@ -1254,6 +1283,15 @@ describe Ferrum::Node do
 
   describe "#evaluate" do
     before { browser.go_to("/index") }
+
+    it "bounds looking up the node by the given timeout" do
+      node = browser.at_xpath(".//a")
+      hang_commands
+      started = Ferrum::Utils::ElapsedTime.monotonic_time
+
+      expect { node.evaluate("this.tagName", timeout: 0.3) }.to raise_error(Ferrum::TimeoutError)
+      expect(Ferrum::Utils::ElapsedTime.elapsed_time(started)).to be < 0.8
+    end
 
     it "binds this to the node" do
       expect(browser.at_xpath(".//a").evaluate("this.getAttribute('href')")).to eq("js_redirect")

@@ -315,13 +315,15 @@ module Ferrum
 
         deadline = Deadline.wrap(timeout)
 
-        until (node = send(method_name, selector, within: within))
-          return nil if deadline.expired?
+        Deadline.within(deadline) do
+          until (node = poll_selector(method_name, selector, within, deadline))
+            return nil if deadline.expired?
 
-          sleep(interval)
+            sleep(interval)
+          end
+
+          node
         end
-
-        node
       end
 
       #
@@ -380,6 +382,16 @@ module Ferrum
         end
 
         true
+      end
+
+      private
+
+      def poll_selector(method_name, selector, within, deadline)
+        send(method_name, selector, within: within)
+      rescue TimeoutError
+        raise unless deadline.expired?
+
+        nil
       end
     end
   end

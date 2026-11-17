@@ -82,6 +82,9 @@ module Ferrum
     # @param [Numeric, nil] wait
     #   Deprecated, renamed to `navigation_wait`.
     #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long the click and the page load it starts may take together, the page timeout by default.
+    #
     # @param [Hash{Symbol => Object}] options
     #   Additional keyword arguments.
     #
@@ -98,14 +101,17 @@ module Ferrum
     #
     # @raise [TimeoutError]
     #
-    def click(x:, y:, delay: 0, navigation_wait: Page::NAVIGATION_WAIT, wait: nil, **options)
+    def click(x:, y:, delay: 0, navigation_wait: Page::NAVIGATION_WAIT, wait: nil, timeout: nil, **options) # rubocop:disable Metrics/ParameterLists
       navigation_wait = Utils::Deprecate.renamed_keyword(:wait, :navigation_wait, wait, navigation_wait)
-      move(x: x, y: y, modifiers: options[:modifiers])
-      down(**options)
-      sleep(delay)
-      # Potential wait because if some network event is triggered then we have
-      # to wait until it's over and frame is loaded or failed to load.
-      up(navigation_wait: navigation_wait, **options)
+      deadline = Deadline.wrap(timeout || @page.timeout)
+      Deadline.within(deadline) do
+        move(x: x, y: y, modifiers: options[:modifiers])
+        down(**options)
+        sleep(delay)
+        # Potential wait because if some network event is triggered then we have
+        # to wait until it's over and frame is loaded or failed to load.
+        up(navigation_wait: navigation_wait, timeout: deadline, **options)
+      end
       self
     end
 
@@ -180,18 +186,20 @@ module Ferrum
       @y = y
       button = pressed_button
 
-      steps.times do |i|
-        new_x = from_x + ((@x - from_x) * ((i + 1) / steps.to_f))
-        new_y = from_y + ((@y - from_y) * ((i + 1) / steps.to_f))
+      Deadline.within(@page.timeout) do
+        steps.times do |i|
+          new_x = from_x + ((@x - from_x) * ((i + 1) / steps.to_f))
+          new_y = from_y + ((@y - from_y) * ((i + 1) / steps.to_f))
 
-        @page.command("Input.dispatchMouseEvent",
-                      slowmoable: true,
-                      type: "mouseMoved",
-                      x: new_x,
-                      y: new_y,
-                      button: button,
-                      buttons: @buttons,
-                      modifiers: modifiers || @page.keyboard.held_modifiers)
+          @page.command("Input.dispatchMouseEvent",
+                        slowmoable: true,
+                        type: "mouseMoved",
+                        x: new_x,
+                        y: new_y,
+                        button: button,
+                        buttons: @buttons,
+                        modifiers: modifiers || @page.keyboard.held_modifiers)
+        end
       end
 
       self
@@ -199,14 +207,14 @@ module Ferrum
 
     private
 
-    def mouse_event(type:, button: :left, count: 1, modifiers: nil, navigation_wait: 0)
+    def mouse_event(type:, button: :left, count: 1, modifiers: nil, navigation_wait: 0, timeout: nil)
       button = validate_button(button)
       register_event_button(type, button)
       options = { x: @x, y: @y, type: type, button: button, buttons: @buttons, clickCount: count,
                   modifiers: modifiers || @page.keyboard.held_modifiers }
       return @page.command("Input.dispatchMouseEvent", slowmoable: true, **options) unless navigation_wait.positive?
 
-      deadline = Deadline.wrap(@page.timeout)
+      deadline = Deadline.wrap(timeout || @page.timeout)
       result = nil
       @page.wait_for_navigation!(navigation_wait, timeout: deadline) do
         result = @page.command("Input.dispatchMouseEvent", slowmoable: true, timeout: deadline, **options)

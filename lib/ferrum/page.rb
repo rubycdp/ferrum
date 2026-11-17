@@ -420,6 +420,9 @@ module Ferrum
     #
     # Navigates to the previous URL in the history.
     #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long the history lookup and the page load may take together, the page timeout by default.
+    #
     # @raise [TimeoutError]
     #
     # @example
@@ -427,12 +430,15 @@ module Ferrum
     #   page.at_xpath("//a").click
     #   page.back
     #
-    def back
-      history_navigate(delta: -1)
+    def back(timeout: nil)
+      history_navigate(delta: -1, timeout: timeout)
     end
 
     #
     # Navigates to the next URL in the history.
+    #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long the history lookup and the page load may take together, the page timeout by default.
     #
     # @raise [TimeoutError]
     #
@@ -442,8 +448,8 @@ module Ferrum
     #   page.back
     #   page.forward
     #
-    def forward
-      history_navigate(delta: 1)
+    def forward(timeout: nil)
+      history_navigate(delta: 1, timeout: timeout)
     end
 
     #
@@ -733,15 +739,15 @@ module Ferrum
       document_node_id
     end
 
-    def history_navigate(delta:)
-      history = command("Page.getNavigationHistory")
+    def history_navigate(delta:, timeout: nil)
+      deadline = Deadline.wrap(timeout || self.timeout)
+      history = command("Page.getNavigationHistory", timeout: deadline)
       index, entries = history.values_at("currentIndex", "entries")
       entry = entries[index + delta]
 
       return unless entry
 
       # Potential wait because of network event
-      deadline = Deadline.wrap(timeout)
       wait_for_navigation!(NAVIGATION_WAIT, timeout: deadline) do
         command("Page.navigateToHistoryEntry", timeout: deadline, slowmoable: true, entryId: entry["id"])
       end

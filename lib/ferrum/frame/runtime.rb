@@ -271,7 +271,8 @@ module Ferrum
         script = Script.new(expression)
         named = keywords.except(:timeout)
         params, values = arguments_for(script, positional, named)
-        call(wrap(script, params, mode), values, on: on, mode: mode, deadline: script_deadline(keywords[:timeout]))
+        deadline = script_deadline(keywords[:timeout])
+        Deadline.within(deadline) { call(wrap(script, params, mode), values, on: on, mode: mode, deadline: deadline) }
       end
 
       #

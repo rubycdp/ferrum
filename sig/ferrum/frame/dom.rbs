@@ -25,6 +25,8 @@ module Ferrum
 
       def at_css: (untyped selector, ?within: untyped?) -> untyped
 
+      def poll_selector: (Symbol method_name, String selector, untyped within, Deadline deadline) -> untyped
+
       def wait_for_selector: (?css: untyped?, ?xpath: untyped?, ?within: untyped?, ?timeout: (::Numeric | Deadline), ?interval: untyped) -> untyped
 
       def add_script_tag: (?url: untyped?, ?path: untyped?, ?content: untyped?, ?type: ::String) -> untyped
