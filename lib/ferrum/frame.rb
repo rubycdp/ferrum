@@ -62,7 +62,7 @@ module Ferrum
       @page = page
       @parent_id = parent_id
       @lifecycle_events = []
-      @execution_id = Utils::Concurrency::Cell.new
+      @execution_id = Concurrency::Cell.new
       @isolated_worlds = Concurrent::Map.new
     end
 

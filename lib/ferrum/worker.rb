@@ -26,7 +26,7 @@ module Ferrum
       @type = type
       @options = client.options
       @page = self
-      @execution_id = Utils::Concurrency::Cell.new
+      @execution_id = Concurrency::Cell.new
       @network = Network.new(self)
       @console = Console.new(self)
 

@@ -20,7 +20,7 @@ module Ferrum
       @implicit = implicit
       @client = client
       @contexts = contexts
-      @targets = Utils::Concurrency::AwaitableMap.new
+      @targets = Concurrency::AwaitableMap.new
     end
 
     # Whether this is the browser's implicit context, the one it puts its

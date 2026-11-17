@@ -10,7 +10,7 @@ module Ferrum
     @implicit: bool
     @client: Client
     @contexts: Contexts
-    @targets: Utils::Concurrency::AwaitableMap[String, Target]
+    @targets: Concurrency::AwaitableMap[String, Target]
     @default_target: Target?
     @cookies: Cookies
 

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-describe Ferrum::Utils::Concurrency::Cell do
+describe Ferrum::Concurrency::Cell do
   subject(:cell) { described_class.new }
 
   describe ".set" do

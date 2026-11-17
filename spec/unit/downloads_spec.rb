@@ -4,7 +4,7 @@ describe Ferrum::Downloads do
   describe "#wait" do
     subject(:downloads) { described_class.allocate }
 
-    let(:idle) { Ferrum::Utils::Concurrency::Cell.set(true) }
+    let(:idle) { Ferrum::Concurrency::Cell.set(true) }
 
     before { downloads.instance_variable_set(:@idle, idle) }
 

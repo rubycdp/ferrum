@@ -56,7 +56,7 @@ module Ferrum
       def record(path: nil, encoding: :binary, timeout: nil, trace_config: nil, screenshots: false)
         @path = path
         @encoding = encoding
-        @pending = Utils::Concurrency::Cell.new
+        @pending = Concurrency::Cell.new
         @failure = nil
         trace_config ||= DEFAULT_TRACE_CONFIG.dup
 

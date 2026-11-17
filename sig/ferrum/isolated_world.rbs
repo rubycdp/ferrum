@@ -8,7 +8,7 @@ module Ferrum
 
     attr_reader page: Page
 
-    @execution_id: Utils::Concurrency::Cell
+    @execution_id: Concurrency::Cell
 
     def initialize: (Frame frame, String name) -> void
 

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-describe Ferrum::Utils::Concurrency::AwaitableMap do
+describe Ferrum::Concurrency::AwaitableMap do
   subject(:map) { described_class.new }
 
   describe "#await" do

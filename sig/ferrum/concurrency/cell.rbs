@@ -1,0 +1,32 @@
+module Ferrum
+  module Concurrency
+    class Cell
+      @mutex: Mutex
+      @condition: ConditionVariable
+      @set: bool
+      @closed: bool
+      @value: untyped
+      @generation: Integer
+
+      attr_reader generation: Integer
+
+      def self.set: (untyped value) -> Cell
+
+      def initialize: () -> void
+
+      def set: (untyped value) -> untyped
+
+      def clear: () -> Integer
+
+      def set?: () -> bool
+
+      def value: () -> untyped
+
+      def close: () -> void
+
+      def closed?: () -> bool
+
+      def wait: ((Numeric | Deadline) timeout) -> bool
+    end
+  end
+end

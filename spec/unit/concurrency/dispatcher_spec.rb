@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-describe Ferrum::Utils::Concurrency::Dispatcher do
+describe Ferrum::Concurrency::Dispatcher do
   subject(:dispatcher) { described_class.new }
 
   after { dispatcher.close }

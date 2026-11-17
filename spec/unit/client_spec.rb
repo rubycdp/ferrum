@@ -51,7 +51,7 @@ describe Ferrum::Client do
 
   describe "#send_message" do
     before do
-      client.instance_variable_set(:@responses, Ferrum::Utils::Concurrency::AwaitableMap.new)
+      client.instance_variable_set(:@responses, Ferrum::Concurrency::AwaitableMap.new)
     end
 
     it "waits for a response that arrives within the given timeout" do

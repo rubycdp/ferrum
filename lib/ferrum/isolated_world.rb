@@ -31,7 +31,7 @@ module Ferrum
       @frame = frame
       @page = frame.page
       @name = name
-      @execution_id = Utils::Concurrency::Cell.new
+      @execution_id = Concurrency::Cell.new
     end
 
     #

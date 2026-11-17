@@ -406,7 +406,7 @@ module Ferrum
     end
 
     # `Network.requestWillBeSent` and `Fetch.requestPaused` are handled on
-    # separate threads (see `Utils::Concurrency::Dispatcher`), so the "find the existing
+    # separate threads (see `Concurrency::Dispatcher`), so the "find the existing
     # exchange for this id or build a new one" check has to be atomic,
     # otherwise both threads can race past the `select` before either has
     # appended, and end up building two exchanges for the same request.

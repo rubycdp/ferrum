@@ -4,7 +4,7 @@ describe Ferrum::Page do
   describe "#wait_for_reload" do
     subject(:page) { described_class.allocate }
 
-    let(:idle) { Ferrum::Utils::Concurrency::Cell.set(true) }
+    let(:idle) { Ferrum::Concurrency::Cell.set(true) }
 
     before { page.instance_variable_set(:@idle, idle) }
 

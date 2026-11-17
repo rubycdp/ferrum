@@ -41,14 +41,14 @@ module Ferrum
 
     attr_reader ws_url: (String | ::Addressable::URI)
     attr_reader options: Browser::Options
-    attr_reader dispatcher: Utils::Concurrency::Dispatcher
+    attr_reader dispatcher: Concurrency::Dispatcher
 
     @command_id: ::Integer
     @ws_url: (String | ::Addressable::URI)
     @options: Browser::Options
-    @responses: Utils::Concurrency::AwaitableMap[::Integer, Hash[String, untyped]]
+    @responses: Concurrency::AwaitableMap[::Integer, Hash[String, untyped]]
     @ws: Client::WebSocket
-    @dispatcher: Utils::Concurrency::Dispatcher
+    @dispatcher: Concurrency::Dispatcher
     @thread: ::Thread
 
     def initialize: ((String | ::Addressable::URI) ws_url, Browser::Options options) -> void

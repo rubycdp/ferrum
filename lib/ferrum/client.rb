@@ -155,7 +155,7 @@ module Ferrum
   #
   # The low-level CDP client. Owns the {WebSocket} connection to the browser,
   # assigns command ids, matches responses back to their pending commands and
-  # dispatches incoming events to the {Utils::Concurrency::Dispatcher}. {SessionClient} builds on
+  # dispatches incoming events to the {Concurrency::Dispatcher}. {SessionClient} builds on
   # top of it to scope commands/events to a particular target's session.
   #
   class Client
@@ -173,9 +173,9 @@ module Ferrum
       @command_id_mutex = Mutex.new
       @ws_url = ws_url
       @options = options
-      @responses = Utils::Concurrency::AwaitableMap.new
+      @responses = Concurrency::AwaitableMap.new
       @ws = WebSocket.new(ws_url, options.ws_max_receive_size, options.log)
-      @dispatcher = Utils::Concurrency::Dispatcher.new
+      @dispatcher = Concurrency::Dispatcher.new
 
       start
     end
