@@ -35,19 +35,20 @@ module Ferrum
 
   class Client
     PROTOCOL_TIMEOUT: Integer
+    INTERRUPTIONS: Array[String]
 
     extend Forwardable
 
     attr_reader ws_url: (String | ::Addressable::URI)
     attr_reader options: Browser::Options
-    attr_reader subscriber: Client::Subscriber
+    attr_reader dispatcher: Utils::Concurrency::Dispatcher
 
     @command_id: ::Integer
     @ws_url: (String | ::Addressable::URI)
     @options: Browser::Options
     @responses: Utils::Concurrency::AwaitableMap[::Integer, Hash[String, untyped]]
     @ws: Client::WebSocket
-    @subscriber: Client::Subscriber
+    @dispatcher: Utils::Concurrency::Dispatcher
     @thread: ::Thread
 
     def initialize: ((String | ::Addressable::URI) ws_url, Browser::Options options) -> void
@@ -80,6 +81,8 @@ module Ferrum
     private
 
     def start: () -> void
+
+    def dispatch: (Hash[String, untyped] message) -> void
 
     def release_commands: () -> void
 

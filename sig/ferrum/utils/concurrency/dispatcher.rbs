@@ -1,0 +1,37 @@
+module Ferrum
+  module Utils
+    module Concurrency
+      class Dispatcher
+        DEFAULT_LANES: Array[Symbol]
+
+        @queues: Hash[Symbol, ::Queue]
+        @on_error: ^(String, StandardError) -> void
+        @on: ::Concurrent::Hash[String, ::Concurrent::Array[[Integer, Proc]]]
+        @sequence: ::Concurrent::AtomicFixnum
+        @threads: Array[::Thread]
+
+        def initialize: (?lanes: Array[Symbol], ?on_error: (^(String, StandardError) -> void)?) -> void
+
+        def publish: (String key, untyped payload, ?lane: Symbol) -> void
+
+        def on: (String key) { (untyped, Integer, Integer) -> void } -> Integer
+
+        def off: (String key, Integer id) -> bool
+
+        def subscribed?: (String key) -> bool
+
+        def close: () -> void
+
+        def clear: () { (String) -> boolish } -> void
+
+        private
+
+        def start: () -> void
+
+        def call: (String key, untyped payload) -> void
+
+        def warn_error: (String key, StandardError error) -> void
+      end
+    end
+  end
+end

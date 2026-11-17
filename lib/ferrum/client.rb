@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "forwardable"
-require "ferrum/client/subscriber"
 require "ferrum/client/web_socket"
 require "ferrum/utils/thread"
 
@@ -134,12 +133,12 @@ module Ferrum
 
     #
     # Removes all event callbacks registered for this session from the
-    # underlying client's subscriber.
+    # underlying client's dispatcher.
     #
     # @return [void]
     #
     def close
-      @client.subscriber.clear(session_id: session_id)
+      @client.dispatcher.clear { |k| k.match?(session_id) }
     end
 
     private
@@ -156,17 +155,18 @@ module Ferrum
   #
   # The low-level CDP client. Owns the {WebSocket} connection to the browser,
   # assigns command ids, matches responses back to their pending commands and
-  # dispatches incoming events to the {Subscriber}. {SessionClient} builds on
+  # dispatches incoming events to the {Utils::Concurrency::Dispatcher}. {SessionClient} builds on
   # top of it to scope commands/events to a particular target's session.
   #
   class Client
     extend Forwardable
 
     PROTOCOL_TIMEOUT = 5
+    INTERRUPTIONS = %w[Fetch.requestPaused Fetch.authRequired].freeze
 
     delegate %i[timeout] => :options
 
-    attr_reader :ws_url, :options, :subscriber
+    attr_reader :ws_url, :options, :dispatcher
 
     def initialize(ws_url, options)
       @command_id = 0
@@ -175,7 +175,7 @@ module Ferrum
       @options = options
       @responses = Utils::Concurrency::AwaitableMap.new
       @ws = WebSocket.new(ws_url, options.ws_max_receive_size, options.log)
-      @subscriber = Subscriber.new
+      @dispatcher = Utils::Concurrency::Dispatcher.new
 
       start
     end
@@ -278,7 +278,7 @@ module Ferrum
     #   The subscription id, used to unsubscribe via {#off}.
     #
     def on(event, &)
-      @subscriber.on(event, &)
+      @dispatcher.on(event, &)
     end
 
     #
@@ -293,7 +293,7 @@ module Ferrum
     # @return [void]
     #
     def off(event, id)
-      @subscriber.off(event, id)
+      @dispatcher.off(event, id)
     end
 
     # Whether there's at least one callback registered for the event.
@@ -303,7 +303,7 @@ module Ferrum
     #
     # @return [Boolean]
     def subscribed?(event)
-      @subscriber.subscribed?(event)
+      @dispatcher.subscribed?(event)
     end
 
     #
@@ -321,7 +321,7 @@ module Ferrum
 
     #
     # Closes the underlying websocket, drops pending commands and stops
-    # the message-processing thread and subscriber.
+    # the message-processing thread and dispatcher.
     #
     # @return [void]
     #
@@ -330,7 +330,7 @@ module Ferrum
       # Give a thread some time to handle a tail of messages
       @responses.close
       @thread.kill unless @thread.join(1)
-      @subscriber.close
+      @dispatcher.close
       @ws.force_close
     end
 
@@ -370,7 +370,7 @@ module Ferrum
           break unless message
 
           if message.key?("method")
-            @subscriber << message
+            dispatch(message)
           else
             @responses.fulfill(message["id"], message)
           end
@@ -383,6 +383,13 @@ module Ferrum
       ensure
         release_commands
       end
+    end
+
+    # Request interception events take the priority lane so they aren't delayed behind the others.
+    def dispatch(message)
+      method, session_id, params = message.values_at("method", "sessionId", "params")
+      lane = INTERRUPTIONS.include?(method) ? :priority : :regular
+      @dispatcher.publish(SessionClient.event_name(method, session_id), params, lane: lane)
     end
 
     # Nothing is going to answer the commands still in flight once the socket
