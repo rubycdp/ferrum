@@ -213,8 +213,17 @@ module Ferrum
 
     # Sends a CDP command through {#client}.
     #
-    # @return [Boolean, Hash]
-    #   `true` when sent asynchronously, otherwise the command's result.
+    # @param [String] method
+    #   The CDP method name.
+    #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long to wait for the response, the browser's `timeout` by default.
+    #
+    # @param [Hash] params
+    #   The command's parameters.
+    #
+    # @return [Hash]
+    #   The command's result.
     #
     # @raise [TimeoutError]
     def command(method, timeout: nil, **params)
