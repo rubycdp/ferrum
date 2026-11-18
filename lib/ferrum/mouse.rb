@@ -175,18 +175,21 @@ module Ferrum
     #   Bitfield for key modifiers. See `keyboard.modifiers`.
     #   If omitted, uses the keys held by `keyboard.hold`, or none outside of it.
     #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long all the steps may take together, the page timeout by default.
+    #
     # @return [self]
     #
     # @raise [TimeoutError]
     #
-    def move(x:, y:, steps: 1, modifiers: nil)
+    def move(x:, y:, steps: 1, modifiers: nil, timeout: nil)
       from_x = @x
       from_y = @y
       @x = x
       @y = y
       button = pressed_button
 
-      Deadline.within(@page.timeout) do
+      Deadline.within(timeout || @page.timeout) do
         steps.times do |i|
           new_x = from_x + ((@x - from_x) * ((i + 1) / steps.to_f))
           new_y = from_y + ((@y - from_y) * ((i + 1) / steps.to_f))

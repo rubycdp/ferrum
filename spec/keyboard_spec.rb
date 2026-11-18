@@ -45,6 +45,18 @@ describe Ferrum::Keyboard do
       end
     end
 
+    it "types a text that takes longer than the page timeout within the given timeout" do
+      input = browser.at_css("#empty_input")
+      input.focus
+
+      with_timeout(0.5) do
+        slow_commands(0.1)
+        browser.keyboard.type("Hello", timeout: 5)
+      end
+
+      expect(input.value).to eq("Hello")
+    end
+
     it "types text into the focused element" do
       input = browser.at_css("#empty_input").focus
 

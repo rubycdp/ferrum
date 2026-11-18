@@ -222,6 +222,15 @@ describe Ferrum::Mouse do
       end
     end
 
+    it "moves in steps that take longer than the page timeout within the given timeout" do
+      browser.go_to("/click_coordinates")
+
+      with_timeout(0.5) do
+        slow_commands(0.3)
+        expect { browser.mouse.move(x: 100, y: 150, steps: 3, timeout: 5) }.not_to raise_error
+      end
+    end
+
     it "sends modifiers" do
       browser.go_to("/simple")
       browser.execute(<<~JS)

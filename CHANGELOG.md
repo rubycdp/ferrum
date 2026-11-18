@@ -5,6 +5,8 @@
   and `evaluate` included
 - `timeout:` on `go_to`, `refresh`, `back`, `forward`, `click` and `wait_for_navigation` bounds the whole call with a single
   `Ferrum::Deadline`
+- `timeout:` on `keyboard.type`, `node.type` and `mouse.move` bounds all the keys or steps together, the page `timeout`
+  by default, raise it for a long text
 - `cookies[name, domain:, path:]` picks one of the cookies sharing a name
 - `context.cookies` with every cookie in the context whatever its domain, `browser.cookies` is the default context's
 - `network.emulate(user_agent:, accept_language:, platform:, metadata:)` overrides what the page reports in the request

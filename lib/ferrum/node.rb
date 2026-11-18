@@ -232,15 +232,19 @@ module Ferrum
     # @param [Array<String, Symbol, (Symbol, String)>] keys
     #   The keys to type, e.g. `"Input"`, `[:Shift, "s"], "tring"`.
     #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long typing all the keys may take together, the page timeout by default.
+    #
     # @return [self]
     #
     # @raise [TimeoutError]
     #
     # @example
     #   input.focus.type("Input")
+    #   input.focus.type(long_text, timeout: 30)
     #
-    def type(*keys)
-      tap { page.keyboard.type(*keys) }
+    def type(*keys, timeout: nil)
+      tap { page.keyboard.type(*keys, timeout: timeout) }
     end
 
     #

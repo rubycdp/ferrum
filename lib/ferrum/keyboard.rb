@@ -89,14 +89,21 @@ module Ferrum
     # @param [Array<String, Symbol, (Symbol, String)>] keys
     #   The text to type into a focused element, `[:Shift, "s"], "tring"`.
     #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long typing all the keys may take together, the page timeout by default. Raise it for a long text.
+    #
     # @return [self]
     #
     # @raise [TimeoutError]
     #
-    def type(*keys)
+    # @example
+    #   page.keyboard.type("Hello World")
+    #   page.keyboard.type(long_text, timeout: 30)
+    #
+    def type(*keys, timeout: nil)
       keys = normalize_keys(Array(keys))
 
-      Deadline.within(@page.timeout) do
+      Deadline.within(timeout || @page.timeout) do
         keys.each do |key|
           type = key[:text] ? "keyDown" : "rawKeyDown"
           @page.command("Input.dispatchKeyEvent", type: type, **key)

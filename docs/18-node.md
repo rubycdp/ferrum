@@ -111,10 +111,11 @@ Removes focus from the node.
 page.at_css("input[name='q']").focus.blur
 ```
 
-#### type(\*keys) : `Node`
+#### type(\*keys, timeout: nil) : `Node`
 
 Types the keys with the page's keyboard, into whatever is focused, so it's usually chained after `focus` or `click`. See
-[keyboard](https://github.com/rubycdp/ferrum#keyboard) for what a key can be.
+[keyboard](https://github.com/rubycdp/ferrum#keyboard) for what a key can be. `timeout` bounds typing all the keys together,
+the page timeout by default.
 
 ```ruby
 page.at_css("input[name='q']").focus.type("Ruby", :Enter)

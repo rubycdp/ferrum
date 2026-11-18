@@ -58,7 +58,7 @@ Mouse up for given coordinates.
     * :modifiers `Integer` bitfield for key modifiers. See `keyboard.modifiers`.
       If omitted, uses the keys held by `keyboard.hold`, or none outside of it
 
-#### move(x:, y:, steps: 1, modifiers: nil) : `Mouse`
+#### move(x:, y:, steps: 1, modifiers: nil, timeout: nil) : `Mouse`
 
 Mouse move to given x and y.
 
@@ -68,6 +68,7 @@ Mouse move to given x and y.
     * :steps `Integer` defaults to 1. Sends intermediate mousemove events.
     * :modifiers `Integer` bitfield for key modifiers. See `keyboard.modifiers`.
       If omitted, uses the keys held by `keyboard.hold`, or none outside of it
+    * :timeout `Numeric` how long all the steps may take together, the page timeout by default
 
 ## Keyboard
 
@@ -87,12 +88,14 @@ Dispatches a keyup event.
 * key `String` | `Symbol` Name of key such as "b", :enter, :backspace. Raises `ArgumentError` for a modifier,
   use `hold` instead
 
-#### type(\*keys) : `Keyboard`
+#### type(\*keys, timeout: nil) : `Keyboard`
 
 Sends a keydown, keypress/input, and keyup event for each character in the text.
 
 * text `String` | `Array<String> | Array<Symbol>` A text to type into a focused
   element, `[:Shift, "s"], "tring"`
+* timeout `Numeric` how long typing all the keys may take together, the page timeout by default. Raise it for a long
+  text
 
 #### hold(\*keys) { } : `Object`
 

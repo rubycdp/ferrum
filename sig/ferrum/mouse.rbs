@@ -19,7 +19,7 @@ module Ferrum
 
     def up: (?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer, ?navigation_wait: ::Numeric, ?timeout: (::Numeric | Deadline)?) -> self
 
-    def move: (x: ::Numeric, y: ::Numeric, ?steps: ::Integer, ?modifiers: ::Integer?) -> self
+    def move: (x: ::Numeric, y: ::Numeric, ?steps: ::Integer, ?modifiers: ::Integer?, ?timeout: (::Numeric | Deadline)?) -> self
 
     private
 

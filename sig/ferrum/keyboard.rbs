@@ -15,7 +15,7 @@ module Ferrum
 
     def up: ((String | Symbol) key) -> self
 
-    def type: (*(String | Symbol | ::Array[String | Symbol])) -> self
+    def type: (*(String | Symbol | ::Array[String | Symbol]), ?timeout: (::Numeric | Deadline)?) -> self
 
     def hold: [T] (*(String | Symbol) keys) { () -> T } -> T
 
