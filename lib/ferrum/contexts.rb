@@ -281,7 +281,7 @@ module Ferrum
     end
 
     def forget_session(target_id, session_id)
-      target = find_by(target_id: target_id)&.targets&.[](target_id)
+      target = find_by(target_id: target_id)&.target(target_id)
       target.session_id = nil if target&.session_id == session_id
     end
 

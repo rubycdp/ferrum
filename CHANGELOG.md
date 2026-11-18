@@ -5,6 +5,7 @@
   and `evaluate` included. `go_to` raises `NavigationTimeoutError` once it runs out, whatever `on_timeout` is
 - `timeout:` on `go_to`, `refresh`, `back`, `forward`, `click` and `wait_for_navigation` bounds the whole call with a single
   `Ferrum::Deadline`
+- `context.target(id)` returns the context's target with that id
 - `timeout:` on `keyboard.type`, `node.type` and `mouse.move` bounds all the keys or steps together, the page `timeout`
   by default, raise it for a long text
 - `cookies[name, domain:, path:]` picks one of the cookies sharing a name

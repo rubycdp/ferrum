@@ -266,6 +266,21 @@ describe Ferrum::Context do
     end
   end
 
+  describe "#target" do
+    it "returns the target with the given id" do
+      context = browser.contexts.create
+      page = context.create_page
+
+      expect(context.target(page.target_id).page).to be(page)
+    end
+
+    it "returns nil for a target of another context" do
+      context = browser.contexts.create
+
+      expect(context.target(browser.contexts.create.create_page.target_id)).to be_nil
+    end
+  end
+
   describe "#target?" do
     it "returns true for a target of the context" do
       context = browser.contexts.create

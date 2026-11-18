@@ -230,13 +230,23 @@ module Ferrum
       @contexts.dispose(@id)
     end
 
+    # The target with the given id.
+    #
+    # @param [String] target_id
+    #
+    # @return [Target, nil]
+    #   `nil` when the context has no such target.
+    def target(target_id)
+      @targets[target_id]
+    end
+
     # Whether a target with the given id is known in this context.
     #
     # @param [String] target_id
     #
     # @return [Boolean]
     def target?(target_id)
-      !!@targets[target_id]
+      !!target(target_id)
     end
 
     # Debug representation of the context, including its known targets.

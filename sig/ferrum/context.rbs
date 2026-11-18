@@ -50,6 +50,8 @@ module Ferrum
 
     def dispose: () -> bool?
 
+    def target: (String target_id) -> Target?
+
     def target?: (String target_id) -> bool
 
     def inspect: () -> ::String
