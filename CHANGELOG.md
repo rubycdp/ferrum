@@ -18,8 +18,9 @@
 ### Changed
 - `client.command` needs a `timeout:` and has no `async: true`, use `client.notify` to send without waiting, and
   `browser.command` defaults to the browser's `timeout`
-- `:protocol_timeout` is removed and ignored: internal commands have a fixed 5 second timeout and the connection is
-  closed once the browser takes no data for 30 seconds
+- `:protocol_timeout` is ignored and warns, as do `browser.protocol_timeout`, `browser.protocol_timeout=` and
+  `FERRUM_PROTOCOL_TIMEOUT`: internal commands have a fixed 5 second timeout and the connection is closed once a
+  write to the browser stalls for 30 seconds
 - Creating pages and contexts follows `timeout`
 - `wait:` of `click` is renamed to `navigation_wait:`, `wait:` still works and warns
 - `Mouse::CLICK_WAIT` and `Page::GOTO_WAIT` are merged into `Page::NAVIGATION_WAIT`, set by `FERRUM_NAVIGATION_WAIT`,
