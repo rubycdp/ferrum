@@ -55,6 +55,23 @@ module Ferrum
     end
 
     #
+    # Runs the block outside the budget of the enclosing {.within} block, for cleanup that has to reach the browser
+    # even when the budget is used up, like releasing a held key. The calls in it follow their own timeouts.
+    #
+    # @api private
+    #
+    # @return [Object]
+    #   What the block returns.
+    #
+    def self.suspend
+      previous = current
+      Thread.current.thread_variable_set(THREAD_KEY, nil)
+      yield
+    ensure
+      Thread.current.thread_variable_set(THREAD_KEY, previous)
+    end
+
+    #
     # Starts a deadline that expires in `seconds`.
     #
     # @param [Numeric] seconds

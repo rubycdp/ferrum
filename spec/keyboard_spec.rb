@@ -109,6 +109,12 @@ describe Ferrum::Keyboard do
       expect(browser.keyboard.held_modifiers).to eq(0)
     end
 
+    it "releases the modifier when the block outlives the surrounding Deadline.within" do
+      Ferrum::Deadline.within(0.3) { browser.keyboard.hold(:shift) { sleep(0.5) } }
+
+      expect(browser.evaluate("events")).to eq(%w[keydown:true:false keyup:false:false])
+    end
+
     it "presses nested modifiers once" do
       browser.keyboard.hold(:shift) do
         browser.keyboard.hold(:shift, :ctrl) { browser.mouse.move(x: 10, y: 10) }

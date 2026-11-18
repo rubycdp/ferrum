@@ -6,6 +6,8 @@ module Ferrum
 
     def self.within: [T] ((Deadline | Numeric) timeout) { () -> T } -> T
 
+    def self.suspend: [T] () { () -> T } -> T
+
     def self.after: (Numeric seconds) -> Deadline
 
     def self.wrap: (Deadline | Numeric timeout) -> Deadline

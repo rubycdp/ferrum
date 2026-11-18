@@ -191,7 +191,7 @@ module Ferrum
       while (name = pressed.pop)
         @held_modifiers &= ~MODIFIERS[name]
         begin
-          dispatch_modifier("keyUp", name)
+          Deadline.suspend { dispatch_modifier("keyUp", name) }
         rescue Error
           raise unless quietly
         end

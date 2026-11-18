@@ -70,6 +70,26 @@ describe Ferrum::Deadline do
     end
   end
 
+  describe ".suspend" do
+    it "lifts the deadline of the enclosing block" do
+      described_class.within(0.05) do
+        described_class.suspend { expect(described_class.wrap(10).remaining).to be > 9 }
+      end
+    end
+
+    it "restores the deadline afterwards" do
+      described_class.within(10) do
+        described_class.suspend { nil }
+
+        expect(described_class.current.remaining).to be_within(0.5).of(10)
+      end
+    end
+
+    it "returns what the block returns" do
+      expect(described_class.suspend { :done }).to eq(:done)
+    end
+  end
+
   describe "#min" do
     it "returns the deadline that expires first" do
       sooner = described_class.after(1)
