@@ -25,7 +25,8 @@
 - `wait:` of `click` is renamed to `navigation_wait:`, `wait:` still works and warns
 - `Mouse::CLICK_WAIT` and `Page::GOTO_WAIT` are merged into `Page::NAVIGATION_WAIT`, set by `FERRUM_NAVIGATION_WAIT`,
   `FERRUM_CLICK_WAIT` and `FERRUM_GOTO_WAIT` still work and warn
-- `page.command` doesn't take `wait:` anymore, wrap it in `page.wait_for_navigation` to wait for a navigation it starts
+- `page.command` doesn't take `wait:` anymore, wrap it in `page.wait_for_navigation` to wait for a navigation it starts.
+  Passing `wait:` or `async:` to a command raises `ArgumentError`, they would be sent to the browser as parameters
 - `page.event` is `page.idle` and holds a `Ferrum::Concurrency::Cell`, not a `Concurrent::Event`
 - `browser.targets` and `context.targets` return a copy of the hash, it doesn't follow the targets that come and go
 - `go_to`, `refresh` and the script methods no longer restart the timeout for each step, one `timeout` covers the whole call

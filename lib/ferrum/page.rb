@@ -608,10 +608,15 @@ module Ferrum
     #
     # @raise [TimeoutError]
     #
+    # @raise [ArgumentError]
+    #   When given the removed `wait:` or `async:`, which would otherwise be sent to the browser as parameters.
+    #
     # @example
     #   page.command("Runtime.evaluate", expression: "1 + 1")
     #
     def command(method, slowmoable: false, timeout: nil, **params)
+      raise ArgumentError, "wait: is removed, wrap #{method} in wait_for_navigation instead" if params.key?(:wait)
+
       sleep(@options.slowmo) if slowmoable && @options.slowmo.positive?
       client.command(method, timeout: Deadline.wrap(timeout || self.timeout), **params)
     end

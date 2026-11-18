@@ -452,6 +452,11 @@ describe Ferrum::Page do
       expect { page.command("Runtime.evaluate", timeout: 0.5, expression: "new Promise(() => {})", awaitPromise: true) }
         .to raise_error(Ferrum::TimeoutError)
     end
+
+    it "rejects the removed wait: instead of sending it to the browser" do
+      expect { page.command("Page.navigate", wait: 1, url: base_url("/")) }
+        .to raise_error(ArgumentError, "wait: is removed, wrap Page.navigate in wait_for_navigation instead")
+    end
   end
 
   describe "#timeout=" do

@@ -357,7 +357,12 @@ module Ferrum
     #
     # @return [Hash]
     #
+    # @raise [ArgumentError]
+    #   When given the removed `async:`, which would otherwise be sent to the browser as a parameter.
+    #
     def build_message(method, params)
+      raise ArgumentError, "async: is removed, use notify to send #{method} without waiting" if params.key?(:async)
+
       { method: method, params: params }.merge(id: next_command_id)
     end
 

@@ -22,6 +22,11 @@ describe Ferrum::Client do
           .to raise_error(Ferrum::TimeoutError, /a response to Page.navigate \(session .+\)/)
       end
 
+      it "rejects the removed async: instead of sending it to the browser" do
+        expect { browser.command("Browser.getVersion", async: true) }
+          .to raise_error(ArgumentError, "async: is removed, use notify to send Browser.getVersion without waiting")
+      end
+
       it "raises NoSuchTargetError for an unknown target" do
         expect { page.command("Target.activateTarget", targetId: "missing") }
           .to raise_error(Ferrum::NoSuchTargetError)
