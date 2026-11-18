@@ -57,6 +57,9 @@ Mouse up for given coordinates.
     * :count `Integer` defaults to 1
     * :modifiers `Integer` bitfield for key modifiers. See `keyboard.modifiers`.
       If omitted, uses the keys held by `keyboard.hold`, or none outside of it
+    * :navigation_wait `Numeric` seconds to watch for a navigation started by releasing the button, then wait for it
+      to load, defaults to 0
+    * :timeout `Numeric` how long the event and the page load it starts may take together, the page timeout by default
 
 #### move(x:, y:, steps: 1, modifiers: nil, timeout: nil) : `Mouse`
 

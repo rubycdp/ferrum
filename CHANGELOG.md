@@ -22,7 +22,7 @@
   `FERRUM_PROTOCOL_TIMEOUT`: internal commands have a fixed 5 second timeout and the connection is closed once a
   write to the browser stalls for 30 seconds
 - Creating pages and contexts follows `timeout`
-- `wait:` of `click` is renamed to `navigation_wait:`, `wait:` still works and warns
+- `wait:` of `click`, `mouse.up` and `mouse.down` is renamed to `navigation_wait:`, `wait:` still works and warns
 - `Mouse::CLICK_WAIT` and `Page::GOTO_WAIT` are merged into `Page::NAVIGATION_WAIT`, set by `FERRUM_NAVIGATION_WAIT`,
   `FERRUM_CLICK_WAIT` and `FERRUM_GOTO_WAIT` still work and warn
 - `page.command` doesn't take `wait:` anymore, wrap it in `page.wait_for_navigation` to wait for a navigation it starts.

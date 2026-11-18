@@ -187,6 +187,16 @@ describe Ferrum::Mouse do
   end
 
   describe "#up" do
+    it "takes the deprecated wait: as navigation_wait:" do
+      Ferrum::Utils::Deprecate.reset!
+      record_mouse_buttons
+
+      expect { browser.mouse.down.up(wait: 0.1) }.to output(/:wait is renamed to :navigation_wait/).to_stderr
+      expect(browser.evaluate("events")).to eq(%w[mousedown:0:1 mouseup:0:1])
+    ensure
+      Ferrum::Utils::Deprecate.reset!
+    end
+
     it "releases the left button by default" do
       record_mouse_buttons
 

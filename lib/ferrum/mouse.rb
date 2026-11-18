@@ -153,6 +153,15 @@ module Ferrum
     #   Bitfield for key modifiers. See `keyboard.modifiers`.
     #   If omitted, uses the keys held by `keyboard.hold`, or none outside of it.
     #
+    # @option options [Numeric] :navigation_wait (0)
+    #   Seconds to watch for a navigation started by releasing the button, then wait for it to load.
+    #
+    # @option options [Numeric] :wait
+    #   Deprecated, renamed to `:navigation_wait`.
+    #
+    # @option options [Numeric, Deadline] :timeout
+    #   How long the event and the page load it starts may take together, the page timeout by default.
+    #
     # @return [self]
     #
     # @raise [TimeoutError]
@@ -210,7 +219,9 @@ module Ferrum
 
     private
 
-    def mouse_event(type:, button: :left, count: 1, modifiers: nil, navigation_wait: 0, timeout: nil)
+    def mouse_event(type:, button: :left, count: 1, modifiers: nil, navigation_wait: 0, wait: nil, # rubocop:disable Metrics/ParameterLists
+                    timeout: nil)
+      navigation_wait = Utils::Deprecate.renamed_keyword(:wait, :navigation_wait, wait, navigation_wait)
       button = validate_button(button)
       register_event_button(type, button)
       options = { x: @x, y: @y, type: type, button: button, buttons: @buttons, clickCount: count,
