@@ -2,7 +2,7 @@
 
 ### Added
 - `Ferrum::Deadline.within(seconds) { ... }` bounds every call the block makes with one budget, `page.go_to`, `cookies`
-  and `evaluate` included
+  and `evaluate` included. `go_to` raises `NavigationTimeoutError` once it runs out, whatever `on_timeout` is
 - `timeout:` on `go_to`, `refresh`, `back`, `forward`, `click` and `wait_for_navigation` bounds the whole call with a single
   `Ferrum::Deadline`
 - `timeout:` on `keyboard.type`, `node.type` and `mouse.move` bounds all the keys or steps together, the page `timeout`

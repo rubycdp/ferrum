@@ -74,6 +74,13 @@ describe Ferrum::Page do
         expect(Ferrum::Utils::ElapsedTime.elapsed_time(started)).to be < 2
       end
 
+      it "raises once the surrounding Deadline.within block runs out" do
+        Ferrum::Deadline.within(0.5) do
+          expect { page.go_to("/really_slow") }.to raise_error(Ferrum::NavigationTimeoutError)
+          expect { page.go_to("/") }.to raise_error(Ferrum::NavigationTimeoutError)
+        end
+      end
+
       it "rejects an unknown on_timeout" do
         expect { browser.go_to("/", on_timeout: :wait) }
           .to raise_error(ArgumentError, "on_timeout should be one of [:ignore, :raise], got :wait")

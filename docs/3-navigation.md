@@ -12,7 +12,8 @@ Navigate page to.
   configuring driver.
 * options `Hash`
   * :on_timeout `Symbol` What to do when the timeout is reached: `:ignore` (default) returns `nil`,
-    `:raise` raises `Ferrum::NavigationTimeoutError` naming the requests still pending.
+    `:raise` raises `Ferrum::NavigationTimeoutError` naming the requests still pending. It raises with `:ignore` too
+    once an enclosing `Ferrum::Deadline.within` has run out.
   * :timeout `Numeric` How long the whole navigation may take, sending the request and loading the page together,
     the page timeout by default.
 

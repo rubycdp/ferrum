@@ -140,6 +140,8 @@ module Ferrum
     #   What to do when the page doesn't load in time: `:ignore` returns `nil`,
     #   `:raise` raises {NavigationTimeoutError}. `nil` follows the deprecated
     #   `:pending_connection_errors` option, which raises {PendingConnectionsError}.
+    #   Once the budget of an enclosing {Deadline.within} is used up, `:ignore`
+    #   raises {NavigationTimeoutError} too.
     #
     # @param [Numeric, Deadline, nil] timeout
     #   How long the whole navigation may take, from sending the request to the
@@ -162,7 +164,7 @@ module Ferrum
     #   page.go_to("/slow", on_timeout: :raise)
     #   page.go_to("/slow", timeout: 10)
     #
-    def go_to(url = nil, on_timeout: nil, timeout: nil)
+    def go_to(url = nil, on_timeout: nil, timeout: nil) # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
       unless on_timeout.nil? || ON_TIMEOUT.include?(on_timeout)
         raise ArgumentError, "on_timeout should be one of #{ON_TIMEOUT.inspect}, got #{on_timeout.inspect}"
       end
@@ -182,12 +184,12 @@ module Ferrum
       response["frameId"]
     rescue TimeoutError
       on_timeout ||= @options.pending_connection_errors ? :pending_connections : :ignore
-      return if on_timeout == :ignore
+      return if on_timeout == :ignore && !Deadline.current&.expired?
 
       pendings = network.traffic.select(&:pending?).map(&:url).compact
-      raise NavigationTimeoutError.new(options[:url], pendings) if on_timeout == :raise
+      raise PendingConnectionsError.new(options[:url], pendings) if on_timeout == :pending_connections
 
-      raise PendingConnectionsError.new(options[:url], pendings)
+      raise NavigationTimeoutError.new(options[:url], pendings)
     end
     alias goto go_to
     alias go go_to
