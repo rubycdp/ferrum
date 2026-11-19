@@ -296,7 +296,7 @@ module Ferrum
       #   ones only.
       #
       def arguments_for(script, positional, named)
-        if positional.any?
+        unless positional.empty?
           raise ArgumentError, "Pass arguments either positionally or by name, not both" if named.any?
 
           return [[], positional]

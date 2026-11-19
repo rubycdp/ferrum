@@ -5,6 +5,8 @@
 ### Changed
 
 ### Fixed
+- `evaluate` dropped its positional arguments when all of them were `false` or `nil`, for a function declaration or a
+  script with `await`
 
 ### Removed
 
