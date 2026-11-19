@@ -34,7 +34,7 @@ module Ferrum
       # @param [:binary, :base64] encoding
       #   Encode output as Base64 or plain text.
       #
-      # @param [Float, nil] timeout
+      # @param [Numeric, Deadline, nil] timeout
       #   Wait until file streaming finishes in the specified time or raise
       #   error.
       #
@@ -51,10 +51,13 @@ module Ferrum
       #   When `path` is specified returns `true` and stores trace data into
       #   file.
       #
+      # @raise [TimeoutError]
+      #
       def record(path: nil, encoding: :binary, timeout: nil, trace_config: nil, screenshots: false)
         @path = path
         @encoding = encoding
-        @pending = Concurrent::IVar.new
+        @pending = Concurrency::Cell.new
+        @failure = nil
         trace_config ||= DEFAULT_TRACE_CONFIG.dup
 
         if screenshots
@@ -68,7 +71,10 @@ module Ferrum
         yield
         stop
 
-        @pending.value!(timeout || @page.timeout)
+        @pending.wait(timeout || @page.timeout)
+        raise @failure if @failure
+
+        @pending.value
       end
 
       private
@@ -89,7 +95,8 @@ module Ferrum
 
           @pending.set(stream_handle(event["stream"]))
         rescue StandardError => e
-          @pending.fail(e)
+          @failure = e
+          @pending.close
         end
 
         @subscribed_tracing_complete = true

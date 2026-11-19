@@ -22,7 +22,7 @@ module Ferrum
 
     def timeout=: (::Numeric) -> ::Numeric
 
-    def protocol_timeout: () -> ::Numeric
+    def protocol_timeout: () -> ::Integer
 
     def protocol_timeout=: (::Numeric) -> ::Numeric
 
@@ -37,7 +37,7 @@ module Ferrum
 
     def add_extension: (String | Hash[Symbol, String] extension) -> ::Array[String]
 
-    def command: (String method, **untyped params) -> Hash[String, untyped]
+    def command: (String method, ?timeout: (::Numeric | Deadline)?, **untyped params) -> Hash[String, untyped]
 
     def reset: () -> void
 

@@ -54,6 +54,8 @@ module Ferrum
     #
     # @return [Hash{String => Object}]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.at_css("a").description["nodeName"] # => "A"
     #
@@ -66,6 +68,8 @@ module Ferrum
     # node, e.g. `"#text"`.
     #
     # @return [String]
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.at_css("#nav").tag_name # => "div"
@@ -100,6 +104,8 @@ module Ferrum
     #
     # @return [Boolean]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.at_css("a").node? # => true
     #   page.xpath("//a/text()").first.node? # => false
@@ -115,6 +121,8 @@ module Ferrum
     #
     # @return [Frame, nil]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   frame = page.at_xpath("//iframe").frame # => Frame
     #   frame.at_css("//a[text() = 'Log in']") # => Node
@@ -128,6 +136,8 @@ module Ferrum
     #
     # @return [self]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   input = page.at_css("input[name='q']")
     #   input.focus
@@ -140,6 +150,8 @@ module Ferrum
     # find out, and leaves it focused when it can.
     #
     # @return [Boolean]
+    #
+    # @raise [TimeoutError]
     def focusable?
       focus
       true
@@ -164,6 +176,8 @@ module Ferrum
     #
     # @raise [NodeMovingError]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.at_css("#modal").wait_for_stop_moving
     #   # => [[50.2, 390.9, 203.2, 390.9, 203.2, 411.9, 50.2, 411.9]]
@@ -186,6 +200,8 @@ module Ferrum
     #
     # @return [Boolean]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.at_css(".animated").moving? # => true
     #   page.at_css("#nav").moving? # => false
@@ -199,6 +215,8 @@ module Ferrum
     # Removes focus from the node.
     #
     # @return [self]
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.at_css("input[name='q']").focus.blur
@@ -214,13 +232,19 @@ module Ferrum
     # @param [Array<String, Symbol, (Symbol, String)>] keys
     #   The keys to type, e.g. `"Input"`, `[:Shift, "s"], "tring"`.
     #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long typing all the keys may take together, the page timeout by default.
+    #
     # @return [self]
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   input.focus.type("Input")
+    #   input.focus.type(long_text, timeout: 30)
     #
-    def type(*keys)
-      tap { page.keyboard.type(*keys) }
+    def type(*keys, timeout: nil)
+      tap { page.keyboard.type(*keys, timeout: timeout) }
     end
 
     #
@@ -249,34 +273,49 @@ module Ferrum
     # @param [Float] delay
     #   Delay between mouse down and mouse up events.
     #
-    # @param [Numeric] wait
+    # @param [Numeric] navigation_wait
     #   Seconds to watch for a navigation started by a left click, then wait for
     #   it to load. Ignored for `:right` and `:double`, which never wait. `0`
     #   returns as soon as the click is dispatched.
     #
+    # @param [Numeric, nil] wait
+    #   Deprecated, renamed to `navigation_wait`.
+    #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long finding the node's position, the click and the page load it starts may take together, the page
+    #   timeout by default.
+    #
     # @return [self]
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.at_css("a").click
-    #   page.at_css("a").click(wait: 0)
+    #   page.at_css("a").click(timeout: 30)
+    #   page.at_css("a").click(navigation_wait: 0)
     #   page.at_css("a").click(mode: :right)
     #   page.at_css("a").click(keys: [:ctrl, :shift])
     #   page.at_css("canvas").click(offset: { x: 10, y: 20 })
     #   page.at_css("canvas").click(offset: { x: 10, y: 20, position: :center })
     #
-    def click(mode: :left, keys: [], offset: {}, delay: 0, wait: Mouse::CLICK_WAIT)
-      x, y = find_position(**offset)
-      modifiers = page.keyboard.modifiers(keys)
+    def click(mode: :left, keys: [], offset: {}, delay: 0, navigation_wait: Page::NAVIGATION_WAIT, wait: nil, # rubocop:disable Metrics/ParameterLists
+              timeout: nil)
+      navigation_wait = Utils::Deprecate.renamed_keyword(:wait, :navigation_wait, wait, navigation_wait)
+      deadline = Deadline.wrap(timeout || page.timeout)
+      Deadline.within(deadline) do
+        x, y = find_position(**offset)
+        modifiers = page.keyboard.modifiers(keys)
 
-      # `:right` and `:double` pass `wait: 0` to preserve the historical
-      # no-network-wait default of `Mouse#up` and `Mouse#down`
-      case mode
-      when :right
-        page.mouse.click(x:, y:, modifiers:, delay:, button: :right, wait: 0)
-      when :double
-        page.mouse.click(x:, y:, modifiers:, delay:, count: 2, wait: 0)
-      when :left
-        page.mouse.click(x:, y:, modifiers:, delay:, wait:)
+        # `:right` and `:double` pass `navigation_wait: 0` to preserve the historical
+        # no-network-wait default of `Mouse#up` and `Mouse#down`
+        case mode
+        when :right
+          page.mouse.click(x:, y:, modifiers:, delay:, button: :right, navigation_wait: 0, timeout: deadline)
+        when :double
+          page.mouse.click(x:, y:, modifiers:, delay:, count: 2, navigation_wait: 0, timeout: deadline)
+        when :left
+          page.mouse.click(x:, y:, modifiers:, delay:, navigation_wait:, timeout: deadline)
+        end
       end
 
       self
@@ -285,6 +324,8 @@ module Ferrum
     # Not currently implemented.
     #
     # @raise [Ferrum::NotImplementedError] always
+    #
+    # @raise [TimeoutError]
     def hover
       raise Ferrum::NotImplementedError
     end
@@ -293,6 +334,8 @@ module Ferrum
     # Scrolls the node into view if it is not already visible.
     #
     # @return [self]
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.at_css("#footer").scroll_into_view
@@ -308,6 +351,8 @@ module Ferrum
     #   An element to use as the visible bounds instead of the window.
     #
     # @return [Boolean]
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.at_css("#footer").in_viewport? # => false
@@ -337,6 +382,8 @@ module Ferrum
     #
     # @return [Hash{String => Object}]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.at_css("input[type=file]").select_file("/path/to/file.png")
     #
@@ -357,6 +404,8 @@ module Ferrum
     #
     # @return [Node, nil]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.at_xpath("//nav").at_xpath(".//a") # => Node
     #
@@ -371,6 +420,8 @@ module Ferrum
     # @param [String] selector
     #
     # @return [Node, nil]
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.at_css("form").at_css("input[name='q']") # => Node
@@ -387,6 +438,8 @@ module Ferrum
     #
     # @return [Array<Node>]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.at_css("ul").xpath(".//li") # => [Node]
     #
@@ -402,6 +455,8 @@ module Ferrum
     #
     # @return [Array<Node>]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.at_css("ul").css("li") # => [Node]
     #
@@ -413,6 +468,8 @@ module Ferrum
     # The node's text content, i.e. `textContent`.
     #
     # @return [String]
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.at_css("a > h3").text # => "rubycdp/ferrum: Ruby Chrome/Chromium driver - GitHub"
@@ -426,6 +483,8 @@ module Ferrum
     # the layout: text hidden by CSS is left out and line breaks are kept.
     #
     # @return [String]
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   # <p>Hello <span style="display: none">hidden</span>world</p>
@@ -442,6 +501,8 @@ module Ferrum
     #
     # @return [Object]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.at_css("input[name='q']").value # => "ferrum"
     #
@@ -455,6 +516,8 @@ module Ferrum
     # @param [String] name
     #
     # @return [Object]
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.at_css("input").property("value") # => "Foo"
@@ -473,6 +536,8 @@ module Ferrum
     #
     # @return [String, nil]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.at_css("input").attribute("value") # => "Foo"
     #
@@ -486,6 +551,8 @@ module Ferrum
     # @return [Array<Node>]
     #
     # @raise [JavaScriptError] when the node is not a `select`.
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.at_css("select#title").selected.map(&:text) # => ["Mrs"]
@@ -514,6 +581,8 @@ module Ferrum
     #   `:text`.
     #
     # @return [self]
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.at_xpath("//*[select]").select(["1"]) # => Node (select)
@@ -555,6 +624,8 @@ module Ferrum
     #
     # @return [Object]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.at_css("input").evaluate("this.value")
     #   page.at_css("input").evaluate("this.value + suffix", suffix: "!")
@@ -572,6 +643,8 @@ module Ferrum
     #
     # @return [RemoteObject, Node, Object]
     #   A {Node} for a node and the value itself for a primitive.
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.at_css("form").evaluate_handle("this.dataset") # => RemoteObject
@@ -591,6 +664,8 @@ module Ferrum
     #
     # @return [Boolean]
     #   Always `true`.
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.at_css("input").execute("this.value = text", text: "hello")
@@ -642,6 +717,8 @@ module Ferrum
     #
     # @return [(Float, Float)]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.at_css("input").find_position # => [126.7, 401.4]
     #   page.at_css("input").find_position(x: 5, y: 5) # => [55.2, 395.9]
@@ -662,6 +739,8 @@ module Ferrum
     #
     # @return [Hash{String => String}]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.at_css("a").computed_style["display"] # => "inline"
     #
@@ -676,6 +755,8 @@ module Ferrum
     #
     # @return [Accessibility::AXNode, nil]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.at_css("a").axnode.role # => "link"
     #
@@ -688,6 +769,8 @@ module Ferrum
     #
     # @return [Hash{String => Object}]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.at_css("#ad").remove
     #
@@ -698,6 +781,8 @@ module Ferrum
     # Whether the node still exists in the DOM.
     #
     # @return [Boolean]
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   node = page.at_css("#ad")

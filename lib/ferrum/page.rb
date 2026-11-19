@@ -29,7 +29,9 @@ module Ferrum
   # JavaScript evaluation methods are ultimately delegated to from {Browser}.
   #
   class Page
-    GOTO_WAIT = ENV.fetch("FERRUM_GOTO_WAIT", 0.1).to_f
+    NAVIGATION_WAIT = Utils::Deprecate.renamed_env(
+      "FERRUM_NAVIGATION_WAIT", %w[FERRUM_CLICK_WAIT FERRUM_GOTO_WAIT], 0.1
+    )
     ON_TIMEOUT = %i[ignore raise].freeze
 
     extend Forwardable
@@ -48,7 +50,7 @@ module Ferrum
     include Interceptable
 
     attr_accessor :referrer
-    attr_reader :context_id, :target_id, :event, :tracing
+    attr_reader :context_id, :target_id, :idle, :tracing
 
     # Client connection.
     #
@@ -109,7 +111,7 @@ module Ferrum
 
       @frames = Concurrent::Map.new
       @main_frame = Frame.new(nil, self)
-      @event = Utils::Event.new.tap(&:set)
+      @idle = Concurrency::Cell.set(true)
       @document_version = 0
       self.proxy = proxy
 
@@ -138,6 +140,12 @@ module Ferrum
     #   What to do when the page doesn't load in time: `:ignore` returns `nil`,
     #   `:raise` raises {NavigationTimeoutError}. `nil` follows the deprecated
     #   `:pending_connection_errors` option, which raises {PendingConnectionsError}.
+    #   Once the budget of an enclosing {Deadline.within} is used up, `:ignore`
+    #   raises {NavigationTimeoutError} too.
+    #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long the whole navigation may take, from sending the request to the
+    #   page loading. Defaults to the page's `timeout`.
     #
     # @return [String, nil]
     #   The navigated frame's id, or `nil` when the timeout is reached.
@@ -154,15 +162,20 @@ module Ferrum
     # @example
     #   page.go_to("https://github.com/")
     #   page.go_to("/slow", on_timeout: :raise)
+    #   page.go_to("/slow", timeout: 10)
     #
-    def go_to(url = nil, on_timeout: nil)
+    def go_to(url = nil, on_timeout: nil, timeout: nil) # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
       unless on_timeout.nil? || ON_TIMEOUT.include?(on_timeout)
         raise ArgumentError, "on_timeout should be one of #{ON_TIMEOUT.inspect}, got #{on_timeout.inspect}"
       end
 
       options = { url: combine_url!(url) }
       options.merge!(referrer: referrer) if referrer
-      response = command("Page.navigate", wait: GOTO_WAIT, **options)
+      deadline = Deadline.wrap(timeout || self.timeout)
+      response = nil
+      wait_for_navigation!(NAVIGATION_WAIT, timeout: deadline) do
+        response = command("Page.navigate", timeout: deadline, **options)
+      end
       error_text = response["errorText"] # https://cs.chromium.org/chromium/src/net/base/net_error_list.h
       if error_text && error_text != "net::ERR_ABORTED" # Request aborted due to user action or download
         raise StatusError.new(options[:url], "Request to #{options[:url]} failed (#{error_text})")
@@ -171,12 +184,12 @@ module Ferrum
       response["frameId"]
     rescue TimeoutError
       on_timeout ||= @options.pending_connection_errors ? :pending_connections : :ignore
-      return if on_timeout == :ignore
+      return if on_timeout == :ignore && !Deadline.current&.expired?
 
       pendings = network.traffic.select(&:pending?).map(&:url).compact
-      raise NavigationTimeoutError.new(options[:url], pendings) if on_timeout == :raise
+      raise PendingConnectionsError.new(options[:url], pendings) if on_timeout == :pending_connections
 
-      raise PendingConnectionsError.new(options[:url], pendings)
+      raise NavigationTimeoutError.new(options[:url], pendings)
     end
     alias goto go_to
     alias go go_to
@@ -190,7 +203,7 @@ module Ferrum
     #   page.close # => true
     #
     def close
-      client.command("Target.closeTarget", async: true, targetId: @target_id)
+      client.notify("Target.closeTarget", targetId: @target_id)
       close_connection
 
       true
@@ -220,6 +233,7 @@ module Ferrum
     #   a desktop and leaves touch emulation as is. Turning touch off resets hover and pointer to the detected input
     #   devices, which undoes `--blink-settings` overrides until the next navigation
     #
+    # @raise [TimeoutError]
     def set_viewport(width: 0, height: 0, scale_factor: 0, mobile: nil)
       command("Emulation.setTouchEmulationEnabled", enabled: mobile, maxTouchPoints: 1) unless mobile.nil?
 
@@ -247,6 +261,8 @@ module Ferrum
     #
     # @return [Hash{String => Object}]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.resize(width: 1024, height: 768)
     #
@@ -270,6 +286,7 @@ module Ferrum
     #
     # This doesn't prevent users evaluate JavaScript with Ferrum.
     #
+    # @raise [TimeoutError]
     def disable_javascript
       command("Emulation.setScriptExecutionDisabled", value: true)
     end
@@ -279,6 +296,8 @@ module Ferrum
     #
     # @return [(Integer, Integer)]
     #   The left, top coordinates of the window.
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.position # => [10, 20]
@@ -297,6 +316,8 @@ module Ferrum
     #
     # @option options [Integer] :top
     #   The number of pixels from the top of the screen.
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.position = { left: 10, top: 20 }
@@ -324,6 +345,8 @@ module Ferrum
     # @option options [String] :window_state
     #   The window state. Default to normal. Allowed Values: normal, minimized, maximized, fullscreen
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.window_bounds = { left: 10, top: 20, width: 1024, height: 768, window_state: "normal" }
     #
@@ -332,7 +355,7 @@ module Ferrum
       window_state = options.delete(:window_state)
       bounds = { windowState: window_state, **options }.compact
 
-      client.command("Browser.setWindowBounds", windowId: window_id, bounds: bounds)
+      command("Browser.setWindowBounds", windowId: window_id, bounds: bounds)
     end
 
     #
@@ -340,11 +363,13 @@ module Ferrum
     #
     # @return [Hash{String => (Integer, String)}]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.window_bounds # => { "left": 0, "top": 1286, "width": 10, "height": 10, "windowState": "normal" }
     #
     def window_bounds
-      client.command("Browser.getWindowBounds", windowId: window_id).fetch("bounds")
+      command("Browser.getWindowBounds", windowId: window_id).fetch("bounds")
     end
 
     #
@@ -352,27 +377,39 @@ module Ferrum
     #
     # @return [Integer]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.window_id # => 1
     #
     def window_id
-      client.command("Browser.getWindowForTarget", targetId: target_id)["windowId"]
+      command("Browser.getWindowForTarget", targetId: target_id)["windowId"]
     end
 
     #
     # Reloads the current page.
     #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long the whole reload may take. Defaults to the page's `timeout`.
+    #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.go_to("https://github.com/")
     #   page.refresh
     #
-    def refresh
-      command("Page.reload", wait: timeout, slowmoable: true)
+    def refresh(timeout: nil)
+      deadline = Deadline.wrap(timeout || self.timeout)
+      wait_for_navigation!(NAVIGATION_WAIT, timeout: deadline) do
+        command("Page.reload", timeout: deadline, slowmoable: true)
+      end
     end
     alias reload refresh
 
     #
     # Stop all navigations and loading pending resources on the page.
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.go_to("https://github.com/")
@@ -385,17 +422,27 @@ module Ferrum
     #
     # Navigates to the previous URL in the history.
     #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long the history lookup and the page load may take together, the page timeout by default.
+    #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.go_to("https://github.com/")
     #   page.at_xpath("//a").click
     #   page.back
     #
-    def back
-      history_navigate(delta: -1)
+    def back(timeout: nil)
+      history_navigate(delta: -1, timeout: timeout)
     end
 
     #
     # Navigates to the next URL in the history.
+    #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long the history lookup and the page load may take together, the page timeout by default.
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.go_to("https://github.com/")
@@ -403,47 +450,52 @@ module Ferrum
     #   page.back
     #   page.forward
     #
-    def forward
-      history_navigate(delta: 1)
+    def forward(timeout: nil)
+      history_navigate(delta: 1, timeout: timeout)
     end
 
     #
     # Blocks until the page reloads or the timeout is reached.
     #
-    # @param [Numeric] timeout
+    # @param [Numeric, Deadline] timeout
     #   Maximum time in seconds to wait for a reload event.
     #
     # @example
     #   page.wait_for_reload
     #
     def wait_for_reload(timeout = 1)
-      @event.reset if @event.set?
-      @event.wait(timeout)
-      @event.set
+      deadline = Deadline.wrap(timeout)
+      generation = @idle.clear if @idle.set?
+      @idle.wait(deadline)
+      @idle.set(true) if generation == @idle.generation
     end
 
     #
     # Runs the block and, if it starts a navigation of the main frame within
-    # `wait` seconds, waits for that navigation to finish, e.g. after a click
-    # on a link made from JavaScript.
+    # `navigation_wait` seconds, waits for that navigation to finish, e.g. after
+    # a click on a link made from JavaScript.
     #
-    # @param [Numeric] wait
+    # @param [Numeric] navigation_wait
     #   How many seconds to watch for a navigation after the block returns.
+    #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long the block and the navigation it starts may take together.
+    #   Defaults to the page's `timeout`.
     #
     # @yield The code that may start a navigation.
     #
     # @return [Boolean]
-    #   `false` when a navigation started but didn't finish within the page's
-    #   `timeout`.
+    #   `false` when a navigation started but didn't finish in time.
     #
     # @example
     #   page.wait_for_navigation { page.at_css("a").evaluate("this.click()") } # => true
     #
-    def wait_for_navigation(wait = Mouse::CLICK_WAIT)
-      iteration = @event.reset
+    def wait_for_navigation(navigation_wait = NAVIGATION_WAIT, timeout: nil)
+      deadline = Deadline.wrap(timeout || self.timeout)
+      generation = @idle.clear
       yield
-      @event.wait(wait)
-      iteration == @event.iteration || @event.wait(timeout)
+      @idle.wait([navigation_wait, deadline.remaining].min)
+      generation == @idle.generation || @idle.wait(deadline)
     end
 
     #
@@ -462,6 +514,8 @@ module Ferrum
     # @param [Boolean] enabled
     #
     # @return [Boolean]
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.bypass_csp # => true
@@ -490,6 +544,8 @@ module Ferrum
     # @return [String]
     #   The script identifier, for {#remove_script_on_new_document}.
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.evaluate_on_new_document <<~JS
     #     Object.defineProperty(navigator, "languages", {
@@ -509,6 +565,8 @@ module Ferrum
     #
     # @return [true]
     #
+    # @raise [TimeoutError]
+    #
     def remove_script_on_new_document(identifier)
       command("Page.removeScriptToEvaluateOnNewDocument", identifier: identifier)
       true
@@ -520,6 +578,8 @@ module Ferrum
     #
     # @return [Boolean]
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   page.activate # => true
     #
@@ -529,38 +589,36 @@ module Ferrum
     end
 
     #
-    # Sends a CDP command to the browser and optionally waits for network
-    # activity on the main frame to settle before returning.
+    # Sends a CDP command to the browser. To wait for a navigation it starts,
+    # wrap it in {#wait_for_navigation}.
     #
     # @param [String] method
     #   The CDP method name, e.g. `"Page.navigate"`.
-    #
-    # @param [Numeric] wait
-    #   How many seconds to wait for a network event on the main frame after
-    #   the command is sent. `0` disables waiting.
     #
     # @param [Boolean] slowmoable
     #   Whether to sleep for `Browser::Options#slowmo` seconds before sending
     #   the command.
     #
-    # @param [Numeric, nil] timeout
+    # @param [Numeric, Deadline, nil] timeout
     #   Overrides the timeout this command's response is bound by. Defaults
     #   to the page's `timeout`. Callers with their own budget (e.g. `#pdf`/
     #   `#screenshot`) pass it explicitly.
     #
     # @return [Hash{String => Object}]
     #
-    # @example
-    #   page.command("Page.navigate", url: "https://github.com/")
+    # @raise [TimeoutError]
     #
-    def command(method, wait: 0, slowmoable: false, timeout: nil, **params)
-      sleep(@options.slowmo) if slowmoable && @options.slowmo.positive?
-      timeout ||= self.timeout
-      return client.command(method, timeout:, **params) unless wait.positive?
+    # @raise [ArgumentError]
+    #   When given the removed `wait:` or `async:`, which would otherwise be sent to the browser as parameters.
+    #
+    # @example
+    #   page.command("Runtime.evaluate", expression: "1 + 1")
+    #
+    def command(method, slowmoable: false, timeout: nil, **params)
+      raise ArgumentError, "wait: is removed, wrap #{method} in wait_for_navigation instead" if params.key?(:wait)
 
-      result = nil
-      wait_for_navigation!(wait) { result = client.command(method, timeout:, **params) }
-      result
+      sleep(@options.slowmo) if slowmoable && @options.slowmo.positive?
+      client.command(method, timeout: Deadline.wrap(timeout || self.timeout), **params)
     end
 
     # Subscribes to a CDP event, or to `:dialog`, `:request`, `:response`,
@@ -613,9 +671,11 @@ module Ferrum
     # @return [Integer, Boolean]
     #   The root node id, or `true` when sent asynchronously.
     #
+    # @raise [TimeoutError]
+    #
     def document_node_id(async: false)
       result = if async
-                 client.command("DOM.getDocument", async: true, depth: 0)
+                 client.notify("DOM.getDocument", depth: 0)
                else
                  command("DOM.getDocument", depth: 0).dig("root", "nodeId")
                end
@@ -686,18 +746,18 @@ module Ferrum
       document_node_id
     end
 
-    def history_navigate(delta:)
-      history = command("Page.getNavigationHistory")
+    def history_navigate(delta:, timeout: nil)
+      deadline = Deadline.wrap(timeout || self.timeout)
+      history = command("Page.getNavigationHistory", timeout: deadline)
       index, entries = history.values_at("currentIndex", "entries")
       entry = entries[index + delta]
 
       return unless entry
 
       # Potential wait because of network event
-      command("Page.navigateToHistoryEntry",
-              wait: Mouse::CLICK_WAIT,
-              slowmoable: true,
-              entryId: entry["id"])
+      wait_for_navigation!(NAVIGATION_WAIT, timeout: deadline) do
+        command("Page.navigateToHistoryEntry", timeout: deadline, slowmoable: true, entryId: entry["id"])
+      end
     end
 
     def combine_url!(url_or_path)

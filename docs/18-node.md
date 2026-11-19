@@ -111,10 +111,11 @@ Removes focus from the node.
 page.at_css("input[name='q']").focus.blur
 ```
 
-#### type(\*keys) : `Node`
+#### type(\*keys, timeout: nil) : `Node`
 
 Types the keys with the page's keyboard, into whatever is focused, so it's usually chained after `focus` or `click`. See
-[keyboard](https://github.com/rubycdp/ferrum#keyboard) for what a key can be.
+[keyboard](https://github.com/rubycdp/ferrum#keyboard) for what a key can be. `timeout` bounds typing all the keys together,
+the page timeout by default.
 
 ```ruby
 page.at_css("input[name='q']").focus.type("Ruby", :Enter)
@@ -135,12 +136,15 @@ moving.
     * :position `Symbol` `:top` | `:center`, what the offset is measured from, the top-left corner of the node or its
       center, `:top` by default
   * :delay `Float` delay between mouse down and mouse up, `0` by default
-  * :wait `Numeric` seconds to watch for a navigation started by a left click, then wait for it to load,
-    `Mouse::CLICK_WAIT` by default. Ignored for `:right` and `:double`. `0` returns right after the click.
+  * :navigation_wait `Numeric` seconds to watch for a navigation started by a left click, then wait for it to load,
+    `Page::NAVIGATION_WAIT` by default. Ignored for `:right` and `:double`. `0` returns right after the click.
+  * :timeout `Numeric` how long finding the node's position, the click and the page load it starts may take together,
+    the page timeout by default
 
 ```ruby
 page.at_css("a").click
-page.at_css("a").click(wait: 0)
+page.at_css("a").click(navigation_wait: 0)
+page.at_css("a").click(timeout: 30)
 page.at_css("a").click(mode: :right)
 page.at_css("a").click(keys: [:ctrl, :shift])
 page.at_css("canvas").click(offset: { x: 10, y: 20 })

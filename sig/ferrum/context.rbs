@@ -3,14 +3,14 @@ module Ferrum
     POSITION: ::Array[:first | :last]
 
     attr_reader id: String
-    attr_reader targets: ::Concurrent::Hash[String, Target]
+
+    def targets: () -> Hash[String, Target]
 
     @id: String
     @implicit: bool
     @client: Client
     @contexts: Contexts
-    @targets: ::Concurrent::Hash[String, Target]
-    @pendings: ::Concurrent::Map[String, ::Concurrent::IVar]
+    @targets: Concurrency::AwaitableMap[String, Target]
     @default_target: Target?
     @cookies: Cookies
 
@@ -49,6 +49,8 @@ module Ferrum
     def close_targets_connection: () -> void
 
     def dispose: () -> bool?
+
+    def target: (String target_id) -> Target?
 
     def target?: (String target_id) -> bool
 

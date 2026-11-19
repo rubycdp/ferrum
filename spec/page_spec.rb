@@ -57,6 +57,30 @@ describe Ferrum::Page do
         end
       end
 
+      it "bounds the navigation by the given timeout instead of the page timeout" do
+        started = Ferrum::Utils::ElapsedTime.monotonic_time
+
+        expect { page.go_to("/really_slow", timeout: 0.5, on_timeout: :raise) }
+          .to raise_error(Ferrum::NavigationTimeoutError)
+        expect(Ferrum::Utils::ElapsedTime.elapsed_time(started)).to be < 2
+      end
+
+      it "is bound by the surrounding Deadline.within block" do
+        started = Ferrum::Utils::ElapsedTime.monotonic_time
+
+        Ferrum::Deadline.within(0.5) do
+          expect { page.go_to("/really_slow", on_timeout: :raise) }.to raise_error(Ferrum::NavigationTimeoutError)
+        end
+        expect(Ferrum::Utils::ElapsedTime.elapsed_time(started)).to be < 2
+      end
+
+      it "raises once the surrounding Deadline.within block runs out" do
+        Ferrum::Deadline.within(0.5) do
+          expect { page.go_to("/really_slow") }.to raise_error(Ferrum::NavigationTimeoutError)
+          expect { page.go_to("/") }.to raise_error(Ferrum::NavigationTimeoutError)
+        end
+      end
+
       it "rejects an unknown on_timeout" do
         expect { browser.go_to("/", on_timeout: :wait) }
           .to raise_error(ArgumentError, "on_timeout should be one of [:ignore, :raise], got :wait")
@@ -160,6 +184,12 @@ describe Ferrum::Page do
       expect(page.evaluate("window.marker")).to be_nil
       expect(page.body).to include("slow page")
     end
+
+    it "raises when the given timeout is already used up" do
+      page.go_to("/slow")
+
+      expect { page.refresh(timeout: 0) }.to raise_error(Ferrum::TimeoutError)
+    end
   end
 
   describe "#stop" do
@@ -220,6 +250,35 @@ describe Ferrum::Page do
   end
 
   describe "#back" do
+    it "raises when the history query and the navigation take longer than the timeout together" do
+      page.go_to("/simple")
+      page.go_to("/with_js")
+
+      with_timeout(0.5) do
+        slow_commands(0.3)
+        expect { page.back }.to raise_error(Ferrum::TimeoutError)
+      end
+    end
+
+    it "bounds the history query and the navigation by the given timeout" do
+      page.go_to("/simple")
+      page.go_to("/with_js")
+
+      slow_commands(0.3)
+
+      expect { page.back(timeout: 0.5) }.to raise_error(Ferrum::TimeoutError)
+    end
+
+    it "lets the given timeout exceed the page timeout" do
+      page.go_to("/simple")
+      page.go_to("/with_js")
+
+      with_timeout(0.5) do
+        slow_commands(0.3)
+        expect { page.back(timeout: 5) }.not_to raise_error
+      end
+    end
+
     it "goes back when history state has been pushed" do
       page.go_to
 
@@ -232,6 +291,16 @@ describe Ferrum::Page do
   end
 
   describe "#forward" do
+    it "bounds the history query and the navigation by the given timeout" do
+      page.go_to("/simple")
+      page.go_to("/with_js")
+      page.back
+
+      slow_commands(0.3)
+
+      expect { page.forward(timeout: 0.5) }.to raise_error(Ferrum::TimeoutError)
+    end
+
     it "goes forward when history state is used" do
       page.go_to
 
@@ -281,6 +350,10 @@ describe Ferrum::Page do
       page.timeout = 1
 
       expect(page.wait_for_navigation { page.execute("location.href = '/really_slow'") }).to be(false)
+    end
+
+    it "returns false when the navigation doesn't finish within the given timeout" do
+      expect(page.wait_for_navigation(timeout: 0.5) { page.execute("location.href = '/really_slow'") }).to be(false)
     end
   end
 
@@ -375,19 +448,14 @@ describe Ferrum::Page do
       expect(result.dig("result", "value")).to eq(2)
     end
 
-    it "waits for the navigation the command starts with wait:" do
-      page.go_to
-      loaded = false
-      page.on("Page.loadEventFired") { loaded = true }
-
-      page.command("Page.navigate", wait: 1, url: base_url("/slow"))
-
-      expect(loaded).to be(true)
-    end
-
     it "raises when the response doesn't come within timeout:" do
       expect { page.command("Runtime.evaluate", timeout: 0.5, expression: "new Promise(() => {})", awaitPromise: true) }
         .to raise_error(Ferrum::TimeoutError)
+    end
+
+    it "rejects the removed wait: instead of sending it to the browser" do
+      expect { page.command("Page.navigate", wait: 1, url: base_url("/")) }
+        .to raise_error(ArgumentError, "wait: is removed, wrap Page.navigate in wait_for_navigation instead")
     end
   end
 

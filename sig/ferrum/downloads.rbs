@@ -3,14 +3,14 @@ module Ferrum
     VALID_BEHAVIOR: ::Array[:deny | :allow | :allowAndName | :default]
 
     @page: Page
-    @event: Utils::Event
+    @idle: Concurrency::Cell
     @files: ::Hash[String, Hash[String, untyped]]
 
     def initialize: (Page) -> void
 
     def files: () -> ::Array[Hash[String, untyped]]
 
-    def wait: (?::Integer timeout) ?{ () -> void } -> void
+    def wait: (?(::Numeric | Deadline) timeout) ?{ () -> void } -> void
 
     def set_behavior: (save_path: String, ?behavior: :deny | :allow | :allowAndName | :default) -> void
 

@@ -53,6 +53,8 @@ module Ferrum
     #
     # @raise [ArgumentError] If the key is a modifier, use {#hold} instead.
     #
+    # @raise [TimeoutError]
+    #
     def down(key)
       reject_modifier(key)
       key = normalize_keys(Array(key)).first
@@ -71,6 +73,8 @@ module Ferrum
     #
     # @raise [ArgumentError] If the key is a modifier, use {#hold} instead.
     #
+    # @raise [TimeoutError]
+    #
     def up(key)
       reject_modifier(key)
       key = normalize_keys(Array(key)).first
@@ -85,15 +89,26 @@ module Ferrum
     # @param [Array<String, Symbol, (Symbol, String)>] keys
     #   The text to type into a focused element, `[:Shift, "s"], "tring"`.
     #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long typing all the keys may take together, the page timeout by default. Raise it for a long text.
+    #
     # @return [self]
     #
-    def type(*keys)
+    # @raise [TimeoutError]
+    #
+    # @example
+    #   page.keyboard.type("Hello World")
+    #   page.keyboard.type(long_text, timeout: 30)
+    #
+    def type(*keys, timeout: nil)
       keys = normalize_keys(Array(keys))
 
-      keys.each do |key|
-        type = key[:text] ? "keyDown" : "rawKeyDown"
-        @page.command("Input.dispatchKeyEvent", type: type, **key)
-        @page.command("Input.dispatchKeyEvent", slowmoable: true, type: "keyUp", **key)
+      Deadline.within(timeout || @page.timeout) do
+        keys.each do |key|
+          type = key[:text] ? "keyDown" : "rawKeyDown"
+          @page.command("Input.dispatchKeyEvent", type: type, **key)
+          @page.command("Input.dispatchKeyEvent", slowmoable: true, type: "keyUp", **key)
+        end
       end
 
       self
@@ -111,6 +126,8 @@ module Ferrum
     # @return [Object] The block's value.
     #
     # @raise [ArgumentError] If no block is given or a key isn't a modifier.
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   page.keyboard.hold(:shift) do
@@ -174,7 +191,7 @@ module Ferrum
       while (name = pressed.pop)
         @held_modifiers &= ~MODIFIERS[name]
         begin
-          dispatch_modifier("keyUp", name)
+          Deadline.suspend { dispatch_modifier("keyUp", name) }
         rescue Error
           raise unless quietly
         end

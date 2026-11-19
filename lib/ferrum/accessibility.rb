@@ -36,6 +36,8 @@ module Ferrum
     # @param [Boolean] fetch_relatives
     # @return [Array<AXNode>]
     #
+    # @raise [TimeoutError]
+    #
     def partial_tree(node:, fetch_relatives: false)
       nodes = node.page.command("Accessibility.getPartialAXTree",
                                 nodeId: node.node_id,
@@ -50,6 +52,8 @@ module Ferrum
     # @param [String, nil] frame_id
     # @return [Array<AXNode>]
     #
+    # @raise [TimeoutError]
+    #
     def snapshot(depth: nil, frame_id: nil)
       params = { depth: depth, frameId: frame_id }.compact
       build(@page.command("Accessibility.getFullAXTree", **params)["nodes"])
@@ -62,6 +66,8 @@ module Ferrum
     # @param [String, nil] role
     # @param [Ferrum::Node, nil] node  Scope the query to this node's subtree.
     # @return [Array<AXNode>]
+    #
+    # @raise [TimeoutError]
     #
     def query(name: nil, role: nil, node: nil)
       page = node ? node.page : @page
@@ -76,6 +82,8 @@ module Ferrum
     # @param [String, nil] frame_id
     # @return [AXNode, nil]
     #
+    # @raise [TimeoutError]
+    #
     def root(frame_id: nil)
       params = { depth: 1, frameId: frame_id }.compact
       build(@page.command("Accessibility.getFullAXTree", **params)["nodes"]).first
@@ -84,6 +92,8 @@ module Ferrum
     # Enables the Accessibility domain, activating live AX tree change events.
     #
     # @return [self]
+    #
+    # @raise [TimeoutError]
     def enable
       @page.command("Accessibility.enable")
       self
@@ -92,6 +102,8 @@ module Ferrum
     # Disables the Accessibility domain.
     #
     # @return [self]
+    #
+    # @raise [TimeoutError]
     def disable
       @page.command("Accessibility.disable")
       self

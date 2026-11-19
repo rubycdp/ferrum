@@ -113,7 +113,7 @@ describe Ferrum::Contexts do
       context = browser.contexts.create
 
       expect(context).not_to be_implicit
-      expect(browser.client.command("Target.getBrowserContexts")["browserContextIds"]).to include(context.id)
+      expect(browser.command("Target.getBrowserContexts")["browserContextIds"]).to include(context.id)
     end
   end
 
@@ -124,7 +124,7 @@ describe Ferrum::Contexts do
 
       expect(browser.contexts.dispose(context.id)).to be(true)
       expect(browser.contexts[context.id]).to be_nil
-      expect(browser.client.command("Target.getBrowserContexts")["browserContextIds"]).not_to include(context.id)
+      expect(browser.command("Target.getBrowserContexts")["browserContextIds"]).not_to include(context.id)
     end
 
     it "returns nil for an unknown context" do

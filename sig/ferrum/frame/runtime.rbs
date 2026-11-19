@@ -34,17 +34,17 @@ module Ferrum
 
       def wrap: (Script script, ::Array[::String] params, ::Symbol mode) -> ::String
 
-      def script_timeout: (Numeric? timeout) -> ::Float
+      def script_deadline: ((Numeric | Deadline)? timeout) -> Deadline
 
-      def call: (::String declaration, ::Array[untyped] values, on: (Node | RemoteObject)?, mode: ::Symbol, timeout: ::Float) -> untyped
+      def call: (::String declaration, ::Array[untyped] values, on: (Node | RemoteObject)?, mode: ::Symbol, deadline: Deadline) -> untyped
 
-      def call_function: (::String declaration, ::Array[untyped] values, ::Hash[::Symbol, untyped] target, ::Hash[::Symbol, untyped] serialization, ::Float timeout) -> untyped
+      def call_function: (::String declaration, ::Array[untyped] values, ::Hash[::Symbol, untyped] target, ::Hash[::Symbol, untyped] serialization, Deadline deadline) -> untyped
 
       def thenable?: (::Hash[::String, untyped] result) -> bool
 
-      def await_promise: (::Hash[::String, untyped] promise, ::Hash[::Symbol, untyped] serialization, ::Float timeout) -> ::Hash[::String, untyped]
+      def await_promise: (::Hash[::String, untyped] promise, ::Hash[::Symbol, untyped] serialization, Deadline deadline) -> ::Hash[::String, untyped]
 
-      def call_target: ((Node | RemoteObject)? on) -> ::Hash[::Symbol, untyped]
+      def call_target: ((Node | RemoteObject)? on, Deadline deadline) -> ::Hash[::Symbol, untyped]
 
       def handle_error: (untyped response, ?::String? declaration) -> void
 

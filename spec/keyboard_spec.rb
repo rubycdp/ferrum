@@ -36,6 +36,27 @@ describe Ferrum::Keyboard do
   describe "#type" do
     before { browser.go_to("/type") }
 
+    it "raises when the commands it sends take longer than the timeout together" do
+      browser.at_css("#empty_input").focus
+
+      with_timeout(0.5) do
+        slow_commands(0.3)
+        expect { browser.keyboard.type("Hello") }.to raise_error(Ferrum::TimeoutError)
+      end
+    end
+
+    it "types a text that takes longer than the page timeout within the given timeout" do
+      input = browser.at_css("#empty_input")
+      input.focus
+
+      with_timeout(0.5) do
+        slow_commands(0.1)
+        browser.keyboard.type("Hello", timeout: 5)
+      end
+
+      expect(input.value).to eq("Hello")
+    end
+
     it "types text into the focused element" do
       input = browser.at_css("#empty_input").focus
 
@@ -86,6 +107,12 @@ describe Ferrum::Keyboard do
            mousemove:true:false mouseup:true:false keyup:false:false mousemove:false:false]
       )
       expect(browser.keyboard.held_modifiers).to eq(0)
+    end
+
+    it "releases the modifier when the block outlives the surrounding Deadline.within" do
+      Ferrum::Deadline.within(0.3) { browser.keyboard.hold(:shift) { sleep(0.5) } }
+
+      expect(browser.evaluate("events")).to eq(%w[keydown:true:false keyup:false:false])
     end
 
     it "presses nested modifiers once" do

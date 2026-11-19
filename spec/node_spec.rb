@@ -138,6 +138,35 @@ describe Ferrum::Node do
   end
 
   describe "#click" do
+    it "bounds the click by the given timeout" do
+      browser.go_to("/with_js")
+      node = browser.at_css("#remove")
+
+      slow_commands(0.3)
+
+      expect { node.click(timeout: 0.5) }.to raise_error(Ferrum::TimeoutError)
+    end
+
+    it "lets the given timeout exceed the page timeout" do
+      browser.go_to("/with_js")
+      node = browser.at_css("#remove")
+
+      with_timeout(0.5) do
+        slow_commands(0.3)
+        expect { node.click(timeout: 5) }.not_to raise_error
+      end
+    end
+
+    it "raises when the commands it sends take longer than the timeout together" do
+      browser.go_to("/with_js")
+      node = browser.at_css("#remove")
+
+      with_timeout(0.5) do
+        slow_commands(0.3)
+        expect { node.click }.to raise_error(Ferrum::TimeoutError)
+      end
+    end
+
     it "hovers an element before clicking it" do
       browser.go_to("/with_js")
 
@@ -156,14 +185,20 @@ describe Ferrum::Node do
       expect(browser.network.traffic.length).to be <= 5
     end
 
-    it "returns without waiting for the navigation to load when wait is 0" do
+    it "warns when given the deprecated wait:" do
+      browser.go_to("/link_with_ping")
+
+      expect { browser.at_css("a").click(wait: 0) }.to output(/:wait is renamed to :navigation_wait/).to_stderr
+    end
+
+    it "returns without waiting for the navigation to load when navigation_wait is 0" do
       browser.go_to("/")
       browser.execute(<<~JS)
         document.body.innerHTML = '<a id="slow" href="/really_slow">Slow</a>'
       JS
       started_at = Ferrum::Utils::ElapsedTime.monotonic_time
 
-      browser.at_css("#slow").click(wait: 0)
+      browser.at_css("#slow").click(navigation_wait: 0)
 
       expect(Ferrum::Utils::ElapsedTime.monotonic_time - started_at).to be < 1
       expect(browser.network.wait_for_idle(timeout: 5)).to be(true)
@@ -1248,6 +1283,15 @@ describe Ferrum::Node do
 
   describe "#evaluate" do
     before { browser.go_to("/index") }
+
+    it "bounds looking up the node by the given timeout" do
+      node = browser.at_xpath(".//a")
+      hang_commands
+      started = Ferrum::Utils::ElapsedTime.monotonic_time
+
+      expect { node.evaluate("this.tagName", timeout: 0.3) }.to raise_error(Ferrum::TimeoutError)
+      expect(Ferrum::Utils::ElapsedTime.elapsed_time(started)).to be < 0.8
+    end
 
     it "binds this to the node" do
       expect(browser.at_xpath(".//a").evaluate("this.getAttribute('href')")).to eq("js_redirect")

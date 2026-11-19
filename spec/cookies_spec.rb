@@ -2,6 +2,12 @@
 
 describe Ferrum::Cookies do
   describe "#each" do
+    it "raises once the surrounding Deadline.within block is used up" do
+      Ferrum::Deadline.within(0) do
+        expect { browser.cookies.each { nil } }.to raise_error(Ferrum::TimeoutError)
+      end
+    end
+
     context "when a block is given" do
       it "yields each cookie" do
         browser.go_to("/set_cookie")

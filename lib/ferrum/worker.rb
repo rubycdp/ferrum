@@ -26,7 +26,7 @@ module Ferrum
       @type = type
       @options = client.options
       @page = self
-      @execution_id = Concurrent::MVar.new
+      @execution_id = Concurrency::Cell.new
       @network = Network.new(self)
       @console = Console.new(self)
 
@@ -53,10 +53,21 @@ module Ferrum
 
     # Sends a CDP command through {#client}.
     #
-    # @return [Boolean, Hash]
-    #   `true` when sent asynchronously, otherwise the command's result.
-    def command(...)
-      client.command(...)
+    # @param [String] method
+    #   The CDP method name.
+    #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long to wait for the response, the worker's `timeout` by default.
+    #
+    # @param [Hash] params
+    #   The command's parameters.
+    #
+    # @return [Hash]
+    #   The command's result.
+    #
+    # @raise [TimeoutError]
+    def command(method, timeout: nil, **params)
+      client.command(method, timeout: timeout || self.timeout, **params)
     end
 
     # Workers have a single execution context and no navigable document, so
@@ -71,9 +82,9 @@ module Ferrum
     # @return [Boolean]
     def close
       if type == "worker"
-        client.command("Runtime.evaluate", async: true, expression: "self.close()")
+        client.notify("Runtime.evaluate", expression: "self.close()")
       else
-        client.command("Target.closeTarget", async: true, targetId: target_id)
+        client.notify("Target.closeTarget", targetId: target_id)
       end
       close_connection
 
@@ -121,18 +132,16 @@ module Ferrum
       command("Runtime.runIfWaitingForDebugger")
     end
 
-    def execution_id!
-      value = @execution_id.borrow(timeout, &:itself)
-      raise NoExecutionContextError if value.instance_of?(Object)
-
-      value
+    def execution_id!(timeout = nil)
+      @execution_id.wait(timeout || self.timeout)
+      @execution_id.value || raise(NoExecutionContextError)
     end
 
     def execution_id=(value)
       if value.nil?
-        @execution_id.try_take!
-      else
-        @execution_id.try_put!(value)
+        @execution_id.clear
+      elsif !@execution_id.set?
+        @execution_id.set(value)
       end
     end
   end

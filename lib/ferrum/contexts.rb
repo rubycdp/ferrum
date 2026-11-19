@@ -79,8 +79,10 @@ module Ferrum
     #   Keyword arguments forwarded to `Target.createBrowserContext`.
     #
     # @return [Context]
+    #
+    # @raise [TimeoutError]
     def create(**options)
-      response = @client.command("Target.createBrowserContext", **options)
+      response = @client.command("Target.createBrowserContext", timeout: @client.timeout, **options)
       context_id = response["browserContextId"]
       context = Context.new(@client, self, context_id)
       @contexts[context_id] = context
@@ -106,7 +108,7 @@ module Ferrum
 
       begin
         context.close_targets_connection
-        @client.command("Target.disposeBrowserContext", browserContextId: context.id)
+        @client.command("Target.disposeBrowserContext", timeout: @client.timeout, browserContextId: context.id)
       ensure
         @contexts.delete(context_id)
       end
@@ -130,7 +132,7 @@ module Ferrum
     # @raise [TimeoutError, BrowserError]
     def reset
       error = nil
-      context_ids = @client.command("Target.getBrowserContexts")["browserContextIds"]
+      context_ids = @client.command("Target.getBrowserContexts", timeout: @client.timeout)["browserContextIds"]
       @default_context = nil if context_ids.include?(@default_context&.id)
       (@contexts.keys & context_ids).each do |id|
         dispose(id)
@@ -218,7 +220,7 @@ module Ferrum
       return unless RECURSIVE_AUTO_ATTACH_TYPES.include?(type)
 
       client = @client.session(session_id)
-      client.command("Target.setAutoAttach", autoAttach: true, waitForDebuggerOnStart: true, flatten: true, async: true)
+      client.notify("Target.setAutoAttach", autoAttach: true, waitForDebuggerOnStart: true, flatten: true)
       subscribe_attached_target(client)
     end
 
@@ -240,9 +242,9 @@ module Ferrum
     def add_extensions_and_resume(session_id, waiting)
       extensions = @client.options.extensions
       session = @client.session(session_id)
-      session.command("Page.enable", async: true) if extensions.any?
+      session.notify("Page.enable") if extensions.any?
       extensions.each do |source|
-        session.command("Page.addScriptToEvaluateOnNewDocument", async: true, source: source)
+        session.notify("Page.addScriptToEvaluateOnNewDocument", source: source)
       end
       resume(session_id) if waiting
     end
@@ -275,29 +277,30 @@ module Ferrum
     end
 
     def resume(session_id)
-      @client.session(session_id).command("Runtime.runIfWaitingForDebugger", async: true)
+      @client.session(session_id).notify("Runtime.runIfWaitingForDebugger")
     end
 
     def forget_session(target_id, session_id)
-      target = find_by(target_id: target_id)&.targets&.[](target_id)
+      target = find_by(target_id: target_id)&.target(target_id)
       target.session_id = nil if target&.session_id == session_id
     end
 
     def silent_detach(session_id, parent)
       Utils::Thread.spawn do
-        @client.session(session_id).command("Runtime.runIfWaitingForDebugger")
-        parent.command("Target.detachFromTarget", sessionId: session_id)
+        @client.session(session_id).command("Runtime.runIfWaitingForDebugger", timeout: Client::PROTOCOL_TIMEOUT)
+        parent.command("Target.detachFromTarget", timeout: Client::PROTOCOL_TIMEOUT, sessionId: session_id)
       rescue Error
         nil
       end
     end
 
     def discover
-      @client.command("Target.setDiscoverTargets", discover: true)
+      @client.command("Target.setDiscoverTargets", timeout: Client::PROTOCOL_TIMEOUT, discover: true)
     end
 
     def auto_attach
-      @client.command("Target.setAutoAttach", autoAttach: true, waitForDebuggerOnStart: true, flatten: true)
+      @client.command("Target.setAutoAttach", timeout: Client::PROTOCOL_TIMEOUT, autoAttach: true,
+                                              waitForDebuggerOnStart: true, flatten: true)
     end
 
     def add_context(context_id)
@@ -320,8 +323,8 @@ module Ferrum
     #
     # @return [Context, nil]
     def find_implicit_context
-      created_ids = @client.command("Target.getBrowserContexts")["browserContextIds"]
-      target_infos = @client.command("Target.getTargets")["targetInfos"]
+      created_ids = @client.command("Target.getBrowserContexts", timeout: Client::PROTOCOL_TIMEOUT)["browserContextIds"]
+      target_infos = @client.command("Target.getTargets", timeout: Client::PROTOCOL_TIMEOUT)["targetInfos"]
       implicit_id = (target_infos.filter_map { |t| t["browserContextId"] } - created_ids).first
       return unless implicit_id
 

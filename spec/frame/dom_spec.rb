@@ -372,6 +372,15 @@ describe Ferrum::Frame::DOM do
   end
 
   describe "#wait_for_selector" do
+    it "returns nil at the timeout when a poll hangs" do
+      page.go_to("/with_js")
+      hang_commands
+      started = Ferrum::Utils::ElapsedTime.monotonic_time
+
+      expect(page.wait_for_selector(css: "#nope", timeout: 0.3)).to be_nil
+      expect(Ferrum::Utils::ElapsedTime.elapsed_time(started)).to be < 0.8
+    end
+
     it "returns the node immediately when it's already present" do
       page.go_to("/with_js")
 

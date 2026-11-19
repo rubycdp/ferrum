@@ -47,9 +47,8 @@ module Ferrum
 
     attr_reader :client, :process, :contexts, :options
 
-    delegate %i[timeout timeout= protocol_timeout protocol_timeout=
-                base_url base_url= default_user_agent default_user_agent= extensions add_extension] => :options
-    delegate %i[command] => :client
+    delegate %i[timeout timeout= protocol_timeout protocol_timeout= base_url base_url= default_user_agent
+                default_user_agent= extensions add_extension] => :options
 
     #
     # Initializes the browser.
@@ -89,13 +88,11 @@ module Ferrum
     #   changes.
     #
     # @option options [Numeric] :timeout (5)
-    #   The number of seconds we'll wait for a response when communicating
-    #   with the browser: navigations, JS evaluation, DOM queries, dispatching input, etc.
-    #
-    # @option options [Numeric] :protocol_timeout (5)
-    #   The number of seconds we'll wait for an individual internal CDP
-    #   bookkeeping call to respond, e.g. `Target.createTarget`,
-    #   `Target.attachToTarget`. These normally resolve in milliseconds.
+    #   How long a call waits for the browser, in seconds: navigations, JS evaluation, DOM queries, dispatching
+    #   input, etc. `go_to`, `refresh` and `wait_for_navigation` wait for the page to load within it. A call that
+    #   only sends commands waits for the browser's answer. A call that runs out raises {TimeoutError}.
+    #   `FERRUM_DEFAULT_TIMEOUT` sets the default. Pass `timeout:` to `go_to`, `refresh` or `wait_for_navigation` to
+    #   change it for one call, or wrap calls in {Deadline.within} to bound them together.
     #
     # @option options [Boolean] :js_errors
     #   Deprecated, will be removed in Ferrum 0.22. When true, JavaScript
@@ -168,6 +165,8 @@ module Ferrum
     # @return [Ferrum::Page]
     #   Created page.
     #
+    # @raise [TimeoutError]
+    #
     def create_page(new_context: false, proxy: nil)
       page = if new_context || proxy
                params = {}
@@ -194,6 +193,8 @@ module Ferrum
 
     #
     # Closes browser tabs opened by the `Browser` instance.
+    #
+    # @raise [TimeoutError]
     #
     # @example
     #   # connect to a long-running Chrome process
@@ -257,9 +258,32 @@ module Ferrum
     end
 
     #
+    # Sends a CDP command to the browser.
+    #
+    # @param [String] method
+    #   The CDP method name, e.g. `"Browser.getVersion"`.
+    #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long to wait for the response, the browser's `timeout` by default.
+    #
+    # @param [Hash] params
+    #   The command's parameters.
+    #
+    # @return [Hash]
+    #   The command's result.
+    #
+    # @raise [TimeoutError]
+    #
+    def command(method, timeout: nil, **params)
+      client.command(method, timeout: timeout || self.timeout, **params)
+    end
+
+    #
     # Gets the version information from the browser.
     #
     # @return [VersionInfo]
+    #
+    # @raise [TimeoutError]
     #
     # @since 0.13
     #

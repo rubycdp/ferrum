@@ -8,7 +8,6 @@ module Ferrum
   # can be composed while reporting consistent state to Chrome.
   #
   class Mouse
-    CLICK_WAIT = ENV.fetch("FERRUM_CLICK_WAIT", 0.1).to_f
     BUTTON_MASKS = {
       "none" => 0,
       "left" => 1,
@@ -34,6 +33,8 @@ module Ferrum
     # @param [Integer] y
     #   The vertical pixel value that you want to scroll by.
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   browser.go_to("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
     #   browser.mouse.scroll_by(0, 400)
@@ -54,6 +55,8 @@ module Ferrum
     #   The pixel along the vertical axis of the document that you want
     #   displayed in the upper left.
     #
+    # @raise [TimeoutError]
+    #
     # @example
     #   browser.go_to("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
     #   browser.mouse.scroll_to(0, 400)
@@ -72,9 +75,15 @@ module Ferrum
     # @param [Float] delay
     #   Delay between mouse down and mouse up events.
     #
-    # @param [Numeric] wait
+    # @param [Numeric] navigation_wait
     #   Seconds to watch for a navigation started by the click, then wait for it
     #   to load. `0` returns as soon as the click is dispatched.
+    #
+    # @param [Numeric, nil] wait
+    #   Deprecated, renamed to `navigation_wait`.
+    #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long the click and the page load it starts may take together, the page timeout by default.
     #
     # @param [Hash{Symbol => Object}] options
     #   Additional keyword arguments.
@@ -90,13 +99,19 @@ module Ferrum
     #
     # @return [self]
     #
-    def click(x:, y:, delay: 0, wait: CLICK_WAIT, **options)
-      move(x: x, y: y, modifiers: options[:modifiers])
-      down(**options)
-      sleep(delay)
-      # Potential wait because if some network event is triggered then we have
-      # to wait until it's over and frame is loaded or failed to load.
-      up(wait: wait, **options)
+    # @raise [TimeoutError]
+    #
+    def click(x:, y:, delay: 0, navigation_wait: Page::NAVIGATION_WAIT, wait: nil, timeout: nil, **options) # rubocop:disable Metrics/ParameterLists
+      navigation_wait = Utils::Deprecate.renamed_keyword(:wait, :navigation_wait, wait, navigation_wait)
+      deadline = Deadline.wrap(timeout || @page.timeout)
+      Deadline.within(deadline) do
+        move(x: x, y: y, modifiers: options[:modifiers])
+        down(**options)
+        sleep(delay)
+        # Potential wait because if some network event is triggered then we have
+        # to wait until it's over and frame is loaded or failed to load.
+        up(navigation_wait: navigation_wait, timeout: deadline, **options)
+      end
       self
     end
 
@@ -117,6 +132,8 @@ module Ferrum
     #
     # @return [self]
     #
+    # @raise [TimeoutError]
+    #
     def down(**options)
       tap { mouse_event(type: "mousePressed", **options) }
     end
@@ -136,7 +153,18 @@ module Ferrum
     #   Bitfield for key modifiers. See `keyboard.modifiers`.
     #   If omitted, uses the keys held by `keyboard.hold`, or none outside of it.
     #
+    # @option options [Numeric] :navigation_wait (0)
+    #   Seconds to watch for a navigation started by releasing the button, then wait for it to load.
+    #
+    # @option options [Numeric] :wait
+    #   Deprecated, renamed to `:navigation_wait`.
+    #
+    # @option options [Numeric, Deadline] :timeout
+    #   How long the event and the page load it starts may take together, the page timeout by default.
+    #
     # @return [self]
+    #
+    # @raise [TimeoutError]
     #
     def up(**options)
       tap { mouse_event(type: "mouseReleased", **options) }
@@ -156,27 +184,34 @@ module Ferrum
     #   Bitfield for key modifiers. See `keyboard.modifiers`.
     #   If omitted, uses the keys held by `keyboard.hold`, or none outside of it.
     #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long all the steps may take together, the page timeout by default.
+    #
     # @return [self]
     #
-    def move(x:, y:, steps: 1, modifiers: nil)
+    # @raise [TimeoutError]
+    #
+    def move(x:, y:, steps: 1, modifiers: nil, timeout: nil)
       from_x = @x
       from_y = @y
       @x = x
       @y = y
       button = pressed_button
 
-      steps.times do |i|
-        new_x = from_x + ((@x - from_x) * ((i + 1) / steps.to_f))
-        new_y = from_y + ((@y - from_y) * ((i + 1) / steps.to_f))
+      Deadline.within(timeout || @page.timeout) do
+        steps.times do |i|
+          new_x = from_x + ((@x - from_x) * ((i + 1) / steps.to_f))
+          new_y = from_y + ((@y - from_y) * ((i + 1) / steps.to_f))
 
-        @page.command("Input.dispatchMouseEvent",
-                      slowmoable: true,
-                      type: "mouseMoved",
-                      x: new_x,
-                      y: new_y,
-                      button: button,
-                      buttons: @buttons,
-                      modifiers: modifiers || @page.keyboard.held_modifiers)
+          @page.command("Input.dispatchMouseEvent",
+                        slowmoable: true,
+                        type: "mouseMoved",
+                        x: new_x,
+                        y: new_y,
+                        button: button,
+                        buttons: @buttons,
+                        modifiers: modifiers || @page.keyboard.held_modifiers)
+        end
       end
 
       self
@@ -184,12 +219,21 @@ module Ferrum
 
     private
 
-    def mouse_event(type:, button: :left, count: 1, modifiers: nil, wait: 0)
+    def mouse_event(type:, button: :left, count: 1, modifiers: nil, navigation_wait: 0, wait: nil, # rubocop:disable Metrics/ParameterLists
+                    timeout: nil)
+      navigation_wait = Utils::Deprecate.renamed_keyword(:wait, :navigation_wait, wait, navigation_wait)
       button = validate_button(button)
       register_event_button(type, button)
       options = { x: @x, y: @y, type: type, button: button, buttons: @buttons, clickCount: count,
                   modifiers: modifiers || @page.keyboard.held_modifiers }
-      @page.command("Input.dispatchMouseEvent", wait: wait, slowmoable: true, **options)
+      return @page.command("Input.dispatchMouseEvent", slowmoable: true, **options) unless navigation_wait.positive?
+
+      deadline = Deadline.wrap(timeout || @page.timeout)
+      result = nil
+      @page.wait_for_navigation!(navigation_wait, timeout: deadline) do
+        result = @page.command("Input.dispatchMouseEvent", slowmoable: true, timeout: deadline, **options)
+      end
+      result
     end
 
     def validate_button(button)

@@ -139,7 +139,7 @@ describe Ferrum::Context do
       target = wait_for_target(&:service_worker?)
 
       wait_for do
-        browser.client.command("Target.getTargets")["targetInfos"]
+        browser.command("Target.getTargets")["targetInfos"]
                .select { |info| info["type"] == "service_worker" }.map { |info| info["attached"] }
       end.to eq([false])
       expect(target.session_id).to be_nil
@@ -248,8 +248,8 @@ describe Ferrum::Context do
 
       expect(context.dispose).to be(true)
       expect(browser.contexts[context.id]).to be_nil
-      expect(browser.client.command("Target.getBrowserContexts")["browserContextIds"]).not_to include(context.id)
-      target_ids = browser.client.command("Target.getTargets")["targetInfos"].map { |info| info["targetId"] }
+      expect(browser.command("Target.getBrowserContexts")["browserContextIds"]).not_to include(context.id)
+      target_ids = browser.command("Target.getTargets")["targetInfos"].map { |info| info["targetId"] }
       expect(target_ids).not_to include(page.target_id)
     end
 
@@ -263,6 +263,21 @@ describe Ferrum::Context do
       ensure
         remote&.quit
       end
+    end
+  end
+
+  describe "#target" do
+    it "returns the target with the given id" do
+      context = browser.contexts.create
+      page = context.create_page
+
+      expect(context.target(page.target_id).page).to be(page)
+    end
+
+    it "returns nil for a target of another context" do
+      context = browser.contexts.create
+
+      expect(context.target(browser.contexts.create.create_page.target_id)).to be_nil
     end
   end
 

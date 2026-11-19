@@ -13,7 +13,7 @@ module Ferrum
 
     def initialize(page)
       @page = page
-      @event = Utils::Event.new.tap(&:set)
+      @idle = Concurrency::Cell.set(true)
       @files = {}
     end
 
@@ -29,7 +29,7 @@ module Ferrum
     #
     # Waits until the current download finishes.
     #
-    # @param [Integer] timeout
+    # @param [Numeric, Deadline] timeout
     #   How long to wait in seconds.
     #
     # @yield
@@ -38,10 +38,11 @@ module Ferrum
     # @return [void]
     #
     def wait(timeout = 5)
-      @event.reset
+      deadline = Deadline.wrap(timeout)
+      generation = @idle.clear
       yield if block_given?
-      @event.wait(timeout)
-      @event.set
+      @idle.wait(deadline)
+      @idle.set(true) if generation == @idle.generation
     end
 
     #
@@ -57,6 +58,8 @@ module Ferrum
     #
     # @raise [ArgumentError]
     # @raise [Ferrum::Error]
+    #
+    # @raise [TimeoutError]
     #
     def set_behavior(save_path:, behavior: :allow)
       raise ArgumentError unless VALID_BEHAVIOR.include?(behavior.to_sym)
@@ -87,7 +90,7 @@ module Ferrum
     #
     def subscribe_download_will_begin
       @page.on("Browser.downloadWillBegin") do |params|
-        @event.reset
+        @idle.clear
         @files[params["guid"]] = params
       end
     end
@@ -103,9 +106,9 @@ module Ferrum
 
         case params["state"]
         when "completed", "canceled"
-          @event.set
+          @idle.set(true)
         else
-          @event.reset
+          @idle.clear
         end
       end
     end

@@ -61,7 +61,7 @@ module Ferrum
 
     def maybe_sleep_if_new_window: () -> void
 
-    def command: (*untyped) -> (bool | Hash[String, untyped])
+    def command: (String method, ?timeout: (::Numeric | Deadline)?, **untyped params) -> Hash[String, untyped]
 
     private
 

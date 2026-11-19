@@ -13,15 +13,14 @@ module Ferrum
   class Context
     POSITION = %i[first last].freeze
 
-    attr_reader :id, :targets
+    attr_reader :id
 
     def initialize(client, contexts, id, implicit: false)
       @id = id
       @implicit = implicit
       @client = client
       @contexts = contexts
-      @targets = Concurrent::Hash.new
-      @pendings = Concurrent::Map.new
+      @targets = Concurrency::AwaitableMap.new
     end
 
     # Whether this is the browser's implicit context, the one it puts its
@@ -52,13 +51,24 @@ module Ferrum
     # Connects to and returns the {#default_target}'s page.
     #
     # @return [Page]
+    #
+    # @raise [TimeoutError]
     def page
       default_target.page
+    end
+
+    # The targets in this context by id, as they are at the time of the call.
+    #
+    # @return [Hash{String => Target}]
+    def targets
+      @targets.to_h
     end
 
     # All page targets in this context, connected to as {Page}s.
     #
     # @return [Array<Page>]
+    #
+    # @raise [TimeoutError]
     def pages
       @targets.values.select(&:page?).map(&:page)
     end
@@ -67,6 +77,8 @@ module Ferrum
     # leaving out the ones we have no session with, e.g. detached ones.
     #
     # @return [Array<Worker>]
+    #
+    # @raise [TimeoutError]
     def workers
       @targets.values.select { |t| (t.worker? || t.shared_worker?) && t.session_id }.map(&:worker)
     end
@@ -99,6 +111,8 @@ module Ferrum
     # @param [Hash] options
     #
     # @return [Page]
+    #
+    # @raise [TimeoutError]
     def create_page(**options)
       target = create_target
       target.page = target.build_page(**options)
@@ -110,17 +124,13 @@ module Ferrum
     # @return [Target]
     #
     # @raise [NoSuchTargetError]
+    #
+    # @raise [TimeoutError]
     def create_target
       options = { browserContextId: @id } unless implicit?
-      target_id = @client.command("Target.createTarget", url: "about:blank", **Hash(options))["targetId"]
-
-      new_pending = Concurrent::IVar.new
-      pending = @pendings.put_if_absent(target_id, new_pending) || new_pending
-      resolved = pending.value(@client.protocol_timeout)
-      raise NoSuchTargetError unless resolved
-
-      @pendings.delete(target_id)
-      @targets[target_id]
+      deadline = Deadline.wrap(@client.timeout)
+      response = @client.command("Target.createTarget", timeout: deadline, url: "about:blank", **Hash(options))
+      @targets.await(response["targetId"], deadline) || raise(NoSuchTargetError)
     end
 
     # Registers a target discovered via a CDP `Target.*` event, or updates
@@ -138,15 +148,11 @@ module Ferrum
     # @return [Target]
     def add_target(params:, session_id: nil, attached: false)
       new_target = Target.new(@client, session_id, params, implicit: implicit?)
-      target = @targets[new_target.id] ||= new_target
+      target = @targets[new_target.id] || new_target
       # on first iteration session_id may be nil, then if session is present here we must set it to the target
       target.session_id = session_id if session_id && (attached || target.session_id.nil?)
       @default_target ||= target
-
-      new_pending = Concurrent::IVar.new
-      pending = @pendings.put_if_absent(target.id, new_pending) || new_pending
-      pending.try_set(true)
-      target
+      @targets[target.id] = target
     end
 
     # Updates a known target's params, e.g. on `Target.targetInfoChanged`.
@@ -182,13 +188,16 @@ module Ferrum
     # @return [Target]
     #
     # @raise [NoSuchTargetError] if the context has no such target.
+    #
+    # @raise [TimeoutError]
     def attach_target(target_id)
       target = @targets[target_id]
       raise NoSuchTargetError unless target
       return target if target.session_id
 
       @contexts.manually_attached(target_id)
-      session = @client.command("Target.attachToTarget", targetId: target_id, flatten: true)
+      session = @client.command("Target.attachToTarget", timeout: Client::PROTOCOL_TIMEOUT,
+                                                         targetId: target_id, flatten: true)
       target.session_id = session["sessionId"]
       target
     end
@@ -215,8 +224,20 @@ module Ferrum
     # implicit context cannot be disposed, see {#implicit?}.
     #
     # @return [Boolean, nil]
+    #
+    # @raise [TimeoutError]
     def dispose
       @contexts.dispose(@id)
+    end
+
+    # The target with the given id.
+    #
+    # @param [String] target_id
+    #
+    # @return [Target, nil]
+    #   `nil` when the context has no such target.
+    def target(target_id)
+      @targets[target_id]
     end
 
     # Whether a target with the given id is known in this context.
@@ -225,7 +246,7 @@ module Ferrum
     #
     # @return [Boolean]
     def target?(target_id)
-      !!@targets[target_id]
+      !!target(target_id)
     end
 
     # Debug representation of the context, including its known targets.

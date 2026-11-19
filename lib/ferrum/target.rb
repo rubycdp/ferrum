@@ -48,6 +48,8 @@ module Ferrum
     # Connects to and returns this target's {Page}.
     #
     # @return [Page]
+    #
+    # @raise [TimeoutError]
     def page
       @page ||= build_page
     end
@@ -58,6 +60,8 @@ module Ferrum
     #
     # @raise [NoSuchTargetError] if there's no session with the target, e.g. a service worker
     #   not attached to with {Context#attach_target}.
+    #
+    # @raise [TimeoutError]
     def worker
       @worker ||= build_worker
     end
@@ -209,10 +213,21 @@ module Ferrum
 
     # Sends a CDP command through {#client}.
     #
-    # @return [Boolean, Hash]
-    #   `true` when sent asynchronously, otherwise the command's result.
-    def command(...)
-      client.command(...)
+    # @param [String] method
+    #   The CDP method name.
+    #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long to wait for the response, the browser's `timeout` by default.
+    #
+    # @param [Hash] params
+    #   The command's parameters.
+    #
+    # @return [Hash]
+    #   The command's result.
+    #
+    # @raise [TimeoutError]
+    def command(method, timeout: nil, **params)
+      client.command(method, timeout: timeout || client.timeout, **params)
     end
 
     private

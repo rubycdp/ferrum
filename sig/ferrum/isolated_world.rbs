@@ -8,11 +8,11 @@ module Ferrum
 
     attr_reader page: Page
 
-    @execution_id: ::Concurrent::MVar
+    @execution_id: Concurrency::Cell
 
     def initialize: (Frame frame, String name) -> void
 
-    def execution_id!: () -> Integer
+    def execution_id!: (?(::Numeric | Deadline)? timeout) -> Integer
 
     def execution_id: () -> Integer?
 

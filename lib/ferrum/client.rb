@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
-require "concurrent-ruby"
 require "forwardable"
-require "ferrum/client/subscriber"
 require "ferrum/client/web_socket"
 require "ferrum/utils/thread"
 
@@ -45,22 +43,35 @@ module Ferrum
     # @param [String] method
     #   The CDP method name, e.g. `"Page.navigate"`.
     #
-    # @param [Boolean] async
-    #   Whether to send the command without waiting for a response.
+    # @param [Numeric, Deadline] timeout
+    #   How long to wait for this command's response. See {Client#send_message}.
     #
     # @param [Hash] params
     #   The command's parameters.
     #
-    # @param [Numeric, nil] timeout
-    #   How long to wait for this command's response, overriding
-    #   {Browser::Options#protocol_timeout}. See {Client#send_message}.
+    # @return [Hash]
+    #   The command's result.
     #
-    # @return [Boolean, Hash]
-    #   `true` when sent asynchronously, otherwise the command's result.
+    # @raise [TimeoutError]
     #
-    def command(method, async: false, timeout: nil, **params)
+    def command(method, timeout:, **params)
       message = build_message(method, params)
-      @client.send_message(message, async: async, timeout: timeout)
+      @client.send_message(message, timeout: timeout)
+    end
+
+    #
+    # Sends a CDP command scoped to this session without waiting for a response.
+    #
+    # @param [String] method
+    #   The CDP method name, e.g. `"Runtime.runIfWaitingForDebugger"`.
+    #
+    # @param [Hash] params
+    #   The command's parameters.
+    #
+    # @return [true]
+    #
+    def notify(method, **params)
+      @client.send_notification(build_message(method, params))
     end
 
     #
@@ -122,12 +133,12 @@ module Ferrum
 
     #
     # Removes all event callbacks registered for this session from the
-    # underlying client's subscriber.
+    # underlying client's dispatcher.
     #
     # @return [void]
     #
     def close
-      @client.subscriber.clear(session_id: session_id)
+      @client.dispatcher.clear { |k| k.match?(session_id) }
     end
 
     private
@@ -144,24 +155,27 @@ module Ferrum
   #
   # The low-level CDP client. Owns the {WebSocket} connection to the browser,
   # assigns command ids, matches responses back to their pending commands and
-  # dispatches incoming events to the {Subscriber}. {SessionClient} builds on
+  # dispatches incoming events to the {Concurrency::Dispatcher}. {SessionClient} builds on
   # top of it to scope commands/events to a particular target's session.
   #
   class Client
     extend Forwardable
 
-    delegate %i[protocol_timeout protocol_timeout=] => :options
+    PROTOCOL_TIMEOUT = 5
+    INTERRUPTIONS = %w[Fetch.requestPaused Fetch.authRequired].freeze
 
-    attr_reader :ws_url, :options, :subscriber
+    delegate %i[timeout] => :options
+
+    attr_reader :ws_url, :options, :dispatcher
 
     def initialize(ws_url, options)
       @command_id = 0
       @command_id_mutex = Mutex.new
       @ws_url = ws_url
       @options = options
-      @pendings = Concurrent::Hash.new
-      @ws = WebSocket.new(ws_url, options.ws_max_receive_size, options.log, options.protocol_timeout)
-      @subscriber = Subscriber.new
+      @responses = Concurrency::AwaitableMap.new
+      @ws = WebSocket.new(ws_url, options.ws_max_receive_size, options.log)
+      @dispatcher = Concurrency::Dispatcher.new
 
       start
     end
@@ -172,74 +186,86 @@ module Ferrum
     # @param [String] method
     #   The CDP method name, e.g. `"Target.createTarget"`.
     #
-    # @param [Boolean] async
-    #   Whether to send the command without waiting for a response.
+    # @param [Numeric, Deadline] timeout
+    #   How long to wait for this command's response. See {#send_message}.
     #
     # @param [Hash] params
     #   The command's parameters.
     #
-    # @param [Numeric, nil] timeout
-    #   How long to wait for this command's response, overriding
-    #   {Browser::Options#protocol_timeout}. See {#send_message}.
+    # @return [Hash]
+    #   The command's result.
     #
-    # @return [Boolean, Hash]
-    #   `true` when sent asynchronously, otherwise the command's result.
-    #
-    def command(method, async: false, timeout: nil, **params)
+    def command(method, timeout:, **params)
       message = build_message(method, params)
-      send_message(message, async: async, timeout: timeout)
+      send_message(message, timeout: timeout)
     end
 
     #
-    # Sends a raw CDP message over the websocket. Synchronous calls block
-    # until a matching response arrives, or `timeout` elapses, defaulting to
-    # `protocol_timeout` (delegated to {Browser::Options#protocol_timeout}).
-    # That default is the transport-level budget for internal CDP bookkeeping
-    # (e.g. `Target.createTarget`). {Page#command} overrides
-    # this back to `timeout`, or a caller-supplied budget (e.g. `#pdf`/
-    # `#screenshot`'s own `timeout:` argument), for the user-facing commands
-    # it issues -- some of which (e.g. `Page.navigate`, `Page.printToPDF`)
-    # rely on their own response latency to detect a stuck operation.
+    # Sends a CDP command to the browser-wide session without waiting for a response.
+    #
+    # @param [String] method
+    #   The CDP method name, e.g. `"Target.closeTarget"`.
+    #
+    # @param [Hash] params
+    #   The command's parameters.
+    #
+    # @return [true]
+    #
+    def notify(method, **params)
+      send_notification(build_message(method, params))
+    end
+
+    #
+    # Sends a raw CDP message over the websocket and blocks until a matching
+    # response arrives or `timeout` elapses. The caller says how long that is,
+    # so the budget it runs under is visible. Pass the {Deadline} of the
+    # surrounding operation to share its budget; inside {Deadline.within} the
+    # budget is also bound by the one that block sets.
     #
     # @param [Hash] message
     #   The message to send, must include an `:id` key.
     #
-    # @param [Boolean] async
-    #   Whether to return immediately instead of waiting for a response.
-    #
-    # @param [Numeric, nil] timeout
+    # @param [Numeric, Deadline] timeout
     #   How long to wait for the response, counting the time the message waits
-    #   to be sent. Defaults to `protocol_timeout`.
+    #   to be sent.
     #
-    # @return [Boolean, Hash]
-    #   `true` when sent asynchronously, otherwise the parsed `"result"`
-    #   from the response.
+    # @return [Hash]
+    #   The parsed `"result"` from the response.
     #
-    def send_message(message, async:, timeout: nil)
-      timeout ||= protocol_timeout
+    def send_message(message, timeout:)
+      deadline = Deadline.wrap(timeout)
 
-      if async
-        @ws.send_message(message, timeout)
-        true
-      else
-        raise dead_browser_error if @ws.messages.closed?
+      raise dead_browser_error if @ws.messages.closed?
 
-        pending = Concurrent::IVar.new
-        @pendings[message[:id]] = pending
-        begin
-          @ws.send_message(message, timeout)
-          data = pending.value!(timeout)
-        ensure
-          @pendings.delete(message[:id])
-        end
-
-        raise dead_browser_error if data.nil? && @ws.messages.closed?
-        raise TimeoutError.new(message[:method], session_id: message[:sessionId]) unless data
-
-        error, response = data.values_at("error", "result")
-        raise_browser_error(error) if error
-        response
+      @responses.expect(message[:id])
+      begin
+        @ws.send_message(message, deadline)
+        data = @responses.await(message[:id], deadline)
+      ensure
+        @responses.delete(message[:id])
       end
+
+      raise dead_browser_error if data.nil? && @ws.messages.closed?
+      raise TimeoutError.new(message[:method], session_id: message[:sessionId]) unless data
+
+      error, response = data.values_at("error", "result")
+      raise_browser_error(error) if error
+      response
+    end
+
+    #
+    # Sends a raw CDP message over the websocket without waiting for a
+    # response, which is dropped when it arrives. Nothing bounds it: a browser
+    # that stops reading is detected by the write watchdog.
+    #
+    # @param [Hash] message
+    #   The message to send, must include an `:id` key.
+    #
+    # @return [true]
+    #
+    def send_notification(message)
+      @ws.send_message(message)
+      true
     end
 
     #
@@ -252,7 +278,7 @@ module Ferrum
     #   The subscription id, used to unsubscribe via {#off}.
     #
     def on(event, &)
-      @subscriber.on(event, &)
+      @dispatcher.on(event, &)
     end
 
     #
@@ -267,7 +293,7 @@ module Ferrum
     # @return [void]
     #
     def off(event, id)
-      @subscriber.off(event, id)
+      @dispatcher.off(event, id)
     end
 
     # Whether there's at least one callback registered for the event.
@@ -277,7 +303,7 @@ module Ferrum
     #
     # @return [Boolean]
     def subscribed?(event)
-      @subscriber.subscribed?(event)
+      @dispatcher.subscribed?(event)
     end
 
     #
@@ -295,16 +321,16 @@ module Ferrum
 
     #
     # Closes the underlying websocket, drops pending commands and stops
-    # the message-processing thread and subscriber.
+    # the message-processing thread and dispatcher.
     #
     # @return [void]
     #
     def close
       @ws.close
       # Give a thread some time to handle a tail of messages
-      @pendings.clear
+      @responses.close
       @thread.kill unless @thread.join(1)
-      @subscriber.close
+      @dispatcher.close
       @ws.force_close
     end
 
@@ -316,7 +342,7 @@ module Ferrum
     def inspect
       "#<#{self.class} " \
         "@command_id=#{@command_id.inspect} " \
-        "@pendings=#{@pendings.inspect} " \
+        "@responses=#{@responses.inspect} " \
         "@ws=#{@ws.inspect}>"
     end
 
@@ -331,7 +357,12 @@ module Ferrum
     #
     # @return [Hash]
     #
+    # @raise [ArgumentError]
+    #   When given the removed `async:`, which would otherwise be sent to the browser as a parameter.
+    #
     def build_message(method, params)
+      raise ArgumentError, "async: is removed, use notify to send #{method} without waiting" if params.key?(:async)
+
       { method: method, params: params }.merge(id: next_command_id)
     end
 
@@ -344,9 +375,9 @@ module Ferrum
           break unless message
 
           if message.key?("method")
-            @subscriber << message
+            dispatch(message)
           else
-            @pendings[message["id"]]&.set(message)
+            @responses.fulfill(message["id"], message)
           end
         end
       rescue StandardError => e
@@ -355,14 +386,21 @@ module Ferrum
         warn("Ferrum: dispatch stopped, #{e.class}: #{e.message}\n  #{e.backtrace&.first}")
         @ws.messages.close
       ensure
-        release_pendings
+        release_commands
       end
+    end
+
+    # Request interception events take the priority lane so they aren't delayed behind the others.
+    def dispatch(message)
+      method, session_id, params = message.values_at("method", "sessionId", "params")
+      lane = INTERRUPTIONS.include?(method) ? :priority : :regular
+      @dispatcher.publish(SessionClient.event_name(method, session_id), params, lane: lane)
     end
 
     # Nothing is going to answer the commands still in flight once the socket
     # is gone, release them instead of making each wait out its timeout.
-    def release_pendings
-      @pendings.each_value { |pending| pending.try_set(nil) }
+    def release_commands
+      @responses.close
     end
 
     def dead_browser_error
@@ -370,7 +408,7 @@ module Ferrum
     end
 
     # Locked so two concurrent commands never share an id and read each
-    # other's responses from @pendings.
+    # other's responses from @responses.
     def next_command_id
       @command_id_mutex.synchronize { @command_id += 1 }
     end

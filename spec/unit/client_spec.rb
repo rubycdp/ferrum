@@ -51,51 +51,33 @@ describe Ferrum::Client do
 
   describe "#send_message" do
     before do
-      client.instance_variable_set(:@pendings, Concurrent::Hash.new)
+      client.instance_variable_set(:@responses, Ferrum::Concurrency::AwaitableMap.new)
     end
 
-    it "waits up to protocol_timeout, independent of the page-level timeout" do
-      options = Ferrum::Browser::Options.new(timeout: 100, protocol_timeout: 0.05)
-      client.instance_variable_set(:@options, options)
-      client.instance_variable_set(
-        :@ws, instance_double(Ferrum::Client::WebSocket, send_message: true, messages: Queue.new)
-      )
-
-      expect do
-        client.send_message(client.build_message("Target.createTarget", {}), async: false)
-      end.to raise_error(Ferrum::TimeoutError)
-    end
-
-    it "does not time out early just because the page-level timeout is low" do
-      options = Ferrum::Browser::Options.new(timeout: 0.05, protocol_timeout: 100)
-      client.instance_variable_set(:@options, options)
-
-      # Simulates the response arriving after the (low) page-level timeout has
-      # already elapsed, but well inside the (high) protocol timeout.
+    it "waits for a response that arrives within the given timeout" do
       ws = instance_double(Ferrum::Client::WebSocket, messages: Queue.new)
       allow(ws).to receive(:send_message) do |message|
         Thread.new do
           sleep 0.1
-          client.instance_variable_get(:@pendings)[message[:id]].set({ "result" => { "ok" => true } })
+          client.instance_variable_get(:@responses).fulfill(message[:id], { "result" => { "ok" => true } })
         end
         true
       end
       client.instance_variable_set(:@ws, ws)
 
       message = client.build_message("Target.createTarget", {})
-      expect(client.send_message(message, async: false)).to eq({ "ok" => true })
+      expect(client.send_message(message, timeout: 5)).to eq({ "ok" => true })
     end
 
-    it "honors an explicit per-call timeout: over protocol_timeout" do
-      options = Ferrum::Browser::Options.new(protocol_timeout: 100)
-      client.instance_variable_set(:@options, options)
+    it "times out once the given timeout is up" do
+      client.instance_variable_set(:@options, Ferrum::Browser::Options.new(timeout: 100))
       client.instance_variable_set(
         :@ws, instance_double(Ferrum::Client::WebSocket, send_message: true, messages: Queue.new)
       )
 
       message = client.build_message("Page.navigate", {})
       expect do
-        client.send_message(message, async: false, timeout: 0.05)
+        client.send_message(message, timeout: 0.05)
       end.to raise_error(Ferrum::TimeoutError)
     end
 
@@ -106,8 +88,20 @@ describe Ferrum::Client do
       client.instance_variable_set(:@ws, ws)
 
       message = client.build_message("Page.navigate", {})
-      expect { client.send_message(message, async: false) }.to raise_error(Ferrum::DeadBrowserError)
-      expect(client.instance_variable_get(:@pendings)).to be_empty
+      expect { client.send_message(message, timeout: 5) }.to raise_error(Ferrum::DeadBrowserError)
+      expect(client.instance_variable_get(:@responses)).not_to be_expecting(message[:id])
+    end
+  end
+
+  describe "#notify" do
+    it "sends the message without waiting, whatever the surrounding deadline" do
+      ws = instance_double(Ferrum::Client::WebSocket)
+      allow(ws).to receive(:send_message)
+      client.instance_variable_set(:@ws, ws)
+
+      Ferrum::Deadline.within(0) { expect(client.notify("Page.enable")).to be(true) }
+
+      expect(ws).to have_received(:send_message).with(hash_including(method: "Page.enable"))
     end
   end
 end

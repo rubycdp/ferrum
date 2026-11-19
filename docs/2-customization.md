@@ -27,8 +27,11 @@ Ferrum::Browser.new(options)
       written to it, see [Logging](#logging).
     * `:slowmo` (Integer | Float) - Set a delay in seconds to wait before sending command.
       Useful companion of headless option, so that you have time to see changes.
-    * `:timeout` (Numeric) - The number of seconds we'll wait for a response when
-      communicating with browser. Default is 5.
+    * `:timeout` (Numeric) - How long a call waits for the browser, in seconds, `FERRUM_DEFAULT_TIMEOUT` or 5 by
+      default. `go_to`, `refresh` and `wait_for_navigation` wait for the page to load within it. A call that only sends
+      commands, like `evaluate` or `at_css`, waits for the browser's answer. A call that runs out raises
+      `Ferrum::TimeoutError`. Pass `timeout:` to `go_to`, `refresh` or `wait_for_navigation` to change it for one
+      call, or wrap calls in `Ferrum::Deadline.within` to bound them together, see [Timeouts](#timeouts).
     * `:js_errors` (Boolean) - Deprecated, will be removed in 0.22. When true, JavaScript errors get re-raised in
       Ruby. Uncaught exceptions are in the [console](/docs/ferrum/javascript#console), use
       `page.console.select { |m| m.source == :exception }` or `page.on(:console)` instead.
@@ -185,3 +188,23 @@ Ferrum::Browser.new(browser_path: "/Applications/Google Chrome.app/Contents/MacO
 # Add custom browser options
 Ferrum::Browser.new(browser_options: { "disable-web-security" => nil })
 ```
+
+## Timeouts
+
+Every call that talks to the browser can raise `Ferrum::TimeoutError`, and `Ferrum::DeadBrowserError` when the browser is
+gone, even where nothing looks like a request, like `page.cookies.each`. Each call waits at most the `:timeout` option.
+
+To bound a group of calls by one budget, wrap them in `Ferrum::Deadline.within`. Every call made in the block by the
+same thread shares what is left of it, and a call can only shorten it, never extend it:
+
+```ruby
+Ferrum::Deadline.within(10) do
+  page.go_to("https://example.com")
+  page.cookies.to_a
+  page.evaluate("document.title")
+end
+# => raises Ferrum::TimeoutError from the first call that runs out of the 10 seconds
+```
+
+Blocks nest, the shorter budget wins. Other threads, such as event callbacks, don't inherit it, open a block of their own
+there.

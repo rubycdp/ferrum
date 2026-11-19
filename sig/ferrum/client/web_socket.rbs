@@ -4,6 +4,7 @@ module Ferrum
       WEBSOCKET_BUG_SLEEP: Float
       DEFAULT_PORTS: Hash[String, Integer]
       WRITE_CHUNK_SIZE: Integer
+      WRITE_TIMEOUT: Integer
 
       attr_reader url: (String | ::Addressable::URI)
       attr_reader messages: ::Queue
@@ -22,7 +23,7 @@ module Ferrum
       @encoded: Array[String]
       @close_reason: String?
 
-      def initialize: ((String | ::Addressable::URI) url, Integer? max_receive_size, Log? log, ?::Numeric? write_timeout) -> void
+      def initialize: ((String | ::Addressable::URI) url, Integer? max_receive_size, Log? log, ?::Numeric write_timeout) -> void
 
       def on_open: (untyped event) -> void
 
@@ -30,7 +31,7 @@ module Ferrum
 
       def on_close: (untyped event) -> void
 
-      def send_message: (Hash[Symbol, untyped] data, ?::Numeric? timeout) -> void
+      def send_message: (Hash[Symbol, untyped] data, ?(::Numeric | Deadline)? timeout) -> void
 
       def write: (String data) -> void
 
@@ -40,9 +41,9 @@ module Ferrum
 
       private
 
-      def drive: (?::Float? deadline) { () -> void } -> void
+      def drive: (?Deadline? deadline) { () -> void } -> void
 
-      def queue_encoded: (?::Float? deadline) -> void
+      def queue_encoded: (?Deadline? deadline) -> void
 
       def start_writer: () -> void
 

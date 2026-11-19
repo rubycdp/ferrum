@@ -61,6 +61,8 @@ module Ferrum
       # @yieldparam session_id [Integer]
       #   Frame number.
       #
+      # @raise [TimeoutError]
+      #
       # @example
       #   require "base64"
       #
@@ -93,6 +95,8 @@ module Ferrum
       end
 
       # Stops sending frames.
+      #
+      # @raise [TimeoutError]
       def stop_screencast
         command("Page.stopScreencast")
       end

@@ -31,7 +31,7 @@ module Ferrum
       @frame = frame
       @page = frame.page
       @name = name
-      @execution_id = Concurrent::MVar.new
+      @execution_id = Concurrency::Cell.new
     end
 
     #
@@ -40,9 +40,10 @@ module Ferrum
     #
     # @return [Integer]
     #
-    def execution_id!
+    def execution_id!(timeout = nil)
       execution_id || begin
-        id = @page.command("Page.createIsolatedWorld", frameId: @frame.id, worldName: @name)["executionContextId"]
+        response = @page.command("Page.createIsolatedWorld", timeout: timeout, frameId: @frame.id, worldName: @name)
+        id = response["executionContextId"]
         self.execution_id = id
         execution_id || id
       end
@@ -54,10 +55,7 @@ module Ferrum
     # @return [Integer, nil]
     #
     def execution_id
-      value = @execution_id.value
-      return if value.instance_of?(Object)
-
-      value
+      @execution_id.value
     end
 
     #
@@ -70,9 +68,9 @@ module Ferrum
     #
     def execution_id=(value)
       if value.nil?
-        @execution_id.try_take!
-      else
-        @execution_id.try_put!(value)
+        @execution_id.clear
+      elsif !@execution_id.set?
+        @execution_id.set(value)
       end
     end
 

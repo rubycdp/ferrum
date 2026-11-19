@@ -1,6 +1,13 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.20.1...main) ##
 
 ### Added
+- `Ferrum::Deadline.within(seconds) { ... }` bounds every call the block makes with one budget, `page.go_to`, `cookies`
+  and `evaluate` included. `go_to` raises `NavigationTimeoutError` once it runs out, whatever `on_timeout` is
+- `timeout:` on `go_to`, `refresh`, `back`, `forward`, `click` and `wait_for_navigation` bounds the whole call with a single
+  `Ferrum::Deadline`
+- `context.target(id)` returns the context's target with that id
+- `timeout:` on `keyboard.type`, `node.type` and `mouse.move` bounds all the keys or steps together, the page `timeout`
+  by default, raise it for a long text
 - `cookies[name, domain:, path:]` picks one of the cookies sharing a name
 - `context.cookies` with every cookie in the context whatever its domain, `browser.cookies` is the default context's
 - `network.emulate(user_agent:, accept_language:, platform:, metadata:)` overrides what the page reports in the request
@@ -10,6 +17,22 @@
   pending, when the page doesn't load in time
 
 ### Changed
+- `client.command` needs a `timeout:` and has no `async: true`, use `client.notify` to send without waiting, and
+  `browser.command` defaults to the browser's `timeout`
+- `:protocol_timeout` is ignored and warns, as do `browser.protocol_timeout`, `browser.protocol_timeout=` and
+  `FERRUM_PROTOCOL_TIMEOUT`: internal commands have a fixed 5 second timeout and the connection is closed once a
+  write to the browser stalls for 30 seconds
+- Creating pages and contexts follows `timeout`
+- `wait:` of `click`, `mouse.up` and `mouse.down` is renamed to `navigation_wait:`, `wait:` still works and warns
+- `Mouse::CLICK_WAIT` and `Page::GOTO_WAIT` are merged into `Page::NAVIGATION_WAIT`, set by `FERRUM_NAVIGATION_WAIT`,
+  `FERRUM_CLICK_WAIT` and `FERRUM_GOTO_WAIT` still work and warn
+- `page.command` doesn't take `wait:` anymore, wrap it in `page.wait_for_navigation` to wait for a navigation it starts.
+  Passing `wait:` or `async:` to a command raises `ArgumentError`, they would be sent to the browser as parameters
+- `page.event` is `page.idle` and holds a `Ferrum::Concurrency::Cell`, not a `Concurrent::Event`
+- `browser.targets` and `context.targets` return a copy of the hash, it doesn't follow the targets that come and go
+- `go_to`, `refresh` and the script methods no longer restart the timeout for each step, one `timeout` covers the whole call
+- `click`, `mouse.move`, `keyboard.type`, `back`, `forward`, `wait_for_selector` and node scripts share one `timeout` across the
+  commands they send, they restarted it for each
 - `page.on(:request)`, `on(:auth)` and `on(:dialog)` callbacks form a chain: they run in order and the rest are skipped
   once one continues, responds to, aborts, accepts or dismisses, and an unhandled request is continued. They receive
   only the object, not `index` and `total`, use `handled?` to check whether a previous callback took it. A callback

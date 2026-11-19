@@ -126,6 +126,8 @@ module Ferrum
       #
       # @raise [Ferrum::BrowserError]
       #
+      # @raise [TimeoutError]
+      #
       def body!
         @body ||= begin
           body, encoded = @page.command("Network.getResponseBody", requestId: id)
@@ -138,6 +140,8 @@ module Ferrum
       # The response body.
       #
       # @return [String, nil]
+      #
+      # @raise [TimeoutError]
       #
       def body
         body!

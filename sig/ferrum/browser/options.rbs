@@ -9,17 +9,19 @@ module Ferrum
 
       BASE_URL_SCHEMA: ::Array[String]
 
-      DEFAULT_TIMEOUT: ::Integer
-
-      DEFAULT_PROTOCOL_TIMEOUT: ::Integer
+      DEFAULT_TIMEOUT: ::Float
 
       PROCESS_TIMEOUT: ::Integer
+
+      PROTOCOL_TIMEOUT_REMOVED: String
 
       attr_reader window_size: ::Array[::Integer]
 
       attr_accessor timeout: ::Numeric
 
-      attr_accessor protocol_timeout: ::Numeric
+      def protocol_timeout: () -> ::Integer
+
+      def protocol_timeout=: (::Numeric value) -> ::Numeric
 
       attr_accessor default_user_agent: String?
 
@@ -71,7 +73,6 @@ module Ferrum
       @port: String
       @host: String
       @timeout: ::Numeric
-      @protocol_timeout: ::Numeric
       @window_size: ::Array[::Integer]
       @js_errors: bool
       @headless: bool
@@ -109,6 +110,8 @@ module Ferrum
       def to_h: () -> Hash[Symbol, untyped]
 
       private
+
+      def warn_protocol_timeout: () -> void
 
       def fetch_deprecated: (Symbol name, String instead) -> bool
 

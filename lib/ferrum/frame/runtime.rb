@@ -203,6 +203,8 @@ module Ferrum
       #
       # @return [RemoteObject, Node, Object]
       #
+      # @raise [TimeoutError]
+      #
       # @example
       #   list = page.evaluate_handle("document.querySelectorAll('li')")
       #   page.evaluate("Array.from(nodes).map(n => n.textContent)", nodes: list)
@@ -221,6 +223,8 @@ module Ferrum
       #
       # @return [Boolean]
       #   Always `true`.
+      #
+      # @raise [TimeoutError]
       #
       # @example
       #   browser.execute("window.scrollBy(0, 100)") # => true
@@ -249,6 +253,8 @@ module Ferrum
       #
       # @return [Object]
       #
+      # @raise [TimeoutError]
+      #
       def evaluate_in(object, expression, positional, keywords, mode: :value)
         run(expression, positional, keywords, mode: mode, on: object)
       end
@@ -265,7 +271,8 @@ module Ferrum
         script = Script.new(expression)
         named = keywords.except(:timeout)
         params, values = arguments_for(script, positional, named)
-        call(wrap(script, params, mode), values, on: on, mode: mode, timeout: script_timeout(keywords[:timeout]))
+        deadline = script_deadline(keywords[:timeout])
+        Deadline.within(deadline) { call(wrap(script, params, mode), values, on: on, mode: mode, deadline: deadline) }
       end
 
       #
@@ -323,8 +330,8 @@ module Ferrum
       # Waiting for the response is what bounds the script, so a page that
       # replaces `Promise` or `setTimeout`, or throttles timers, can't defeat
       # it.
-      def script_timeout(timeout)
-        (timeout || @page.timeout).to_f
+      def script_deadline(timeout)
+        Deadline.wrap(timeout || @page.timeout)
       end
 
       #
@@ -336,18 +343,18 @@ module Ferrum
       #   `:value` resolves the result into Ruby, `:handle` returns a
       #   {RemoteObject}, and `:none` discards it.
       #
-      def call(declaration, values, on:, mode:, timeout:)
+      def call(declaration, values, on:, mode:, deadline:)
         # do not rescue -> retry if we operate on an existing node
         errors = on ? [] : [NodeNotFoundError, NoExecutionContextError]
 
         serialization = mode == :value ? DEEP_SERIALIZATION : SHALLOW_SERIALIZATION
         response = Utils::Attempt.with_retry(errors: errors, max: INTERMITTENT_ATTEMPTS, wait: INTERMITTENT_SLEEP) do
-          call_function(declaration, values, call_target(on), serialization, timeout)
+          call_function(declaration, values, call_target(on, deadline), serialization, deadline)
         end
         handle_error(response, declaration)
 
         result = response["result"]
-        result = await_promise(result, serialization, timeout) if thenable?(result)
+        result = await_promise(result, serialization, deadline) if thenable?(result)
         case mode
         when :none then nil
         when :handle then handle_remote_object(result)
@@ -355,9 +362,9 @@ module Ferrum
         end
       end
 
-      def call_function(declaration, values, target, serialization, timeout)
+      def call_function(declaration, values, target, serialization, deadline)
         @page.command("Runtime.callFunctionOn",
-                      timeout: timeout, slowmoable: true, serializationOptions: serialization,
+                      timeout: deadline, slowmoable: true, serializationOptions: serialization,
                       functionDeclaration: declaration, arguments: prepare_args(values), **target)
       rescue TimeoutError
         raise ScriptTimeoutError
@@ -374,9 +381,9 @@ module Ferrum
       # Awaited outside the retries: by now the script has run, and running
       # it again after a navigation would repeat what it did. Awaiting an
       # object that isn't thenable returns it as it is.
-      def await_promise(promise, serialization, timeout)
+      def await_promise(promise, serialization, deadline)
         response = @page.command("Runtime.callFunctionOn",
-                                 timeout: timeout, awaitPromise: true, serializationOptions: serialization,
+                                 timeout: deadline, awaitPromise: true, serializationOptions: serialization,
                                  functionDeclaration: "function() { return this }", objectId: promise["objectId"])
         handle_error(response)
         response["result"]
@@ -392,13 +399,13 @@ module Ferrum
         raise ResultTooDeepError, error.response
       end
 
-      def call_target(on)
+      def call_target(on, deadline)
         if on.is_a?(RemoteObject)
           { objectId: on.remote_id }
         elsif on
           { objectId: resolve_node(on) }
         else
-          { executionContextId: execution_id! }
+          { executionContextId: execution_id!(deadline) }
         end
       end
 

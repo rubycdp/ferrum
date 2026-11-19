@@ -13,6 +13,8 @@ module Ferrum
       #
       # @return [Number]
       #
+      # @raise [TimeoutError]
+      #
       def playback_rate
         command("Animation.getPlaybackRate")["playbackRate"]
       end
@@ -21,6 +23,8 @@ module Ferrum
       # Sets playback rate of CSS animations.
       #
       # @param [Number] value
+      #
+      # @raise [TimeoutError]
       #
       # @example
       #   browser = Ferrum::Browser.new

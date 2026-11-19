@@ -75,6 +75,8 @@ module Ferrum
       #   {DEFAULT_RENDER_TIMEOUT} since a full-page capture is a known slow
       #   outlier among CDP commands.
       #
+      # @raise [TimeoutError]
+      #
       # @example
       #   page.go_to("https://google.com/")
       #
@@ -130,6 +132,8 @@ module Ferrum
       # @option opts [Float] :paper_height
       #   Sets the paper's height.
       #
+      # @raise [TimeoutError]
+      #
       # @note
       #   See other [native options](https://chromedevtools.github.io/devtools-protocol/tot/Page#method-printToPDF) you
       #   can pass.
@@ -157,6 +161,8 @@ module Ferrum
       # @param [String, nil] path
       #   The path to save a file on the disk.
       #
+      # @raise [TimeoutError]
+      #
       # @example
       #   page.go_to("https://google.com/")
       #   page.mhtml(path: "google.mhtml") # => 87742
@@ -174,6 +180,8 @@ module Ferrum
       # @return [(Integer, Integer)]
       #   The width, height of the viewport.
       #
+      # @raise [TimeoutError]
+      #
       # @example
       #   page.viewport_size # => [1024, 768]
       #
@@ -188,6 +196,8 @@ module Ferrum
       # CSS pixels for the current display device.
       #
       # @return [Float]
+      #
+      # @raise [TimeoutError]
       #
       # @example
       #   page.device_pixel_ratio # => 1.0
@@ -204,6 +214,8 @@ module Ferrum
       #
       # @return [(Integer, Integer)]
       #   The scroll width, scroll height of the document.
+      #
+      # @raise [TimeoutError]
       #
       # @example
       #   page.document_size # => [1024, 4000]

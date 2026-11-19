@@ -17,6 +17,39 @@ describe Ferrum::Mouse do
   end
 
   describe "#click" do
+    it "bounds the click by the given timeout" do
+      browser.go_to("/click_coordinates")
+
+      slow_commands(0.3)
+
+      expect { browser.mouse.click(x: 100, y: 150, timeout: 0.5) }.to raise_error(Ferrum::TimeoutError)
+    end
+
+    it "lets the given timeout exceed the page timeout" do
+      browser.go_to("/click_coordinates")
+
+      with_timeout(0.5) do
+        slow_commands(0.3)
+        expect { browser.mouse.click(x: 100, y: 150, timeout: 5) }.not_to raise_error
+      end
+    end
+
+    it "raises when the commands it sends take longer than the timeout together" do
+      browser.go_to("/click_coordinates")
+
+      with_timeout(0.5) do
+        slow_commands(0.3)
+        expect { browser.mouse.click(x: 100, y: 150) }.to raise_error(Ferrum::TimeoutError)
+      end
+    end
+
+    it "warns when given the deprecated wait:" do
+      browser.go_to("/click_coordinates")
+
+      expect { browser.mouse.click(x: 100, y: 150, wait: 0) }
+        .to output(/:wait is renamed to :navigation_wait/).to_stderr
+    end
+
     it "supports clicking precise coordinates" do
       browser.go_to("/click_coordinates")
       browser.mouse.click(x: 100, y: 150)
@@ -154,6 +187,16 @@ describe Ferrum::Mouse do
   end
 
   describe "#up" do
+    it "takes the deprecated wait: as navigation_wait:" do
+      Ferrum::Utils::Deprecate.reset!
+      record_mouse_buttons
+
+      expect { browser.mouse.down.up(wait: 0.1) }.to output(/:wait is renamed to :navigation_wait/).to_stderr
+      expect(browser.evaluate("events")).to eq(%w[mousedown:0:1 mouseup:0:1])
+    ensure
+      Ferrum::Utils::Deprecate.reset!
+    end
+
     it "releases the left button by default" do
       record_mouse_buttons
 
@@ -180,6 +223,24 @@ describe Ferrum::Mouse do
   end
 
   describe "#move" do
+    it "raises when the commands it sends take longer than the timeout together" do
+      browser.go_to("/click_coordinates")
+
+      with_timeout(0.5) do
+        slow_commands(0.3)
+        expect { browser.mouse.move(x: 100, y: 150, steps: 3) }.to raise_error(Ferrum::TimeoutError)
+      end
+    end
+
+    it "moves in steps that take longer than the page timeout within the given timeout" do
+      browser.go_to("/click_coordinates")
+
+      with_timeout(0.5) do
+        slow_commands(0.3)
+        expect { browser.mouse.move(x: 100, y: 150, steps: 3, timeout: 5) }.not_to raise_error
+      end
+    end
+
     it "sends modifiers" do
       browser.go_to("/simple")
       browser.execute(<<~JS)

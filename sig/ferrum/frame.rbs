@@ -38,7 +38,7 @@ module Ferrum
 
     alias set_content content=
 
-    def execution_id!: () -> untyped
+    def execution_id!: (?(::Numeric | Deadline)? timeout) -> untyped
 
     def execution_id: () -> (nil | untyped)
 
