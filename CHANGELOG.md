@@ -1,4 +1,4 @@
-## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.20.1...main) ##
+## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.20.2...main) ##
 
 ### Added
 - `Ferrum::Deadline.within(seconds) { ... }` bounds every call the block makes with one budget, `page.go_to`, `cookies`
@@ -96,6 +96,19 @@
 - `Ferrum::ServerError`, nothing raised it
 - `:browser_name`, it only switched between Chrome-named defaults and raised `NotImplementedError` for anything else, set
   `:browser_path` to run Opera or Edge
+
+
+## [0.20.2](https://github.com/rubycdp/ferrum/compare/v0.20.1...v0.20.2) (November 19, 2026) ##
+
+### Added
+
+### Changed
+
+### Fixed
+- `evaluate` dropped its positional arguments when all of them were `false` or `nil`, for a function declaration or a
+  script with `await`
+
+### Removed
 
 
 ## [0.20.1](https://github.com/rubycdp/ferrum/compare/v0.20.0...v0.20.1) (October 29, 2026) ##

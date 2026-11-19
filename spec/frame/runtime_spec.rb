@@ -417,6 +417,13 @@ describe Ferrum::Frame::Runtime do
       it "passes positional arguments through arguments" do
         expect(browser.evaluate("arguments[0] + arguments[1]", 1, 2)).to eq(3)
       end
+
+      it "passes falsy positional arguments" do
+        expect(browser.evaluate("[arguments.length, arguments[0]]", false)).to eq([1, false])
+        expect(browser.evaluate("function(a) { return [arguments.length, a] }", nil)).to eq([1, nil])
+        expect(browser.evaluate("await Promise.resolve([arguments.length, arguments[1]])", nil, false))
+          .to eq([2, false])
+      end
     end
 
     context "with a function declaration" do
