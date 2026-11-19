@@ -19,13 +19,11 @@
 ### Changed
 - `client.command` needs a `timeout:` and has no `async: true`, use `client.notify` to send without waiting, and
   `browser.command` defaults to the browser's `timeout`
-- `:protocol_timeout` is ignored and warns, as do `browser.protocol_timeout`, `browser.protocol_timeout=` and
-  `FERRUM_PROTOCOL_TIMEOUT`: internal commands have a fixed 5 second timeout and the connection is closed once a
-  write to the browser stalls for 30 seconds
+- Internal commands have a fixed 5 second timeout and the connection is closed once a write to the browser stalls for
+  30 seconds, `:protocol_timeout` no longer sets either
 - Creating pages and contexts follows `timeout`
-- `wait:` of `click`, `mouse.up` and `mouse.down` is renamed to `navigation_wait:`, `wait:` still works and warns
-- `Mouse::CLICK_WAIT` and `Page::GOTO_WAIT` are merged into `Page::NAVIGATION_WAIT`, set by `FERRUM_NAVIGATION_WAIT`,
-  `FERRUM_CLICK_WAIT` and `FERRUM_GOTO_WAIT` still work and warn
+- `wait:` of `click`, `mouse.up` and `mouse.down` is renamed to `navigation_wait:`
+- The waits after a click and after `go_to` share one default, `Page::NAVIGATION_WAIT`, set by `FERRUM_NAVIGATION_WAIT`
 - `page.command` doesn't take `wait:` anymore, wrap it in `page.wait_for_navigation` to wait for a navigation it starts.
   Passing `wait:` or `async:` to a command raises `ArgumentError`, they would be sent to the browser as parameters
 - `page.event` is `page.idle` and holds a `Ferrum::Concurrency::Cell`, not a `Concurrent::Event`
@@ -56,6 +54,10 @@
 - `:pending_connection_errors` and `PendingConnectionsError`, will be removed in 0.22. Pass `on_timeout: :raise` to
   `go_to` instead
 - `FERRUM_DEBUG`, will be removed in 0.22. Use `FERRUM_LOG=*` instead
+- `:protocol_timeout`, `browser.protocol_timeout`, `browser.protocol_timeout=` and `FERRUM_PROTOCOL_TIMEOUT`, will be
+  removed in 0.22. They are ignored and warn, `:timeout` bounds everything else
+- `wait:` of `click`, `mouse.up` and `mouse.down`, will be removed in 0.22. Use `navigation_wait:` instead
+- `FERRUM_CLICK_WAIT` and `FERRUM_GOTO_WAIT`, will be removed in 0.22. Use `FERRUM_NAVIGATION_WAIT` instead
 
 ### Fixed
 - `page.command(method, wait:)` ran a subclass override of `command`, like Cuprite's, twice
@@ -89,6 +91,7 @@
 - `#evaluate_async`, `#evaluate_func` and `#evaluate_on`, use `#evaluate` and `Node#evaluate`, and
   `page.wait_for_navigation! { }` for `evaluate_on`'s `wait:` [#673]
 - `FERRUM_JS_API` [#673]
+- `Mouse::CLICK_WAIT` and `Page::GOTO_WAIT`, use `Page::NAVIGATION_WAIT`
 - `Browser::Options::Base`, Chrome is the only browser, `Browser::Options::Chrome` has everything it had
 - `Ferrum::ServerError`, nothing raised it
 - `:browser_name`, it only switched between Chrome-named defaults and raised `NotImplementedError` for anything else, set

@@ -22,9 +22,9 @@ module Ferrum
 
     def timeout=: (::Numeric) -> ::Numeric
 
-    def protocol_timeout: () -> ::Integer
+    %a{deprecated} def protocol_timeout: () -> ::Integer
 
-    def protocol_timeout=: (::Numeric) -> ::Numeric
+    %a{deprecated} def protocol_timeout=: (::Numeric) -> ::Numeric
 
     def default_user_agent: () -> String?
 

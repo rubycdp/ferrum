@@ -19,9 +19,9 @@ module Ferrum
 
       attr_accessor timeout: ::Numeric
 
-      def protocol_timeout: () -> ::Integer
+      %a{deprecated} def protocol_timeout: () -> ::Integer
 
-      def protocol_timeout=: (::Numeric value) -> ::Numeric
+      %a{deprecated} def protocol_timeout=: (::Numeric value) -> ::Numeric
 
       attr_accessor default_user_agent: String?
 
