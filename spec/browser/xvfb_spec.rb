@@ -53,6 +53,22 @@ describe Ferrum::Browser::Xvfb, :launch, skip: !Ferrum::Browser::Binary.find("Xv
         expect(process_alive?(pid)).to be(false) if pid
       end
     end
+
+    it "waits for an Xvfb that is slow to start before launching a headful browser" do
+      Dir.mktmpdir do |dir|
+        slow_xvfb = File.join(dir, "Xvfb")
+        File.write(slow_xvfb, "#!/bin/sh\nsleep 1\nexec #{Ferrum::Browser::Binary.find('Xvfb')} \"$@\"\n", perm: 0o755)
+        allow(Ferrum::Browser::Binary).to receive(:find).and_call_original
+        allow(Ferrum::Browser::Binary).to receive(:find).with("Xvfb").and_return(slow_xvfb)
+
+        browser = Ferrum::Browser.new(xvfb: true, headless: false)
+        browser.go_to(base_url)
+
+        expect(browser.body).to include("Hello world!")
+      ensure
+        browser&.quit
+      end
+    end
   end
 
   def process_alive?(pid)

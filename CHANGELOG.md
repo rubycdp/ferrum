@@ -60,6 +60,8 @@
 - `FERRUM_CLICK_WAIT` and `FERRUM_GOTO_WAIT`, will be removed in 0.22. Use `FERRUM_NAVIGATION_WAIT` instead
 
 ### Fixed
+- A headful browser with `xvfb: true` sometimes started before Xvfb was ready and exited at once with
+  `ProcessTimeoutError`, Ferrum waits for the display now
 - `page.command(method, wait:)` ran a subclass override of `command`, like Cuprite's, twice
 - `evaluate` of a result nested about 100 levels deep raised an opaque `BrowserError` about Chrome's CBOR stack limit,
   it raises `ResultTooDeepError` now, a `BrowserError` that says to return less or use `evaluate_handle`

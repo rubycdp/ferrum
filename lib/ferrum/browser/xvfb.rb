@@ -32,16 +32,27 @@ module Ferrum
 
         @screen_size = "#{options.window_size.join('x')}x24"
         @display_id = (Time.now.to_f * 1000).to_i % 100_000_000
+        @timeout = options.process_timeout
       end
 
       #
-      # Spawns the Xvfb process on the configured display.
+      # Spawns the Xvfb process on the configured display and waits until it
+      # accepts connections, so a browser started right after finds the display.
       #
       # @return [void]
       #
+      # @raise [Error]
+      #   When Xvfb exits or isn't ready within `:process_timeout`.
+      #
       def start
-        @pid = ::Process.spawn("#{@path} :#{display_id} -screen 0 #{screen_size}")
+        reader, writer = IO.pipe
+        @pid = ::Process.spawn(@path, ":#{display_id}", "-screen", "0", screen_size, "-displayfd", "1", out: writer)
         ::Process.detach(@pid)
+        writer.close
+        wait_for_display(reader)
+      ensure
+        reader&.close
+        writer&.close
       end
 
       #
@@ -51,6 +62,15 @@ module Ferrum
       #
       def to_env
         { "DISPLAY" => ":#{display_id}" }
+      end
+
+      private
+
+      def wait_for_display(io)
+        return if io.wait_readable(@timeout) && io.gets
+
+        Process::Killer.kill(@pid)
+        raise Error, "Xvfb exited or wasn't ready on display :#{display_id} within #{@timeout} seconds"
       end
     end
   end
