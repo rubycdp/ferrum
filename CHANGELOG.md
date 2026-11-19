@@ -55,6 +55,7 @@
   `page.on(:console)` instead
 - `:pending_connection_errors` and `PendingConnectionsError`, will be removed in 0.22. Pass `on_timeout: :raise` to
   `go_to` instead
+- `FERRUM_DEBUG`, will be removed in 0.22. Use `FERRUM_LOG=*` instead
 
 ### Fixed
 - `page.command(method, wait:)` ran a subclass override of `command`, like Cuprite's, twice

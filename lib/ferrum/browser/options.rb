@@ -21,7 +21,9 @@ module Ferrum
       PROTOCOL_TIMEOUT_REMOVED = "is ignored and will be removed in Ferrum 0.22. Internal commands have a fixed " \
                                  "timeout, :timeout bounds everything else."
 
-      warn "Ferrum: FERRUM_DEBUG is deprecated, use FERRUM_LOG=* instead" if ENV.key?("FERRUM_DEBUG")
+      if ENV.key?("FERRUM_DEBUG")
+        Utils::Deprecate.warn("FERRUM_DEBUG will be removed in Ferrum 0.22. Use FERRUM_LOG=* instead.")
+      end
       if ENV.key?("FERRUM_PROTOCOL_TIMEOUT")
         Utils::Deprecate.warn("FERRUM_PROTOCOL_TIMEOUT #{PROTOCOL_TIMEOUT_REMOVED}")
       end
