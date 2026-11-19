@@ -16,6 +16,10 @@ module Ferrum
       def start: () -> untyped
 
       def to_env: () -> ::Hash[::String, ::String]
+
+      private
+
+      def wait_for_display: (::IO io) -> void
     end
   end
 end
