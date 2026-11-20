@@ -93,7 +93,8 @@ subscription id you can pass to `off` to unsubscribe.
 
 * `:request` an intercepted request, see `intercept` below. Requires `network.intercept` to be set up first.
   Callbacks run in the order they were added and the rest are skipped once one handles the request.
-* `:response` a request's response once it's fully loaded, see below. Works without `intercept`.
+* `:response` a request's response once it's fully loaded, yielded as a `Network::Exchange`, see below. Works
+  without `intercept`.
 * `:auth` a proxy/basic auth challenge, see `authorize` below. Requires `network.intercept` to be set up first.
   Works like `:request`, an unhandled challenge gets Chrome's default response.
 * `:dialog` a JS dialog (`alert`/`confirm`/`prompt`), see [Dialogs](./16-dialogs.md).
@@ -103,9 +104,11 @@ subscription id you can pass to `off` to unsubscribe.
 
 Subscribes to a callback fired once a request's response has fully loaded, i.e. after
 Chrome's `Network.loadingFinished` event, so `exchange.response.body` is always
-available. Doesn't require `intercept` to be set up. The block receives the
-`Network::Exchange` for that request; it's never yielded for requests that fail to
-load (use `traffic` to inspect those instead).
+available. Doesn't require `intercept` to be set up. Despite the event's name, the block
+receives the `Network::Exchange` for that request, not a `Network::Response`: it pairs
+`exchange.request` with `exchange.response`, so you can tell which request a response
+belongs to. It's never yielded for requests that fail to load (use `traffic` to inspect
+those instead).
 
 ```ruby
 page.on(:response) do |exchange|
