@@ -21,6 +21,8 @@ module Ferrum
       @client = client
       @contexts = contexts
       @targets = Concurrency::AwaitableMap.new
+      @page_waiters = []
+      @page_waiters_mutex = Mutex.new
     end
 
     # Whether this is the browser's implicit context, the one it puts its
@@ -105,6 +107,52 @@ module Ferrum
       windows.map(&:page)
     end
 
+    # Runs the block and returns the page it opens, in a tab or a window,
+    # e.g. through `window.open` or a link with `target="_blank"`.
+    #
+    # @param [Page, nil] opener
+    #   Only return a page opened by this page. By default a page opened by
+    #   any page of the context is returned.
+    #
+    # @param [Numeric, Deadline] timeout
+    #   How long the block and the new page may take together. Defaults to
+    #   the browser's `timeout`.
+    #
+    # @yield The code that opens the page.
+    #
+    # @return [Page, nil]
+    #   The first page opened since the call, `nil` if none opens in time.
+    #
+    # @example
+    #   opened = browser.wait_for_new_page { browser.at_css("a[target=_blank]").click }
+    #   opened.url # => "https://example.com/"
+    def wait_for_new_page(opener: nil, timeout: @client.timeout)
+      deadline = Deadline.wrap(timeout)
+      waiter = [opener&.target_id, Concurrency::Cell.new]
+      @page_waiters_mutex.synchronize { @page_waiters << waiter }
+      yield if block_given?
+      return unless waiter.last.wait(deadline)
+
+      waiter.last.value.page
+    ensure
+      @page_waiters_mutex.synchronize { @page_waiters.delete(waiter) }
+    end
+
+    # Same as {#wait_for_new_page}, but raises if no page opens in time.
+    #
+    # @param [Hash] options
+    #   The options of {#wait_for_new_page}.
+    #
+    # @yield The code that opens the page.
+    #
+    # @return [Page]
+    #
+    # @raise [TimeoutError]
+    #   If no page opens in time.
+    def wait_for_new_page!(**options, &)
+      wait_for_new_page(**options, &) || raise(TimeoutError)
+    end
+
     # Creates a new target in this context and eagerly connects to it as a
     # {Page}, forwarding `options` to {Target#build_page}.
     #
@@ -153,6 +201,8 @@ module Ferrum
       target.session_id = session_id if session_id && (attached || target.session_id.nil?)
       @default_target ||= target
       @targets[target.id] = target
+      announce_page(target) if target.equal?(new_target)
+      target
     end
 
     # Updates a known target's params, e.g. on `Target.targetInfoChanged`.
@@ -254,6 +304,15 @@ module Ferrum
     # @return [String]
     def inspect
       %(#<#{self.class} @id=#{@id.inspect} @targets=#{@targets.inspect} @default_target=#{@default_target.inspect}>)
+    end
+
+    private
+
+    def announce_page(target)
+      return unless target.page? && target.opener_id
+
+      waiters = @page_waiters_mutex.synchronize { @page_waiters.select { |id, _| id.nil? || id == target.opener_id } }
+      waiters.each { |w| w.last.set(target) }
     end
   end
 end

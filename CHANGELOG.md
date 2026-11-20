@@ -8,6 +8,9 @@
 - `context.target(id)` returns the context's target with that id
 - `timeout:` on `keyboard.type`, `node.type` and `mouse.move` bounds all the keys or steps together, the page `timeout`
   by default, raise it for a long text
+- `context.wait_for_new_page { ... }`, and `browser.wait_for_new_page` for the default context, runs the block and
+  returns the page it opens, in a tab or a window, or `nil` if none opens in time. `wait_for_new_page!` raises
+  `Ferrum::TimeoutError` instead. Pass `opener:` to only get the pages opened by one page
 - `go_to(url, referrer:)` sets the referrer of that navigation only, the page's other requests don't carry it
 - `cookies.set` accepts `http_only:` and `same_site:` next to `httponly:` and `samesite:`, like the cookie's readers
 - `cookies[name, domain:, path:]` picks one of the cookies sharing a name
