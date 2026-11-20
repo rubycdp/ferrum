@@ -69,13 +69,13 @@ module Ferrum
     #   When the cookie will expire.
     #
     # @option options [Boolean] :httponly
-    #   Specifies whether the cookie `HttpOnly`.
+    #   Specifies whether the cookie `HttpOnly`, also accepted as `:http_only`.
     #
     # @option options [Boolean] :secure
     #   Specifies whether the cookie is marked as `Secure`.
     #
     # @option options [String] :samesite
-    #   Specifies whether the cookie is `SameSite`.
+    #   Specifies whether the cookie is `SameSite`, also accepted as `:same_site`.
     #
     # @return [true]
     #

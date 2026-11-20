@@ -57,8 +57,8 @@ Sets a cookie, for the `:base_url` host unless `:domain` or `:url` is given.
   * :url `String`
   * :path `String`
   * :expires `Integer`
-  * :samesite `String`
-  * :httponly `Boolean`
+  * :samesite `String`, or `:same_site`
+  * :httponly `Boolean`, or `:http_only`
   * :secure `Boolean`
 
 ```ruby

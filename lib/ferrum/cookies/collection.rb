@@ -76,10 +76,8 @@ module Ferrum
       private
 
       def cookie_params(options)
-        cookie = (options.is_a?(Cookie) ? options.attributes : options).dup.transform_keys(&:to_sym)
-
-        cookie[:httpOnly] = cookie.delete(:httponly) if cookie.key?(:httponly)
-        cookie[:sameSite] = cookie.delete(:samesite) if cookie.key?(:samesite)
+        cookie = (options.is_a?(Cookie) ? options.attributes : options).transform_keys(&:to_sym)
+        cookie.transform_keys!(httponly: :httpOnly, http_only: :httpOnly, samesite: :sameSite, same_site: :sameSite)
 
         expires = cookie.delete(:expires).to_i
         cookie[:expires] = expires if expires.positive?

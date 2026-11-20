@@ -165,6 +165,13 @@ describe Ferrum::Cookies do
       expect(browser.cookies["stealth"].samesite).to eq("Strict")
     end
 
+    it "sets cookies with http_only and same_site" do
+      browser.cookies.set(name: "stealth", value: "omg", http_only: true, same_site: "Strict")
+
+      expect(browser.cookies["stealth"].http_only?).to be true
+      expect(browser.cookies["stealth"].same_site).to eq("Strict")
+    end
+
     it "sets a retrieved cookie" do
       browser.cookies.set(name: "stealth", value: "omg")
       browser.go_to("/get_cookie")

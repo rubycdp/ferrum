@@ -8,6 +8,7 @@
 - `context.target(id)` returns the context's target with that id
 - `timeout:` on `keyboard.type`, `node.type` and `mouse.move` bounds all the keys or steps together, the page `timeout`
   by default, raise it for a long text
+- `cookies.set` accepts `http_only:` and `same_site:` next to `httponly:` and `samesite:`, like the cookie's readers
 - `cookies[name, domain:, path:]` picks one of the cookies sharing a name
 - `context.cookies` with every cookie in the context whatever its domain, `browser.cookies` is the default context's
 - `network.emulate(user_agent:, accept_language:, platform:, metadata:)` overrides what the page reports in the request
