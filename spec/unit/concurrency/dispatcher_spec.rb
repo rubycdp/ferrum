@@ -15,14 +15,14 @@ describe Ferrum::Concurrency::Dispatcher do
       expect(called.pop).to eq("hello")
     end
 
-    it "passes the index of the callback and the total" do
+    it "passes only the payload to every callback of the key" do
       called = Queue.new
-      dispatcher.on("greeting") { |_, index, total| called << [index, total] }
-      dispatcher.on("greeting") { |_, index, total| called << [index, total] }
+      dispatcher.on("greeting", &->(payload) { called << [:first, payload] })
+      dispatcher.on("greeting", &->(payload) { called << [:second, payload] })
 
       dispatcher.publish("greeting", "hello")
 
-      expect([called.pop, called.pop]).to eq([[0, 2], [1, 2]])
+      expect([called.pop, called.pop]).to eq([[:first, "hello"], [:second, "hello"]])
     end
 
     it "delivers in order within a lane" do

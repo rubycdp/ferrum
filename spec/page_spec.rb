@@ -550,6 +550,15 @@ describe Ferrum::Page do
         page.evaluate("console.log('hello')")
         wait_for { message }.to eq("hello")
       end
+
+      it "yields only the params" do
+        message = nil
+
+        page.on("Runtime.consoleAPICalled", &->(params) { message = params.dig("args", 0, "value") })
+
+        page.evaluate("console.log('hello')")
+        wait_for { message }.to eq("hello")
+      end
     end
 
     context "with :request" do

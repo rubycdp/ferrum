@@ -90,9 +90,7 @@ module Ferrum
       def subscribe_tracing_complete
         return if @subscribed_tracing_complete
 
-        @page.on("Tracing.tracingComplete") do |event, index|
-          next if index.to_i != 0
-
+        @page.on("Tracing.tracingComplete") do |event|
           @pending.set(stream_handle(event["stream"]))
         rescue StandardError => e
           @failure = e

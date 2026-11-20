@@ -85,6 +85,14 @@ describe Ferrum::Page::Tracing do
       expect(File.exist?(file_path3)).to be(true)
     end
 
+    it "outputs a trace when the tracing complete event already has a subscriber" do
+      page.on("Tracing.tracingComplete") { nil }
+
+      page.tracing.record(path: file_path, timeout: 5) { page.go_to }
+
+      expect(File.exist?(file_path)).to be(true)
+    end
+
     it "returns base64 encoded string" do
       trace = page.tracing.record(encoding: :base64) { page.go_to }
 
