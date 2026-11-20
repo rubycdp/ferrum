@@ -20,8 +20,6 @@ module Ferrum
 
     def expired?: () -> bool
 
-    protected
-
     attr_reader at: Float
   end
 end

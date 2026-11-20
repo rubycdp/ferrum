@@ -33,15 +33,15 @@ module Ferrum
                 wait_for_navigation wait_for_navigation!
                 at_css at_xpath css xpath wait_for_selector current_url current_title url title
                 body doctype content=
-                headers network console accessibility downloads
+                headers network console accessibility downloads tracing
                 mouse keyboard
-                screenshot pdf mhtml viewport_size device_pixel_ratio
+                screenshot pdf mhtml viewport_size device_pixel_ratio document_size
                 start_screencast stop_screencast
                 frames frame_by main_frame
                 evaluate evaluate_handle execute isolated_world
                 add_script_tag add_style_tag bypass_csp
                 evaluate_on_new_document remove_script_on_new_document
-                on position position=
+                on off position position= window_bounds window_bounds= activate
                 playback_rate playback_rate=
                 disable_javascript set_viewport resize] => :page
 
@@ -260,7 +260,9 @@ module Ferrum
     end
 
     #
-    # Sends a CDP command to the browser.
+    # Sends a CDP command to the browser itself, not to the default page like
+    # most other `Browser` methods, {#on} included. Use `page.command` for page
+    # domains such as `Page`, `Runtime` or `DOM`.
     #
     # @param [String] method
     #   The CDP method name, e.g. `"Browser.getVersion"`.

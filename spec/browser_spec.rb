@@ -1156,4 +1156,49 @@ describe Ferrum::Browser do
       expect(browser.accessibility).to be_a(Ferrum::Accessibility)
     end
   end
+
+  describe "#tracing" do
+    it "returns the tracing of the page" do
+      expect(browser.tracing).to be(browser.page.tracing)
+    end
+  end
+
+  describe "#off" do
+    it "unsubscribes from the page event" do
+      removed = []
+      kept = []
+      id = browser.on("Runtime.consoleAPICalled") { |params| removed << params.dig("args", 0, "value") }
+      browser.on("Runtime.consoleAPICalled") { |params| kept << params.dig("args", 0, "value") }
+      browser.evaluate("console.log('first')")
+      wait_for { kept }.to eq(["first"])
+
+      browser.off("Runtime.consoleAPICalled", id)
+      browser.evaluate("console.log('second')")
+
+      wait_for { kept }.to eq(%w[first second])
+      expect(removed).to eq(["first"])
+    end
+  end
+
+  describe "#document_size" do
+    it "returns the scroll size of the page" do
+      browser.content = %(<div style="width: 2000px; height: 3000px"></div>)
+
+      expect(browser.document_size).to eq(browser.page.document_size)
+    end
+  end
+
+  describe "#window_bounds" do
+    it "returns the window bounds of the page" do
+      browser.window_bounds = { width: 800, height: 600 }
+
+      expect(browser.window_bounds).to include("width" => 800, "height" => 600)
+    end
+  end
+
+  describe "#activate" do
+    it "brings the page to the front" do
+      expect(browser.activate).to be(true)
+    end
+  end
 end
