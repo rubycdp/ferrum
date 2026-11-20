@@ -68,11 +68,22 @@ module Ferrum
 
     # All page targets in this context, connected to as {Page}s.
     #
+    # @yield [target]
+    #   Only the pages of the targets the block returns truthy for are
+    #   connected to and returned.
+    #
+    # @yieldparam [Target] target
+    #
     # @return [Array<Page>]
     #
     # @raise [TimeoutError]
-    def pages
-      @targets.values.select(&:page?).map(&:page)
+    #
+    # @example The pages opened by another page
+    #   browser.pages(&:opener_id)
+    def pages(&)
+      targets = @targets.values.select(&:page?)
+      targets = targets.select(&) if block_given?
+      targets.map(&:page)
     end
 
     # Dedicated and shared workers spawned by any page in this context,

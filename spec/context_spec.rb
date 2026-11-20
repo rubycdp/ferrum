@@ -65,6 +65,15 @@ describe Ferrum::Context do
     ensure
       pages&.each(&:close)
     end
+
+    it "returns only the pages of the targets the block selects" do
+      browser.go_to
+      popup = browser.wait_for_new_page! { browser.execute(%(window.open("/simple"))) }
+
+      expect(browser.pages(&:opener_id)).to eq([popup])
+    ensure
+      popup&.close
+    end
   end
 
   describe "#workers" do

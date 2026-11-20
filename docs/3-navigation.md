@@ -173,3 +173,13 @@ The target of an opened page has the id of the page that opened it:
 ```ruby
 browser.targets[opened.target_id].opener_id == page.target_id # => true
 ```
+
+#### pages { |target| } : `Array<Page>`
+
+Returns the pages of the default context. With a block, only the pages of the targets it returns truthy for.
+
+```ruby
+browser.pages # => [#<Ferrum::Page>, #<Ferrum::Page>]
+browser.pages(&:opener_id) # the pages opened by another page
+browser.pages { |t| t.opener_id == page.target_id } # the pages opened by `page`
+```

@@ -11,6 +11,8 @@
 - `context.wait_for_new_page { ... }`, and `browser.wait_for_new_page` for the default context, runs the block and
   returns the page it opens, in a tab or a window, or `nil` if none opens in time. `wait_for_new_page!` raises
   `Ferrum::TimeoutError` instead. Pass `opener:` to only get the pages opened by one page
+- `pages` of a context and of the browser takes a block that selects targets, e.g. `pages(&:opener_id)` for
+  the pages opened by another page
 - `go_to(url, referrer:)` sets the referrer of that navigation only, the page's other requests don't carry it
 - `cookies.set` accepts `http_only:` and `same_site:` next to `httponly:` and `samesite:`, like the cookie's readers
 - `cookies[name, domain:, path:]` picks one of the cookies sharing a name
