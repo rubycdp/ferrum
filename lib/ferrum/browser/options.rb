@@ -52,6 +52,7 @@ module Ferrum
         @incognito = @options.fetch(:incognito, true)
         @dockerize = @options.fetch(:dockerize, false)
         @flatten = @options.fetch(:flatten, true)
+        warn_flatten unless @flatten
         @pending_connection_errors = fetch_deprecated(
           :pending_connection_errors, "Pass on_timeout: :raise to go_to instead: page.go_to(url, on_timeout: :raise)."
         )
@@ -169,6 +170,13 @@ module Ferrum
 
       def warn_protocol_timeout
         Utils::Deprecate.warn(":protocol_timeout #{PROTOCOL_TIMEOUT_REMOVED}", user_code: true)
+      end
+
+      def warn_flatten
+        Utils::Deprecate.warn(
+          "flatten: false will be removed in Ferrum 0.22. Every page will share the browser's websocket connection.",
+          user_code: true
+        )
       end
 
       def fetch_deprecated(name, instead)

@@ -61,7 +61,7 @@ module Ferrum
 
       attr_reader incognito: bool
 
-      attr_reader flatten: bool
+      %a{deprecated} attr_reader flatten: bool
 
       attr_reader ignore_default_browser_options: bool?
 
@@ -112,6 +112,8 @@ module Ferrum
       private
 
       def warn_protocol_timeout: () -> void
+
+      def warn_flatten: () -> void
 
       def fetch_deprecated: (Symbol name, String instead) -> bool
 
