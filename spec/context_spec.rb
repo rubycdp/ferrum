@@ -156,40 +156,22 @@ describe Ferrum::Context do
   end
 
   describe "#windows" do
-    it "waits for the window to load" do
-      browser.go_to
-
-      browser.execute <<-JS
-        window.open("/slow", "popup")
-      JS
-
-      popup, = browser.windows(:last)
-      expect(popup.body).to include("slow page")
-      popup.close
+    around do |example|
+      Ferrum::Utils::Deprecate.reset!
+      example.run
+      Ferrum::Utils::Deprecate.reset!
     end
 
-    it "opens a second window under the same name" do
+    it "returns the pages opened by another page and warns that it is deprecated" do
       browser.go_to
+      popup = browser.wait_for_new_page { browser.execute(%(window.open("/simple", "popup"))) }
 
-      browser.execute <<-JS
-        window.open("/simple", "popup")
-      JS
-
-      popup, = browser.windows(:last)
-      expect(popup.body).to include("Test")
-      popup.close
-
-      sleep 0.5 # https://github.com/ChromeDevTools/devtools-protocol/issues/145
-
-      browser.execute <<-JS
-        window.open("/simple", "popup")
-      JS
-
-      sleep 0.5 # https://github.com/ChromeDevTools/devtools-protocol/issues/145
-
-      same, = browser.windows(:last)
-      expect(same.body).to include("Test")
-      same.close
+      windows = nil
+      expect { windows = browser.windows }
+        .to output(/windows will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
+      expect(windows).to eq([popup])
+    ensure
+      popup&.close
     end
   end
 

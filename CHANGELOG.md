@@ -53,6 +53,9 @@
 - `on` with a raw CDP event yields only the params, not the callback's index and the total number of callbacks
 
 ### Deprecated
+- `target.window?`, will be removed in 0.22. Use `target.opener_id`, it is set for a target another one opened
+- `windows` of a context and of the browser, will be removed in 0.22. Use `wait_for_new_page { ... }` for the page a click
+  opens, or `pages(&:opener_id)` for all of them
 - `cookies.all`, will be removed in 0.22. Keyed by name, it kept one of the cookies sharing a name, use `to_a`, or
   `map(&:name)` for the names
 - `current_url` and `current_title` on pages and frames, will be removed in 0.22. Use `url` and `title`, or

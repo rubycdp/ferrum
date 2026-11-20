@@ -12,6 +12,8 @@ module Ferrum
   #
   class Context
     POSITION = %i[first last].freeze
+    WINDOWS_DEPRECATED = "windows will be removed in Ferrum 0.22. Use wait_for_new_page { ... } for the page a click " \
+                         "opens, or pages(&:opener_id) for all of them."
 
     attr_reader :id
 
@@ -106,14 +108,25 @@ module Ferrum
       @targets.values.select(&:service_worker?)
     end
 
-    # When we call `page` method on target it triggers ruby to connect to given
-    # page by WebSocket, if there are many opened windows, but we need only one
-    # it makes more sense to get and connect to the needed one only which
-    # usually is the last one.
+    # The pages of this context opened by another page.
+    #
+    # @deprecated Will be removed in Ferrum 0.22. Use {#wait_for_new_page} for the page a click opens, or
+    #   `pages(&:opener_id)` for all of them.
+    #
+    # @param [:first, :last, nil] pos
+    #
+    # @param [Integer] size
+    #
+    # @return [Array<Page>]
+    #
+    # @raise [ArgumentError]
+    #
+    # @raise [TimeoutError]
     def windows(pos = nil, size = 1)
+      Utils::Deprecate.warn(WINDOWS_DEPRECATED, user_code: true)
       raise ArgumentError if pos && !POSITION.include?(pos)
 
-      windows = @targets.values.select(&:window?)
+      windows = @targets.values.select(&:opener_id)
       windows = windows.send(pos, size) if pos
       windows.map(&:page)
     end

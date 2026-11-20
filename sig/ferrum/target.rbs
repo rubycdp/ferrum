@@ -1,6 +1,7 @@
 module Ferrum
   class Target
     NEW_WINDOW_WAIT: ::Float
+    WINDOW_DEPRECATED: String
 
     attr_writer page: Page?
     attr_reader options: Browser::Options
@@ -47,7 +48,7 @@ module Ferrum
 
     def context_id: () -> String?
 
-    def window?: () -> bool
+    %a{deprecated} def window?: () -> bool
 
     def iframe?: () -> bool
 

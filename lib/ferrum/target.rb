@@ -9,6 +9,8 @@ module Ferrum
   #
   class Target
     NEW_WINDOW_WAIT = ENV.fetch("FERRUM_NEW_WINDOW_WAIT", 0.3).to_f
+    WINDOW_DEPRECATED = "window? will be removed in Ferrum 0.22. Use opener_id, it is set for a target another one " \
+                        "opened."
 
     # You can create page yourself and assign it to target, used in cuprite
     # where we enhance page class and build page ourselves.
@@ -159,11 +161,13 @@ module Ferrum
       @params["browserContextId"] unless @implicit
     end
 
-    # Whether this target is a window/tab, i.e. was opened via
-    # `window.open`/a link/etc. and thus has an {#opener_id}.
+    # Whether this target was opened by another one, i.e. has an {#opener_id}.
+    #
+    # @deprecated Will be removed in Ferrum 0.22. Use {#opener_id}.
     #
     # @return [Boolean]
     def window?
+      Utils::Deprecate.warn(WINDOW_DEPRECATED, user_code: true)
       !!opener_id
     end
 
@@ -208,7 +212,7 @@ module Ferrum
     # @return [void]
     def maybe_sleep_if_new_window
       # Dirty hack because new window doesn't have events at all
-      sleep(NEW_WINDOW_WAIT) if window?
+      sleep(NEW_WINDOW_WAIT) if opener_id
     end
 
     # Sends a CDP command through {#client}.
