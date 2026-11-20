@@ -168,6 +168,16 @@ opened = browser.wait_for_new_page(opener: page) { page.at_css("a[target=_blank]
 
 Same as `wait_for_new_page`, but raises `Ferrum::TimeoutError` if no page opens in time.
 
+Both only see a page that another page opened, through `window.open` or a link with `target="_blank"`, with or
+without `noopener`. Chrome reports no opener for a page the user opens from a link: a click with Ctrl, Cmd or Shift
+held, or a middle click. Such a page is not returned, compare the targets before and after the click instead:
+
+```ruby
+known = browser.targets.keys
+browser.at_css("a").click(keys: [:ctrl]) # :meta on macOS
+browser.pages { |t| !known.include?(t.id) } # => [#<Ferrum::Page>]
+```
+
 The target of an opened page has the id of the page that opened it:
 
 ```ruby

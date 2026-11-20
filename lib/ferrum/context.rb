@@ -134,6 +134,11 @@ module Ferrum
     # Runs the block and returns the page it opens, in a tab or a window,
     # e.g. through `window.open` or a link with `target="_blank"`.
     #
+    # Only a page that another page opened is seen. Chrome reports no opener
+    # for a page the user opens from a link, i.e. a click with Ctrl, Cmd or
+    # Shift held, or a middle click, so such a page is not returned. Compare
+    # {#targets} before and after the click to find it.
+    #
     # @param [Page, nil] opener
     #   Only return a page opened by this page. By default a page opened by
     #   any page of the context is returned.
