@@ -60,6 +60,13 @@ describe Ferrum::Headers do
       expect(browser.body).not_to include("X_OMG")
     end
 
+    it "stops sending the Referer with navigations" do
+      browser.headers.set("Referer" => "http://google.com/")
+      browser.headers.clear
+      browser.go_to("/headers")
+      expect(browser.body).not_to include("REFERER: http://google.com/")
+    end
+
     it "brings the user agent and language back" do
       browser.headers.set("User-Agent" => "foo", "Accept-Language" => "de-DE")
       browser.headers.clear
@@ -103,11 +110,9 @@ describe Ferrum::Headers do
       expect(browser.body).to match(/ACCEPT_LANGUAGE: esperanto/)
     end
 
-    it "sets headers on the initial request for referer only" do
+    it "sends added headers with the initial and later requests" do
       browser.headers.set("PermanentA" => "a")
-      browser.headers.add({ "PermanentB" => "b" })
-      browser.headers.add({ "Referer" => "http://google.com" }, permanent: false)
-      browser.headers.add({ "TempA" => "a" }, permanent: false) # simply ignored
+      browser.headers.add("PermanentB" => "b")
 
       browser.go_to("/headers_with_ajax")
       initial_request = browser.at_css("#initial_request").text
@@ -115,17 +120,21 @@ describe Ferrum::Headers do
 
       expect(initial_request).to include("PERMANENTA: a")
       expect(initial_request).to include("PERMANENTB: b")
-      expect(initial_request).to include("REFERER: http://google.com")
-      expect(initial_request).to include("TEMPA: a")
-
       expect(ajax_request).to include("PERMANENTA: a")
       expect(ajax_request).to include("PERMANENTB: b")
-      expect(ajax_request).to_not include("REFERER: http://google.com")
-      expect(ajax_request).to include("TEMPA: a")
+    end
+
+    it "sends a Referer header with the initial and later requests" do
+      browser.headers.add("Referer" => "http://google.com/")
+
+      browser.go_to("/headers_with_ajax")
+
+      expect(browser.at_css("#initial_request").text).to include("REFERER: http://google.com/")
+      expect(browser.at_css("#ajax_request").text).to include("REFERER: http://google.com/")
     end
 
     it "keeps added headers on redirects" do
-      browser.headers.add({ "X-Custom-Header" => "1" }, permanent: false)
+      browser.headers.add({ "X-Custom-Header" => "1" })
       browser.go_to("/redirect_to_headers")
       expect(browser.body).to include("X_CUSTOM_HEADER: 1")
     end

@@ -8,6 +8,7 @@
 - `context.target(id)` returns the context's target with that id
 - `timeout:` on `keyboard.type`, `node.type` and `mouse.move` bounds all the keys or steps together, the page `timeout`
   by default, raise it for a long text
+- `go_to(url, referrer:)` sets the referrer of that navigation only, the page's other requests don't carry it
 - `cookies.set` accepts `http_only:` and `same_site:` next to `httponly:` and `samesite:`, like the cookie's readers
 - `cookies[name, domain:, path:]` picks one of the cookies sharing a name
 - `context.cookies` with every cookie in the context whatever its domain, `browser.cookies` is the default context's
@@ -77,6 +78,7 @@
 - `InterceptedRequest#navigation_request?` and `AuthRequest#navigation_request?` always returned `nil`, they are true
   for document requests now
 - `evaluate` raised `NoMethodError` when a node inside a `Map` or `Set` was also referenced elsewhere in the result
+- `go_to` kept sending a `Referer` after `headers.clear` or `headers.set` had removed it
 - `headers.clear` kept sending the old headers until the next `add` or `set`, and kept the user agent and language they
   set. Now it clears them in Chrome right away
 - `headers.add` and `headers.set` reset a user agent or language set with `network.emulate`, and made Chrome stop
@@ -97,6 +99,9 @@
 - `#evaluate_async`, `#evaluate_func` and `#evaluate_on`, use `#evaluate` and `Node#evaluate`, and
   `page.wait_for_navigation! { }` for `evaluate_on`'s `wait:` [#673]
 - `FERRUM_JS_API` [#673]
+- `permanent:` of `headers.add`, it only kept a `Referer` off the requests after the navigation, pass `referrer:` to
+  `go_to` instead. `headers.add("X-Trace" => "1")` works without braces now, it raised `ArgumentError`
+- `page.referrer` and `page.referrer=`, pass `referrer:` to `go_to` instead
 - `Mouse::CLICK_WAIT` and `Page::GOTO_WAIT`, use `Page::NAVIGATION_WAIT`
 - `Browser::Options::Base`, Chrome is the only browser, `Browser::Options::Chrome` has everything it had
 - `Ferrum::ServerError`, nothing raised it

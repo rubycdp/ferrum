@@ -11,7 +11,6 @@ module Ferrum
     include Stream
     include Interceptable
 
-    attr_accessor referrer: String?
     attr_reader context_id: String?
     attr_reader target_id: String
     attr_reader idle: Concurrency::Cell
@@ -42,14 +41,13 @@ module Ferrum
     @console: Console
     @tracing: Page::Tracing
     @downloads: Downloads
-    @referrer: String?
     @document_version: ::Integer
 
     def initialize: ((Client | SessionClient) client, context_id: String?, target_id: String, ?proxy: { host: String, port: ::Integer, user: String?, password: String? }?) -> void
 
     def context: () -> Context?
 
-    def go_to: (?String? url, ?on_timeout: (:ignore | :raise)?, ?timeout: (::Numeric | Deadline)?) -> String?
+    def go_to: (?String? url, ?on_timeout: (:ignore | :raise)?, ?timeout: (::Numeric | Deadline)?, ?referrer: String?) -> String?
     alias goto go_to
     alias go go_to
 

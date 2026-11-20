@@ -29,6 +29,21 @@ describe Ferrum::Page do
         expect(frame.body).to include("slow page")
         expect(states).to eq(%i[stopped_loading stopped_loading])
       end
+
+      it "sends the given referrer with the navigation and not with later requests" do
+        page.go_to("/headers_with_ajax", referrer: "http://google.com/")
+
+        expect(page.at_css("#initial_request").text).to include("REFERER: http://google.com/")
+        expect(page.at_css("#ajax_request").text).not_to include("REFERER: http://google.com/")
+        expect(page.evaluate("document.referrer")).to eq("http://google.com/")
+      end
+
+      it "sends the given referrer for that navigation only" do
+        page.go_to("/headers", referrer: "http://google.com/")
+        page.go_to("/headers")
+
+        expect(page.body).not_to include("REFERER: http://google.com/")
+      end
     end
 
     context "with failing response" do

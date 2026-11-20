@@ -49,7 +49,6 @@ module Ferrum
     include Stream
     include Interceptable
 
-    attr_accessor :referrer
     attr_reader :context_id, :target_id, :idle, :tracing
 
     # Client connection.
@@ -147,6 +146,12 @@ module Ferrum
     #   How long the whole navigation may take, from sending the request to the
     #   page loading. Defaults to the page's `timeout`.
     #
+    # @param [String, nil] referrer
+    #   The referrer of this navigation only, what the document request sends
+    #   as `Referer` and `document.referrer` returns. A `Referer` header set
+    #   with {Headers#add} or {Headers#set} is sent with every request and
+    #   takes its place.
+    #
     # @return [String, nil]
     #   The navigated frame's id, or `nil` when the timeout is reached.
     #
@@ -163,13 +168,15 @@ module Ferrum
     #   page.go_to("https://github.com/")
     #   page.go_to("/slow", on_timeout: :raise)
     #   page.go_to("/slow", timeout: 10)
+    #   page.go_to("/landing", referrer: "https://google.com")
     #
-    def go_to(url = nil, on_timeout: nil, timeout: nil) # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+    def go_to(url = nil, on_timeout: nil, timeout: nil, referrer: nil) # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
       unless on_timeout.nil? || ON_TIMEOUT.include?(on_timeout)
         raise ArgumentError, "on_timeout should be one of #{ON_TIMEOUT.inspect}, got #{on_timeout.inspect}"
       end
 
       options = { url: combine_url!(url) }
+      referrer ||= headers.get["Referer"]
       options.merge!(referrer: referrer) if referrer
       deadline = Deadline.wrap(timeout || self.timeout)
       response = nil

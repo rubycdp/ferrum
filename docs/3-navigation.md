@@ -16,11 +16,15 @@ Navigate page to.
     once an enclosing `Ferrum::Deadline.within` has run out.
   * :timeout `Numeric` How long the whole navigation may take, sending the request and loading the page together,
     the page timeout by default.
+  * :referrer `String` The referrer of this navigation only: the document request sends it as `Referer` and
+    `document.referrer` returns it, the page's other requests don't carry it. A `Referer` set with `headers` is sent
+    with every request and takes its place.
 
 ```ruby
 page.go_to("https://github.com/")
 page.go_to("https://github.com/", on_timeout: :raise)
 page.go_to("https://github.com/", timeout: 10)
+page.go_to("https://github.com/", referrer: "https://google.com/")
 ```
 
 #### back(timeout: nil)

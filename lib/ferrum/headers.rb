@@ -61,18 +61,11 @@ module Ferrum
     # @param [Hash{String => String}] headers
     #   key-value pairs for example `"Referer" => "http://example.com"`.
     #
-    # @param [Boolean] permanent
-    #
     # @return [true]
     #
     # @raise [TimeoutError]
     #
-    def add(headers, permanent: true)
-      if headers["Referer"]
-        @page.referrer = headers["Referer"]
-        headers.delete("Referer") unless permanent
-      end
-
+    def add(headers)
       @headers.merge!(headers)
       overrides = OVERRIDES.select { |_, name| headers.key?(name) }.transform_values { |name| headers[name] }
       @page.network.emulate(**overrides) unless overrides.empty?
