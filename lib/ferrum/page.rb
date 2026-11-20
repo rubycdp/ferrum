@@ -13,6 +13,7 @@ require "ferrum/accessibility"
 require "ferrum/interceptable"
 require "ferrum/downloads"
 require "ferrum/page/frames"
+require "ferrum/page/navigation"
 require "ferrum/page/screencast"
 require "ferrum/page/screenshot"
 require "ferrum/page/animation"
@@ -32,20 +33,26 @@ module Ferrum
     NAVIGATION_WAIT = Utils::Deprecate.renamed_env(
       "FERRUM_NAVIGATION_WAIT", %w[FERRUM_CLICK_WAIT FERRUM_GOTO_WAIT], 0.1
     )
-    ON_TIMEOUT = %i[ignore raise].freeze
+    WAIT_INTERVAL = 0.05
+    WAIT_FOR_NAVIGATION_DEPRECATED = "wait_for_navigation will be removed in Ferrum 0.22. Use " \
+                                     "await_navigation(watch: seconds) { ... } instead."
+    WAIT_FOR_RELOAD_DEPRECATED = "wait_for_reload will be removed in Ferrum 0.22. Use await_navigation { ... } " \
+                                 "around the code that reloads the page."
 
     extend Forwardable
 
-    delegate %i[at_css at_xpath css xpath wait_for_selector
+    delegate %i[at_css at_xpath css xpath wait_css wait_css! wait_xpath wait_xpath! wait_for_selector
                 current_url current_title url title body doctype content=
                 execution_id execution_id! evaluate evaluate_handle execute isolated_world
                 add_script_tag add_style_tag] => :main_frame
+    delegate %i[await_download await_download!] => :downloads
     delegate %i[base_url default_user_agent timeout timeout=] => :@options
 
     include Animation
     include Screencast
     include Screenshot
     include Frames
+    include Navigation
     include Stream
     include Interceptable
 
@@ -127,79 +134,6 @@ module Ferrum
       subscribe
       prepare_page
     end
-
-    #
-    # Navigates the page to a URL.
-    #
-    # @param [String, nil] url
-    #   The URL to navigate to. The url should include scheme unless you set
-    #   `{Browser#base_url = url}` when configuring.
-    #
-    # @param [:ignore, :raise, nil] on_timeout
-    #   What to do when the page doesn't load in time: `:ignore` returns `nil`,
-    #   `:raise` raises {NavigationTimeoutError}. `nil` follows the deprecated
-    #   `:pending_connection_errors` option, which raises {PendingConnectionsError}.
-    #   Once the budget of an enclosing {Deadline.within} is used up, `:ignore`
-    #   raises {NavigationTimeoutError} too.
-    #
-    # @param [Numeric, Deadline, nil] timeout
-    #   How long the whole navigation may take, from sending the request to the
-    #   page loading. Defaults to the page's `timeout`.
-    #
-    # @param [String, nil] referrer
-    #   The referrer of this navigation only, what the document request sends
-    #   as `Referer` and `document.referrer` returns. A `Referer` header set
-    #   with {Headers#add} or {Headers#set} is sent with every request and
-    #   takes its place.
-    #
-    # @return [String, nil]
-    #   The navigated frame's id, or `nil` when the timeout is reached.
-    #
-    # @raise [StatusError]
-    #   If the request fails.
-    #
-    # @raise [NavigationTimeoutError]
-    #   If `on_timeout` is `:raise` and the timeout is reached.
-    #
-    # @raise [ArgumentError]
-    #   If `on_timeout` is neither `:ignore`, `:raise` nor `nil`.
-    #
-    # @example
-    #   page.go_to("https://github.com/")
-    #   page.go_to("/slow", on_timeout: :raise)
-    #   page.go_to("/slow", timeout: 10)
-    #   page.go_to("/landing", referrer: "https://google.com")
-    #
-    def go_to(url = nil, on_timeout: nil, timeout: nil, referrer: nil) # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
-      unless on_timeout.nil? || ON_TIMEOUT.include?(on_timeout)
-        raise ArgumentError, "on_timeout should be one of #{ON_TIMEOUT.inspect}, got #{on_timeout.inspect}"
-      end
-
-      options = { url: combine_url!(url) }
-      referrer ||= headers.get["Referer"]
-      options.merge!(referrer: referrer) if referrer
-      deadline = Deadline.wrap(timeout || self.timeout)
-      response = nil
-      wait_for_navigation!(NAVIGATION_WAIT, timeout: deadline) do
-        response = command("Page.navigate", timeout: deadline, **options)
-      end
-      error_text = response["errorText"] # https://cs.chromium.org/chromium/src/net/base/net_error_list.h
-      if error_text && error_text != "net::ERR_ABORTED" # Request aborted due to user action or download
-        raise StatusError.new(options[:url], "Request to #{options[:url]} failed (#{error_text})")
-      end
-
-      response["frameId"]
-    rescue TimeoutError
-      on_timeout ||= @options.pending_connection_errors ? :pending_connections : :ignore
-      return if on_timeout == :ignore && !Deadline.current&.expired?
-
-      pendings = network.traffic.select(&:pending?).map(&:url).compact
-      raise PendingConnectionsError.new(options[:url], pendings) if on_timeout == :pending_connections
-
-      raise NavigationTimeoutError.new(options[:url], pendings)
-    end
-    alias goto go_to
-    alias go go_to
 
     #
     # Closes the page's target and its underlying client connection.
@@ -394,125 +328,43 @@ module Ferrum
     end
 
     #
-    # Reloads the current page.
+    # Runs the block until it returns a truthy value. The calls in the block
+    # share the timeout.
     #
     # @param [Numeric, Deadline, nil] timeout
-    #   How long the whole reload may take. Defaults to the page's `timeout`.
+    #   How long to keep trying, the page's `timeout` by default.
+    #
+    # @param [Numeric] interval
+    #   Seconds to sleep between the attempts.
+    #
+    # @yield The check to repeat.
+    #
+    # @return [Object, nil]
+    #   What the block returned, `nil` if it didn't return a truthy value in time.
+    #
+    # @example
+    #   page.wait_until { page.evaluate("window.ready") } # => true
+    #
+    def wait_until(timeout: nil, interval: WAIT_INTERVAL, &)
+      Utils::Poll.call(timeout || self.timeout, interval, &)
+    end
+
+    #
+    # Same as {#wait_until}, but raises if the block doesn't return a truthy
+    # value in time.
+    #
+    # @param [Hash] options
+    #   The options of {#wait_until}.
+    #
+    # @yield The check to repeat.
+    #
+    # @return [Object]
     #
     # @raise [TimeoutError]
+    #   If the block doesn't return a truthy value in time.
     #
-    # @example
-    #   page.go_to("https://github.com/")
-    #   page.refresh
-    #
-    def refresh(timeout: nil)
-      deadline = Deadline.wrap(timeout || self.timeout)
-      wait_for_navigation!(NAVIGATION_WAIT, timeout: deadline) do
-        command("Page.reload", timeout: deadline, slowmoable: true)
-      end
-    end
-    alias reload refresh
-
-    #
-    # Stop all navigations and loading pending resources on the page.
-    #
-    # @raise [TimeoutError]
-    #
-    # @example
-    #   page.go_to("https://github.com/")
-    #   page.stop
-    #
-    def stop
-      command("Page.stopLoading", slowmoable: true)
-    end
-
-    #
-    # Navigates to the previous URL in the history.
-    #
-    # @param [Numeric, Deadline, nil] timeout
-    #   How long the history lookup and the page load may take together, the page timeout by default.
-    #
-    # @raise [TimeoutError]
-    #
-    # @example
-    #   page.go_to("https://github.com/")
-    #   page.at_xpath("//a").click
-    #   page.back
-    #
-    def back(timeout: nil)
-      history_navigate(delta: -1, timeout: timeout)
-    end
-
-    #
-    # Navigates to the next URL in the history.
-    #
-    # @param [Numeric, Deadline, nil] timeout
-    #   How long the history lookup and the page load may take together, the page timeout by default.
-    #
-    # @raise [TimeoutError]
-    #
-    # @example
-    #   page.go_to("https://github.com/")
-    #   page.at_xpath("//a").click
-    #   page.back
-    #   page.forward
-    #
-    def forward(timeout: nil)
-      history_navigate(delta: 1, timeout: timeout)
-    end
-
-    #
-    # Blocks until the page reloads or the timeout is reached.
-    #
-    # @param [Numeric, Deadline] timeout
-    #   Maximum time in seconds to wait for a reload event.
-    #
-    # @example
-    #   page.wait_for_reload
-    #
-    def wait_for_reload(timeout = 1)
-      deadline = Deadline.wrap(timeout)
-      generation = @idle.clear if @idle.set?
-      @idle.wait(deadline)
-      @idle.set(true) if generation == @idle.generation
-    end
-
-    #
-    # Runs the block and, if it starts a navigation of the main frame within
-    # `navigation_wait` seconds, waits for that navigation to finish, e.g. after
-    # a click on a link made from JavaScript.
-    #
-    # @param [Numeric] navigation_wait
-    #   How many seconds to watch for a navigation after the block returns.
-    #
-    # @param [Numeric, Deadline, nil] timeout
-    #   How long the block and the navigation it starts may take together.
-    #   Defaults to the page's `timeout`.
-    #
-    # @yield The code that may start a navigation.
-    #
-    # @return [Boolean]
-    #   `false` when a navigation started but didn't finish in time.
-    #
-    # @example
-    #   page.wait_for_navigation { page.at_css("a").evaluate("this.click()") } # => true
-    #
-    def wait_for_navigation(navigation_wait = NAVIGATION_WAIT, timeout: nil)
-      deadline = Deadline.wrap(timeout || self.timeout)
-      generation = @idle.clear
-      yield
-      @idle.wait([navigation_wait, deadline.remaining].min)
-      generation == @idle.generation || @idle.wait(deadline)
-    end
-
-    #
-    # Waits for a navigation the block starts or raises {Ferrum::TimeoutError}.
-    # Accepts the same arguments as {#wait_for_navigation}.
-    #
-    # @raise [Ferrum::TimeoutError]
-    #
-    def wait_for_navigation!(...)
-      raise TimeoutError unless wait_for_navigation(...)
+    def wait_until!(**options, &)
+      wait_until(**options, &) || raise(TimeoutError)
     end
 
     #
@@ -597,7 +449,7 @@ module Ferrum
 
     #
     # Sends a CDP command to the browser. To wait for a navigation it starts,
-    # wrap it in {#wait_for_navigation}.
+    # wrap it in {#await_navigation}.
     #
     # @param [String] method
     #   The CDP method name, e.g. `"Page.navigate"`.
@@ -622,7 +474,7 @@ module Ferrum
     #   page.command("Runtime.evaluate", expression: "1 + 1")
     #
     def command(method, slowmoable: false, timeout: nil, **params)
-      raise ArgumentError, "wait: is removed, wrap #{method} in wait_for_navigation instead" if params.key?(:wait)
+      raise ArgumentError, "wait: is removed, wrap #{method} in await_navigation instead" if params.key?(:wait)
 
       sleep(@options.slowmo) if slowmoable && @options.slowmo.positive?
       client.command(method, timeout: Deadline.wrap(timeout || self.timeout), **params)
@@ -751,31 +603,6 @@ module Ferrum
       # the history and if the transitionType for example `link` then
       # content is already loaded, and we can try to get the document.
       document_node_id
-    end
-
-    def history_navigate(delta:, timeout: nil)
-      deadline = Deadline.wrap(timeout || self.timeout)
-      history = command("Page.getNavigationHistory", timeout: deadline)
-      index, entries = history.values_at("currentIndex", "entries")
-      entry = entries[index + delta]
-
-      return unless entry
-
-      # Potential wait because of network event
-      wait_for_navigation!(NAVIGATION_WAIT, timeout: deadline) do
-        command("Page.navigateToHistoryEntry", timeout: deadline, slowmoable: true, entryId: entry["id"])
-      end
-    end
-
-    def combine_url!(url_or_path)
-      url = Addressable::URI.parse(url_or_path)
-      nil_or_relative = url.nil? || url.relative?
-
-      if nil_or_relative && !@options.base_url
-        raise "Set :base_url browser's option or use absolute url in `go_to`, you passed: #{url_or_path}"
-      end
-
-      (nil_or_relative ? @options.base_url.join(url.to_s) : url).to_s
     end
 
     def proxy=(options)

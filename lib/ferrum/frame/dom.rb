@@ -26,6 +26,9 @@ module Ferrum
     # `<link>` tags.
     #
     module DOM
+      WAIT_INTERVAL = 0.05
+      WAIT_FOR_SELECTOR_DEPRECATED = "wait_for_selector will be removed in Ferrum 0.22. Use wait_css(selector) or " \
+                                     "wait_xpath(selector) instead."
       SCRIPT_SRC_TAG = <<~JS
         function(url, type) {
           const script = document.createElement("script");
@@ -275,55 +278,116 @@ module Ferrum
       end
 
       #
-      # Finds a node by using a CSS path or XPath selector, retrying until
-      # it appears or `timeout` elapses. Pass exactly one of `css`/`xpath`;
-      # each attempt delegates to {#at_css}/{#at_xpath} respectively, so it
-      # matches their behavior exactly.
+      # Polls {#at_css} until a node matches the selector.
       #
-      # @param [String, nil] css
-      #   The CSS path selector. Mutually exclusive with `xpath`.
-      #
-      # @param [String, nil] xpath
-      #   The XPath selector. Mutually exclusive with `css`.
+      # @param [String] selector
+      #   The CSS selector.
       #
       # @param [Node, nil] within
       #   The parent node to search within.
       #
-      # @param [Numeric, Deadline] timeout
-      #   How long to keep retrying, in seconds.
+      # @param [Numeric, Deadline, nil] timeout
+      #   How long to keep trying, the page's `timeout` by default.
       #
-      # @param [Float, Integer] interval
-      #   How long to sleep between attempts, in seconds.
+      # @param [Numeric] interval
+      #   Seconds to sleep between the attempts.
       #
       # @return [Node, nil]
-      #   The matching node, or `nil` if `timeout` elapses without a match.
+      #   The matching node, `nil` if none shows up in time.
+      #
+      # @example
+      #   browser.wait_css("#appears_later") # => Node
+      #
+      def wait_css(selector, within: nil, timeout: nil, interval: WAIT_INTERVAL)
+        Utils::Poll.call(timeout || @page.timeout, interval) { at_css(selector, within: within) }
+      end
+
+      #
+      # Same as {#wait_css}, but raises if no node matches in time.
+      #
+      # @param [String] selector
+      #
+      # @param [Hash] options
+      #   The options of {#wait_css}.
+      #
+      # @return [Node]
+      #
+      # @raise [TimeoutError]
+      #   If no node matches in time.
+      #
+      def wait_css!(selector, **options)
+        wait_css(selector, **options) || raise(TimeoutError)
+      end
+
+      #
+      # Polls {#at_xpath} until a node matches the selector.
+      #
+      # @param [String] selector
+      #   The XPath selector.
+      #
+      # @param [Node, nil] within
+      #   The parent node to search within.
+      #
+      # @param [Numeric, Deadline, nil] timeout
+      #   How long to keep trying, the page's `timeout` by default.
+      #
+      # @param [Numeric] interval
+      #   Seconds to sleep between the attempts.
+      #
+      # @return [Node, nil]
+      #   The matching node, `nil` if none shows up in time.
+      #
+      # @example
+      #   browser.wait_xpath("//div[@id='appears_later']") # => Node
+      #
+      def wait_xpath(selector, within: nil, timeout: nil, interval: WAIT_INTERVAL)
+        Utils::Poll.call(timeout || @page.timeout, interval) { at_xpath(selector, within: within) }
+      end
+
+      #
+      # Same as {#wait_xpath}, but raises if no node matches in time.
+      #
+      # @param [String] selector
+      #
+      # @param [Hash] options
+      #   The options of {#wait_xpath}.
+      #
+      # @return [Node]
+      #
+      # @raise [TimeoutError]
+      #   If no node matches in time.
+      #
+      def wait_xpath!(selector, **options)
+        wait_xpath(selector, **options) || raise(TimeoutError)
+      end
+
+      #
+      # Finds a node by using a CSS path or XPath selector, retrying until
+      # it appears or `timeout` elapses.
+      #
+      # @deprecated Will be removed in Ferrum 0.22. Use {#wait_css} or {#wait_xpath}.
+      #
+      # @param [String, nil] css
+      #
+      # @param [String, nil] xpath
+      #
+      # @param [Node, nil] within
+      #
+      # @param [Numeric, Deadline] timeout
+      #
+      # @param [Float, Integer] interval
+      #
+      # @return [Node, nil]
       #
       # @raise [ArgumentError]
       #   If neither or both of `css`/`xpath` are given.
       #
-      # @raise [TimeoutError]
-      #
-      # @example
-      #   browser.go_to("https://github.com/")
-      #   browser.wait_for_selector(css: "a[aria-label='Issues you created']") # => Node
-      #
-      def wait_for_selector(css: nil, xpath: nil, within: nil, timeout: @page.timeout, interval: 0.05)
-        raise ArgumentError, "pass either `css:` or `xpath:`" if css && xpath
+      def wait_for_selector(css: nil, xpath: nil, within: nil, timeout: @page.timeout, interval: WAIT_INTERVAL)
+        Utils::Deprecate.warn(WAIT_FOR_SELECTOR_DEPRECATED, user_code: true)
+        raise ArgumentError, "pass either `css:` or `xpath:`" if (css && xpath) || !(css || xpath)
 
-        selector, method_name = css ? [css, :at_css] : [xpath, :at_xpath]
-        raise ArgumentError, "pass either `css:` or `xpath:`" unless selector
-
-        deadline = Deadline.wrap(timeout)
-
-        Deadline.within(deadline) do
-          until (node = poll_selector(method_name, selector, within, deadline))
-            return nil if deadline.expired?
-
-            sleep(interval)
-          end
-
-          node
-        end
+        options = { within: within, timeout: timeout, interval: interval }
+        css ? wait_css(css, **options) : wait_xpath(xpath, **options)
       end
 
       #
@@ -382,16 +446,6 @@ module Ferrum
         end
 
         true
-      end
-
-      private
-
-      def poll_selector(method_name, selector, within, deadline)
-        send(method_name, selector, within: within)
-      rescue TimeoutError
-        raise unless deadline.expired?
-
-        nil
       end
     end
   end

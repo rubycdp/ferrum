@@ -68,7 +68,7 @@ describe Ferrum::Context do
 
     it "returns only the pages of the targets the block selects" do
       browser.go_to
-      popup = browser.wait_for_new_page! { browser.execute(%(window.open("/simple"))) }
+      popup = browser.await_page! { browser.execute(%(window.open("/simple"))) }
 
       expect(browser.pages(&:opener_id)).to eq([popup])
     ensure
@@ -164,7 +164,7 @@ describe Ferrum::Context do
 
     it "returns the pages opened by another page and warns that it is deprecated" do
       browser.go_to
-      popup = browser.wait_for_new_page { browser.execute(%(window.open("/simple", "popup"))) }
+      popup = browser.await_page { browser.execute(%(window.open("/simple", "popup"))) }
 
       windows = nil
       expect { windows = browser.windows }
@@ -175,11 +175,11 @@ describe Ferrum::Context do
     end
   end
 
-  describe "#wait_for_new_page" do
+  describe "#await_page" do
     it "returns the page opened with window.open" do
       browser.go_to
 
-      popup = browser.wait_for_new_page { browser.execute(%(window.open("/simple"))) }
+      popup = browser.await_page { browser.execute(%(window.open("/simple"))) }
 
       expect(popup.body).to include("Test")
       expect(browser.pages).to include(popup)
@@ -191,7 +191,7 @@ describe Ferrum::Context do
       browser.go_to
       browser.content = %(<a href="/simple" target="_blank" rel="noopener">open</a>)
 
-      popup = browser.wait_for_new_page { browser.at_css("a").click }
+      popup = browser.await_page { browser.at_css("a").click }
 
       expect(popup.url).to eq(base_url("/simple"))
     ensure
@@ -201,7 +201,7 @@ describe Ferrum::Context do
     it "waits for the page to load" do
       browser.go_to
 
-      popup = browser.wait_for_new_page { browser.execute(%(window.open("/slow", "popup"))) }
+      popup = browser.await_page { browser.execute(%(window.open("/slow", "popup"))) }
 
       expect(popup.body).to include("slow page")
     ensure
@@ -210,10 +210,10 @@ describe Ferrum::Context do
 
     it "returns the page opened under the name of a closed one" do
       browser.go_to
-      browser.wait_for_new_page { browser.execute(%(window.open("/simple", "popup"))) }.close
+      browser.await_page { browser.execute(%(window.open("/simple", "popup"))) }.close
       sleep 0.5 # https://github.com/ChromeDevTools/devtools-protocol/issues/145
 
-      same = browser.wait_for_new_page { browser.execute(%(window.open("/simple", "popup"))) }
+      same = browser.await_page { browser.execute(%(window.open("/simple", "popup"))) }
 
       expect(same.body).to include("Test")
     ensure
@@ -225,7 +225,7 @@ describe Ferrum::Context do
       other = browser.create_page
       other.go_to("/")
 
-      popup = browser.wait_for_new_page(opener: other) { other.execute(%(window.open("/simple"))) }
+      popup = browser.await_page(opener: other) { other.execute(%(window.open("/simple"))) }
 
       expect(browser.targets[popup.target_id].opener_id).to eq(other.target_id)
     ensure
@@ -237,7 +237,7 @@ describe Ferrum::Context do
       browser.go_to
       other = browser.create_page
 
-      popup = browser.wait_for_new_page(opener: other, timeout: 0.5) { browser.execute(%(window.open("/simple"))) }
+      popup = browser.await_page(opener: other, timeout: 0.5) { browser.execute(%(window.open("/simple"))) }
 
       expect(popup).to be_nil
     ensure
@@ -249,7 +249,7 @@ describe Ferrum::Context do
       browser.go_to
       context = browser.contexts.create
 
-      popup = context.wait_for_new_page(timeout: 0.5) { browser.execute(%(window.open("/simple"))) }
+      popup = context.await_page(timeout: 0.5) { browser.execute(%(window.open("/simple"))) }
 
       expect(popup).to be_nil
     ensure
@@ -258,15 +258,19 @@ describe Ferrum::Context do
     end
 
     it "returns nil when no page opens in time" do
-      expect(browser.wait_for_new_page(timeout: 0.1)).to be_nil
+      expect(browser.await_page(timeout: 0.1) { browser.execute("1 + 1") }).to be_nil
+    end
+
+    it "raises without a block" do
+      expect { browser.await_page }.to raise_error(ArgumentError, /needs a block/)
     end
   end
 
-  describe "#wait_for_new_page!" do
+  describe "#await_page!" do
     it "returns the page opened with window.open" do
       browser.go_to
 
-      popup = browser.wait_for_new_page! { browser.execute(%(window.open("/simple"))) }
+      popup = browser.await_page! { browser.execute(%(window.open("/simple"))) }
 
       expect(popup.body).to include("Test")
     ensure
@@ -278,7 +282,7 @@ describe Ferrum::Context do
       other = browser.create_page
       other.go_to("/")
 
-      popup = browser.wait_for_new_page!(opener: other) { other.execute(%(window.open("/simple"))) }
+      popup = browser.await_page!(opener: other) { other.execute(%(window.open("/simple"))) }
 
       expect(browser.targets[popup.target_id].opener_id).to eq(other.target_id)
     ensure
@@ -287,7 +291,7 @@ describe Ferrum::Context do
     end
 
     it "raises when no page opens in time" do
-      expect { browser.wait_for_new_page!(timeout: 0.1) }.to raise_error(Ferrum::TimeoutError)
+      expect { browser.await_page!(timeout: 0.1) { browser.execute("1 + 1") } }.to raise_error(Ferrum::TimeoutError)
     end
   end
 

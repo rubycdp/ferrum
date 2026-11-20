@@ -2,6 +2,7 @@ module Ferrum
   class Node
     MOVING_WAIT_DELAY: ::Float
     MOVING_CHECK_DELAY: ::Float
+    WAIT_FOR_STOP_MOVING_DEPRECATED: String
 
     MOVING_WAIT_ATTEMPTS: ::Integer
 
@@ -41,7 +42,11 @@ module Ferrum
 
     def node_id: () -> Integer
 
-    def wait_for_stop_moving: (?delay: ::Numeric, ?attempts: ::Integer) -> ::Array[::Array[::Numeric]]
+    def wait_still: (?timeout: (::Numeric | Deadline)?, ?interval: ::Numeric) -> ::Array[::Array[::Numeric]]?
+
+    def wait_still!: (?timeout: (::Numeric | Deadline)?, ?interval: ::Numeric) -> ::Array[::Array[::Numeric]]
+
+    %a{deprecated} def wait_for_stop_moving: (?delay: ::Numeric, ?attempts: ::Integer) -> ::Array[::Array[::Numeric]]
 
     def moving?: (?delay: ::Numeric) -> bool
 
@@ -49,7 +54,7 @@ module Ferrum
 
     def type: (*untyped keys, ?timeout: (::Numeric | Deadline)?) -> self
 
-    def click: (?mode: ::Symbol, ?keys: ::Array[::Symbol], ?offset: ::Hash[::Symbol, untyped], ?delay: ::Numeric, ?navigation_wait: ::Numeric, ?wait: ::Numeric?, ?timeout: (::Numeric | Deadline)?) -> self
+    def click: (?mode: ::Symbol, ?keys: ::Array[::Symbol], ?offset: ::Hash[::Symbol, untyped], ?delay: ::Numeric, ?navigation_wait: (::Numeric | false), ?wait: ::Numeric?, ?timeout: (::Numeric | Deadline)?) -> self
 
     def hover: () -> bot
 
@@ -108,6 +113,8 @@ module Ferrum
     def bounding_rect_coordinates: () -> [Numeric, Numeric]
 
     def content_quads: () -> untyped
+
+    def settled_quads: (?delay: ::Numeric, ?attempts: ::Integer) -> ::Array[::Array[::Numeric]]
 
     def content_quads_with: (?delay: untyped) -> ::Array[untyped]
 

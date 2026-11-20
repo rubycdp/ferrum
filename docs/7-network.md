@@ -44,33 +44,26 @@ page.go_to("https://github.com/")
 page.network.status # => 200
 ```
 
-#### wait_for_idle(\*\*options) : `Boolean`
+#### wait_idle(\*\*options) : `true` | `nil`
 
-Waits for network idle, returns `true` in case of success and `false` if there are still connections.
+Polls `idle?` until the network is idle, returns `true`, or `nil` if connections are still pending after `timeout`.
+`wait_idle!` takes the same options and raises `Ferrum::TimeoutError` instead.
 
 * options `Hash`
-    * :connections `Integer` how many connections are allowed for network to be
-      idling, `0` by default
-    * :duration `Float` sleep for given amount of time and check again, `0.05` by
-      default
-    * :timeout `Float` during what time we try to check idle, `browser.timeout`
-      by default
+    * :connections `Integer` how many connections may still be pending, `0` by default
+    * :timeout `Numeric` how long to keep trying, the page timeout by default
+    * :interval `Numeric` seconds to sleep between attempts, `0.05` by default
 
 ```ruby
 page.go_to("https://example.com/")
 page.at_xpath("//a[text() = 'No UI changes button']").click
-page.network.wait_for_idle # => true
+page.network.wait_idle # => true
+page.network.wait_idle!(connections: 1)
 ```
 
-#### wait_for_idle!(\*\*options)
+#### idle?(connections: 0) : `Boolean`
 
-Waits for network idle or raises `Ferrum::TimeoutError` error. Accepts same arguments as `wait_for_idle`.
-
-```ruby
-page.go_to("https://example.com/")
-page.at_xpath("//a[text() = 'No UI changes button']").click
-page.network.wait_for_idle! # might raise an error
-```
+Whether no more than `connections` requests are still pending.
 
 #### clear(type)
 

@@ -1,6 +1,8 @@
 module Ferrum
   class Frame
     module DOM
+      WAIT_INTERVAL: ::Float
+      WAIT_FOR_SELECTOR_DEPRECATED: String
       SCRIPT_SRC_TAG: ::String
 
       SCRIPT_TEXT_TAG: ::String
@@ -25,9 +27,15 @@ module Ferrum
 
       def at_css: (untyped selector, ?within: untyped?) -> untyped
 
-      def poll_selector: (Symbol method_name, String selector, untyped within, Deadline deadline) -> untyped
+      def wait_css: (String selector, ?within: Node?, ?timeout: (::Numeric | Deadline)?, ?interval: ::Numeric) -> Node?
 
-      def wait_for_selector: (?css: untyped?, ?xpath: untyped?, ?within: untyped?, ?timeout: (::Numeric | Deadline), ?interval: untyped) -> untyped
+      def wait_css!: (String selector, ?within: Node?, ?timeout: (::Numeric | Deadline)?, ?interval: ::Numeric) -> Node
+
+      def wait_xpath: (String selector, ?within: Node?, ?timeout: (::Numeric | Deadline)?, ?interval: ::Numeric) -> Node?
+
+      def wait_xpath!: (String selector, ?within: Node?, ?timeout: (::Numeric | Deadline)?, ?interval: ::Numeric) -> Node
+
+      %a{deprecated} def wait_for_selector: (?css: String?, ?xpath: String?, ?within: Node?, ?timeout: (::Numeric | Deadline), ?interval: ::Numeric) -> Node?
 
       def add_script_tag: (?url: untyped?, ?path: untyped?, ?content: untyped?, ?type: ::String) -> untyped
 

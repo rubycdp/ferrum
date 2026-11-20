@@ -333,7 +333,7 @@ describe Ferrum::Browser do
                                     extensions: [File.expand_path("support/geolocation.js", __dir__)])
       browser.go_to
 
-      popup = browser.wait_for_new_page { browser.execute(%(window.open("/requiring_custom_extension", "popup"))) }
+      popup = browser.await_page { browser.execute(%(window.open("/requiring_custom_extension", "popup"))) }
 
       expect(popup.at_css("#location").text).to eq("1,-1")
     ensure
@@ -701,8 +701,7 @@ describe Ferrum::Browser do
       after { browser.quit }
 
       it "saves an attachment", :launch do
-        browser.go_to("/#{filename}")
-        browser.downloads.wait
+        browser.await_download { browser.go_to("/#{filename}") }
 
         expect(File.exist?("#{save_path}/#{filename}")).to be true
       ensure
@@ -896,8 +895,8 @@ describe Ferrum::Browser do
 
       expect(browser.targets.size).to eq(1)
 
-      popup1 = browser.wait_for_new_page { browser.execute(%(window.open("/simple", "popup1"))) }
-      popup2 = browser.wait_for_new_page { browser.execute(%(window.open("/simple", "popup2"))) }
+      popup1 = browser.await_page { browser.execute(%(window.open("/simple", "popup1"))) }
+      popup2 = browser.await_page { browser.execute(%(window.open("/simple", "popup2"))) }
       popup1.resize(width: 100, height: 200)
       popup2.resize(width: 200, height: 100)
 
@@ -939,7 +938,7 @@ describe Ferrum::Browser do
 
       expect(browser.targets.size).to eq(2)
 
-      popup2 = browser.wait_for_new_page { browser.execute(%(window.open("/simple", "popup2"))) }
+      popup2 = browser.await_page { browser.execute(%(window.open("/simple", "popup2"))) }
 
       expect(browser.targets.size).to eq(3)
 

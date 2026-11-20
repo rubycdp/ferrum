@@ -6,7 +6,10 @@ describe Ferrum::Downloads do
 
     let(:idle) { Ferrum::Concurrency::Cell.set(true) }
 
-    before { downloads.instance_variable_set(:@idle, idle) }
+    before do
+      downloads.instance_variable_set(:@idle, idle)
+      allow(Ferrum::Utils::Deprecate).to receive(:warn)
+    end
 
     it "marks downloads idle again when none began" do
       downloads.wait(0.05)

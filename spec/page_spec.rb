@@ -1,118 +1,6 @@
 # frozen_string_literal: true
 
 describe Ferrum::Page do
-  describe "#go_to" do
-    let(:port) { server.port }
-
-    context "with success response" do
-      it "works when DNS correct" do
-        expect { page.go_to("http://localhost:#{port}/") }.not_to raise_error
-      end
-
-      it "reports no open resources when there are none" do
-        page.timeout = 4
-        expect { page.go_to("/really_slow") }.not_to raise_error
-      end
-
-      it "does not block on a lazy iframe" do
-        expect { page.go_to("/lazy_iframe") }.not_to raise_error
-
-        states = page.frames.reject(&:main?).map(&:state)
-        expect(states).to eq(%i[stopped_loading stopped_loading])
-      end
-
-      it "loads in-viewport lazy iframes" do
-        page.go_to("/lazy_iframe")
-        frame = page.frame_by(name: "lazy_in_viewport")
-
-        states = page.frames.reject(&:main?).map(&:state)
-        expect(frame.body).to include("slow page")
-        expect(states).to eq(%i[stopped_loading stopped_loading])
-      end
-
-      it "sends the given referrer with the navigation and not with later requests" do
-        page.go_to("/headers_with_ajax", referrer: "http://google.com/")
-
-        expect(page.at_css("#initial_request").text).to include("REFERER: http://google.com/")
-        expect(page.at_css("#ajax_request").text).not_to include("REFERER: http://google.com/")
-        expect(page.evaluate("document.referrer")).to eq("http://google.com/")
-      end
-
-      it "sends the given referrer for that navigation only" do
-        page.go_to("/headers", referrer: "http://google.com/")
-        page.go_to("/headers")
-
-        expect(page.body).not_to include("REFERER: http://google.com/")
-      end
-    end
-
-    context "with failing response" do
-      it "handles navigation error" do
-        expect { page.go_to("http://nope:#{port}/") }.to raise_error(
-          Ferrum::StatusError,
-          %r{Request to http://nope:\d+/ failed \(net::ERR_NAME_NOT_RESOLVED\)}
-        )
-      end
-
-      it "reports pending connection for image" do
-        with_timeout(2) do
-          expect { browser.go_to("/visit_timeout", on_timeout: :raise) }.to raise_error(
-            Ferrum::NavigationTimeoutError,
-            %r{Timed out waiting for http://.*/visit_timeout to load, still pending: http://.*/really_slow\.}
-          )
-        end
-      end
-
-      it "reports pending connection for main frame" do
-        with_timeout(0.5) do
-          expect { browser.go_to("/really_slow", on_timeout: :raise) }.to raise_error(
-            Ferrum::NavigationTimeoutError,
-            %r{Timed out waiting for http://.*/really_slow to load, still pending: http://.*/really_slow\.}
-          )
-        end
-      end
-
-      it "bounds the navigation by the given timeout instead of the page timeout" do
-        started = Ferrum::Utils::ElapsedTime.monotonic_time
-
-        expect { page.go_to("/really_slow", timeout: 0.5, on_timeout: :raise) }
-          .to raise_error(Ferrum::NavigationTimeoutError)
-        expect(Ferrum::Utils::ElapsedTime.elapsed_time(started)).to be < 2
-      end
-
-      it "is bound by the surrounding Deadline.within block" do
-        started = Ferrum::Utils::ElapsedTime.monotonic_time
-
-        Ferrum::Deadline.within(0.5) do
-          expect { page.go_to("/really_slow", on_timeout: :raise) }.to raise_error(Ferrum::NavigationTimeoutError)
-        end
-        expect(Ferrum::Utils::ElapsedTime.elapsed_time(started)).to be < 2
-      end
-
-      it "raises once the surrounding Deadline.within block runs out" do
-        Ferrum::Deadline.within(0.5) do
-          expect { page.go_to("/really_slow") }.to raise_error(Ferrum::NavigationTimeoutError)
-          expect { page.go_to("/") }.to raise_error(Ferrum::NavigationTimeoutError)
-        end
-      end
-
-      it "rejects an unknown on_timeout" do
-        expect { browser.go_to("/", on_timeout: :wait) }
-          .to raise_error(ArgumentError, "on_timeout should be one of [:ignore, :raise], got :wait")
-      end
-
-      it "handles server error" do
-        expect { page.go_to("/server_error") }.to raise_error(
-          Ferrum::StatusError,
-          %r{Request to http://.*/server_error failed \(net::ERR_HTTP_RESPONSE_CODE_FAILURE\)}
-        )
-
-        expect(page.network.status).to eq(500)
-        expect(page.network.traffic.first.error.error_text).to eq("net::ERR_HTTP_RESPONSE_CODE_FAILURE")
-      end
-    end
-  end
-
   describe "#close" do
     it "closes the page's target" do
       page.go_to
@@ -189,36 +77,6 @@ describe Ferrum::Page do
     end
   end
 
-  describe "#refresh" do
-    it "reloads the page and waits for it to load" do
-      page.go_to("/slow")
-      page.execute("window.marker = 'set'")
-
-      page.refresh
-
-      expect(page.evaluate("window.marker")).to be_nil
-      expect(page.body).to include("slow page")
-    end
-
-    it "raises when the given timeout is already used up" do
-      page.go_to("/slow")
-
-      expect { page.refresh(timeout: 0) }.to raise_error(Ferrum::TimeoutError)
-    end
-  end
-
-  describe "#stop" do
-    it "stops the pending navigation" do
-      page.go_to("/simple")
-      page.execute("location.href = '/really_slow'")
-
-      page.stop
-
-      expect(page.url).to eq(base_url("/simple"))
-      expect(page.at_css("title").text).to eq("Test")
-    end
-  end
-
   describe "#url" do
     it "supports whitespace characters" do
       page.go_to("/arbitrary_path/200/foo%20bar%20baz")
@@ -264,132 +122,33 @@ describe Ferrum::Page do
     end
   end
 
-  describe "#back" do
-    it "raises when the history query and the navigation take longer than the timeout together" do
-      page.go_to("/simple")
+  describe "#wait_until" do
+    it "returns the first truthy value of the block" do
       page.go_to("/with_js")
+      page.execute("setTimeout(() => window.ready = 'yes', 200)")
 
-      with_timeout(0.5) do
-        slow_commands(0.3)
-        expect { page.back }.to raise_error(Ferrum::TimeoutError)
-      end
+      expect(page.wait_until { page.evaluate("window.ready") }).to eq("yes")
     end
 
-    it "bounds the history query and the navigation by the given timeout" do
-      page.go_to("/simple")
+    it "returns nil when the block stays falsy" do
       page.go_to("/with_js")
 
-      slow_commands(0.3)
-
-      expect { page.back(timeout: 0.5) }.to raise_error(Ferrum::TimeoutError)
+      expect(page.wait_until(timeout: 0.3) { page.evaluate("window.ready") }).to be_nil
     end
 
-    it "lets the given timeout exceed the page timeout" do
-      page.go_to("/simple")
+    it "returns nil when a call in the block hangs past the timeout" do
       page.go_to("/with_js")
+      hang_commands
 
-      with_timeout(0.5) do
-        slow_commands(0.3)
-        expect { page.back(timeout: 5) }.not_to raise_error
-      end
-    end
-
-    it "goes back when history state has been pushed" do
-      page.go_to
-
-      page.execute(%(window.history.pushState({foo: "bar"}, "title", "bar2.html");))
-
-      expect(page.url).to eq(base_url("/bar2.html"))
-      expect { page.back }.not_to raise_error
-      expect(page.url).to eq(base_url("/"))
+      expect(page.wait_until(timeout: 0.3) { page.evaluate("window.ready") }).to be_nil
     end
   end
 
-  describe "#forward" do
-    it "bounds the history query and the navigation by the given timeout" do
-      page.go_to("/simple")
+  describe "#wait_until!" do
+    it "raises when the block stays falsy" do
       page.go_to("/with_js")
-      page.back
 
-      slow_commands(0.3)
-
-      expect { page.forward(timeout: 0.5) }.to raise_error(Ferrum::TimeoutError)
-    end
-
-    it "goes forward when history state is used" do
-      page.go_to
-
-      page.execute(%(window.history.pushState({foo: "bar"}, "title", "bar2.html");))
-      expect(page.url).to eq(base_url("/bar2.html"))
-      # don't use #back here to isolate the test
-      page.execute("window.history.go(-1);")
-
-      expect(page.url).to eq(base_url("/"))
-      expect { page.forward }.not_to raise_error
-      expect(page.url).to eq(base_url("/bar2.html"))
-    end
-  end
-
-  describe "#wait_for_reload" do
-    it "waits for page to be reloaded" do
-      page.go_to("/auto_refresh")
-      expect(page.body).to include("Visited 1 times")
-
-      page.wait_for_reload(5)
-
-      expect(page.body).to include("Visited 2 times")
-    end
-  end
-
-  describe "#wait_for_navigation" do
-    before { page.go_to("/") }
-
-    it "waits for a navigation the block starts" do
-      navigated = loaded = false
-      page.on("Page.frameNavigated") { |params| navigated = params.dig("frame", "url").end_with?("/slow") }
-      page.on("Page.loadEventFired") { loaded = navigated }
-
-      expect(page.wait_for_navigation { page.execute("location.href = '/slow'") }).to be(true)
-      expect(loaded).to be(true)
-      expect(page.body).to include("slow page")
-    end
-
-    it "returns after the wait when nothing navigates" do
-      started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-
-      expect(page.wait_for_navigation(0.2) { page.execute("1 + 1") }).to be(true)
-      expect(Process.clock_gettime(Process::CLOCK_MONOTONIC) - started).to be_between(0.2, page.timeout)
-    end
-
-    it "returns false when the navigation doesn't finish within the page timeout" do
-      page.timeout = 1
-
-      expect(page.wait_for_navigation { page.execute("location.href = '/really_slow'") }).to be(false)
-    end
-
-    it "returns false when the navigation doesn't finish within the given timeout" do
-      expect(page.wait_for_navigation(timeout: 0.5) { page.execute("location.href = '/really_slow'") }).to be(false)
-    end
-  end
-
-  describe "#wait_for_navigation!" do
-    before { page.go_to("/") }
-
-    it "waits for a navigation the block starts" do
-      navigated = loaded = false
-      page.on("Page.frameNavigated") { |params| navigated = params.dig("frame", "url").end_with?("/slow") }
-      page.on("Page.loadEventFired") { loaded = navigated }
-
-      page.wait_for_navigation! { page.execute("location.href = '/slow'") }
-
-      expect(loaded).to be(true)
-    end
-
-    it "raises when the navigation doesn't finish within the page timeout" do
-      page.timeout = 1
-
-      expect { page.wait_for_navigation! { page.execute("location.href = '/really_slow'") } }
-        .to raise_error(Ferrum::TimeoutError)
+      expect { page.wait_until!(timeout: 0.3) { page.evaluate("window.ready") } }.to raise_error(Ferrum::TimeoutError)
     end
   end
 
@@ -470,17 +229,17 @@ describe Ferrum::Page do
 
     it "rejects the removed wait: instead of sending it to the browser" do
       expect { page.command("Page.navigate", wait: 1, url: base_url("/")) }
-        .to raise_error(ArgumentError, "wait: is removed, wrap Page.navigate in wait_for_navigation instead")
+        .to raise_error(ArgumentError, "wait: is removed, wrap Page.navigate in await_navigation instead")
     end
   end
 
   describe "#timeout=" do
     it "supports to change timeout dynamically" do
       page.timeout = 4
-      expect { page.go_to("/really_slow", on_timeout: :raise) }.not_to raise_error
+      expect { page.go_to!("/really_slow") }.not_to raise_error
 
       page.timeout = 2
-      expect { page.go_to("/really_slow", on_timeout: :raise) }.to raise_error(Ferrum::NavigationTimeoutError)
+      expect { page.go_to!("/really_slow") }.to raise_error(Ferrum::NavigationTimeoutError)
     end
   end
 
@@ -655,7 +414,7 @@ describe Ferrum::Page do
         page.on(:response) { |exchange| exchanges << exchange }
 
         page.go_to("/with_ajax_connection_refused")
-        network.wait_for_idle
+        network.wait_idle
 
         expect(traffic.size).to eq(3)
         expect(exchanges.size).to eq(2)

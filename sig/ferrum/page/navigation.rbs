@@ -1,0 +1,47 @@
+module Ferrum
+  class Page
+    module Navigation
+      def go_to: (?String? url, ?timeout: (::Numeric | Deadline)?, ?referrer: String?) -> String?
+      alias goto go_to
+      alias go go_to
+
+      def go_to!: (?String? url, ?timeout: (::Numeric | Deadline)?, ?referrer: String?) -> String
+
+      def refresh: (?timeout: (::Numeric | Deadline)?) -> true?
+      alias reload refresh
+
+      def refresh!: (?timeout: (::Numeric | Deadline)?) -> true
+      alias reload! refresh!
+
+      def stop: () -> Hash[String, untyped]
+
+      def back: (?timeout: (::Numeric | Deadline)?) -> true?
+
+      def back!: (?timeout: (::Numeric | Deadline)?) -> true?
+
+      def forward: (?timeout: (::Numeric | Deadline)?) -> true?
+
+      def forward!: (?timeout: (::Numeric | Deadline)?) -> true?
+
+      def await_navigation: (?watch: ::Numeric?, ?timeout: (::Numeric | Deadline)?) { () -> void } -> true?
+
+      def await_navigation!: (?watch: ::Numeric?, ?timeout: (::Numeric | Deadline)?) { () -> void } -> true
+
+      %a{deprecated} def wait_for_reload: (?(::Numeric | Deadline) timeout) -> void
+
+      %a{deprecated} def wait_for_navigation: (?::Numeric navigation_wait, ?timeout: (::Numeric | Deadline)?) { () -> void } -> bool
+
+      %a{deprecated} def wait_for_navigation!: (?::Numeric navigation_wait, ?timeout: (::Numeric | Deadline)?) { () -> void } -> nil
+
+      private
+
+      def history_navigate: (delta: ::Integer, ?timeout: (::Numeric | Deadline)?) -> true?
+
+      def navigate!: (String? url, Deadline deadline) { () -> void } -> true
+
+      def nil_on_timeout: [T] () { () -> T } -> T?
+
+      def combine_url!: (String? url) -> String
+    end
+  end
+end

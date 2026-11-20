@@ -191,17 +191,17 @@ describe Ferrum::Node do
       expect { browser.at_css("a").click(wait: 0) }.to output(/:wait is renamed to :navigation_wait/).to_stderr
     end
 
-    it "returns without waiting for the navigation to load when navigation_wait is 0" do
+    it "returns without waiting for the navigation to load when navigation is false" do
       browser.go_to("/")
       browser.execute(<<~JS)
         document.body.innerHTML = '<a id="slow" href="/really_slow">Slow</a>'
       JS
       started_at = Ferrum::Utils::ElapsedTime.monotonic_time
 
-      browser.at_css("#slow").click(navigation_wait: 0)
+      browser.at_css("#slow").click(navigation_wait: false)
 
       expect(Ferrum::Utils::ElapsedTime.monotonic_time - started_at).to be < 1
-      expect(browser.network.wait_for_idle(timeout: 5)).to be(true)
+      expect(browser.network.wait_idle(timeout: 5)).to be(true)
       expect(browser.body).to include("really slow page")
     end
 
@@ -654,21 +654,40 @@ describe Ferrum::Node do
     end
   end
 
-  describe "#wait_for_stop_moving" do
+  describe "#wait_still" do
     it "returns the content quads of a static node" do
       browser.go_to("/simple")
 
-      quads = browser.at_css("#nav").wait_for_stop_moving
+      quads = browser.at_css("#nav").wait_still
 
       expect(quads.size).to eq(1)
       expect(quads.first.size).to eq(8)
     end
 
-    it "raises NodeMovingError for a node that keeps moving" do
+    it "returns nil for a node that keeps moving" do
       browser.go_to("/animation")
 
-      expect { browser.at_css(".animated").wait_for_stop_moving(delay: 0.1, attempts: 2) }
-        .to raise_error(Ferrum::NodeMovingError, /is moving/)
+      expect(browser.at_css(".animated").wait_still(timeout: 0.3, interval: 0.1)).to be_nil
+    end
+  end
+
+  describe "#wait_still!" do
+    it "raises for a node that keeps moving" do
+      browser.go_to("/animation")
+
+      expect { browser.at_css(".animated").wait_still!(timeout: 0.3, interval: 0.1) }.to raise_error(Ferrum::TimeoutError)
+    end
+  end
+
+  describe "#wait_for_stop_moving" do
+    it "raises NodeMovingError for a node that keeps moving and warns that it is deprecated" do
+      browser.go_to("/animation")
+      node = browser.at_css(".animated")
+      Ferrum::Utils::Deprecate.reset!
+
+      expect do
+        expect { node.wait_for_stop_moving(delay: 0.1, attempts: 2) }.to raise_error(Ferrum::NodeMovingError, /is moving/)
+      end.to output(/wait_for_stop_moving will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
     end
   end
 

@@ -50,7 +50,7 @@ describe Ferrum::Dialog do
     it "works with second window" do
       browser.go_to
 
-      popup = browser.wait_for_new_page { browser.execute(%(window.open("/with_js", "popup"))) }
+      popup = browser.await_page { browser.execute(%(window.open("/with_js", "popup"))) }
 
       popup.on(:dialog, &:accept)
       popup.at_css("a#open-match").click
@@ -76,7 +76,7 @@ describe Ferrum::Dialog do
     it "works with second window" do
       browser.go_to
 
-      popup = browser.wait_for_new_page { browser.execute(%(window.open("/with_js", "popup"))) }
+      popup = browser.await_page { browser.execute(%(window.open("/with_js", "popup"))) }
 
       popup.on(:dialog, &:dismiss)
       popup.at_css("a#open-match").click

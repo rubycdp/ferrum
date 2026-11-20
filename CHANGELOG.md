@@ -2,14 +2,14 @@
 
 ### Added
 - `Ferrum::Deadline.within(seconds) { ... }` bounds every call the block makes with one budget, `page.go_to`, `cookies`
-  and `evaluate` included. `go_to` raises `NavigationTimeoutError` once it runs out, whatever `on_timeout` is
-- `timeout:` on `go_to`, `refresh`, `back`, `forward`, `click` and `wait_for_navigation` bounds the whole call with a single
+  and `evaluate` included. `go_to` raises `NavigationTimeoutError` once it runs out
+- `timeout:` on `go_to`, `refresh`, `back`, `forward`, `click` and `await_navigation` bounds the whole call with a single
   `Ferrum::Deadline`
 - `context.target(id)` returns the context's target with that id
 - `timeout:` on `keyboard.type`, `node.type` and `mouse.move` bounds all the keys or steps together, the page `timeout`
   by default, raise it for a long text
-- `context.wait_for_new_page { ... }`, and `browser.wait_for_new_page` for the default context, runs the block and
-  returns the page it opens, in a tab or a window, or `nil` if none opens in time. `wait_for_new_page!` raises
+- `context.await_page { ... }`, and `browser.await_page` for the default context, runs the block and
+  returns the page it opens, in a tab or a window, or `nil` if none opens in time. `await_page!` raises
   `Ferrum::TimeoutError` instead. Pass `opener:` to only get the pages opened by one page
 - `pages` of a context and of the browser takes a block that selects targets, e.g. `pages(&:opener_id)` for
   the pages opened by another page
@@ -20,25 +20,32 @@
 - `network.emulate(user_agent:, accept_language:, platform:, metadata:)` overrides what the page reports in the request
   headers and in `navigator`, `platform` had no way to be set before, and `metadata` keeps the client hints Chrome
   otherwise stops sending once the user agent is overridden
-- `go_to(url, on_timeout: :raise)` raises `NavigationTimeoutError`, a `TimeoutError` naming the requests still
-  pending, when the page doesn't load in time
+- `go_to!`, `refresh!`, `back!` and `forward!` raise `NavigationTimeoutError`, a `TimeoutError` naming the requests
+  still pending, when the page doesn't load in time
 - `browser.off`, `window_bounds`, `window_bounds=`, `tracing`, `activate` and `document_size` reach the page like the
   rest of its methods
+- Waits share two verbs: `await_*` runs a block and waits for the event it triggers, `wait_*` polls a check.
+  `page.await_navigation { }`, `context.await_page { }` and `page.await_download { }` return the navigation's result,
+  the page or the download. `wait_css`, `wait_xpath`, `network.wait_idle`, `node.wait_still` and `page.wait_until { }`
+  return what they waited for. Every one returns `nil` on timeout and has a `!` version that raises `TimeoutError`
 
 ### Changed
+- `refresh`, `back` and `forward` return `nil` when the page doesn't load in time instead of raising, use `refresh!`,
+  `back!` and `forward!` to raise
+- `network.idle?` takes `connections:` as a keyword
 - `client.command` needs a `timeout:` and has no `async: true`, use `client.notify` to send without waiting, and
   `browser.command` defaults to the browser's `timeout`
 - Internal commands have a fixed 5 second timeout and the connection is closed once a write to the browser stalls for
   30 seconds, `:protocol_timeout` no longer sets either
 - Creating pages and contexts follows `timeout`
-- `wait:` of `click`, `mouse.up` and `mouse.down` is renamed to `navigation_wait:`
+- `wait:` of `click`, `mouse.up` and `mouse.down` is renamed to `navigation_wait:`, `false` skips the wait
 - The waits after a click and after `go_to` share one default, `Page::NAVIGATION_WAIT`, set by `FERRUM_NAVIGATION_WAIT`
-- `page.command` doesn't take `wait:` anymore, wrap it in `page.wait_for_navigation` to wait for a navigation it starts.
+- `page.command` doesn't take `wait:` anymore, wrap it in `page.await_navigation` to wait for a navigation it starts.
   Passing `wait:` or `async:` to a command raises `ArgumentError`, they would be sent to the browser as parameters
 - `page.event` is `page.idle` and holds a `Ferrum::Concurrency::Cell`, not a `Concurrent::Event`
 - `browser.targets` and `context.targets` return a copy of the hash, it doesn't follow the targets that come and go
 - `go_to`, `refresh` and the script methods no longer restart the timeout for each step, one `timeout` covers the whole call
-- `click`, `mouse.move`, `keyboard.type`, `back`, `forward`, `wait_for_selector` and node scripts share one `timeout` across the
+- `click`, `mouse.move`, `keyboard.type`, `back`, `forward`, `wait_css` and node scripts share one `timeout` across the
   commands they send, they restarted it for each
 - `page.on(:request)`, `on(:auth)` and `on(:dialog)` callbacks form a chain: they run in order and the rest are skipped
   once one continues, responds to, aborts, accepts or dismisses, and an unhandled request is continued. They receive
@@ -56,16 +63,22 @@
 
 ### Deprecated
 - `target.window?`, will be removed in 0.22. Use `target.opener_id`, it is set for a target another one opened
-- `windows` of a context and of the browser, will be removed in 0.22. Use `wait_for_new_page { ... }` for the page a click
+- `windows` of a context and of the browser, will be removed in 0.22. Use `await_page { ... }` for the page a click
   opens, or `pages(&:opener_id)` for all of them
 - `cookies.all`, will be removed in 0.22. Keyed by name, it kept one of the cookies sharing a name, use `to_a`, or
   `map(&:name)` for the names
+- `wait_for_navigation` and `wait_for_navigation!`, will be removed in 0.22. Use `await_navigation(watch:)`
+- `wait_for_reload`, will be removed in 0.22. Use `await_navigation { ... }` around the code that reloads the page
+- `wait_for_selector`, will be removed in 0.22. Use `wait_css` or `wait_xpath`
+- `network.wait_for_idle` and `wait_for_idle!`, will be removed in 0.22. Use `wait_idle`, `duration:` is `interval:`
+- `downloads.wait`, will be removed in 0.22. Use `page.await_download { ... }`
+- `node.wait_for_stop_moving`, will be removed in 0.22. Use `wait_still`
+- Passing `connections` to `network.idle?` positionally, will be removed in 0.22. Pass `connections:`
 - `current_url` and `current_title` on pages and frames, will be removed in 0.22. Use `url` and `title`, or
   `frame.page.url` for the top window from a frame, `frame.url` is the frame's own
 - `:js_errors`, will be removed in 0.22. Uncaught exceptions are in `page.console` with `source: :exception`, use it or
   `page.on(:console)` instead
-- `:pending_connection_errors` and `PendingConnectionsError`, will be removed in 0.22. Pass `on_timeout: :raise` to
-  `go_to` instead
+- `:pending_connection_errors` and `PendingConnectionsError`, will be removed in 0.22. Use `go_to!` instead
 - `User-Agent` and `Accept-Language` set through `headers` changing what `navigator` reports, will stop in 0.22, where
   they are only sent with requests. Use `network.emulate(user_agent:, accept_language:)` to override both
 - `flatten: false`, the option will be removed in 0.22 and every page will share the browser's websocket connection
@@ -76,6 +89,7 @@
 - `FERRUM_CLICK_WAIT` and `FERRUM_GOTO_WAIT`, will be removed in 0.22. Use `FERRUM_NAVIGATION_WAIT` instead
 
 ### Fixed
+- `back` on the first history entry reloaded the page, it returns `nil` now
 - A headful browser with `xvfb: true` sometimes started before Xvfb was ready and exited at once with
   `ProcessTimeoutError`, Ferrum waits for the display now
 - `tracing.record` timed out when `page.on("Tracing.tracingComplete")` was subscribed before its first call
@@ -109,7 +123,7 @@
 
 ### Removed
 - `#evaluate_async`, `#evaluate_func` and `#evaluate_on`, use `#evaluate` and `Node#evaluate`, and
-  `page.wait_for_navigation! { }` for `evaluate_on`'s `wait:` [#673]
+  `page.await_navigation!(watch:) { }` for `evaluate_on`'s `wait:` [#673]
 - `FERRUM_JS_API` [#673]
 - `permanent:` of `headers.add`, it only kept a `Referer` off the requests after the navigation, pass `referrer:` to
   `go_to` instead. `headers.add("X-Trace" => "1")` works without braces now, it raised `ArgumentError`

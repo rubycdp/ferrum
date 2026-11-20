@@ -54,7 +54,7 @@ module Ferrum
         @flatten = @options.fetch(:flatten, true)
         warn_flatten unless @flatten
         @pending_connection_errors = fetch_deprecated(
-          :pending_connection_errors, "Pass on_timeout: :raise to go_to instead: page.go_to(url, on_timeout: :raise)."
+          :pending_connection_errors, "Use page.go_to!(url) to raise when the page doesn't load in time."
         )
         @process_timeout = @options.fetch(:process_timeout, PROCESS_TIMEOUT)
         @slowmo = @options[:slowmo].to_f

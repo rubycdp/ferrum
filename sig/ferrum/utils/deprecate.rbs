@@ -9,6 +9,8 @@ module Ferrum
 
       def self?.renamed_keyword: (Symbol old, Symbol new, untyped value, untyped current) -> untyped
 
+      def self?.positional: (Symbol name, untyped value, untyped current) -> untyped
+
       def self?.reset!: () -> void
 
       def self?.skip?: (::String path, bool user_code) -> bool

@@ -27,11 +27,13 @@ module Ferrum
     extend Forwardable
 
     delegate %i[default_context] => :contexts
-    delegate %i[targets create_target page pages windows wait_for_new_page wait_for_new_page! workers service_workers
+    delegate %i[targets create_target page pages windows await_page await_page! workers service_workers
                 attach_target cookies] => :default_context
-    delegate %i[go_to goto go back forward refresh reload stop wait_for_reload
-                wait_for_navigation wait_for_navigation!
-                at_css at_xpath css xpath wait_for_selector current_url current_title url title
+    delegate %i[go_to go_to! goto go back back! forward forward! refresh refresh! reload reload! stop
+                await_navigation await_navigation! await_download await_download! wait_until wait_until!
+                wait_for_reload wait_for_navigation wait_for_navigation!
+                at_css at_xpath css xpath wait_css wait_css! wait_xpath wait_xpath! wait_for_selector
+                current_url current_title url title
                 body doctype content=
                 headers network console accessibility downloads tracing
                 mouse keyboard
@@ -91,9 +93,9 @@ module Ferrum
     #
     # @option options [Numeric] :timeout (5)
     #   How long a call waits for the browser, in seconds: navigations, JS evaluation, DOM queries, dispatching
-    #   input, etc. `go_to`, `refresh` and `wait_for_navigation` wait for the page to load within it. A call that
+    #   input, etc. `go_to`, `refresh` and `await_navigation` wait for the page to load within it. A call that
     #   only sends commands waits for the browser's answer. A call that runs out raises {TimeoutError}.
-    #   `FERRUM_DEFAULT_TIMEOUT` sets the default. Pass `timeout:` to `go_to`, `refresh` or `wait_for_navigation` to
+    #   `FERRUM_DEFAULT_TIMEOUT` sets the default. Pass `timeout:` to `go_to`, `refresh` or `await_navigation` to
     #   change it for one call, or wrap calls in {Deadline.within} to bound them together.
     #
     # @option options [Boolean] :js_errors
@@ -103,8 +105,8 @@ module Ferrum
     #   `page.on(:console)` instead.
     #
     # @option options [Boolean] :pending_connection_errors (false)
-    #   Deprecated, will be removed in Ferrum 0.22. Default for `go_to`'s
-    #   `on_timeout:`, pass `on_timeout: :raise` to `go_to` instead.
+    #   Deprecated, will be removed in Ferrum 0.22. Makes `go_to` raise
+    #   {PendingConnectionsError} on timeout, use `go_to!` instead.
     #
     # @option options [String] :browser_path
     #   Path to Chrome binary, you can also set ENV variable as

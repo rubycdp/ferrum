@@ -14,6 +14,7 @@ module Ferrum
     MOVING_WAIT_DELAY = ENV.fetch("FERRUM_NODE_MOVING_WAIT", 0.01).to_f
     MOVING_WAIT_ATTEMPTS = ENV.fetch("FERRUM_NODE_MOVING_ATTEMPTS", 50).to_i
     MOVING_CHECK_DELAY = ENV.fetch("FERRUM_NODE_MOVING_CHECK", 0.05).to_f
+    WAIT_FOR_STOP_MOVING_DEPRECATED = "wait_for_stop_moving will be removed in Ferrum 0.22. Use wait_still instead."
 
     # @return [Page] the page the node belongs to.
     attr_reader :page
@@ -160,35 +161,65 @@ module Ferrum
     end
 
     #
-    # Waits until the node's position stops changing, retrying up to
-    # `attempts` times. Raises {NodeMovingError} if the node is still moving
-    # after the last attempt.
+    # Polls the node's position until two snapshots taken `interval` seconds
+    # apart match, see {#moving?}.
     #
-    # @param [Float] delay
-    #   Seconds to wait between two position checks.
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long to keep trying, the page's `timeout` by default.
     #
-    # @param [Integer] attempts
-    #   Maximum number of attempts before raising.
+    # @param [Numeric] interval
+    #   Seconds between the two snapshots of an attempt.
+    #
+    # @return [Array<Array<Float>>, nil]
+    #   The content quads of the node once it stands still, each one as the
+    #   eight coordinates of its four corners. `nil` if it keeps moving.
+    #
+    # @raise [CoordinatesNotFoundError]
+    #   If the node isn't visible.
+    #
+    # @example
+    #   page.at_css("#modal").wait_still
+    #   # => [[50.2, 390.9, 203.2, 390.9, 203.2, 411.9, 50.2, 411.9]]
+    #
+    def wait_still(timeout: nil, interval: MOVING_WAIT_DELAY)
+      Utils::Poll.call(timeout || page.timeout, 0) do
+        previous, current = content_quads_with(delay: interval)
+        current if previous == current
+      end
+    end
+
+    #
+    # Same as {#wait_still}, but raises if the node keeps moving.
+    #
+    # @param [Hash] options
+    #   The options of {#wait_still}.
     #
     # @return [Array<Array<Float>>]
-    #   The content quads of the node once it has stopped moving, each one as
-    #   the eight coordinates of its four corners.
+    #
+    # @raise [TimeoutError]
+    #   If the node keeps moving.
+    #
+    def wait_still!(**options)
+      wait_still(**options) || raise(TimeoutError)
+    end
+
+    #
+    # Waits until the node's position stops changing, retrying up to
+    # `attempts` times.
+    #
+    # @deprecated Will be removed in Ferrum 0.22. Use {#wait_still}.
+    #
+    # @param [Float] delay
+    #
+    # @param [Integer] attempts
+    #
+    # @return [Array<Array<Float>>]
     #
     # @raise [NodeMovingError]
     #
-    # @raise [TimeoutError]
-    #
-    # @example
-    #   page.at_css("#modal").wait_for_stop_moving
-    #   # => [[50.2, 390.9, 203.2, 390.9, 203.2, 411.9, 50.2, 411.9]]
-    #
     def wait_for_stop_moving(delay: MOVING_WAIT_DELAY, attempts: MOVING_WAIT_ATTEMPTS)
-      Utils::Attempt.with_retry(errors: NodeMovingError, max: attempts, wait: 0) do
-        previous, current = content_quads_with(delay: delay)
-        raise NodeMovingError.new(self, previous, current) if previous != current
-
-        current
-      end
+      Utils::Deprecate.warn(WAIT_FOR_STOP_MOVING_DEPRECATED, user_code: true)
+      settled_quads(delay: delay, attempts: attempts)
     end
 
     # Checks whether the node's position is changing, by comparing two
@@ -250,7 +281,7 @@ module Ferrum
     #
     # Clicks the node at its center, or at an offset from it, by moving the
     # mouse there first. Waits for the node to stop moving, see
-    # {#wait_for_stop_moving}.
+    # {#wait_still}.
     #
     # @param [:left, :right, :double] mode
     #   Which click to make, `:double` is a double click with the left button.
@@ -273,9 +304,9 @@ module Ferrum
     # @param [Float] delay
     #   Delay between mouse down and mouse up events.
     #
-    # @param [Numeric] navigation_wait
+    # @param [Numeric, false] navigation_wait
     #   Seconds to watch for a navigation started by a left click, then wait for
-    #   it to load. Ignored for `:right` and `:double`, which never wait. `0`
+    #   it to load. Ignored for `:right` and `:double`, which never wait. `false`
     #   returns as soon as the click is dispatched.
     #
     # @param [Numeric, nil] wait
@@ -292,7 +323,7 @@ module Ferrum
     # @example
     #   page.at_css("a").click
     #   page.at_css("a").click(timeout: 30)
-    #   page.at_css("a").click(navigation_wait: 0)
+    #   page.at_css("a").click(navigation_wait: false)
     #   page.at_css("a").click(mode: :right)
     #   page.at_css("a").click(keys: [:ctrl, :shift])
     #   page.at_css("canvas").click(offset: { x: 10, y: 20 })
@@ -306,13 +337,13 @@ module Ferrum
         x, y = find_position(**offset)
         modifiers = page.keyboard.modifiers(keys)
 
-        # `:right` and `:double` pass `navigation_wait: 0` to preserve the historical
+        # `:right` and `:double` pass `navigation_wait: false` to preserve the historical
         # no-network-wait default of `Mouse#up` and `Mouse#down`
         case mode
         when :right
-          page.mouse.click(x:, y:, modifiers:, delay:, button: :right, navigation_wait: 0, timeout: deadline)
+          page.mouse.click(x:, y:, modifiers:, delay:, button: :right, navigation_wait: false, timeout: deadline)
         when :double
-          page.mouse.click(x:, y:, modifiers:, delay:, count: 2, navigation_wait: 0, timeout: deadline)
+          page.mouse.click(x:, y:, modifiers:, delay:, count: 2, navigation_wait: false, timeout: deadline)
         when :left
           page.mouse.click(x:, y:, modifiers:, delay:, navigation_wait:, timeout: deadline)
         end
@@ -725,7 +756,7 @@ module Ferrum
     #   page.at_css("input").find_position(x: 5, y: 5, position: :center) # => [131.7, 406.4]
     #
     def find_position(x: nil, y: nil, position: :top)
-      points = wait_for_stop_moving.map { |q| to_points(q) }.first
+      points = settled_quads.map { |q| to_points(q) }.first
       get_position(points, x, y, position)
     rescue CoordinatesNotFoundError
       x, y = bounding_rect_coordinates
@@ -812,6 +843,15 @@ module Ferrum
       raise CoordinatesNotFoundError, "Node is either not visible or not an HTMLElement" if quads.empty?
 
       quads
+    end
+
+    def settled_quads(delay: MOVING_WAIT_DELAY, attempts: MOVING_WAIT_ATTEMPTS)
+      Utils::Attempt.with_retry(errors: NodeMovingError, max: attempts, wait: 0) do
+        previous, current = content_quads_with(delay: delay)
+        raise NodeMovingError.new(self, previous, current) if previous != current
+
+        current
+      end
     end
 
     def content_quads_with(delay: MOVING_WAIT_DELAY)

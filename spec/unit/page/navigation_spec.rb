@@ -1,12 +1,15 @@
 # frozen_string_literal: true
 
-describe Ferrum::Page do
+describe Ferrum::Page::Navigation do
   describe "#wait_for_reload" do
-    subject(:page) { described_class.allocate }
+    subject(:page) { Ferrum::Page.allocate }
 
     let(:idle) { Ferrum::Concurrency::Cell.set(true) }
 
-    before { page.instance_variable_set(:@idle, idle) }
+    before do
+      page.instance_variable_set(:@idle, idle)
+      allow(Ferrum::Utils::Deprecate).to receive(:warn)
+    end
 
     it "marks the page idle again when no reload came" do
       page.wait_for_reload(0.05)
