@@ -145,3 +145,41 @@ Current window id
 ```ruby
 browser.window_id # => 1
 ```
+
+#### wait_for_new_page(\*\*options) { } : `Page` | `nil`
+
+Runs the block and returns the page it opens, in a tab or a window, e.g. through `window.open` or a link with
+`target="_blank"`. Returns `nil` if no page opens in time.
+
+* options `Hash`
+  * :opener `Page` only return a page opened by this page, by default a page opened by any page of the context
+  * :timeout `Numeric` how long the block and the new page may take together, the browser's `timeout` by default
+
+```ruby
+opened = browser.wait_for_new_page { browser.at_css("a[target=_blank]").click }
+opened.url # => "https://example.com/"
+opened.close
+
+page = browser.create_page
+opened = browser.wait_for_new_page(opener: page) { page.at_css("a[target=_blank]").click }
+```
+
+#### wait_for_new_page!(\*\*options) { } : `Page`
+
+Same as `wait_for_new_page`, but raises `Ferrum::TimeoutError` if no page opens in time.
+
+The target of an opened page has the id of the page that opened it:
+
+```ruby
+browser.targets[opened.target_id].opener_id == page.target_id # => true
+```
+
+#### pages { |target| } : `Array<Page>`
+
+Returns the pages of the default context. With a block, only the pages of the targets it returns truthy for.
+
+```ruby
+browser.pages # => [#<Ferrum::Page>, #<Ferrum::Page>]
+browser.pages(&:opener_id) # the pages opened by another page
+browser.pages { |t| t.opener_id == page.target_id } # the pages opened by `page`
+```

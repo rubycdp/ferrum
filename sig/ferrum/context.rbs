@@ -1,6 +1,7 @@
 module Ferrum
   class Context
     POSITION: ::Array[:first | :last]
+    WINDOWS_DEPRECATED: String
 
     attr_reader id: String
 
@@ -11,6 +12,8 @@ module Ferrum
     @client: Client
     @contexts: Contexts
     @targets: Concurrency::AwaitableMap[String, Target]
+    @page_waiters: ::Array[[String?, Concurrency::Cell]]
+    @page_waiters_mutex: ::Mutex
     @default_target: Target?
     @cookies: Cookies
 
@@ -24,13 +27,17 @@ module Ferrum
 
     def page: () -> Page
 
-    def pages: () -> ::Array[Page]
+    def pages: () ?{ (Target) -> boolish } -> ::Array[Page]
 
     def workers: () -> ::Array[Worker]
 
     def service_workers: () -> ::Array[Target]
 
-    def windows: (?(:first | :last)?, ?::Integer) -> ::Array[Page]
+    %a{deprecated} def windows: (?(:first | :last)?, ?::Integer) -> ::Array[Page]
+
+    def wait_for_new_page: (?opener: Page?, ?timeout: (::Numeric | Deadline)) ?{ () -> void } -> Page?
+
+    def wait_for_new_page!: (?opener: Page?, ?timeout: (::Numeric | Deadline)) ?{ () -> void } -> Page
 
     def create_page: (**untyped options) -> Page
 
@@ -55,5 +62,9 @@ module Ferrum
     def target?: (String target_id) -> bool
 
     def inspect: () -> ::String
+
+    private
+
+    def announce_page: (Target target) -> void
   end
 end

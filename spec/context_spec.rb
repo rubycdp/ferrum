@@ -65,6 +65,15 @@ describe Ferrum::Context do
     ensure
       pages&.each(&:close)
     end
+
+    it "returns only the pages of the targets the block selects" do
+      browser.go_to
+      popup = browser.wait_for_new_page! { browser.execute(%(window.open("/simple"))) }
+
+      expect(browser.pages(&:opener_id)).to eq([popup])
+    ensure
+      popup&.close
+    end
   end
 
   describe "#workers" do
@@ -147,40 +156,138 @@ describe Ferrum::Context do
   end
 
   describe "#windows" do
-    it "waits for the window to load" do
-      browser.go_to
-
-      browser.execute <<-JS
-        window.open("/slow", "popup")
-      JS
-
-      popup, = browser.windows(:last)
-      expect(popup.body).to include("slow page")
-      popup.close
+    around do |example|
+      Ferrum::Utils::Deprecate.reset!
+      example.run
+      Ferrum::Utils::Deprecate.reset!
     end
 
-    it "opens a second window under the same name" do
+    it "returns the pages opened by another page and warns that it is deprecated" do
+      browser.go_to
+      popup = browser.wait_for_new_page { browser.execute(%(window.open("/simple", "popup"))) }
+
+      windows = nil
+      expect { windows = browser.windows }
+        .to output(/windows will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
+      expect(windows).to eq([popup])
+    ensure
+      popup&.close
+    end
+  end
+
+  describe "#wait_for_new_page" do
+    it "returns the page opened with window.open" do
       browser.go_to
 
-      browser.execute <<-JS
-        window.open("/simple", "popup")
-      JS
+      popup = browser.wait_for_new_page { browser.execute(%(window.open("/simple"))) }
 
-      popup, = browser.windows(:last)
       expect(popup.body).to include("Test")
-      popup.close
+      expect(browser.pages).to include(popup)
+    ensure
+      popup&.close
+    end
 
+    it "returns the page opened by a link with a blank target" do
+      browser.go_to
+      browser.content = %(<a href="/simple" target="_blank" rel="noopener">open</a>)
+
+      popup = browser.wait_for_new_page { browser.at_css("a").click }
+
+      expect(popup.url).to eq(base_url("/simple"))
+    ensure
+      popup&.close
+    end
+
+    it "waits for the page to load" do
+      browser.go_to
+
+      popup = browser.wait_for_new_page { browser.execute(%(window.open("/slow", "popup"))) }
+
+      expect(popup.body).to include("slow page")
+    ensure
+      popup&.close
+    end
+
+    it "returns the page opened under the name of a closed one" do
+      browser.go_to
+      browser.wait_for_new_page { browser.execute(%(window.open("/simple", "popup"))) }.close
       sleep 0.5 # https://github.com/ChromeDevTools/devtools-protocol/issues/145
 
-      browser.execute <<-JS
-        window.open("/simple", "popup")
-      JS
+      same = browser.wait_for_new_page { browser.execute(%(window.open("/simple", "popup"))) }
 
-      sleep 0.5 # https://github.com/ChromeDevTools/devtools-protocol/issues/145
-
-      same, = browser.windows(:last)
       expect(same.body).to include("Test")
-      same.close
+    ensure
+      same&.close
+    end
+
+    it "returns the page opened by the given opener" do
+      browser.go_to
+      other = browser.create_page
+      other.go_to("/")
+
+      popup = browser.wait_for_new_page(opener: other) { other.execute(%(window.open("/simple"))) }
+
+      expect(browser.targets[popup.target_id].opener_id).to eq(other.target_id)
+    ensure
+      popup&.close
+      other&.close
+    end
+
+    it "leaves out the pages opened by other pages than the given opener" do
+      browser.go_to
+      other = browser.create_page
+
+      popup = browser.wait_for_new_page(opener: other, timeout: 0.5) { browser.execute(%(window.open("/simple"))) }
+
+      expect(popup).to be_nil
+    ensure
+      browser.targets.each_value { |t| t.page.close if t.opener_id }
+      other&.close
+    end
+
+    it "leaves out the pages opened in other contexts" do
+      browser.go_to
+      context = browser.contexts.create
+
+      popup = context.wait_for_new_page(timeout: 0.5) { browser.execute(%(window.open("/simple"))) }
+
+      expect(popup).to be_nil
+    ensure
+      browser.targets.each_value { |t| t.page.close if t.opener_id }
+      context&.dispose
+    end
+
+    it "returns nil when no page opens in time" do
+      expect(browser.wait_for_new_page(timeout: 0.1)).to be_nil
+    end
+  end
+
+  describe "#wait_for_new_page!" do
+    it "returns the page opened with window.open" do
+      browser.go_to
+
+      popup = browser.wait_for_new_page! { browser.execute(%(window.open("/simple"))) }
+
+      expect(popup.body).to include("Test")
+    ensure
+      popup&.close
+    end
+
+    it "returns the page opened by the given opener" do
+      browser.go_to
+      other = browser.create_page
+      other.go_to("/")
+
+      popup = browser.wait_for_new_page!(opener: other) { other.execute(%(window.open("/simple"))) }
+
+      expect(browser.targets[popup.target_id].opener_id).to eq(other.target_id)
+    ensure
+      popup&.close
+      other&.close
+    end
+
+    it "raises when no page opens in time" do
+      expect { browser.wait_for_new_page!(timeout: 0.1) }.to raise_error(Ferrum::TimeoutError)
     end
   end
 

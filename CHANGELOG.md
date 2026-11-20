@@ -8,6 +8,11 @@
 - `context.target(id)` returns the context's target with that id
 - `timeout:` on `keyboard.type`, `node.type` and `mouse.move` bounds all the keys or steps together, the page `timeout`
   by default, raise it for a long text
+- `context.wait_for_new_page { ... }`, and `browser.wait_for_new_page` for the default context, runs the block and
+  returns the page it opens, in a tab or a window, or `nil` if none opens in time. `wait_for_new_page!` raises
+  `Ferrum::TimeoutError` instead. Pass `opener:` to only get the pages opened by one page
+- `pages` of a context and of the browser takes a block that selects targets, e.g. `pages(&:opener_id)` for
+  the pages opened by another page
 - `go_to(url, referrer:)` sets the referrer of that navigation only, the page's other requests don't carry it
 - `cookies.set` accepts `http_only:` and `same_site:` next to `httponly:` and `samesite:`, like the cookie's readers
 - `cookies[name, domain:, path:]` picks one of the cookies sharing a name
@@ -48,6 +53,9 @@
 - `on` with a raw CDP event yields only the params, not the callback's index and the total number of callbacks
 
 ### Deprecated
+- `target.window?`, will be removed in 0.22. Use `target.opener_id`, it is set for a target another one opened
+- `windows` of a context and of the browser, will be removed in 0.22. Use `wait_for_new_page { ... }` for the page a click
+  opens, or `pages(&:opener_id)` for all of them
 - `cookies.all`, will be removed in 0.22. Keyed by name, it kept one of the cookies sharing a name, use `to_a`, or
   `map(&:name)` for the names
 - `current_url` and `current_title` on pages and frames, will be removed in 0.22. Use `url` and `title`, or

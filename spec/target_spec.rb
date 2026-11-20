@@ -106,12 +106,19 @@ describe Ferrum::Target do
   end
 
   describe "#window?" do
-    it "returns true for a popup" do
-      expect(open_popup).to be_window
+    around do |example|
+      Ferrum::Utils::Deprecate.reset!
+      example.run
+      Ferrum::Utils::Deprecate.reset!
     end
 
-    it "returns false for a page created directly" do
-      expect(target_of(page)).not_to be_window
+    it "returns true for a target another one opened and warns that it is deprecated" do
+      target = open_popup
+
+      window = nil
+      expect { window = target.window? }
+        .to output(/window\? will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
+      expect(window).to be(true)
     end
   end
 

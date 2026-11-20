@@ -333,8 +333,7 @@ describe Ferrum::Browser do
                                     extensions: [File.expand_path("support/geolocation.js", __dir__)])
       browser.go_to
 
-      browser.execute(%(window.open("/requiring_custom_extension", "popup")))
-      popup, = browser.windows(:last)
+      popup = browser.wait_for_new_page { browser.execute(%(window.open("/requiring_custom_extension", "popup"))) }
 
       expect(popup.at_css("#location").text).to eq("1,-1")
     ensure
@@ -897,22 +896,13 @@ describe Ferrum::Browser do
 
       expect(browser.targets.size).to eq(1)
 
-      browser.execute <<-JS
-        window.open("/simple", "popup1")
-      JS
+      popup1 = browser.wait_for_new_page { browser.execute(%(window.open("/simple", "popup1"))) }
+      popup2 = browser.wait_for_new_page { browser.execute(%(window.open("/simple", "popup2"))) }
+      popup1.resize(width: 100, height: 200)
+      popup2.resize(width: 200, height: 100)
 
-      sleep 0.1
-
-      browser.execute <<-JS
-        window.open("/simple", "popup2")
-      JS
-
-      popup1, popup2 = browser.windows(:last, 2)
-      popup1&.resize(width: 100, height: 200)
-      popup2&.resize(width: 200, height: 100)
-
-      expect(popup1&.viewport_size).to eq([100, 200])
-      expect(popup2&.viewport_size).to eq([200, 100])
+      expect(popup1.viewport_size).to eq([100, 200])
+      expect(popup2.viewport_size).to eq([200, 100])
     end
 
     it "resizes the viewport to the page size with fullscreen: true" do
@@ -949,15 +939,10 @@ describe Ferrum::Browser do
 
       expect(browser.targets.size).to eq(2)
 
-      browser.execute <<~JS
-        window.open("/simple", "popup2")
-      JS
-
-      sleep 0.1
+      popup2 = browser.wait_for_new_page { browser.execute(%(window.open("/simple", "popup2"))) }
 
       expect(browser.targets.size).to eq(3)
 
-      popup2, = browser.windows(:last)
       expect(popup2.body).to include("Test")
       # Browser isn't dead, current page after executing JS closes connection
       # and we don't have a chance to push response to the Queue. Since the
