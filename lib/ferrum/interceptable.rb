@@ -21,7 +21,8 @@ module Ferrum
     #
     # @yieldparam [Network::InterceptedRequest, Network::Exchange, Network::AuthRequest, Console::Message, Hash] arg
     #   For `:request`, the intercepted {Network::InterceptedRequest}. For
-    #   `:response`, the finished {Network::Exchange}. For `:auth`, the
+    #   `:response`, the finished {Network::Exchange}, not a {Network::Response}:
+    #   read the response via `exchange.response`. For `:auth`, the
     #   {Network::AuthRequest} challenge. For `:console`, the new
     #   {Console::Message}. For any other (raw CDP) event name, the event's
     #   params `Hash`.
