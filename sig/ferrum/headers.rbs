@@ -1,6 +1,7 @@
 module Ferrum
   class Headers
     OVERRIDES: { user_agent: String, accept_language: String }
+    OVERRIDES_DEPRECATED: String
 
     @page: Page
     @headers: ::Hash[String, String]

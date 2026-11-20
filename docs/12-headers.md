@@ -18,7 +18,9 @@ Set given headers. Eventually clear all headers and set given ones.
 
 `User-Agent` and `Accept-Language` also change what `navigator` reports, through
 [network.emulate](https://github.com/rubycdp/ferrum#network). Other headers leave it alone, and `set` and `clear` bring
-back the browser's user agent or language once the header that changed it is gone.
+back the browser's user agent or language once the header that changed it is gone. This is deprecated: from 0.22 the
+two headers are only sent with requests, like any other, and `navigator` and the client hints stay as they are. Use
+`network.emulate(user_agent:, accept_language:)` to override both the header and what the page reports.
 
 #### add(headers) : `Boolean`
 

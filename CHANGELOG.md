@@ -56,6 +56,8 @@
   `page.on(:console)` instead
 - `:pending_connection_errors` and `PendingConnectionsError`, will be removed in 0.22. Pass `on_timeout: :raise` to
   `go_to` instead
+- `User-Agent` and `Accept-Language` set through `headers` changing what `navigator` reports, will stop in 0.22, where
+  they are only sent with requests. Use `network.emulate(user_agent:, accept_language:)` to override both
 - `flatten: false`, the option will be removed in 0.22 and every page will share the browser's websocket connection
 - `FERRUM_DEBUG`, will be removed in 0.22. Use `FERRUM_LOG=*` instead
 - `:protocol_timeout`, `browser.protocol_timeout`, `browser.protocol_timeout=` and `FERRUM_PROTOCOL_TIMEOUT`, will be
