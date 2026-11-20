@@ -123,17 +123,6 @@ module Ferrum
       end
 
       #
-      # Specifies whether the cookie is a first-party set cookie or not.
-      #
-      # @return [Boolean]
-      #
-      def sameparty?
-        @attributes["sameParty"]
-      end
-
-      alias same_party? sameparty?
-
-      #
       # The scheme (`"Unset"`, `"NonSecure"`, `"Secure"`) that the cookie was set with.
       #
       # @return [String]

@@ -119,6 +119,7 @@
 - `Ferrum::ServerError`, nothing raised it
 - `:browser_name`, it only switched between Chrome-named defaults and raised `NotImplementedError` for anything else, set
   `:browser_path` to run Opera or Edge
+- `cookie.sameparty?` and `same_party?`, Chrome dropped SameParty cookies and they always returned `nil`
 
 
 ## [0.20.2](https://github.com/rubycdp/ferrum/compare/v0.20.1...v0.20.2) (November 19, 2026) ##

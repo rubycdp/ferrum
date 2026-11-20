@@ -14,7 +14,6 @@ describe Ferrum::Cookies::Cookie do
       "secure" => false,
       "session" => false,
       "priority" => "Medium",
-      "sameParty" => false,
       "sourceScheme" => "Secure",
       "sourcePort" => 443
     }
@@ -93,12 +92,6 @@ describe Ferrum::Cookies::Cookie do
   describe "#priority" do
     it "returns the 'priority' attribute" do
       expect(subject.priority).to eq(attributes["priority"])
-    end
-  end
-
-  describe "#sameparty?" do
-    it "returns the 'sameParty' attribute" do
-      expect(subject.sameparty?).to eq(attributes["sameParty"])
     end
   end
 
