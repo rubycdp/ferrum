@@ -43,6 +43,7 @@
 - Every script runs the new way: keyword arguments are named parameters, promises and thenables are awaited, all
   statements run and the last one's value is returned, and `Node#evaluate` returns nodes and dates, see
   [upgrading](docs/13-javascript.md#upgrading-to-021) [#673]
+- `on` with a raw CDP event yields only the params, not the callback's index and the total number of callbacks
 
 ### Deprecated
 - `cookies.all`, will be removed in 0.22. Keyed by name, it kept one of the cookies sharing a name, use `to_a`, or
@@ -53,6 +54,7 @@
   `page.on(:console)` instead
 - `:pending_connection_errors` and `PendingConnectionsError`, will be removed in 0.22. Pass `on_timeout: :raise` to
   `go_to` instead
+- `flatten: false`, the option will be removed in 0.22 and every page will share the browser's websocket connection
 - `FERRUM_DEBUG`, will be removed in 0.22. Use `FERRUM_LOG=*` instead
 - `:protocol_timeout`, `browser.protocol_timeout`, `browser.protocol_timeout=` and `FERRUM_PROTOCOL_TIMEOUT`, will be
   removed in 0.22. They are ignored and warn, `:timeout` bounds everything else
@@ -62,6 +64,7 @@
 ### Fixed
 - A headful browser with `xvfb: true` sometimes started before Xvfb was ready and exited at once with
   `ProcessTimeoutError`, Ferrum waits for the display now
+- `tracing.record` timed out when `page.on("Tracing.tracingComplete")` was subscribed before its first call
 - `page.command(method, wait:)` ran a subclass override of `command`, like Cuprite's, twice
 - `evaluate` of a result nested about 100 levels deep raised an opaque `BrowserError` about Chrome's CBOR stack limit,
   it raises `ResultTooDeepError` now, a `BrowserError` that says to return less or use `evaluate_handle`

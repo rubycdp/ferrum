@@ -24,8 +24,7 @@ module Ferrum
     #   `:response`, the finished {Network::Exchange}. For `:auth`, the
     #   {Network::AuthRequest} challenge. For `:console`, the new
     #   {Console::Message}. For any other (raw CDP) event name, the event's
-    #   params `Hash`, followed by the callback's index and the total number
-    #   of callbacks registered for the event.
+    #   params `Hash`.
     #
     # @return [Integer]
     #   The subscription id, used to unsubscribe via {#off}.

@@ -9,7 +9,7 @@ module Ferrum
     #
     # @example
     #   dispatcher = Ferrum::Concurrency::Dispatcher.new(lanes: %i[regular priority])
-    #   dispatcher.on("greeting") { |payload, index, total| puts payload }
+    #   dispatcher.on("greeting") { |payload| puts payload }
     #   dispatcher.publish("greeting", "hello", lane: :priority)
     #
     class Dispatcher
@@ -51,8 +51,7 @@ module Ferrum
       end
 
       #
-      # Registers a callback for a key. It receives the payload, its own index among the callbacks of the key and
-      # their total number.
+      # Registers a callback for a key. It receives the payload.
       #
       # @param [String] key
       #
@@ -129,9 +128,8 @@ module Ferrum
       end
 
       def call(key, payload)
-        total = @on[key]&.size.to_i
-        @on[key]&.each_with_index do |(_, block), index|
-          block.call(payload, index, total)
+        @on[key]&.each do |(_, block)|
+          block.call(payload)
         rescue StandardError => e
           # A raising callback used to terminate the dispatch thread, and with it every
           # event for the rest of the browser's life: targets stopped being registered

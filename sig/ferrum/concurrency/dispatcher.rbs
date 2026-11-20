@@ -13,7 +13,7 @@ module Ferrum
 
       def publish: (String key, untyped payload, ?lane: Symbol) -> void
 
-      def on: (String key) { (untyped, Integer, Integer) -> void } -> Integer
+      def on: (String key) { (untyped) -> void } -> Integer
 
       def off: (String key, Integer id) -> bool
 
