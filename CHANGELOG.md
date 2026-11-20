@@ -54,6 +54,7 @@
   `page.on(:console)` instead
 - `:pending_connection_errors` and `PendingConnectionsError`, will be removed in 0.22. Pass `on_timeout: :raise` to
   `go_to` instead
+- `flatten: false`, the option will be removed in 0.22 and every page will share the browser's websocket connection
 - `FERRUM_DEBUG`, will be removed in 0.22. Use `FERRUM_LOG=*` instead
 - `:protocol_timeout`, `browser.protocol_timeout`, `browser.protocol_timeout=` and `FERRUM_PROTOCOL_TIMEOUT`, will be
   removed in 0.22. They are ignored and warn, `:timeout` bounds everything else
