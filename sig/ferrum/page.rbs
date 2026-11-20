@@ -90,8 +90,6 @@ module Ferrum
 
     def window_id: () -> ::Integer
 
-    def set_window_bounds: (Hash[Symbol, (::Integer | String)] bounds) -> Hash[String, untyped]
-
     def command: (String method, ?slowmoable: bool, ?timeout: (::Numeric | Deadline)?, **untyped) -> Hash[String, untyped]
 
     def on: (:dialog) { (Dialog) -> void } -> Integer

@@ -22,6 +22,8 @@
   otherwise stops sending once the user agent is overridden
 - `go_to(url, on_timeout: :raise)` raises `NavigationTimeoutError`, a `TimeoutError` naming the requests still
   pending, when the page doesn't load in time
+- `browser.off`, `window_bounds`, `window_bounds=`, `tracing`, `activate` and `document_size` reach the page like the
+  rest of its methods
 
 ### Changed
 - `client.command` needs a `timeout:` and has no `async: true`, use `client.notify` to send without waiting, and

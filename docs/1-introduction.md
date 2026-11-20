@@ -128,6 +128,19 @@ thread = browser.quit(wait: false)
 thread.join # only needed if you must wait for cleanup to finish, e.g. before reusing a fixed port
 ```
 
+## Raw CDP
+
+Most `Browser` methods are shortcuts to its default page, `browser.on` included, but `browser.command` isn't: it
+talks to the browser itself, for the `Browser.*`, `Target.*` and other browser-wide domains. Send page commands,
+like `Page.*`, `Runtime.*` or `DOM.*`, through the page:
+
+```ruby
+browser.command("Browser.getVersion")
+
+browser.page.command("Runtime.evaluate", expression: "1 + 1")
+browser.on("Page.frameNavigated") { |params| puts params["frame"]["url"] } # same as browser.page.on
+```
+
 ## Thread safety
 
 Ferrum is fully thread-safe. You can create one browser or a few as you wish and
