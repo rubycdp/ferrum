@@ -150,13 +150,19 @@ page.at_css("canvas").click(offset: { x: 10, y: 20 })
 page.at_css("canvas").click(offset: { x: 10, y: 20, position: :center })
 ```
 
-#### hover
+#### hover(\*\*options) : `Node`
 
-Not implemented yet, raises `Ferrum::NotImplementedError`. Move the mouse to the node instead:
+Moves the mouse over the node's center, or an offset from it, so it matches `:hover` and gets `mouseover`,
+`mouseenter` and `mousemove`. Waits for the node to stop moving.
+
+* options `Hash`
+  * :offset `Hash` where to move instead of the center, same as for `click`
+  * :timeout `Numeric` how long finding the node's position and moving there may take together, the page timeout by
+    default
 
 ```ruby
-x, y = page.at_css("a").find_position
-page.mouse.move(x: x, y: y)
+menu = page.at_css("#menu").hover
+menu.evaluate("this.matches(':hover')") # => true
 ```
 
 #### scroll : `Node`

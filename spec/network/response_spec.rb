@@ -87,11 +87,21 @@ describe Ferrum::Network::Response do
     end
   end
 
-  describe "#type" do
+  describe "#resource_type" do
     it "returns the resource type" do
       page.go_to("/with_js")
 
-      expect(traffic.map { |e| e.response.type }).to eq(%w[Document Script Script Script])
+      expect(traffic.map { |e| e.response.resource_type }).to eq(%w[Document Script Script Script])
+    end
+  end
+
+  describe "#type" do
+    it "returns the resource type and warns that it is deprecated" do
+      page.go_to
+      Ferrum::Utils::Deprecate.reset!
+
+      expect { expect(last_exchange.response.type).to eq("Document") }
+        .to output(/Response#type will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
     end
   end
 
@@ -193,7 +203,7 @@ describe Ferrum::Network::Response do
     it "returns true for a redirect response" do
       page.go_to("/redirect_again")
 
-      expect(page.body).to include("You landed")
+      expect(page.html).to include("You landed")
       expect(first_exchange.response.redirect?).to be
     end
   end

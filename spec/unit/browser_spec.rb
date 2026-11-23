@@ -18,7 +18,7 @@ describe Ferrum::Browser do
       file_path = "test.log"
       logger = custom_logger.new(Logger.new(file_path))
       browser = Ferrum::Browser.new(logger: logger)
-      browser.body
+      browser.html
       file_log = File.read(file_path)
       expect(file_log).to include("document.documentElement?.outerHTML")
       expect(file_log).to include("<html><head></head><body></body></html>")
@@ -31,7 +31,7 @@ describe Ferrum::Browser do
       logger = StringIO.new
       browser = Ferrum::Browser.new(logger: logger)
 
-      browser.body
+      browser.html
 
       expect(logger.string).to include("document.documentElement?.outerHTML")
       expect(logger.string).to include("<html><head></head><body></body></html>")

@@ -25,12 +25,12 @@ browser = Ferrum::Browser.new
 
 browser.create_page(proxy: { host: "x.x.x.x", port: 31337, user: "user", password: "password" }) do |page|
   page.go_to("https://api.ipify.org?format=json")
-  page.body # => "x.x.x.x"
+  page.html # => "x.x.x.x"
 end
 
 browser.create_page(proxy: { host: "y.y.y.y", port: 31337, user: "user", password: "password" }) do |page|
   page.go_to("https://api.ipify.org?format=json")
-  page.body # => "y.y.y.y"
+  page.html # => "y.y.y.y"
 end
 ```
 

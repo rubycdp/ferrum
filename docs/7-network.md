@@ -177,7 +177,7 @@ If site or proxy uses authorization you can provide credentials using this metho
 page.network.authorize(user: "login", password: "pass") { |req| req.continue }
 page.go_to("http://example.com/authenticated")
 puts page.network.status # => 200
-puts page.body # => Welcome, authenticated client
+puts page.html # => Welcome, authenticated client
 ```
 
 Since Chrome implements authorize using request interception you must continue or abort authorized requests. If you

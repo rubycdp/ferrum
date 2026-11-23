@@ -64,14 +64,14 @@ describe Ferrum::Network do
   describe "#wait_idle" do
     it "returns true once the network is idle" do
       page.go_to("/show_cookies")
-      expect(page.body).not_to include("test_cookie")
+      expect(page.html).not_to include("test_cookie")
 
       page.at_xpath("//button[text() = 'Set cookie slow']").click
       result = network.wait_idle
       page.refresh
 
       expect(result).to be(true)
-      expect(page.body).to include("test_cookie")
+      expect(page.html).to include("test_cookie")
     end
 
     it "returns nil when the network doesn't go idle in time" do
@@ -281,7 +281,7 @@ describe Ferrum::Network do
       page.go_to("/url_blacklist")
 
       expect(blocked_urls).to be_empty
-      expect(page.body).not_to include("Disappearing header")
+      expect(page.html).not_to include("Disappearing header")
     end
 
     it "continues requests with a binary body" do
@@ -306,7 +306,7 @@ describe Ferrum::Network do
       expect(blocked_urls.size).to eq(1)
       expect(blocked_urls).not_to include(/unwanted/)
       expect(blocked_urls).to include(/jquery/)
-      expect(page.body).to include("Disappearing header")
+      expect(page.html).to include("Disappearing header")
     end
 
     it "blocks with array of patterns" do
@@ -317,7 +317,7 @@ describe Ferrum::Network do
       expect(blocked_urls.size).to eq(4)
       expect(blocked_urls).to include(/unwanted/)
       expect(blocked_urls).to include(/jquery/)
-      expect(page.body).to include("Disappearing header")
+      expect(page.html).to include("Disappearing header")
     end
 
     it "supports wildcards" do
@@ -325,13 +325,13 @@ describe Ferrum::Network do
       page.go_to("/url_whitelist")
 
       expect(network.status).to eq(200)
-      expect(page.body).to include("We are loading some wanted action here")
+      expect(page.html).to include("We are loading some wanted action here")
 
       frame = page.at_xpath("//iframe[@name = 'framename']").frame
-      expect(frame.body).not_to include("We should see this.")
+      expect(frame.html).not_to include("We should see this.")
 
       frame = page.at_xpath("//iframe[@name = 'unwantedframe']").frame
-      expect(frame.body).not_to include("We shouldn't see this.")
+      expect(frame.html).not_to include("We shouldn't see this.")
     end
 
     it "blocks unwanted iframes" do
@@ -339,15 +339,15 @@ describe Ferrum::Network do
       page.go_to("/url_blacklist")
 
       expect(network.status).to eq(200)
-      expect(page.body).to include("We are loading some unwanted action here")
+      expect(page.html).to include("We are loading some unwanted action here")
       frame = page.at_xpath("//iframe[@name = 'framename']").frame
-      expect(frame.body).not_to include("We shouldn't see this.")
+      expect(frame.html).not_to include("We shouldn't see this.")
     end
 
     it "works if set after page is loaded" do
       network.blacklist = nil
       page.go_to("/url_blacklist")
-      expect(page.body).not_to include("Disappearing header")
+      expect(page.html).not_to include("Disappearing header")
 
       network.blacklist = /jquery/
       network.clear(:traffic)
@@ -355,7 +355,7 @@ describe Ferrum::Network do
 
       expect(blocked_urls.size).to eq(1)
       expect(blocked_urls).to include(/jquery/)
-      expect(page.body).to include("Disappearing header")
+      expect(page.html).to include("Disappearing header")
     end
 
     it "works with other subscriptions" do
@@ -397,13 +397,13 @@ describe Ferrum::Network do
       expect(blocked_two.size).to eq(1)
       expect(blocked_two).not_to include(/unwanted/)
       expect(blocked_two).to include(/jquery/)
-      expect(page_two.body).to include("Disappearing header")
+      expect(page_two.html).to include("Disappearing header")
 
       blocked_one = page_one.network.traffic.select(&:blocked?).map { |e| e.request.url }
       expect(blocked_one.size).to eq(3)
       expect(blocked_one).to include(/unwanted/)
       expect(blocked_one).not_to include(/jquery/)
-      expect(page_one.body).not_to include("Disappearing header")
+      expect(page_one.html).not_to include("Disappearing header")
     end
   end
 
@@ -416,7 +416,7 @@ describe Ferrum::Network do
       page.go_to("/url_whitelist")
 
       expect(blocked_urls).to be_empty
-      expect(page.body).not_to include("Disappearing header")
+      expect(page.html).not_to include("Disappearing header")
     end
 
     it "blocks with single pattern" do
@@ -427,7 +427,7 @@ describe Ferrum::Network do
       expect(blocked_urls.size).to eq(4)
       expect(blocked_urls).to include(/unwanted/)
       expect(blocked_urls).to include(/wanted/)
-      expect(page.body).not_to include("Disappearing header")
+      expect(page.html).not_to include("Disappearing header")
     end
 
     it "blocks with array of patterns" do
@@ -438,7 +438,7 @@ describe Ferrum::Network do
       expect(blocked_urls.size).to eq(3)
       expect(blocked_urls).not_to include(/unwanted/)
       expect(blocked_urls).not_to include(/jquery/)
-      expect(page.body).not_to include("Disappearing header")
+      expect(page.html).not_to include("Disappearing header")
     end
 
     it "supports wildcards and frames" do
@@ -446,13 +446,13 @@ describe Ferrum::Network do
       page.go_to("/url_whitelist")
 
       expect(network.status).to eq(200)
-      expect(page.body).to include("We are loading some wanted action here")
+      expect(page.html).to include("We are loading some wanted action here")
 
       frame = page.at_xpath("//iframe[@name = 'framename']").frame
-      expect(frame.body).to include("We should see this.")
+      expect(frame.html).to include("We should see this.")
 
       frame = page.at_xpath("//iframe[@name = 'unwantedframe']").frame
-      expect(frame.body).to include("We shouldn't see this.")
+      expect(frame.html).to include("We shouldn't see this.")
     end
   end
 
@@ -467,7 +467,7 @@ describe Ferrum::Network do
 
       expect(network.status).to eq(200)
       frame = page.at_xpath("//iframe").frame
-      expect(frame.body).to include("hello")
+      expect(frame.html).to include("hello")
     end
 
     it "raises an error for an unknown :resource_type" do
@@ -483,7 +483,7 @@ describe Ferrum::Network do
       page.go_to("/non_existing")
 
       expect(network.status).to eq(200)
-      expect(page.body).to include("hello")
+      expect(page.html).to include("hello")
     end
 
     it "raises an error for an unknown :request_stage" do
@@ -499,7 +499,7 @@ describe Ferrum::Network do
       page.go_to("/index")
 
       expect(network.status).to eq(200)
-      expect(page.body).to include("hello")
+      expect(page.html).to include("hello")
     end
 
     it "supports custom responses" do
@@ -511,7 +511,7 @@ describe Ferrum::Network do
       page.go_to("/non_existing")
 
       expect(network.status).to eq(200)
-      expect(page.body).to include("custom content that is more than 45 characters")
+      expect(page.html).to include("custom content that is more than 45 characters")
     end
   end
 
@@ -544,7 +544,7 @@ describe Ferrum::Network do
       )
 
       expect(network.status).to eq(401)
-      expect(page.body).not_to include("Welcome, authenticated client")
+      expect(page.html).not_to include("Welcome, authenticated client")
     end
 
     it "allows with given credentials" do
@@ -553,7 +553,7 @@ describe Ferrum::Network do
       page.go_to("/basic_auth")
 
       expect(network.status).to eq(200)
-      expect(page.body).to include("Welcome, authenticated client")
+      expect(page.html).to include("Welcome, authenticated client")
     end
 
     it "allows even overwriting headers" do
@@ -563,7 +563,7 @@ describe Ferrum::Network do
       page.go_to("/basic_auth")
 
       expect(network.status).to eq(200)
-      expect(page.body).to include("Welcome, authenticated client")
+      expect(page.html).to include("Welcome, authenticated client")
     end
 
     it "denies with wrong credentials" do
@@ -572,7 +572,7 @@ describe Ferrum::Network do
       page.go_to("/basic_auth")
 
       expect(network.status).to eq(401)
-      expect(page.body).not_to include("Welcome, authenticated client")
+      expect(page.html).not_to include("Welcome, authenticated client")
     end
 
     it "allows on POST request" do
@@ -582,7 +582,7 @@ describe Ferrum::Network do
       page.at_css(%([type="submit"])).click
 
       expect(network.status).to eq(200)
-      expect(page.body).to include("Authorized POST request")
+      expect(page.html).to include("Authorized POST request")
     end
   end
 
@@ -623,7 +623,7 @@ describe Ferrum::Network do
       page.go_to("/headers")
 
       expect(page.evaluate("navigator.userAgent")).to eq("foo")
-      expect(page.body).to include("USER_AGENT: foo")
+      expect(page.html).to include("USER_AGENT: foo")
     end
 
     it "overrides the accept language" do
@@ -631,7 +631,7 @@ describe Ferrum::Network do
       page.go_to("/headers")
 
       expect(page.evaluate("navigator.language")).to eq("de-DE")
-      expect(page.body).to include("ACCEPT_LANGUAGE: de-DE")
+      expect(page.html).to include("ACCEPT_LANGUAGE: de-DE")
     end
 
     it "overrides the platform" do
@@ -685,8 +685,8 @@ describe Ferrum::Network do
         page.go_to("/headers")
 
         expect(page.evaluate("navigator.userAgentData.platform")).to eq("Windows")
-        expect(page.body).to include(%(SEC_CH_UA_PLATFORM: "Windows"))
-        expect(page.body).to include("SEC_CH_UA_MOBILE: ?0")
+        expect(page.html).to include(%(SEC_CH_UA_PLATFORM: "Windows"))
+        expect(page.html).to include("SEC_CH_UA_MOBILE: ?0")
       end
 
       it "reports a mobile device" do
@@ -694,7 +694,7 @@ describe Ferrum::Network do
         page.go_to("/headers")
 
         expect(page.evaluate("navigator.userAgentData.mobile")).to eq(true)
-        expect(page.body).to include("SEC_CH_UA_MOBILE: ?1")
+        expect(page.html).to include("SEC_CH_UA_MOBILE: ?1")
       end
 
       it "sends the brands" do
@@ -710,7 +710,7 @@ describe Ferrum::Network do
         page.network.emulate(metadata: nil)
         page.go_to("/headers")
 
-        expect(page.body).not_to include("SEC_CH_UA_PLATFORM")
+        expect(page.html).not_to include("SEC_CH_UA_PLATFORM")
       end
 
       it "brings Chrome's own client hints back once every option is nil" do
@@ -719,7 +719,7 @@ describe Ferrum::Network do
         page.go_to("/headers")
 
         expect(page.evaluate("navigator.userAgentData.platform")).not_to eq("Windows")
-        expect(page.body).to include("SEC_CH_UA_PLATFORM")
+        expect(page.html).to include("SEC_CH_UA_PLATFORM")
       end
 
       it "raises when a key is missing" do

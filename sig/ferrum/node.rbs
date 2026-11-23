@@ -57,7 +57,7 @@ module Ferrum
 
     def click: (?button: ::Symbol, ?count: ::Integer, ?modifiers: ::Array[::Symbol]?, ?offset: ::Hash[::Symbol, untyped], ?delay: ::Numeric, ?navigation_wait: (::Numeric | false), ?timeout: (::Numeric | Deadline)?, ?mode: ::Symbol?, ?keys: ::Array[::Symbol]?, ?wait: ::Numeric?) -> self
 
-    def hover: () -> bot
+    def hover: (?offset: ::Hash[::Symbol, untyped], ?timeout: (::Numeric | Deadline)?) -> self
 
     def scroll: () -> self
 

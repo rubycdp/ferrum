@@ -9,26 +9,46 @@ describe Ferrum::Network::Request do
     end
   end
 
-  describe "#type" do
+  describe "#resource_type" do
     it "returns the resource type" do
       page.go_to("/with_js")
 
-      expect(traffic.map { |e| e.request.type }).to eq(%w[Document Script Script Script])
+      expect(traffic.map { |e| e.request.resource_type }).to eq(%w[Document Script Script Script])
     end
   end
 
-  describe "#type?" do
+  describe "#resource_type?" do
     it "returns true for the matching type in any case" do
       page.go_to
 
-      expect(last_exchange.request.type?(:document)).to be(true)
-      expect(last_exchange.request.type?("DOCUMENT")).to be(true)
+      expect(last_exchange.request.resource_type?(:document)).to be(true)
+      expect(last_exchange.request.resource_type?("DOCUMENT")).to be(true)
     end
 
     it "returns false for another type" do
       page.go_to
 
-      expect(last_exchange.request.type?(:script)).to be(false)
+      expect(last_exchange.request.resource_type?(:script)).to be(false)
+    end
+  end
+
+  describe "#type" do
+    it "returns the resource type and warns that it is deprecated" do
+      page.go_to
+      Ferrum::Utils::Deprecate.reset!
+
+      expect { expect(last_exchange.request.type).to eq("Document") }
+        .to output(/Request#type will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
+    end
+  end
+
+  describe "#type?" do
+    it "matches the resource type and warns that it is deprecated" do
+      page.go_to
+      Ferrum::Utils::Deprecate.reset!
+
+      expect { expect(last_exchange.request.type?(:document)).to be(true) }
+        .to output(/Request#type\? will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
     end
   end
 

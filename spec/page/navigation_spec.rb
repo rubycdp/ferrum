@@ -26,7 +26,7 @@ describe Ferrum::Page::Navigation do
         frame = page.frame_by(name: "lazy_in_viewport")
 
         states = page.frames.reject(&:main?).map(&:state)
-        expect(frame.body).to include("slow page")
+        expect(frame.html).to include("slow page")
         expect(states).to eq(%i[stopped_loading stopped_loading])
       end
 
@@ -42,7 +42,7 @@ describe Ferrum::Page::Navigation do
         page.go_to("/headers", referrer: "http://google.com/")
         page.go_to("/headers")
 
-        expect(page.body).not_to include("REFERER: http://google.com/")
+        expect(page.html).not_to include("REFERER: http://google.com/")
       end
     end
 
@@ -126,7 +126,7 @@ describe Ferrum::Page::Navigation do
       expect(page.refresh).to be(true)
 
       expect(page.evaluate("window.marker")).to be_nil
-      expect(page.body).to include("slow page")
+      expect(page.html).to include("slow page")
     end
 
     it "returns nil when the given timeout is already used up" do
@@ -263,7 +263,7 @@ describe Ferrum::Page::Navigation do
 
       expect(page.await_navigation { page.execute("location.href = '/slow'") }).to be(true)
       expect(loaded).to be(true)
-      expect(page.body).to include("slow page")
+      expect(page.html).to include("slow page")
     end
 
     it "returns nil when nothing navigates" do
@@ -282,7 +282,7 @@ describe Ferrum::Page::Navigation do
     it "waits for a navigation that begins while watching" do
       expect(page.await_navigation(watch: 0.5) { page.execute("setTimeout(() => location.href = '/slow', 50)") })
         .to be(true)
-      expect(page.body).to include("slow page")
+      expect(page.html).to include("slow page")
     end
 
     it "returns nil when the navigation doesn't finish within the page timeout" do
@@ -305,7 +305,7 @@ describe Ferrum::Page::Navigation do
 
     it "waits for a navigation the block starts" do
       expect(page.await_navigation! { page.execute("location.href = '/slow'") }).to be(true)
-      expect(page.body).to include("slow page")
+      expect(page.html).to include("slow page")
     end
 
     it "raises when the navigation doesn't finish within the page timeout" do
@@ -319,12 +319,12 @@ describe Ferrum::Page::Navigation do
   describe "#wait_for_reload" do
     it "waits for page to be reloaded and warns that it is deprecated" do
       page.go_to("/auto_refresh")
-      expect(page.body).to include("Visited 1 times")
+      expect(page.html).to include("Visited 1 times")
       Ferrum::Utils::Deprecate.reset!
 
       expect { page.wait_for_reload(5) }
         .to output(/wait_for_reload will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      expect(page.body).to include("Visited 2 times")
+      expect(page.html).to include("Visited 2 times")
     end
   end
 
@@ -337,7 +337,7 @@ describe Ferrum::Page::Navigation do
     it "waits for a navigation the block starts and warns that it is deprecated" do
       expect { expect(page.wait_for_navigation(0.2) { page.execute("location.href = '/slow'") }).to be(true) }
         .to output(/wait_for_navigation will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      expect(page.body).to include("slow page")
+      expect(page.html).to include("slow page")
     end
 
     it "returns false when the navigation doesn't finish in time" do
@@ -365,7 +365,7 @@ describe Ferrum::Page::Navigation do
 
       expect { page.goto("/slow") }
         .to output(/goto will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      expect(page.body).to include("slow page")
+      expect(page.html).to include("slow page")
     end
   end
 
@@ -375,7 +375,7 @@ describe Ferrum::Page::Navigation do
 
       expect { page.go("/slow") }
         .to output(/go will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      expect(page.body).to include("slow page")
+      expect(page.html).to include("slow page")
     end
   end
 

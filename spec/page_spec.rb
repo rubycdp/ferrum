@@ -287,7 +287,7 @@ describe Ferrum::Page do
 
       page.evaluate("document.body.innerHTML = '<p>text</p>'")
 
-      expect(page.main_frame.body).to eq("<html><head></head><body><p>text</p></body></html>")
+      expect(page.main_frame.html).to eq("<html><head></head><body><p>text</p></body></html>")
     end
   end
 
@@ -399,7 +399,7 @@ describe Ferrum::Page do
 
         page.go_to("/foo")
 
-        expect(page.body).to include("Another World")
+        expect(page.html).to include("Another World")
       end
 
       it "skips the remaining callbacks once one handles the request" do
@@ -420,7 +420,7 @@ describe Ferrum::Page do
 
         page.go_to("/foo")
 
-        expect(page.body).to include("Another World")
+        expect(page.html).to include("Another World")
       end
 
       it "continues the request when no callback handles it" do
@@ -429,7 +429,7 @@ describe Ferrum::Page do
 
         page.go_to("/foo")
 
-        expect(page.body).to include("Another World")
+        expect(page.html).to include("Another World")
       end
 
       it "stops calling a callback once it is unsubscribed" do

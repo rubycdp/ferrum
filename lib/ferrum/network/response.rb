@@ -97,12 +97,23 @@ module Ferrum
       end
 
       #
-      # The resource type of the response.
+      # The response's resource type, e.g. `"Document"`, `"Script"` or `"XHR"`.
+      #
+      # @return [String]
+      #
+      def resource_type
+        @params["type"]
+      end
+
+      #
+      # @deprecated Will be removed in Ferrum 0.22. Use {#resource_type}.
       #
       # @return [String]
       #
       def type
-        @params["type"]
+        Utils::Deprecate.warn("Response#type will be removed in Ferrum 0.22. Use resource_type instead.",
+                              user_code: true)
+        resource_type
       end
 
       #

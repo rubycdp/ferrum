@@ -53,7 +53,7 @@ describe Ferrum::Mouse do
     it "supports clicking precise coordinates" do
       browser.go_to("/click_coordinates")
       browser.mouse.click(x: 100, y: 150)
-      expect(browser.body).to include("x: 100, y: 150")
+      expect(browser.html).to include("x: 100, y: 150")
     end
 
     it "has no trouble clicking elements when the size of a document changes" do
@@ -64,19 +64,19 @@ describe Ferrum::Mouse do
         el.parentNode.removeChild(el)
       JS
       browser.at_xpath("//a[text() = 'Phasellus blandit velit']").scroll.click
-      expect(browser.body).to include("Hello")
+      expect(browser.html).to include("Hello")
     end
 
     it "handles click when the target is in the view, but the document is smaller than the viewport" do
       browser.go_to("/simple")
       browser.at_xpath("//a[text() = 'Link']").click
-      expect(browser.body).to include("Hello world")
+      expect(browser.html).to include("Hello world")
     end
 
     it "handles clicks where a parent element has a border" do
       browser.go_to("/table")
       browser.at_xpath("//a[text() = 'Link']").click
-      expect(browser.body).to include("Hello world")
+      expect(browser.html).to include("Hello world")
     end
 
     context "on the click test page" do

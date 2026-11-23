@@ -32,6 +32,7 @@
   `page.await_navigation { }`, `context.await_page { }` and `page.await_download { }` return the navigation's result,
   the page or the download. `wait_css`, `wait_xpath`, `network.wait_idle`, `node.wait_still` and `page.wait_until { }`
   return what they waited for. Every one returns `nil` on timeout and has a `!` version that raises `TimeoutError`
+- `node.hover` moves the mouse over the node, it raised `NotImplementedError`
 
 ### Changed
 - `browser.contexts.each` and the `Enumerable` methods yield contexts instead of `[id, context]` pairs
@@ -112,6 +113,9 @@
 - `mode:` and `keys:` of `node.click`, will be removed in 0.22. Use `button: :right` or `count: 2`, and `modifiers:`
 - Positional `mouse.scroll_by(x, y)` and `scroll_to(x, y)`, will be removed in 0.22. Pass `x:` and `y:`
 - `accessibility.enable` and `disable`, will be removed in 0.22. Use `accessibility.enabled = true/false`
+- `body`, will be removed in 0.22. Use `html`, it always returned the whole document
+- `type` and `type?` of `Network::Request` and `type` of `Network::Response`, will be removed in 0.22. Use
+  `resource_type` and `resource_type?`, like the intercepted requests
 
 ### Fixed
 - `back` on the first history entry reloaded the page, it returns `nil` now

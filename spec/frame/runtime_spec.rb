@@ -82,7 +82,7 @@ describe Ferrum::Frame::Runtime do
         browser.go_to("/js_error")
         browser.execute "setTimeout(function() { omg }, 0)"
         sleep 0.1
-        expect(browser.body).to include("hello")
+        expect(browser.html).to include("hello")
       ensure
         browser&.quit
       end
@@ -93,7 +93,7 @@ describe Ferrum::Frame::Runtime do
         browser.go_to("/js_error")
         browser.execute "setTimeout(function() { omg }, 0)"
         sleep 0.1
-        expect(browser.body).to include("hello")
+        expect(browser.html).to include("hello")
       ensure
         browser&.quit
       end

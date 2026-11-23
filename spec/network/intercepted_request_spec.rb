@@ -76,7 +76,7 @@ describe Ferrum::Network::InterceptedRequest do
       page.go_to("/non_existing")
 
       expect(network.status).to eq(200)
-      expect(page.body).to include("intercepted")
+      expect(page.html).to include("intercepted")
     end
 
     it "fulfills the request with the given status code and headers" do
@@ -89,7 +89,7 @@ describe Ferrum::Network::InterceptedRequest do
 
       expect(network.status).to eq(201)
       expect(network.response.headers).to include("X-Ferrum" => "yes")
-      expect(page.body).to include("created")
+      expect(page.html).to include("created")
     end
 
     it "marks the request as responded" do
@@ -114,7 +114,7 @@ describe Ferrum::Network::InterceptedRequest do
       page.go_to
 
       expect(network.status).to eq(200)
-      expect(page.body).to include("Hello world!")
+      expect(page.html).to include("Hello world!")
     end
 
     it "sends the request with the given overrides" do
@@ -125,7 +125,7 @@ describe Ferrum::Network::InterceptedRequest do
 
       page.go_to("/headers")
 
-      expect(page.body).to include("FERRUM: overridden")
+      expect(page.html).to include("FERRUM: overridden")
     end
   end
 

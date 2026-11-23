@@ -12,7 +12,7 @@ describe Ferrum::Browser::Xvfb, :launch, skip: !Ferrum::Browser::Binary.find("Xv
       it "runs the browser in Xvfb" do
         xvfb_browser.go_to(base_url)
 
-        expect(xvfb_browser.body).to include("Hello world!")
+        expect(xvfb_browser.html).to include("Hello world!")
         expect(process_alive?(process.xvfb.pid)).to be(true)
         expect(process.xvfb.screen_size).to eq("1400x1400x24")
         expect(process.xvfb.to_env).to eq("DISPLAY" => ":#{process.xvfb.display_id}")
@@ -28,7 +28,7 @@ describe Ferrum::Browser::Xvfb, :launch, skip: !Ferrum::Browser::Binary.find("Xv
       it "runs the browser in Xvfb" do
         xvfb_browser.go_to(base_url)
 
-        expect(xvfb_browser.body).to include("Hello world!")
+        expect(xvfb_browser.html).to include("Hello world!")
         expect(process_alive?(process.xvfb.pid)).to be(true)
         expect(process.xvfb.screen_size).to eq("1024x768x24")
         expect(process.xvfb.to_env).to eq("DISPLAY" => ":#{process.xvfb.display_id}")
@@ -44,7 +44,7 @@ describe Ferrum::Browser::Xvfb, :launch, skip: !Ferrum::Browser::Binary.find("Xv
       it "runs the browser in Xvfb" do
         xvfb_browser.go_to(base_url)
 
-        expect(xvfb_browser.body).to include("Hello world!")
+        expect(xvfb_browser.html).to include("Hello world!")
         expect(process_alive?(process.xvfb.pid)).to be(true)
         expect(process.xvfb.screen_size).to eq("1024x768x24")
       ensure
@@ -64,7 +64,7 @@ describe Ferrum::Browser::Xvfb, :launch, skip: !Ferrum::Browser::Binary.find("Xv
         browser = Ferrum::Browser.new(xvfb: true, headless: false)
         browser.go_to(base_url)
 
-        expect(browser.body).to include("Hello world!")
+        expect(browser.html).to include("Hello world!")
       ensure
         browser&.quit
       end

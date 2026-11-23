@@ -84,10 +84,27 @@ describe Ferrum::Node do
   end
 
   describe "#hover" do
-    it "raises NotImplementedError" do
-      browser.go_to("/simple")
+    it "matches :hover" do
+      browser.go_to("/with_js")
+      link = browser.at_css("#hidden_link")
 
-      expect { browser.at_css("#nav").hover }.to raise_error(Ferrum::NotImplementedError)
+      link.hover
+
+      expect(link.evaluate("this.matches(':hover')")).to be(true)
+    end
+
+    it "fires the mouse events of entering the node" do
+      browser.go_to("/simple")
+      browser.execute(<<~JS)
+        document.body.innerHTML = '<button id="target">Target</button>';
+        window.events = [];
+        ["mouseover", "mouseenter", "mousemove"].forEach(type =>
+          document.querySelector("#target").addEventListener(type, e => events.push(e.type)));
+      JS
+
+      expect(browser.at_css("#target").hover).to be_a(Ferrum::Node)
+
+      expect(browser.evaluate("events")).to eq(%w[mouseover mouseenter mousemove])
     end
   end
 
@@ -223,7 +240,7 @@ describe Ferrum::Node do
 
       expect(Ferrum::Utils::ElapsedTime.monotonic_time - started_at).to be < 1
       expect(browser.network.wait_idle(timeout: 5)).to be(true)
-      expect(browser.body).to include("really slow page")
+      expect(browser.html).to include("really slow page")
     end
 
     context "when content quads can't be computed" do
@@ -237,7 +254,7 @@ describe Ferrum::Node do
 
         browser.at_xpath("//a[text()='JS redirect']").click
 
-        expect(browser.body).to include("Hello world")
+        expect(browser.html).to include("Hello world")
       end
 
       it "clicks the element by its bounding rect on a scrolled page" do
@@ -265,7 +282,7 @@ describe Ferrum::Node do
       browser.go_to("/index")
       browser.at_xpath("//a[text() = 'JS redirect']").click
       sleep 0.1
-      expect(browser.body).to include("Hello world")
+      expect(browser.html).to include("Hello world")
     end
 
     it "raises an error if the element has been removed from the DOM" do

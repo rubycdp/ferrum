@@ -142,7 +142,7 @@ describe Ferrum::Cookies do
     it "sets cookies" do
       browser.cookies.set(name: "stealth", value: "omg")
       browser.go_to("/get_cookie")
-      expect(browser.body).to include("omg")
+      expect(browser.html).to include("omg")
     end
 
     it "sets cookies with custom settings" do
@@ -155,10 +155,10 @@ describe Ferrum::Cookies do
       )
 
       browser.go_to("/get_cookie")
-      expect(browser.body).to_not include("omg")
+      expect(browser.html).to_not include("omg")
 
       browser.go_to("/custom/get_cookie")
-      expect(browser.body).to include("omg")
+      expect(browser.html).to include("omg")
 
       expect(browser.cookies["stealth"].path).to eq("/custom")
       expect(browser.cookies["stealth"].httponly?).to be_truthy
@@ -175,16 +175,16 @@ describe Ferrum::Cookies do
     it "sets a retrieved cookie" do
       browser.cookies.set(name: "stealth", value: "omg")
       browser.go_to("/get_cookie")
-      expect(browser.body).to include("omg")
+      expect(browser.html).to include("omg")
 
       cookie = browser.cookies["stealth"]
       browser.cookies.clear
       browser.go_to("/get_cookie")
-      expect(browser.body).to_not include("omg")
+      expect(browser.html).to_not include("omg")
 
       browser.cookies.set(cookie)
       browser.go_to("/get_cookie")
-      expect(browser.body).to include("omg")
+      expect(browser.html).to include("omg")
     end
 
     it "sets a retrieved browser cookie" do
@@ -193,15 +193,15 @@ describe Ferrum::Cookies do
       browser.go_to("/get_cookie")
       expect(cookie.name).to eq("stealth")
       expect(cookie.value).to eq("test_cookie")
-      expect(browser.body).to include("test_cookie")
+      expect(browser.html).to include("test_cookie")
 
       browser.cookies.clear
       browser.go_to("/get_cookie")
-      expect(browser.body).not_to include("test_cookie")
+      expect(browser.html).not_to include("test_cookie")
 
       browser.cookies.set(cookie)
       browser.go_to("/get_cookie")
-      expect(browser.body).to include("test_cookie")
+      expect(browser.html).to include("test_cookie")
     end
 
     it "retains the characteristics of the reference cookie" do
@@ -264,10 +264,10 @@ describe Ferrum::Cookies do
       browser.cookies.set(name: "stealth", value: "localhost", domain: "localhost")
 
       browser.go_to("http://localhost:#{port}/get_cookie")
-      expect(browser.body).to include("localhost")
+      expect(browser.html).to include("localhost")
 
       browser.go_to("http://127.0.0.1:#{port}/get_cookie")
-      expect(browser.body).to include("127.0.0.1")
+      expect(browser.html).to include("127.0.0.1")
     end
 
     it "sets cookies for given domain when base_url isn't set", :launch do
@@ -276,10 +276,10 @@ describe Ferrum::Cookies do
 
       port = server.port
       browser.go_to("http://localhost:#{port}/get_cookie")
-      expect(browser.body).to include("123456")
+      expect(browser.html).to include("123456")
 
       browser.go_to("http://127.0.0.1:#{port}/get_cookie")
-      expect(browser.body).not_to include("123456")
+      expect(browser.html).not_to include("123456")
     ensure
       browser&.quit
     end
@@ -290,12 +290,12 @@ describe Ferrum::Cookies do
       browser.go_to("/set_cookie")
 
       browser.go_to("/get_cookie")
-      expect(browser.body).to include("test_cookie")
+      expect(browser.html).to include("test_cookie")
 
       browser.cookies.remove(name: "stealth")
 
       browser.go_to("/get_cookie")
-      expect(browser.body).to_not include("test_cookie")
+      expect(browser.html).to_not include("test_cookie")
     end
 
     it "removes the cookie sent to the given URL" do
@@ -313,12 +313,12 @@ describe Ferrum::Cookies do
       browser.go_to("/set_cookie")
 
       browser.go_to("/get_cookie")
-      expect(browser.body).to include("test_cookie")
+      expect(browser.html).to include("test_cookie")
 
       browser.cookies.clear
 
       browser.go_to("/get_cookie")
-      expect(browser.body).to_not include("test_cookie")
+      expect(browser.html).to_not include("test_cookie")
     end
   end
 
@@ -345,7 +345,7 @@ describe Ferrum::Cookies do
       browser.cookies.load("test.yml")
 
       browser.go_to("/get_cookie")
-      expect(browser.body).to include("hello world")
+      expect(browser.html).to include("hello world")
     ensure
       File.delete("test.yml")
     end

@@ -34,7 +34,7 @@ module Ferrum
                 wait_for_reload wait_for_navigation wait_for_navigation!
                 at_css at_xpath css xpath wait_css wait_css! wait_xpath wait_xpath! wait_for_selector
                 current_url current_title url title
-                body doctype content=
+                html body doctype content=
                 headers network console accessibility downloads tracing
                 mouse keyboard
                 screenshot pdf mhtml viewport_size device_pixel_ratio document_size

@@ -181,7 +181,7 @@ describe Ferrum::Context do
 
       popup = browser.await_page { browser.execute(%(window.open("/simple"))) }
 
-      expect(popup.body).to include("Test")
+      expect(popup.html).to include("Test")
       expect(browser.pages).to include(popup)
     ensure
       popup&.close
@@ -203,7 +203,7 @@ describe Ferrum::Context do
 
       popup = browser.await_page { browser.execute(%(window.open("/slow", "popup"))) }
 
-      expect(popup.body).to include("slow page")
+      expect(popup.html).to include("slow page")
     ensure
       popup&.close
     end
@@ -215,7 +215,7 @@ describe Ferrum::Context do
 
       same = browser.await_page { browser.execute(%(window.open("/simple", "popup"))) }
 
-      expect(same.body).to include("Test")
+      expect(same.html).to include("Test")
     ensure
       same&.close
     end
@@ -272,7 +272,7 @@ describe Ferrum::Context do
 
       popup = browser.await_page! { browser.execute(%(window.open("/simple"))) }
 
-      expect(popup.body).to include("Test")
+      expect(popup.html).to include("Test")
     ensure
       popup&.close
     end

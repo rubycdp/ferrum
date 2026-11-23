@@ -19,7 +19,10 @@ module Ferrum
 
       def headers_size: () -> untyped
 
-      def type: () -> untyped
+      def resource_type: () -> String
+
+      %a{deprecated}
+      def type: () -> String
 
       def content_type: () -> untyped
 

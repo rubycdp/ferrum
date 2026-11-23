@@ -52,7 +52,7 @@ describe Ferrum::Page::Cookies do
       page.cookies.clear
 
       page.go_to("/get_cookie")
-      expect(page.body).not_to include("local")
+      expect(page.html).not_to include("local")
       expect(browser.cookies.map(&:name)).to eq(["other"])
     end
   end

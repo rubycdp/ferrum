@@ -74,7 +74,7 @@ describe Ferrum::Frame do
 
       frame = page.at_xpath("//iframe[@name='frame']").frame
       expect(frame.url).to end_with("/slow")
-      expect(frame.body).to include("slow page")
+      expect(frame.html).to include("slow page")
 
       expect(page.main_frame.url).to end_with("/")
     end
@@ -85,7 +85,7 @@ describe Ferrum::Frame do
       frame = page.at_xpath("//iframe[@name='frame']").frame
 
       expect(frame.url).to end_with("/slow")
-      expect(frame.body).to include("slow page")
+      expect(frame.html).to include("slow page")
 
       expect(page.url).to end_with("/frames")
     end
@@ -150,7 +150,7 @@ describe Ferrum::Frame do
     it "sets the page content" do
       page.content = "<html><head></head><body>Voila! <a href='#'>Link</a></body></html>"
 
-      expect(page.body).to include("Voila!")
+      expect(page.html).to include("Voila!")
       expect(page.at_css("a").text).to eq("Link")
     end
   end
@@ -161,7 +161,7 @@ describe Ferrum::Frame do
 
       expect { page.main_frame.set_content("<html><head></head><body>Voila!</body></html>") }
         .to output(/set_content will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      expect(page.body).to include("Voila!")
+      expect(page.html).to include("Voila!")
     end
   end
 

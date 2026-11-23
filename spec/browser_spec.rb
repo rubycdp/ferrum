@@ -303,7 +303,7 @@ describe Ferrum::Browser do
       browser.go_to("/requiring_custom_extension")
 
       expect(
-        browser.body
+        browser.html
       ).to include(%(Location: <span id="location">1,-1</span>))
 
       expect(
@@ -384,7 +384,7 @@ describe Ferrum::Browser do
       with_external_browser do |url, _process|
         browser = Ferrum::Browser.new(url: url)
         browser.go_to(base_url)
-        expect(browser.body).to include("Hello world!")
+        expect(browser.html).to include("Hello world!")
         expect(browser.default_user_agent).to include("Chrome")
       ensure
         browser&.quit
@@ -456,7 +456,7 @@ describe Ferrum::Browser do
           browser = Ferrum::Browser.new(url: proxy_url)
           browser.go_to(base_url)
 
-          expect(browser.body).to include("Hello world!")
+          expect(browser.html).to include("Hello world!")
           expect(browser.process.ws_url.authority).to eq(Addressable::URI.parse(proxy_url).authority)
           expect(browser.process.ws_url.query).to eq("token=secret")
         ensure
@@ -473,7 +473,7 @@ describe Ferrum::Browser do
           browser.go_to("/headers")
 
           expect(browser.default_user_agent).to include("Chrome")
-          expect(browser.body).to include("X_CUSTOM: 1")
+          expect(browser.html).to include("X_CUSTOM: 1")
         ensure
           browser&.quit
         end
@@ -495,7 +495,7 @@ describe Ferrum::Browser do
       with_external_browser do |url, _process|
         browser = Ferrum::Browser.new(ws_url: web_socket_debugger_url(url))
         browser.go_to(base_url)
-        expect(browser.body).to include("Hello world!")
+        expect(browser.html).to include("Hello world!")
         expect(browser.default_user_agent).to include("Chrome")
       ensure
         browser&.quit
@@ -510,7 +510,7 @@ describe Ferrum::Browser do
           browser = Ferrum::Browser.new(ws_url: ws_url, base_url: base_url)
           browser.go_to("/")
 
-          expect(browser.body).to include("Hello world!")
+          expect(browser.html).to include("Hello world!")
           expect(browser.default_user_agent).to include("Chrome")
         ensure
           browser&.quit
@@ -587,7 +587,7 @@ describe Ferrum::Browser do
 
         browser.go_to("https://example.com")
         expect(browser.network.status).to eq(200)
-        expect(browser.body).to include("Example Domain")
+        expect(browser.html).to include("Example Domain")
       ensure
         browser&.quit
       end
@@ -606,7 +606,7 @@ describe Ferrum::Browser do
 
         browser.go_to("https://example.com")
         expect(browser.network.status).to eq(200)
-        expect(browser.body).to include("Example Domain")
+        expect(browser.html).to include("Example Domain")
       ensure
         browser&.quit
       end
@@ -673,7 +673,7 @@ describe Ferrum::Browser do
         browser.create_page(new_context: true) do |page|
           page.go_to("https://example.com")
           expect(page.network.status).to eq(200)
-          expect(page.body).to include("Example Domain")
+          expect(page.html).to include("Example Domain")
         end
 
         proxy.rotate(host: upstream.host, port: upstream.port, user: "user", password: "wrong")
@@ -797,7 +797,7 @@ describe Ferrum::Browser do
       browser.restart
       browser.go_to
 
-      expect(browser.body).to include("Hello world")
+      expect(browser.html).to include("Hello world")
     end
   end
 
@@ -812,7 +812,7 @@ describe Ferrum::Browser do
       browser.restart
       browser.go_to
 
-      expect(browser.body).to include("Hello world")
+      expect(browser.html).to include("Hello world")
     end
   end
 
@@ -942,7 +942,7 @@ describe Ferrum::Browser do
 
       expect(browser.targets.size).to eq(3)
 
-      expect(popup2.body).to include("Test")
+      expect(popup2.html).to include("Test")
       # Browser isn't dead, current page after executing JS closes connection
       # and we don't have a chance to push response to the Queue. Since the
       # queue and websocket are closed and response is nil the proper guess
@@ -1074,7 +1074,7 @@ describe Ferrum::Browser do
         expect(browser.contexts.size).to eq(1)
         expect(browser.contexts[page.context_id].targets.size).to eq(1)
         expect(page.network.status).to eq(200)
-        expect(page.body).to include("Example Domain")
+        expect(page.html).to include("Example Domain")
 
         page = browser.create_page(proxy: { host: proxy.host, port: proxy.port })
         expect(browser.contexts.size).to eq(2)
@@ -1106,7 +1106,7 @@ describe Ferrum::Browser do
         page.go_to("https://example.com")
 
         expect(page.network.status).to eq(200)
-        expect(page.body).to include("Example Domain")
+        expect(page.html).to include("Example Domain")
       end
     end
   end

@@ -97,11 +97,12 @@ page.title # => "Google"
 
 `current_url` and `current_title` are deprecated and will be removed in 0.22, use `url` and `title`.
 
-#### body : `String`
+#### html : `String`
 
-Returns current page's html.
+Returns the HTML of the whole document, `<html>` included. `body` is deprecated and will be removed in 0.22, it never
+returned only `<body>`.
 
 ```ruby
 page.go_to("https://google.com/")
-page.body # => '<html itemscope="" itemtype="http://schema.org/WebPage" lang="ru"><head>...
+page.html # => '<html itemscope="" itemtype="http://schema.org/WebPage" lang="ru"><head>...
 ```

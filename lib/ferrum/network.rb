@@ -354,7 +354,7 @@ module Ferrum
     #   browser.network.authorize(user: "login", password: "pass") { |req| req.continue }
     #   browser.go_to("http://example.com/authenticated")
     #   puts browser.network.status # => 200
-    #   puts browser.body # => Welcome, authenticated client
+    #   puts browser.html # => Welcome, authenticated client
     #
     def authorize(user:, password:, type: :server, &block)
       raise ArgumentError, AUTHORIZE_TYPE_WRONG unless AUTHORIZE_TYPE.include?(type)
