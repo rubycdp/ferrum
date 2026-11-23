@@ -189,9 +189,9 @@ module Ferrum
     # @example
     #   browser.go_to("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
     #   frame = browser.frames[1]
-    #   frame.body # <html lang="en"><head><style>body {transition: opacity ease-in 0.2s; }...
+    #   frame.html # <html lang="en"><head><style>body {transition: opacity ease-in 0.2s; }...
     #   frame.content = "<html><head></head><body><p>lol</p></body></html>"
-    #   frame.body # => <html><head></head><body><p>lol</p></body></html>
+    #   frame.html # => <html><head></head><body><p>lol</p></body></html>
     #
     def content=(html)
       execute(<<~JS, html: html)

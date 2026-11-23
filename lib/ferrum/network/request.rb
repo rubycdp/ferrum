@@ -33,24 +33,48 @@ module Ferrum
       end
 
       #
-      # The request resource type.
+      # The request's resource type, e.g. `"Document"`, `"Script"` or `"XHR"`.
       #
       # @return [String]
       #
-      def type
+      def resource_type
         @params["type"]
       end
 
       #
-      # Determines if the request is of the given type.
+      # Determines if the request is of the given resource type, ignoring case.
       #
       # @param [String, Symbol] value
-      #   The type value to compare against.
+      #   The type to compare against, e.g. `:document`.
+      #
+      # @return [Boolean]
+      #
+      def resource_type?(value)
+        resource_type.downcase == value.to_s.downcase
+      end
+
+      #
+      # @deprecated Will be removed in Ferrum 0.22. Use {#resource_type}.
+      #
+      # @return [String]
+      #
+      def type
+        Utils::Deprecate.warn("Request#type will be removed in Ferrum 0.22. Use resource_type instead.",
+                              user_code: true)
+        resource_type
+      end
+
+      #
+      # @deprecated Will be removed in Ferrum 0.22. Use {#resource_type?}.
+      #
+      # @param [String, Symbol] value
       #
       # @return [Boolean]
       #
       def type?(value)
-        type.downcase == value.to_s.downcase
+        Utils::Deprecate.warn("Request#type? will be removed in Ferrum 0.22. Use resource_type? instead.",
+                              user_code: true)
+        resource_type?(value)
       end
 
       #
@@ -59,7 +83,7 @@ module Ferrum
       # @return [Boolean]
       #
       def xhr?
-        type?("xhr")
+        resource_type?("xhr")
       end
 
       #
@@ -95,7 +119,7 @@ module Ferrum
       # @return [Boolean]
       #
       def ping?
-        type?("ping")
+        resource_type?("ping")
       end
 
       #

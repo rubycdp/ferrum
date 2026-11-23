@@ -362,13 +362,34 @@ module Ferrum
       self
     end
 
-    # Not currently implemented.
     #
-    # @raise [Ferrum::NotImplementedError] always
+    # Moves the mouse over the node's center, or an offset from it, firing
+    # `mouseover`, `mouseenter` and `mousemove` and matching `:hover`. Waits
+    # for the node to stop moving, see {#wait_still}.
+    #
+    # @param [Hash{Symbol => Object}] offset
+    #   Where to move instead of the center, see {#click}.
+    #
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long finding the node's position and moving there may take
+    #   together, the page timeout by default.
+    #
+    # @return [self]
     #
     # @raise [TimeoutError]
-    def hover
-      raise Ferrum::NotImplementedError
+    #
+    # @example
+    #   menu = page.at_css("#menu").hover
+    #   menu.evaluate("this.matches(':hover')") # => true
+    #
+    def hover(offset: {}, timeout: nil)
+      deadline = Deadline.wrap(timeout || page.timeout)
+      Deadline.within(deadline) do
+        x, y = find_position(**offset)
+        page.mouse.move(x:, y:, timeout: deadline)
+      end
+
+      self
     end
 
     #

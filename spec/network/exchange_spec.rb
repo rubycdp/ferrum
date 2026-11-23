@@ -41,7 +41,7 @@ describe Ferrum::Network::Exchange do
 
       page.go_to
 
-      expect(page.body).to include("Hello world!")
+      expect(page.html).to include("Hello world!")
       exchange = network.select(request_id).first
       expect(exchange.intercepted_request).to be
       expect(exchange.intercepted_request).to be_a(Ferrum::Network::InterceptedRequest)
@@ -62,7 +62,7 @@ describe Ferrum::Network::Exchange do
 
       page.go_to
 
-      expect(page.body).to include("Another World")
+      expect(page.html).to include("Another World")
       exchange = network.select(request_id).first
       expect(exchange.intercepted_request).to be
       expect(exchange.intercepted_request).to be_a(Ferrum::Network::InterceptedRequest)
@@ -150,7 +150,7 @@ describe Ferrum::Network::Exchange do
         %r{Request to http://127.0.0.1:#{server.port} failed \(net::ERR_BLOCKED_BY_CLIENT\)}
       )
 
-      expect(page.body).not_to include("Hello world!")
+      expect(page.html).not_to include("Hello world!")
       expect(last_exchange.blocked?).to be true
     end
   end
@@ -258,14 +258,14 @@ describe Ferrum::Network::Exchange do
       page.go_to("/with_slow_ajax_connection")
       xhr = page.network.traffic.find(&:pending?)
 
-      expect(page.body).to include("Slow AJAX")
+      expect(page.html).to include("Slow AJAX")
       expect(xhr.url).to include("really_slow")
       expect(xhr.unknown).to be_falsey
       expect(xhr).to be_pending
 
       page.go_to("/")
 
-      expect(page.body).to include("Hello world!")
+      expect(page.html).to include("Hello world!")
       expect(xhr.unknown).to be_truthy
       expect(xhr).not_to be_pending
     end

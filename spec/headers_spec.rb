@@ -5,8 +5,8 @@ describe Ferrum::Headers do
     it "allows headers to be set" do
       browser.headers.set("Cookie" => "foo=bar", "YourName" => "your_value")
       browser.go_to("/headers")
-      expect(browser.body).to include("COOKIE: foo=bar")
-      expect(browser.body).to include("YOURNAME: your_value")
+      expect(browser.html).to include("COOKIE: foo=bar")
+      expect(browser.html).to include("YOURNAME: your_value")
     end
 
     it "supports User-Agent" do
@@ -34,7 +34,7 @@ describe Ferrum::Headers do
           document.body.innerHTML = request.responseText;
         }
       JS
-      expect(browser.body).to include("X_OMG: wat")
+      expect(browser.html).to include("X_OMG: wat")
     end
 
     it "keeps a user agent from network.emulate when setting other headers" do
@@ -55,7 +55,7 @@ describe Ferrum::Headers do
       browser.headers.set("User-Agent" => "foo")
       browser.headers.set("X-Trace" => "1")
       browser.go_to("/headers")
-      expect(browser.body).to include("SEC_CH_UA_PLATFORM")
+      expect(browser.html).to include("SEC_CH_UA_PLATFORM")
     end
   end
 
@@ -64,14 +64,14 @@ describe Ferrum::Headers do
       browser.headers.set("X-Omg" => "wat")
       browser.headers.clear
       browser.go_to("/headers")
-      expect(browser.body).not_to include("X_OMG")
+      expect(browser.html).not_to include("X_OMG")
     end
 
     it "stops sending the Referer with navigations" do
       browser.headers.set("Referer" => "http://google.com/")
       browser.headers.clear
       browser.go_to("/headers")
-      expect(browser.body).not_to include("REFERER: http://google.com/")
+      expect(browser.html).not_to include("REFERER: http://google.com/")
     end
 
     it "brings the user agent and language back" do
@@ -79,8 +79,8 @@ describe Ferrum::Headers do
       browser.headers.clear
       browser.go_to("/headers")
       expect(browser.evaluate("navigator.userAgent")).to eq(browser.default_user_agent)
-      expect(browser.body).not_to include("ACCEPT_LANGUAGE: de-DE")
-      expect(browser.body).to include("SEC_CH_UA_PLATFORM")
+      expect(browser.html).not_to include("ACCEPT_LANGUAGE: de-DE")
+      expect(browser.html).to include("SEC_CH_UA_PLATFORM")
     end
 
     it "keeps a user agent from network.emulate" do
@@ -105,16 +105,16 @@ describe Ferrum::Headers do
       browser.headers.set("User-Agent" => "Browser", "YourName" => "your_value")
       browser.headers.add({ "User-Agent" => "Super Browser", "Appended" => "true" })
       browser.go_to("/headers")
-      expect(browser.body).to include("USER_AGENT: Super Browser")
-      expect(browser.body).to include("YOURNAME: your_value")
-      expect(browser.body).to include("APPENDED: true")
+      expect(browser.html).to include("USER_AGENT: Super Browser")
+      expect(browser.html).to include("YOURNAME: your_value")
+      expect(browser.html).to include("APPENDED: true")
     end
 
     it "sets Accept-Language even if user-agent is not provided" do
       browser.headers.add({ "Accept-Language" => "esperanto" })
       browser.go_to("/headers")
-      expect(browser.body).to include("USER_AGENT: #{browser.default_user_agent}")
-      expect(browser.body).to match(/ACCEPT_LANGUAGE: esperanto/)
+      expect(browser.html).to include("USER_AGENT: #{browser.default_user_agent}")
+      expect(browser.html).to match(/ACCEPT_LANGUAGE: esperanto/)
     end
 
     it "warns that changing navigator through Accept-Language is deprecated" do
@@ -150,7 +150,7 @@ describe Ferrum::Headers do
     it "keeps added headers on redirects" do
       browser.headers.add({ "X-Custom-Header" => "1" })
       browser.go_to("/redirect_to_headers")
-      expect(browser.body).to include("X_CUSTOM_HEADER: 1")
+      expect(browser.html).to include("X_CUSTOM_HEADER: 1")
     end
 
     it "keeps a user agent from network.emulate when adding other headers" do
@@ -158,13 +158,13 @@ describe Ferrum::Headers do
       browser.headers.add({ "X-Trace" => "1" })
       browser.go_to("/headers")
       expect(browser.evaluate("navigator.userAgent")).to eq("Bot/1.0")
-      expect(browser.body).to include("USER_AGENT: Bot/1.0")
+      expect(browser.html).to include("USER_AGENT: Bot/1.0")
     end
 
     it "keeps client hints when the headers have no user agent or language" do
       browser.headers.add({ "X-Trace" => "1" })
       browser.go_to("/headers")
-      expect(browser.body).to include("SEC_CH_UA_PLATFORM")
+      expect(browser.html).to include("SEC_CH_UA_PLATFORM")
     end
   end
 end

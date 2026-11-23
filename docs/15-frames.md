@@ -131,14 +131,14 @@ frame = page.frame_by(id: "C09C4E4404314AAEAE85928EAC109A93")
 frame.page.url # => "https://www.w3schools.com/tags/tag_frame.asp"
 ```
 
-#### body : `String`
+#### html : `String`
 
-Returns current frame's html.
+Returns the HTML of the frame's whole document, `<html>` included.
 
 ```ruby
 page.go_to("https://www.w3schools.com/tags/tag_frame.asp")
 frame = page.frame_by(id: "C09C4E4404314AAEAE85928EAC109A93")
-frame.body # => "<html><head></head><body></body></html>"
+frame.html # => "<html><head></head><body></body></html>"
 ```
 
 #### doctype
@@ -159,9 +159,9 @@ Sets a content of a given frame.
 ```ruby
 page.go_to("https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe")
 frame = page.frames[1]
-frame.body # <html lang="en"><head><style>body {transition: opacity ease-in 0.2s; }...
+frame.html # <html lang="en"><head><style>body {transition: opacity ease-in 0.2s; }...
 frame.content = "<html><head></head><body><p>lol</p></body></html>"
-frame.body # => <html><head></head><body><p>lol</p></body></html>
+frame.html # => <html><head></head><body><p>lol</p></body></html>
 ```
 
 ## Example

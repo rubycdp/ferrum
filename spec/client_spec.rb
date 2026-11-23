@@ -146,7 +146,7 @@ describe Ferrum::Client do
         page.go_to("/")
       end.to output(/Target.targetCreated callback raised Ferrum::TimeoutError/).to_stderr
 
-      expect(page.body).to include("Hello world!")
+      expect(page.html).to include("Hello world!")
     end
   end
 

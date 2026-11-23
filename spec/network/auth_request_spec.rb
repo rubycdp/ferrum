@@ -50,7 +50,7 @@ describe Ferrum::Network::AuthRequest do
       page.go_to("/basic_auth")
 
       expect(network.status).to eq(200)
-      expect(page.body).to include("Welcome, authenticated client")
+      expect(page.html).to include("Welcome, authenticated client")
     end
   end
 
@@ -63,7 +63,7 @@ describe Ferrum::Network::AuthRequest do
       page.go_to("/basic_auth")
 
       expect(network.status).to eq(401)
-      expect(page.body).not_to include("Welcome, authenticated client")
+      expect(page.html).not_to include("Welcome, authenticated client")
     end
   end
 

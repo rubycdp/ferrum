@@ -5,9 +5,15 @@ module Ferrum
 
       def id: () -> untyped
 
-      def type: () -> untyped
+      def resource_type: () -> String
 
-      def type?: (untyped value) -> untyped
+      def resource_type?: (String | Symbol value) -> bool
+
+      %a{deprecated}
+      def type: () -> String
+
+      %a{deprecated}
+      def type?: (String | Symbol value) -> bool
 
       def frame_id: () -> untyped
 

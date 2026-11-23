@@ -120,19 +120,32 @@ module Ferrum
       end
 
       #
-      # Returns current page's html.
+      # Returns the HTML of the whole document, `<html>` included.
       #
       # @return [String]
-      #   The HTML source of the current page.
+      #   The document's `outerHTML`, empty when it has no root element.
       #
       # @raise [TimeoutError]
       #
       # @example
       #   browser.go_to("https://google.com/")
-      #   browser.body # => '<html itemscope="" itemtype="http://schema.org/WebPage" lang="ru"><head>...
+      #   browser.html # => '<html itemscope="" itemtype="http://schema.org/WebPage" lang="ru"><head>...
+      #
+      def html
+        evaluate("document.documentElement?.outerHTML") || ""
+      end
+
+      #
+      # @deprecated Will be removed in Ferrum 0.22. Use {#html}, it was never
+      #   only `<body>`.
+      #
+      # @return [String]
+      #
+      # @raise [TimeoutError]
       #
       def body
-        evaluate("document.documentElement?.outerHTML") || ""
+        Utils::Deprecate.warn("body will be removed in Ferrum 0.22. Use html instead.", user_code: true)
+        html
       end
 
       #

@@ -100,7 +100,7 @@ module Ferrum
       # @return [Boolean]
       #
       def navigation_request?(frame_id)
-        request&.type?(:document) && request&.frame_id == frame_id
+        request&.resource_type?(:document) && request&.frame_id == frame_id
       end
 
       #

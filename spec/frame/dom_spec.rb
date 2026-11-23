@@ -119,17 +119,17 @@ describe Ferrum::Frame::DOM do
     end
   end
 
-  describe "#body" do
-    it "returns the body of an about:blank frame without a document" do
+  describe "#html" do
+    it "returns the HTML of an about:blank frame without a document" do
       page.go_to
       page.execute <<-JS
         document.body.innerHTML += "<iframe src='about:blank' name='frame'>"
       JS
       frame = page.at_xpath("//iframe[@name='frame']").frame
-      expect(frame.body).to eq("<html><head></head><body></body></html>")
+      expect(frame.html).to eq("<html><head></head><body></body></html>")
     end
 
-    it "returns the body of an about:blank frame built by JS" do
+    it "returns the HTML of an about:blank frame built by JS" do
       page.go_to
       page.execute <<-JS
         document.body.innerHTML += "<iframe src='about:blank' name='frame'>";
@@ -140,19 +140,19 @@ describe Ferrum::Frame::DOM do
         iframeDocument.close();
       JS
       frame = page.at_xpath("//iframe[@name='frame']").frame
-      expect(frame.body).to include("Hello Frame")
+      expect(frame.html).to include("Hello Frame")
     end
 
-    it "returns the body of a frame with srcdoc" do
+    it "returns the HTML of a frame with srcdoc" do
       page.go_to
       page.execute <<-JS
         document.body.innerHTML += "<iframe srcdoc='<p>Hello Frame</p>' name='frame'>"
       JS
       frame = page.at_xpath("//iframe[@name='frame']").frame
-      expect(frame.body).to include("Hello Frame")
+      expect(frame.html).to include("Hello Frame")
     end
 
-    it "returns the body of a frame without src filled by JS" do
+    it "returns the HTML of a frame without src filled by JS" do
       page.go_to
       page.execute <<-JS
         document.body.innerHTML += "<iframe id='frame' name='frame'>"
@@ -165,7 +165,17 @@ describe Ferrum::Frame::DOM do
         iframeDocument.close();
       JS
       frame = page.at_xpath("//iframe[@name='frame']").frame
-      expect(frame.body).to include("Hello Frame")
+      expect(frame.html).to include("Hello Frame")
+    end
+  end
+
+  describe "#body" do
+    it "returns the HTML and warns that it is deprecated" do
+      page.go_to("/simple")
+      Ferrum::Utils::Deprecate.reset!
+
+      expect { expect(page.body).to eq(page.html) }
+        .to output(/body will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
     end
   end
 
