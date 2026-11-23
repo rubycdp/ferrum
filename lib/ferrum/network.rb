@@ -371,10 +371,10 @@ module Ferrum
         next unless request.auth_challenge?(type)
 
         response = authorized_response(@authorized_ids[type],
-                                       request.request_id,
+                                       request.id,
                                        user, password)
 
-        @authorized_ids[type] << request.request_id
+        @authorized_ids[type] << request.id
         request.continue(authChallengeResponse: response)
       end
     end
@@ -692,8 +692,16 @@ module Ferrum
         exchange.error.type = params["type"]
         exchange.error.error_text = params["errorText"]
         exchange.error.monotonic_time = params["timestamp"]
+        exchange.error.time ||= failed_at(exchange.request, params["timestamp"])
         exchange.error.canceled = params["canceled"]
       end
+    end
+
+    def failed_at(request, timestamp)
+      started = request.to_h
+      return Time.now unless started["wallTime"] && started["timestamp"] && timestamp
+
+      Time.at(started["wallTime"] + (timestamp - started["timestamp"]))
     end
 
     def subscribe_log_entry_added

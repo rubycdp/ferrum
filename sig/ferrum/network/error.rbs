@@ -1,27 +1,34 @@
 module Ferrum
   class Network
     class Error
-      attr_writer canceled: untyped
+      TIMESTAMP_DEPRECATED: String
+      MONOTONIC_TIME_DEPRECATED: String
 
-      attr_reader time: untyped
+      attr_writer canceled: bool?
 
-      attr_reader timestamp: untyped
+      attr_writer time: Time?
 
-      attr_accessor id: untyped
+      attr_accessor id: String?
 
-      attr_accessor url: untyped
+      attr_accessor url: String?
 
-      attr_accessor type: untyped
+      attr_accessor type: String?
 
-      attr_accessor error_text: untyped
+      attr_accessor error_text: String?
 
-      attr_accessor monotonic_time: untyped
+      attr_writer monotonic_time: Float?
 
-      attr_accessor description: untyped
+      attr_accessor description: String?
 
-      def canceled?: () -> untyped
+      def canceled?: () -> bool?
 
-      def timestamp=: (untyped value) -> untyped
+      def time: () -> Time?
+
+      %a{deprecated} def timestamp: () -> Float?
+
+      %a{deprecated} def monotonic_time: () -> Float?
+
+      def timestamp=: (Float value) -> Float
     end
   end
 end

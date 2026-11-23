@@ -1,7 +1,11 @@
 module Ferrum
   class Network
     class AuthRequest
-      attr_accessor request_id: ::String
+      REQUEST_ID_DEPRECATED: String
+
+      attr_accessor id: ::String
+
+      %a{deprecated} def request_id: () -> ::String
 
       attr_accessor frame_id: ::String
 

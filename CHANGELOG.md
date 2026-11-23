@@ -94,6 +94,10 @@
 - `node.axnode`, will be removed in 0.22. Use `node.ax_node`
 - `node[name]`, will be removed in 0.22. Use `node.property(name)`
 - `contexts.each { |id, context| }`, will be removed in 0.22. `each` yields the context
+- `request_id` of intercepted and auth requests, will be removed in 0.22. Use `id`, like `Request#id`
+- `post_data` of requests, will be removed in 0.22. Use `body`
+- `timestamp` and `monotonic_time` of `Network::Error`, will be removed in 0.22. Use `time`, which is now set for every
+  failure, not only the ones the browser logs a message for
 
 ### Fixed
 - `back` on the first history entry reloaded the page, it returns `nil` now

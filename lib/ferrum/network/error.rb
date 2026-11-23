@@ -8,19 +8,43 @@ module Ferrum
     # defined in `ferrum/errors.rb`.
     #
     class Error
-      attr_reader :time
+      TIMESTAMP_DEPRECATED = "timestamp will be removed in Ferrum 0.22. Use time instead."
+      MONOTONIC_TIME_DEPRECATED = "monotonic_time will be removed in Ferrum 0.22. Use time instead."
 
       # @note The writer is a private API, Ferrum sets it.
-      attr_reader :timestamp, :id, :url, :type, :error_text, :monotonic_time, :description
+      attr_reader :id, :url, :type, :error_text, :description
 
       # @api private
-      attr_writer :canceled, :id, :url, :type, :error_text, :monotonic_time, :description
+      attr_writer :canceled, :id, :url, :type, :error_text, :monotonic_time, :description, :time
 
       # Whether the request was canceled.
       #
       # @return [Boolean]
       def canceled?
         @canceled
+      end
+
+      # When the request failed.
+      #
+      # @return [Time, nil]
+      #
+      # @note The writer is a private API, Ferrum sets it.
+      attr_reader :time
+
+      # @deprecated Will be removed in Ferrum 0.22. Use {#time}.
+      #
+      # @return [Float, nil]
+      def timestamp
+        Utils::Deprecate.warn(TIMESTAMP_DEPRECATED, user_code: true)
+        @timestamp
+      end
+
+      # @deprecated Will be removed in Ferrum 0.22. Use {#time}.
+      #
+      # @return [Float, nil]
+      def monotonic_time
+        Utils::Deprecate.warn(MONOTONIC_TIME_DEPRECATED, user_code: true)
+        @monotonic_time
       end
 
       # Sets the error's timestamp, deriving {#time} from it.
@@ -34,7 +58,7 @@ module Ferrum
       # @api private
       def timestamp=(value)
         @timestamp = value
-        @time = Time.strptime((value / 1000).to_s, "%s")
+        @time = Time.at(value / 1000.0)
       end
     end
   end
