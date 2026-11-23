@@ -13,17 +13,17 @@ module Ferrum
 
     def scroll_to: (::Numeric x, ::Numeric y) -> self
 
-    def click: (x: ::Numeric, y: ::Numeric, ?delay: ::Numeric, ?navigation_wait: ::Numeric, ?wait: ::Numeric?, ?timeout: (::Numeric | Deadline)?, ?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer) -> self
+    def click: (x: ::Numeric, y: ::Numeric, ?delay: ::Numeric, ?navigation_wait: (::Numeric | false), ?wait: ::Numeric?, ?timeout: (::Numeric | Deadline)?, ?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer) -> self
 
-    def down: (?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer, ?navigation_wait: ::Numeric, ?wait: ::Numeric?, ?timeout: (::Numeric | Deadline)?) -> self
+    def down: (?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer, ?navigation_wait: (::Numeric | false), ?wait: ::Numeric?, ?timeout: (::Numeric | Deadline)?) -> self
 
-    def up: (?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer, ?navigation_wait: ::Numeric, ?wait: ::Numeric?, ?timeout: (::Numeric | Deadline)?) -> self
+    def up: (?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer, ?navigation_wait: (::Numeric | false), ?wait: ::Numeric?, ?timeout: (::Numeric | Deadline)?) -> self
 
     def move: (x: ::Numeric, y: ::Numeric, ?steps: ::Integer, ?modifiers: ::Integer?, ?timeout: (::Numeric | Deadline)?) -> self
 
     private
 
-    def mouse_event: (type: String, ?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer?, ?navigation_wait: ::Numeric, ?wait: ::Numeric?, ?timeout: (::Numeric | Deadline)?) -> Hash[String, untyped]
+    def mouse_event: (type: String, ?button: Symbol, ?count: ::Integer, ?modifiers: ::Integer?, ?navigation_wait: (::Numeric | false), ?wait: ::Numeric?, ?timeout: (::Numeric | Deadline)?) -> Hash[String, untyped]
 
     def validate_button: (Symbol button) -> String
 

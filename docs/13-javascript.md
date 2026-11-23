@@ -79,7 +79,7 @@ suite on 0.20 with `FERRUM_JS_API=new`, which behaves like 0.21. These scripts b
 | `evaluate_async("arguments[0](1)", 5)` | `1` | `NoMethodError` | `evaluate("await …", timeout: 5)` |
 | `evaluate_func("function(a) { return a }", 1)` | `1` | `NoMethodError` | `evaluate("function(a) { return a }", 1)`, with `on:` use `node.evaluate` |
 | `evaluate_on(node: node, expression: "this.id")` | `"main"` | `NoMethodError` | `node.evaluate("this.id")` |
-| `evaluate_on(node: link, expression: "this.click()", wait: 0.1)` | waits for the new page | `NoMethodError` | `page.wait_for_navigation!(0.1) { link.evaluate("this.click()") }` |
+| `evaluate_on(node: link, expression: "this.click()", wait: 0.1)` | waits for the new page | `NoMethodError` | `page.await_navigation!(watch: 0.1) { link.evaluate("this.click()") }` |
 
 #### evaluate_on_new_document(source, \*\*options) : `String`
 

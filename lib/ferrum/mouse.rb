@@ -75,9 +75,9 @@ module Ferrum
     # @param [Float] delay
     #   Delay between mouse down and mouse up events.
     #
-    # @param [Numeric] navigation_wait
+    # @param [Numeric, false] navigation_wait
     #   Seconds to watch for a navigation started by the click, then wait for it
-    #   to load. `0` returns as soon as the click is dispatched.
+    #   to load. `false` returns as soon as the click is dispatched.
     #
     # @param [Numeric, nil] wait
     #   Deprecated, renamed to `navigation_wait`.
@@ -153,7 +153,7 @@ module Ferrum
     #   Bitfield for key modifiers. See `keyboard.modifiers`.
     #   If omitted, uses the keys held by `keyboard.hold`, or none outside of it.
     #
-    # @option options [Numeric] :navigation_wait (0)
+    # @option options [Numeric, false] :navigation_wait (false)
     #   Seconds to watch for a navigation started by releasing the button, then wait for it to load.
     #
     # @option options [Numeric] :wait
@@ -219,18 +219,20 @@ module Ferrum
 
     private
 
-    def mouse_event(type:, button: :left, count: 1, modifiers: nil, navigation_wait: 0, wait: nil, # rubocop:disable Metrics/ParameterLists
+    def mouse_event(type:, button: :left, count: 1, modifiers: nil, navigation_wait: false, wait: nil, # rubocop:disable Metrics/ParameterLists
                     timeout: nil)
       navigation_wait = Utils::Deprecate.renamed_keyword(:wait, :navigation_wait, wait, navigation_wait)
       button = validate_button(button)
       register_event_button(type, button)
       options = { x: @x, y: @y, type: type, button: button, buttons: @buttons, clickCount: count,
                   modifiers: modifiers || @page.keyboard.held_modifiers }
-      return @page.command("Input.dispatchMouseEvent", slowmoable: true, **options) unless navigation_wait.positive?
+      if !navigation_wait || navigation_wait.zero?
+        return @page.command("Input.dispatchMouseEvent", slowmoable: true, **options)
+      end
 
       deadline = Deadline.wrap(timeout || @page.timeout)
       result = nil
-      @page.wait_for_navigation!(navigation_wait, timeout: deadline) do
+      @page.await_navigation!(watch: navigation_wait, timeout: deadline) do
         result = @page.command("Input.dispatchMouseEvent", slowmoable: true, timeout: deadline, **options)
       end
       result

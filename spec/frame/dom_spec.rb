@@ -200,7 +200,7 @@ describe Ferrum::Frame::DOM do
       page.execute <<-JS
         document.body.innerHTML += "<iframe src='/nested_frame_test' name='outer_frame' style='padding:200px'>"
       JS
-      page.network.wait_for_idle
+      page.network.wait_idle
 
       outer_frame_element = page.at_xpath("//iframe[@name='outer_frame']")
       outer_frame = outer_frame_element.frame
@@ -244,7 +244,7 @@ describe Ferrum::Frame::DOM do
       page.execute <<-JS
         document.body.innerHTML += "<iframe src='/buttons' id='buttons_frame'>"
       JS
-      page.network.wait_for_idle
+      page.network.wait_idle
 
       frame = page.at_xpath("//iframe[@id='buttons_frame']").frame
       expect(frame.xpath("//button").size).to eq(3)
@@ -282,7 +282,7 @@ describe Ferrum::Frame::DOM do
       page.execute <<-JS
         document.body.innerHTML += "<iframe src='/buttons' id='buttons_frame'>"
       JS
-      page.network.wait_for_idle
+      page.network.wait_idle
 
       frame = page.at_xpath("//iframe[@id='buttons_frame']").frame
       expect(frame.at_xpath("//button[@id='click_me_123']")).not_to be_nil
@@ -326,7 +326,7 @@ describe Ferrum::Frame::DOM do
       page.execute <<-JS
         document.body.innerHTML += "<iframe src='/buttons' id='buttons_frame'>"
       JS
-      page.network.wait_for_idle
+      page.network.wait_idle
 
       frame = page.at_css("iframe#buttons_frame").frame
       expect(frame.css("button").size).to eq(3)
@@ -364,81 +364,128 @@ describe Ferrum::Frame::DOM do
       page.execute <<-JS
         document.body.innerHTML += "<iframe src='/buttons' id='buttons_frame'>"
       JS
-      page.network.wait_for_idle
+      page.network.wait_idle
 
       frame = page.at_css("iframe#buttons_frame").frame
       expect(frame.at_css("button#click_me_123")).not_to be_nil
     end
   end
 
-  describe "#wait_for_selector" do
-    it "returns nil at the timeout when a poll hangs" do
-      page.go_to("/with_js")
-      hang_commands
-      started = Ferrum::Utils::ElapsedTime.monotonic_time
-
-      expect(page.wait_for_selector(css: "#nope", timeout: 0.3)).to be_nil
-      expect(Ferrum::Utils::ElapsedTime.elapsed_time(started)).to be < 0.8
+  describe "#wait_css" do
+    def append_later(id)
+      page.execute(<<~JS)
+        setTimeout(function () {
+          var div = document.createElement("div");
+          div.id = "#{id}";
+          document.body.appendChild(div);
+        }, 300);
+      JS
     end
 
     it "returns the node immediately when it's already present" do
       page.go_to("/with_js")
 
-      expect(page.wait_for_selector(css: "p#remove_me")).not_to be_nil
+      expect(page.wait_css("p#remove_me").attribute(:id)).to eq("remove_me")
     end
 
-    it "waits for a css selector to appear" do
+    it "waits for a node to appear" do
       page.go_to("/with_js")
-      page.execute <<-JS
-        setTimeout(function () {
-          var div = document.createElement("div");
-          div.id = "appears_later";
-          document.body.appendChild(div);
-        }, 300);
-      JS
+      append_later("appears_later")
 
-      expect(page.wait_for_selector(css: "div#appears_later", timeout: 2)).not_to be_nil
+      expect(page.wait_css("div#appears_later", timeout: 2)).not_to be_nil
     end
 
-    it "waits for an xpath selector to appear" do
+    it "returns nil once the timeout elapses without a match" do
       page.go_to("/with_js")
-      page.execute <<-JS
-        setTimeout(function () {
-          var div = document.createElement("div");
-          div.id = "appears_later";
-          document.body.appendChild(div);
-        }, 300);
-      JS
-
-      expect(page.wait_for_selector(xpath: "//div[@id='appears_later']", timeout: 2)).not_to be_nil
-    end
-
-    it "returns nil once timeout elapses without a match" do
-      page.go_to("/with_js")
-
       started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      node = page.wait_for_selector(css: "div#never_appears", timeout: 0.3, interval: 0.05)
-      elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
+
+      node = page.wait_css("div#never_appears", timeout: 0.3, interval: 0.05)
 
       expect(node).to be_nil
-      expect(elapsed).to be >= 0.3
+      expect(Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at).to be >= 0.3
     end
 
-    it "supports within" do
+    it "returns nil within the page timeout" do
+      page.go_to("/with_js")
+      page.timeout = 0.3
+
+      expect(page.wait_css("div#never_appears")).to be_nil
+    end
+
+    it "returns nil at the timeout when a poll hangs" do
+      page.go_to("/with_js")
+      hang_commands
+      started = Ferrum::Utils::ElapsedTime.monotonic_time
+
+      expect(page.wait_css("#nope", timeout: 0.3)).to be_nil
+      expect(Ferrum::Utils::ElapsedTime.elapsed_time(started)).to be < 0.8
+    end
+
+    it "searches within the given node" do
       page.go_to("/with_js")
       p = page.at_css("p#with_content")
 
-      link = page.wait_for_selector(css: "a", within: p)
+      expect(page.wait_css("a", within: p).attribute(:id)).to eq("open-match")
+    end
+  end
 
-      expect(link).not_to be_nil
-      expect(link.attribute(:id)).to eq("open-match")
+  describe "#wait_css!" do
+    it "returns the matching node" do
+      page.go_to("/with_js")
+
+      expect(page.wait_css!("p#remove_me").attribute(:id)).to eq("remove_me")
     end
 
-    it "raises when neither css nor xpath is given" do
-      expect { page.wait_for_selector }.to raise_error(ArgumentError)
+    it "raises when no node matches in time" do
+      page.go_to("/with_js")
+
+      expect { page.wait_css!("div#never_appears", timeout: 0.3) }.to raise_error(Ferrum::TimeoutError)
+    end
+  end
+
+  describe "#wait_xpath" do
+    it "waits for a node to appear" do
+      page.go_to("/with_js")
+      page.execute(<<~JS)
+        setTimeout(function () {
+          var div = document.createElement("div");
+          div.id = "appears_later";
+          document.body.appendChild(div);
+        }, 300);
+      JS
+
+      expect(page.wait_xpath("//div[@id='appears_later']", timeout: 2)).not_to be_nil
+    end
+
+    it "returns nil once the timeout elapses without a match" do
+      page.go_to("/with_js")
+
+      expect(page.wait_xpath("//div[@id='never_appears']", timeout: 0.3)).to be_nil
+    end
+  end
+
+  describe "#wait_xpath!" do
+    it "raises when no node matches in time" do
+      page.go_to("/with_js")
+
+      expect { page.wait_xpath!("//div[@id='never_appears']", timeout: 0.3) }.to raise_error(Ferrum::TimeoutError)
+    end
+  end
+
+  describe "#wait_for_selector" do
+    it "finds the node by css and warns that it is deprecated" do
+      page.go_to("/with_js")
+      Ferrum::Utils::Deprecate.reset!
+      node = nil
+
+      expect { node = page.wait_for_selector(css: "p#remove_me") }
+        .to output(/wait_for_selector will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
+      expect(node.attribute(:id)).to eq("remove_me")
     end
 
     it "raises when both css and xpath are given" do
+      allow(Ferrum::Utils::Deprecate).to receive(:warn)
+
       expect { page.wait_for_selector(css: "a", xpath: "//a") }.to raise_error(ArgumentError)
     end
   end

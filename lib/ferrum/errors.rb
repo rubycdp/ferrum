@@ -26,7 +26,7 @@ module Ferrum
   # pending network connections that never settled.
   #
   # @deprecated Will be removed in Ferrum 0.22 with the `:pending_connection_errors`
-  #   option. `go_to(url, on_timeout: :raise)` raises {NavigationTimeoutError}.
+  #   option. `go_to!` raises {NavigationTimeoutError}.
   class PendingConnectionsError < StatusError
     attr_reader :pendings
 
@@ -98,8 +98,8 @@ module Ferrum
     end
   end
 
-  # Raised by `go_to(url, on_timeout: :raise)` when the page doesn't load in
-  # time.
+  # Raised by `go_to!`, `refresh!`, `back!` and `forward!` when the page
+  # doesn't load in time.
   class NavigationTimeoutError < TimeoutError
     # The URL navigated to.
     #
@@ -131,11 +131,12 @@ module Ferrum
     # @return [String]
     #
     def message
+      target = @url || "the page"
       if @pendings.empty?
-        "Timed out waiting for #{@url} to load. The page took too long, setting the :timeout option to a higher " \
+        "Timed out waiting for #{target} to load. The page took too long, setting the :timeout option to a higher " \
           "value might help."
       else
-        "Timed out waiting for #{@url} to load, still pending: #{@pendings.join(', ')}. If they're expected to be " \
+        "Timed out waiting for #{target} to load, still pending: #{@pendings.join(', ')}. If they're expected to be " \
           "slow, setting the :timeout option to a higher value might help, otherwise block them with network.blacklist."
       end
     end

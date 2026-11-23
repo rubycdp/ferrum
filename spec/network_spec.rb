@@ -45,7 +45,7 @@ describe Ferrum::Network do
         sleep 0.05
       end
 
-      worker_target.worker.network.wait_for_idle
+      worker_target.worker.network.wait_idle
 
       traffic = browser.targets.values.flat_map do |t|
         next [] unless t.connected?
@@ -61,37 +61,40 @@ describe Ferrum::Network do
     end
   end
 
-  describe "#wait_for_idle" do
-    it "returns true" do
+  describe "#wait_idle" do
+    it "returns true once the network is idle" do
       page.go_to("/show_cookies")
       expect(page.body).not_to include("test_cookie")
 
       page.at_xpath("//button[text() = 'Set cookie slow']").click
-      result = network.wait_for_idle
+      result = network.wait_idle
       page.refresh
 
-      expect(result).to eq(true)
+      expect(result).to be(true)
       expect(page.body).to include("test_cookie")
     end
 
-    it "returns false" do
+    it "returns nil when the network doesn't go idle in time" do
       page.go_to("/show_cookies")
-      expect(page.body).not_to include("test_cookie")
-
       page.at_xpath("//button[text() = 'Set cookie slow']").click
-      result = network.wait_for_idle(timeout: 0.2)
 
-      expect(result).to eq(false)
+      expect(network.wait_idle(timeout: 0.2)).to be_nil
+    end
+
+    it "returns true when no more than the given connections are pending" do
+      page.go_to("/show_cookies")
+      page.at_xpath("//button[text() = 'Set cookie slow']").click
+
+      expect(network.wait_idle(connections: 1, timeout: 0.2)).to be(true)
     end
   end
 
-  describe "#wait_for_idle!" do
-    it "raises an error" do
+  describe "#wait_idle!" do
+    it "raises when the network doesn't go idle in time" do
       page.go_to("/show_cookies")
-      expect(page.body).not_to include("test_cookie")
-
       page.at_xpath("//button[text() = 'Set cookie slow']").click
-      expect { network.wait_for_idle!(timeout: 0.2) }.to raise_error(Ferrum::TimeoutError)
+
+      expect { network.wait_idle!(timeout: 0.2) }.to raise_error(Ferrum::TimeoutError)
     end
 
     it "raises no error for blobs" do
@@ -104,15 +107,37 @@ describe Ferrum::Network do
         })()
       JS
 
-      expect { page.network.wait_for_idle!(duration: 1) }.not_to raise_error
+      expect { page.network.wait_idle!(interval: 1) }.not_to raise_error
     end
 
-    it "raises no error" do
+    it "returns true once the network is idle" do
       page.go_to("/show_cookies")
-      expect(page.body).not_to include("test_cookie")
-
       page.at_xpath("//button[text() = 'Set cookie slow']").click
-      expect { network.wait_for_idle! }.not_to raise_error
+
+      expect(network.wait_idle!).to be(true)
+    end
+  end
+
+  describe "#wait_for_idle" do
+    it "returns false when the network doesn't go idle in time and warns that it is deprecated" do
+      page.go_to("/show_cookies")
+      page.at_xpath("//button[text() = 'Set cookie slow']").click
+      Ferrum::Utils::Deprecate.reset!
+      result = nil
+
+      expect { result = network.wait_for_idle(duration: 0.05, timeout: 0.2) }
+        .to output(/wait_for_idle will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
+      expect(result).to be(false)
+    end
+  end
+
+  describe "#wait_for_idle!" do
+    it "raises when the network doesn't go idle in time" do
+      page.go_to("/show_cookies")
+      page.at_xpath("//button[text() = 'Set cookie slow']").click
+      allow(Ferrum::Utils::Deprecate).to receive(:warn)
+
+      expect { network.wait_for_idle!(timeout: 0.2) }.to raise_error(Ferrum::TimeoutError)
     end
   end
 
@@ -122,7 +147,7 @@ describe Ferrum::Network do
       expect(page.at_xpath("//h1[text() = 'Slow AJAX']")).to be
 
       expect(network.idle?).to be_falsey
-      network.wait_for_idle
+      network.wait_idle
       expect(network.idle?).to be_truthy
     end
 
@@ -130,8 +155,21 @@ describe Ferrum::Network do
       page.go_to("/link_with_ping")
       page.at_css("a").click
 
-      network.wait_for_idle
+      network.wait_idle
       expect(network.idle?).to be_truthy
+    end
+
+    it "takes the allowed pending connections" do
+      page.go_to("/with_slow_ajax_connection")
+
+      expect(network.idle?(connections: 1)).to be(true)
+    end
+
+    it "warns when connections is passed positionally" do
+      Ferrum::Utils::Deprecate.reset!
+
+      expect { expect(network.idle?(0)).to be(true) }
+        .to output(/Passing connections positionally will be removed.*called from #{__FILE__}/m).to_stderr
     end
   end
 
@@ -140,7 +178,7 @@ describe Ferrum::Network do
       expect(network.total_connections).to eq(0)
 
       page.go_to("/with_ajax_connection_refused")
-      network.wait_for_idle
+      network.wait_idle
 
       expect(network.total_connections).to eq(3)
     end
@@ -151,7 +189,7 @@ describe Ferrum::Network do
       expect(network.finished_connections).to eq(0)
 
       page.go_to("/with_ajax_connection_refused")
-      network.wait_for_idle
+      network.wait_idle
 
       expect(network.finished_connections).to eq(3)
     end
@@ -164,7 +202,7 @@ describe Ferrum::Network do
       page.go_to("/with_slow_ajax_connection")
       expect(network.pending_connections).to eq(1)
 
-      network.wait_for_idle
+      network.wait_idle
       expect(network.pending_connections).to eq(0)
     end
   end

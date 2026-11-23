@@ -79,17 +79,14 @@ page.at_css("input[type=hidden]").focusable? # => false
 page.at_css("input[name='q']").focusable? # => true
 ```
 
-#### wait_for_stop_moving(delay: `Float`, attempts: `Integer`) : `Array<Array<Float>>`
+#### wait_still(timeout: nil, interval: 0.01) : `Array<Array<Float>>` | `nil`
 
-Waits until the node's position stops changing, `click` does it before moving the mouse. Returns the content quads of
-the node, each one the eight coordinates of its four corners. Raises `Ferrum::NodeMovingError` if the node is still
-moving after the last attempt.
-
-* delay `Float` seconds between two position checks, `0.01` by default
-* attempts `Integer` how many times to check, `50` by default
+Polls the node's position until two snapshots taken `interval` seconds apart match, `click` does it before moving the
+mouse. Returns the content quads of the node, each one the eight coordinates of its four corners, or `nil` if it keeps
+moving for `timeout`, the page timeout by default. `wait_still!` raises `Ferrum::TimeoutError` instead.
 
 ```ruby
-page.at_css("#modal").wait_for_stop_moving
+page.at_css("#modal").wait_still
 # => [[50.2, 390.9, 203.2, 390.9, 203.2, 411.9, 50.2, 411.9]]
 ```
 
@@ -136,14 +133,14 @@ moving.
     * :position `Symbol` `:top` | `:center`, what the offset is measured from, the top-left corner of the node or its
       center, `:top` by default
   * :delay `Float` delay between mouse down and mouse up, `0` by default
-  * :navigation_wait `Numeric` seconds to watch for a navigation started by a left click, then wait for it to load,
-    `Page::NAVIGATION_WAIT` by default. Ignored for `:right` and `:double`. `0` returns right after the click.
+  * :navigation_wait `Numeric` | `false` seconds to watch for a navigation started by a left click, then wait for it to
+    load, `Page::NAVIGATION_WAIT` by default. Ignored for `:right` and `:double`. `false` returns right after the click.
   * :timeout `Numeric` how long finding the node's position, the click and the page load it starts may take together,
     the page timeout by default
 
 ```ruby
 page.at_css("a").click
-page.at_css("a").click(navigation_wait: 0)
+page.at_css("a").click(navigation_wait: false)
 page.at_css("a").click(timeout: 30)
 page.at_css("a").click(mode: :right)
 page.at_css("a").click(keys: [:ctrl, :shift])

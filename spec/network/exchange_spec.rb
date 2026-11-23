@@ -90,7 +90,7 @@ describe Ferrum::Network::Exchange do
   describe "#error" do
     it "captures failed request errors" do
       page.go_to("/with_ajax_fail")
-      page.network.wait_for_idle!
+      page.network.wait_idle!
 
       expect(last_exchange.error).to be
     end

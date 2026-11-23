@@ -12,7 +12,7 @@ module Ferrum
   #
   class Context
     POSITION = %i[first last].freeze
-    WINDOWS_DEPRECATED = "windows will be removed in Ferrum 0.22. Use wait_for_new_page { ... } for the page a click " \
+    WINDOWS_DEPRECATED = "windows will be removed in Ferrum 0.22. Use await_page { ... } for the page a click " \
                          "opens, or pages(&:opener_id) for all of them."
 
     attr_reader :id
@@ -110,7 +110,7 @@ module Ferrum
 
     # The pages of this context opened by another page.
     #
-    # @deprecated Will be removed in Ferrum 0.22. Use {#wait_for_new_page} for the page a click opens, or
+    # @deprecated Will be removed in Ferrum 0.22. Use {#await_page} for the page a click opens, or
     #   `pages(&:opener_id)` for all of them.
     #
     # @param [:first, :last, nil] pos
@@ -143,7 +143,7 @@ module Ferrum
     #   Only return a page opened by this page. By default a page opened by
     #   any page of the context is returned.
     #
-    # @param [Numeric, Deadline] timeout
+    # @param [Numeric, Deadline, nil] timeout
     #   How long the block and the new page may take together. Defaults to
     #   the browser's `timeout`.
     #
@@ -152,14 +152,19 @@ module Ferrum
     # @return [Page, nil]
     #   The first page opened since the call, `nil` if none opens in time.
     #
+    # @raise [ArgumentError]
+    #   If no block is given.
+    #
     # @example
-    #   opened = browser.wait_for_new_page { browser.at_css("a[target=_blank]").click }
+    #   opened = browser.await_page { browser.at_css("a[target=_blank]").click }
     #   opened.url # => "https://example.com/"
-    def wait_for_new_page(opener: nil, timeout: @client.timeout)
-      deadline = Deadline.wrap(timeout)
+    def await_page(opener: nil, timeout: nil)
+      raise ArgumentError, "await_page needs a block that opens the page" unless block_given?
+
+      deadline = Deadline.wrap(timeout || @client.timeout)
       waiter = [opener&.target_id, Concurrency::Cell.new]
       @page_waiters_mutex.synchronize { @page_waiters << waiter }
-      yield if block_given?
+      yield
       return unless waiter.last.wait(deadline)
 
       waiter.last.value.page
@@ -167,10 +172,10 @@ module Ferrum
       @page_waiters_mutex.synchronize { @page_waiters.delete(waiter) }
     end
 
-    # Same as {#wait_for_new_page}, but raises if no page opens in time.
+    # Same as {#await_page}, but raises if no page opens in time.
     #
     # @param [Hash] options
-    #   The options of {#wait_for_new_page}.
+    #   The options of {#await_page}.
     #
     # @yield The code that opens the page.
     #
@@ -178,8 +183,8 @@ module Ferrum
     #
     # @raise [TimeoutError]
     #   If no page opens in time.
-    def wait_for_new_page!(**options, &)
-      wait_for_new_page(**options, &) || raise(TimeoutError)
+    def await_page!(**options, &)
+      await_page(**options, &) || raise(TimeoutError)
     end
 
     # Creates a new target in this context and eagerly connects to it as a

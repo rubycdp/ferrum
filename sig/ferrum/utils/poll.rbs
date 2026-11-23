@@ -1,0 +1,9 @@
+module Ferrum
+  module Utils
+    module Poll
+      def self?.call: [T] ((::Numeric | Deadline) timeout, ::Numeric interval) { () -> T } -> T?
+
+      def self?.attempt: [T] (Deadline deadline) { () -> T } -> T?
+    end
+  end
+end

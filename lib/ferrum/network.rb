@@ -17,6 +17,9 @@ module Ferrum
   # platform and client hints emulation (`emulate`).
   #
   class Network
+    WAIT_INTERVAL = 0.05
+    WAIT_FOR_IDLE_DEPRECATED = "wait_for_idle will be removed in Ferrum 0.22. Use wait_idle instead, duration: is " \
+                               "interval: there."
     CLEAR_TYPE = %i[traffic cache].freeze
     EMULATE_KEYS = %i[user_agent accept_language platform metadata].freeze
     METADATA_REQUIRED = %i[platform platform_version architecture model mobile].freeze
@@ -54,56 +57,92 @@ module Ferrum
     end
 
     #
-    # Waits for network idle.
+    # Polls {#idle?} until the network is idle.
     #
     # @param [Integer] connections
-    #   how many connections are allowed for network to be idling,
+    #   How many connections may still be pending.
     #
-    # @param [Float] duration
-    #   Sleep for given amount of time and check again.
+    # @param [Numeric, Deadline, nil] timeout
+    #   How long to keep trying, the page's `timeout` by default.
     #
-    # @param [Numeric, Deadline] timeout
-    #   During what time we try to check idle.
+    # @param [Numeric] interval
+    #   Seconds to sleep between the attempts.
     #
-    # @return [Boolean]
+    # @return [true, nil]
+    #   `nil` when the network doesn't go idle in time.
     #
     # @example
     #   browser.go_to("https://example.com/")
     #   browser.at_xpath("//a[text() = 'No UI changes button']").click
-    #   browser.network.wait_for_idle # => false
+    #   browser.network.wait_idle # => true
     #
-    def wait_for_idle(connections: 0, duration: 0.05, timeout: @page.timeout)
-      deadline = Deadline.wrap(timeout)
+    def wait_idle(connections: 0, timeout: nil, interval: WAIT_INTERVAL)
+      Utils::Poll.call(timeout || @page.timeout, interval) { idle?(connections: connections) || nil }
+    end
 
-      until idle?(connections)
-        return false if deadline.expired?
+    #
+    # Same as {#wait_idle}, but raises if the network doesn't go idle in time.
+    #
+    # @param [Hash] options
+    #   The options of {#wait_idle}.
+    #
+    # @return [true]
+    #
+    # @raise [TimeoutError]
+    #   If the network doesn't go idle in time.
+    #
+    def wait_idle!(**options)
+      wait_idle(**options) || raise(TimeoutError)
+    end
 
-        sleep(duration)
-      end
-
-      true
+    #
+    # Waits for network idle.
+    #
+    # @deprecated Will be removed in Ferrum 0.22. Use {#wait_idle}, `duration:` is `interval:` there.
+    #
+    # @param [Integer] connections
+    #
+    # @param [Float] duration
+    #
+    # @param [Numeric, Deadline] timeout
+    #
+    # @return [Boolean]
+    #
+    def wait_for_idle(connections: 0, duration: WAIT_INTERVAL, timeout: @page.timeout)
+      Utils::Deprecate.warn(WAIT_FOR_IDLE_DEPRECATED, user_code: true)
+      wait_idle(connections: connections, timeout: timeout, interval: duration) || false
     end
 
     #
     # Waits for network idle or raises {Ferrum::TimeoutError} error.
-    # Accepts same arguments as `wait_for_idle`.
+    #
+    # @deprecated Will be removed in Ferrum 0.22. Use {#wait_idle!}.
+    #
+    # @param [Hash] options
+    #   The options of {#wait_for_idle}.
+    #
+    # @return [void]
     #
     # @raise [Ferrum::TimeoutError]
-    def wait_for_idle!(...)
-      result = wait_for_idle(...)
-      raise TimeoutError unless result
+    #
+    def wait_for_idle!(**options)
+      raise TimeoutError unless wait_for_idle(**options)
     end
 
     #
     # Whether the network is idle, i.e. no more than `connections`
     # connections are still pending.
     #
+    # @param [Integer, nil] deprecated_connections
+    #   Deprecated, pass `connections:` instead.
+    #
     # @param [Integer] connections
-    #   How many connections are allowed for network to be idling.
+    #   How many connections may still be pending.
     #
     # @return [Boolean]
     #
-    def idle?(connections = 0)
+    def idle?(deprecated_connections = nil, connections: 0)
+      connections = Utils::Deprecate.positional(:connections, deprecated_connections, connections)
       pending_connections <= connections
     end
 

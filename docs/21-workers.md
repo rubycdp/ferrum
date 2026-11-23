@@ -78,7 +78,7 @@ Same API as `page.network` -- see [Network](/docs/ferrum/network). Useful for as
 its own, independently of the page that spawned it.
 
 ```ruby
-worker.network.wait_for_idle
+worker.network.wait_idle
 worker.network.traffic # => [#<Ferrum::Network::Exchange, ...]
 ```
 

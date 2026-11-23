@@ -35,9 +35,9 @@ module Ferrum
 
     %a{deprecated} def windows: (?(:first | :last)?, ?::Integer) -> ::Array[Page]
 
-    def wait_for_new_page: (?opener: Page?, ?timeout: (::Numeric | Deadline)) ?{ () -> void } -> Page?
+    def await_page: (?opener: Page?, ?timeout: (::Numeric | Deadline)?) { () -> void } -> Page?
 
-    def wait_for_new_page!: (?opener: Page?, ?timeout: (::Numeric | Deadline)) ?{ () -> void } -> Page
+    def await_page!: (?opener: Page?, ?timeout: (::Numeric | Deadline)?) { () -> void } -> Page
 
     def create_page: (**untyped options) -> Page
 

@@ -1,25 +1,35 @@
 module Ferrum
   class Downloads
+    WAIT_TIMEOUT: ::Integer
+    WAIT_DEPRECATED: String
     VALID_BEHAVIOR: ::Array[:deny | :allow | :allowAndName | :default]
 
     @page: Page
     @idle: Concurrency::Cell
     @files: ::Hash[String, Hash[String, untyped]]
+    @waiters: ::Array[{ guid: String?, cell: Concurrency::Cell }]
+    @waiters_mutex: ::Mutex
 
     def initialize: (Page) -> void
 
     def files: () -> ::Array[Hash[String, untyped]]
 
-    def wait: (?(::Numeric | Deadline) timeout) ?{ () -> void } -> void
+    def await_download: (?timeout: (::Numeric | Deadline)) { () -> void } -> Hash[String, untyped]?
+
+    def await_download!: (?timeout: (::Numeric | Deadline)) { () -> void } -> Hash[String, untyped]
+
+    %a{deprecated} def wait: (?(::Numeric | Deadline) timeout) ?{ () -> void } -> void
 
     def set_behavior: (save_path: String, ?behavior: :deny | :allow | :allowAndName | :default) -> void
 
     def subscribe: () -> void
 
-    private
-
     def subscribe_download_will_begin: () -> void
 
     def subscribe_download_progress: () -> void
+
+    private
+
+    def finish_waiters: (String guid) -> void
   end
 end

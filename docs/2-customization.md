@@ -28,15 +28,15 @@ Ferrum::Browser.new(options)
     * `:slowmo` (Integer | Float) - Set a delay in seconds to wait before sending command.
       Useful companion of headless option, so that you have time to see changes.
     * `:timeout` (Numeric) - How long a call waits for the browser, in seconds, `FERRUM_DEFAULT_TIMEOUT` or 5 by
-      default. `go_to`, `refresh` and `wait_for_navigation` wait for the page to load within it. A call that only sends
+      default. `go_to`, `refresh` and `await_navigation` wait for the page to load within it. A call that only sends
       commands, like `evaluate` or `at_css`, waits for the browser's answer. A call that runs out raises
-      `Ferrum::TimeoutError`. Pass `timeout:` to `go_to`, `refresh` or `wait_for_navigation` to change it for one
+      `Ferrum::TimeoutError`. Pass `timeout:` to `go_to`, `refresh` or `await_navigation` to change it for one
       call, or wrap calls in `Ferrum::Deadline.within` to bound them together, see [Timeouts](#timeouts).
     * `:js_errors` (Boolean) - Deprecated, will be removed in 0.22. When true, JavaScript errors get re-raised in
       Ruby. Uncaught exceptions are in the [console](/docs/ferrum/javascript#console), use
       `page.console.select { |m| m.source == :exception }` or `page.on(:console)` instead.
-    * `:pending_connection_errors` (Boolean) - Deprecated, will be removed in 0.22. Pass `on_timeout: :raise` to `go_to`
-      instead: `page.go_to(url, on_timeout: :raise)`.
+    * `:pending_connection_errors` (Boolean) - Deprecated, will be removed in 0.22. Use `page.go_to!(url)` to raise
+      when the page doesn't load in time.
     * `:browser_path` (String) - Path to Chrome binary, or to an Opera or Edge one, you can also set ENV
       variable as `BROWSER_PATH=some/path/chrome bundle exec rspec`.
     * `:browser_options` (Hash) - Additional command line options,

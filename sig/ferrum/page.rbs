@@ -1,6 +1,9 @@
 module Ferrum
   class Page
     NAVIGATION_WAIT: ::Float
+    WAIT_INTERVAL: ::Float
+    WAIT_FOR_NAVIGATION_DEPRECATED: String
+    WAIT_FOR_RELOAD_DEPRECATED: String
 
     extend Forwardable
 
@@ -8,6 +11,7 @@ module Ferrum
     include Screenshot
     include Screencast
     include Frames
+    include Navigation
     include Stream
     include Interceptable
 
@@ -47,10 +51,6 @@ module Ferrum
 
     def context: () -> Context?
 
-    def go_to: (?String? url, ?on_timeout: (:ignore | :raise)?, ?timeout: (::Numeric | Deadline)?, ?referrer: String?) -> String?
-    alias goto go_to
-    alias go go_to
-
     def close: () -> bool
 
     def close_connection: () -> void
@@ -66,21 +66,6 @@ module Ferrum
     def window_bounds: () -> Hash[String, (::Integer | String)]
 
     def window_bounds=: (Hash[Symbol, (::Integer | String)] bounds) -> Hash[String, untyped]
-
-    def refresh: (?timeout: (::Numeric | Deadline)?) -> void
-    alias reload refresh
-
-    def stop: () -> Hash[String, untyped]
-
-    def back: (?timeout: (::Numeric | Deadline)?) -> void
-
-    def forward: (?timeout: (::Numeric | Deadline)?) -> void
-
-    def wait_for_reload: (?(::Numeric | Deadline) timeout) -> void
-
-    def wait_for_navigation: (?::Numeric navigation_wait, ?timeout: (::Numeric | Deadline)?) { () -> void } -> bool
-
-    def wait_for_navigation!: (?::Numeric navigation_wait, ?timeout: (::Numeric | Deadline)?) { () -> void } -> void
 
     def bypass_csp: (?enabled: bool) -> Hash[String, untyped]
 
@@ -109,6 +94,10 @@ module Ferrum
 
     def timeout=: (::Numeric value) -> ::Numeric
 
+    def wait_until: [T] (?timeout: (::Numeric | Deadline)?, ?interval: ::Numeric) { () -> T } -> T?
+
+    def wait_until!: [T] (?timeout: (::Numeric | Deadline)?, ?interval: ::Numeric) { () -> T } -> T
+
     private
 
     def subscribe: () -> void
@@ -118,10 +107,6 @@ module Ferrum
     def accept_dialog: (Dialog dialog) -> Hash[String, untyped]
 
     def prepare_page: () -> void
-
-    def history_navigate: (delta: ::Integer, ?timeout: (::Numeric | Deadline)?) -> void
-
-    def combine_url!: (String? url) -> String
 
     def document_node_id: (?async: bool) -> (::Integer | bool)
 

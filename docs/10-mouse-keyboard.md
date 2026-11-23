@@ -30,8 +30,8 @@ Click given coordinates, fires mouse move, down and up events.
     * :x `Integer`
     * :y `Integer`
     * :delay `Float` defaults to 0. Delay between mouse down and mouse up events
-    * :navigation_wait `Numeric` defaults to `Page::NAVIGATION_WAIT`. Seconds to watch for a navigation started by the click, then
-      wait for it to load. `0` returns right after the click.
+    * :navigation_wait `Numeric` | `false` defaults to `Page::NAVIGATION_WAIT`. Seconds to watch for a navigation started
+      by the click, then wait for it to load. `false` returns right after the click.
     * :timeout `Numeric` how long the click and the page load it starts may take together, the page timeout by default
     * :button `Symbol` :left | :right, defaults to :left
     * :count `Integer` defaults to 1
@@ -57,8 +57,8 @@ Mouse up for given coordinates.
     * :count `Integer` defaults to 1
     * :modifiers `Integer` bitfield for key modifiers. See `keyboard.modifiers`.
       If omitted, uses the keys held by `keyboard.hold`, or none outside of it
-    * :navigation_wait `Numeric` seconds to watch for a navigation started by releasing the button, then wait for it
-      to load, defaults to 0
+    * :navigation_wait `Numeric` | `false` seconds to watch for a navigation started by releasing the button, then
+      wait for it to load, defaults to `false`
     * :timeout `Numeric` how long the event and the page load it starts may take together, the page timeout by default
 
 #### move(x:, y:, steps: 1, modifiers: nil, timeout: nil) : `Mouse`
