@@ -8,7 +8,11 @@ module Ferrum
     # answered with credentials or canceled.
     #
     class AuthRequest
-      attr_accessor :request_id, :frame_id, :resource_type
+      # @note The writer is a private API, Ferrum sets it.
+      attr_reader :request_id, :frame_id, :resource_type
+
+      # @api private
+      attr_writer :request_id, :frame_id, :resource_type
 
       def initialize(page, params)
         @page = page

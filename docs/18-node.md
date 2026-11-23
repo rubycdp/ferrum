@@ -157,12 +157,12 @@ x, y = page.at_css("a").find_position
 page.mouse.move(x: x, y: y)
 ```
 
-#### scroll_into_view : `Node`
+#### scroll : `Node`
 
 Scrolls the node into view if it isn't visible yet.
 
 ```ruby
-page.at_css("#footer").scroll_into_view
+page.at_css("#footer").scroll
 ```
 
 #### in_viewport?(of: `Node` | `nil`) : `Boolean`
@@ -171,7 +171,7 @@ Whether the node is fully inside the viewport, or inside the bounds of the `of` 
 
 ```ruby
 page.at_css("#footer").in_viewport? # => false
-page.at_css("#footer").scroll_into_view.in_viewport? # => true
+page.at_css("#footer").scroll.in_viewport? # => true
 page.at_css("#row").in_viewport?(of: page.at_css("#table")) # => true
 ```
 
@@ -229,13 +229,12 @@ page.at_css("input[name='q']").value # => "ferrum"
 
 #### property(name) : `Object`
 
-The JavaScript property of the node. `node[name]` is the same.
+The JavaScript property of the node.
 
 * name `String`
 
 ```ruby
 page.at_css("input").property("value") # => "Foo"
-page.at_css("input")["value"] # => "Foo"
 ```
 
 #### attribute(name) : `String` | `nil`
@@ -301,13 +300,13 @@ The computed CSS styles of the node.
 page.at_css("a").computed_style["display"] # => "inline"
 ```
 
-#### axnode : `Accessibility::AXNode` | `nil`
+#### ax_node : `Accessibility::AXNode` | `nil`
 
 The node in the accessibility tree, `nil` if it is ignored there. See
 [accessibility](https://github.com/rubycdp/ferrum#accessibility).
 
 ```ruby
-page.at_css("a").axnode.role # => "link"
+page.at_css("a").ax_node.role # => "link"
 ```
 
 #### find_position(x: `Integer`, y: `Integer`, position: `Symbol`) : `Array<Float>`

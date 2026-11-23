@@ -56,7 +56,10 @@ module Ferrum
     include Stream
     include Interceptable
 
-    attr_reader :context_id, :target_id, :idle, :tracing
+    attr_reader :context_id, :target_id, :tracing
+
+    # @api private
+    attr_reader :idle
 
     # Client connection.
     #
@@ -107,6 +110,8 @@ module Ferrum
     # `DOM.getDocument`, both invalidate every node id handed out before them.
     #
     # @return [Integer]
+    #
+    # @api private
     attr_reader :document_version
 
     def initialize(client, context_id:, target_id:, proxy: nil)
@@ -510,6 +515,8 @@ module Ferrum
     # Whether the page is configured to use a proxy.
     #
     # @return [Boolean]
+    #
+    # @api private
     def use_proxy?
       @proxy_host && @proxy_port
     end
@@ -517,6 +524,8 @@ module Ferrum
     # Whether the page is configured to use a proxy that requires authentication.
     #
     # @return [Boolean]
+    #
+    # @api private
     def use_authorized_proxy?
       use_proxy? && @proxy_user && @proxy_password
     end
@@ -532,6 +541,7 @@ module Ferrum
     #
     # @raise [TimeoutError]
     #
+    # @api private
     def document_node_id(async: false)
       result = if async
                  client.notify("DOM.getDocument", depth: 0)

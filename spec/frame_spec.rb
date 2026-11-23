@@ -155,6 +155,16 @@ describe Ferrum::Frame do
     end
   end
 
+  describe "#set_content" do
+    it "sets the frame content and warns that it is deprecated" do
+      Ferrum::Utils::Deprecate.reset!
+
+      expect { page.main_frame.set_content("<html><head></head><body>Voila!</body></html>") }
+        .to output(/set_content will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
+      expect(page.body).to include("Voila!")
+    end
+  end
+
   describe "#isolated_world" do
     it "returns the same world for the same name" do
       page.go_to("/simple")

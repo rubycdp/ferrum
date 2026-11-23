@@ -26,6 +26,9 @@ Naming/FileName:
 Style/StringLiterals:
   EnforcedStyle: double_quotes
 
+Style/BisectedAttrAccessor:
+  Enabled: false
+
 Style/ArgumentsForwarding:
   UseAnonymousForwarding: false
 

@@ -30,6 +30,7 @@
   return what they waited for. Every one returns `nil` on timeout and has a `!` version that raises `TimeoutError`
 
 ### Changed
+- `browser.contexts.each` and the `Enumerable` methods yield contexts instead of `[id, context]` pairs
 - `refresh`, `back` and `forward` return `nil` when the page doesn't load in time instead of raising, use `refresh!`,
   `back!` and `forward!` to raise
 - `network.idle?` takes `connections:` as a keyword
@@ -87,6 +88,12 @@
   removed in 0.22. They are ignored and warn, `:timeout` bounds everything else
 - `wait:` of `click`, `mouse.up` and `mouse.down`, will be removed in 0.22. Use `navigation_wait:` instead
 - `FERRUM_CLICK_WAIT` and `FERRUM_GOTO_WAIT`, will be removed in 0.22. Use `FERRUM_NAVIGATION_WAIT` instead
+- `goto`, `go`, `reload` and `reload!`, will be removed in 0.22. Use `go_to`, `refresh` and `refresh!`
+- `frame.set_content`, will be removed in 0.22. Use `content=`
+- `node.scroll_into_view`, will be removed in 0.22. Use `node.scroll`
+- `node.axnode`, will be removed in 0.22. Use `node.ax_node`
+- `node[name]`, will be removed in 0.22. Use `node.property(name)`
+- `contexts.each { |id, context| }`, will be removed in 0.22. `each` yields the context
 
 ### Fixed
 - `back` on the first history entry reloaded the page, it returns `nil` now

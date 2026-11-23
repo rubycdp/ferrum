@@ -115,6 +115,7 @@ module Ferrum
     #
     # @return [void]
     #
+    # @api private
     def subscribe
       @page.on("Runtime.consoleAPICalled") do |params|
         add(Message.from_console_api(params)) unless replayed?(params)

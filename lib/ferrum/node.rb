@@ -79,7 +79,7 @@ module Ferrum
       @tag_name ||= description["nodeName"].downcase
     end
 
-    # Frontend node id is resolved lazily, on first actual need (focus, click, scroll_into_view, etc.)
+    # Frontend node id is resolved lazily, on first actual need (focus, click, scroll, etc.)
     # We can try to subscribe to `DOM.childNodeRemoved` and `DOM.childNodeInserted` in the future
     # to keep track of nodes.
     def node_id
@@ -369,10 +369,22 @@ module Ferrum
     # @raise [TimeoutError]
     #
     # @example
-    #   page.at_css("#footer").scroll_into_view
+    #   page.at_css("#footer").scroll
+    #
+    def scroll
+      tap { page.command("DOM.scrollIntoViewIfNeeded", nodeId: node_id) }
+    end
+
+    #
+    # @deprecated Will be removed in Ferrum 0.22. Use {#scroll}.
+    #
+    # @return [self]
+    #
+    # @raise [TimeoutError]
     #
     def scroll_into_view
-      tap { page.command("DOM.scrollIntoViewIfNeeded", nodeId: node_id) }
+      Utils::Deprecate.warn("scroll_into_view will be removed in Ferrum 0.22. Use scroll instead.", user_code: true)
+      scroll
     end
 
     # Whether the node's bounding rect is fully within the viewport (or,
@@ -387,7 +399,7 @@ module Ferrum
     #
     # @example
     #   page.at_css("#footer").in_viewport? # => false
-    #   page.at_css("#footer").scroll_into_view.in_viewport? # => true
+    #   page.at_css("#footer").scroll.in_viewport? # => true
     #   page.at_css("#row").in_viewport?(of: page.at_css("#table")) # => true
     #
     def in_viewport?(of: nil)
@@ -556,7 +568,20 @@ module Ferrum
     def property(name)
       evaluate("this[name]", name: name)
     end
-    alias [] property
+
+    #
+    # @deprecated Will be removed in Ferrum 0.22. Use {#property}.
+    #
+    # @param [String] name
+    #
+    # @return [Object]
+    #
+    # @raise [TimeoutError]
+    #
+    def [](name)
+      Utils::Deprecate.warn("node[name] will be removed in Ferrum 0.22. Use property(name) instead.", user_code: true)
+      property(name)
+    end
 
     #
     # Returns the value of the given HTML attribute, i.e.
@@ -789,10 +814,22 @@ module Ferrum
     # @raise [TimeoutError]
     #
     # @example
-    #   page.at_css("a").axnode.role # => "link"
+    #   page.at_css("a").ax_node.role # => "link"
+    #
+    def ax_node
+      page.accessibility.node_for(self)
+    end
+
+    #
+    # @deprecated Will be removed in Ferrum 0.22. Use {#ax_node}.
+    #
+    # @return [Accessibility::AXNode, nil]
+    #
+    # @raise [TimeoutError]
     #
     def axnode
-      page.accessibility.node_for(self)
+      Utils::Deprecate.warn("axnode will be removed in Ferrum 0.22. Use ax_node instead.", user_code: true)
+      ax_node
     end
 
     #

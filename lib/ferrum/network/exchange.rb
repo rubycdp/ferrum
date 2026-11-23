@@ -16,28 +16,53 @@ module Ferrum
       # The intercepted request.
       #
       # @return [InterceptedRequest, nil]
-      attr_accessor :intercepted_request
+      #
+      # @note The writer is a private API, Ferrum sets it.
+      attr_reader :intercepted_request
+
+      # @api private
+      attr_writer :intercepted_request
 
       # The request object.
       #
       # @return [Request, nil]
-      attr_accessor :request
+      #
+      # @note The writer is a private API, Ferrum sets it.
+      attr_reader :request
+
+      # @api private
+      attr_writer :request
 
       # The response object.
       #
       # @return [Response, nil]
-      attr_accessor :response
+      #
+      # @note The writer is a private API, Ferrum sets it.
+      attr_reader :response
+
+      # @api private
+      attr_writer :response
 
       # The error object.
       #
       # @return [Error, nil]
-      attr_accessor :error
+      #
+      # @note The writer is a private API, Ferrum sets it.
+      attr_reader :error
+
+      # @api private
+      attr_writer :error
 
       # Determines if the network exchange is unknown due to
       # a lost of its context
       #
       # @return Boolean
-      attr_accessor :unknown
+      #
+      # @note The writer is a private API, Ferrum sets it.
+      attr_reader :unknown
+
+      # @api private
+      attr_writer :unknown
 
       # The raw `Network.requestWillBeSentExtraInfo` params for the request,
       # if it arrived before `request` was set.
@@ -45,7 +70,10 @@ module Ferrum
       # @return [Hash, nil]
       #
       # @api private
-      attr_accessor :request_extra_info
+      attr_reader :request_extra_info
+
+      # @api private
+      attr_writer :request_extra_info
 
       #
       # Initializes the network exchange.

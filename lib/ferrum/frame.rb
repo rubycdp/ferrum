@@ -25,12 +25,22 @@ module Ferrum
     # The Frame's unique id.
     #
     # @return [String]
-    attr_accessor :id
+    #
+    # @note The writer is a private API, Ferrum sets it.
+    attr_reader :id
+
+    # @api private
+    attr_writer :id
 
     # If frame was given a name it should be here.
     #
     # @return [String, nil]
-    attr_accessor :name
+    #
+    # @note The writer is a private API, Ferrum sets it.
+    attr_reader :name
+
+    # @api private
+    attr_writer :name
 
     # The page the frame belongs to.
     #
@@ -45,16 +55,25 @@ module Ferrum
     # One of the states frame's in.
     #
     # @return [:started_loading, :navigated, :stopped_loading, :canceled, nil]
+    #
+    # @note The writer is a private API, Ferrum sets it.
     attr_reader :state
 
     # Frame loader id.
     #
     # @return [String, nil]
-    attr_accessor :loader_id
+    #
+    # @note The writer is a private API, Ferrum sets it.
+    attr_reader :loader_id
+
+    # @api private
+    attr_writer :loader_id
 
     # Frame's lifecycle events (navigation, load, paint, etc.).
     #
     # @return [Array<Hash{String => (String|Float)}>]
+    #
+    # @api private
     attr_reader :lifecycle_events
 
     def initialize(id, page, parent_id = nil)
@@ -75,6 +94,8 @@ module Ferrum
     # @return [Symbol]
     #
     # @raise [ArgumentError]
+    #
+    # @api private
     def state=(value)
       raise ArgumentError unless STATE_VALUES.include?(value)
 
@@ -180,7 +201,18 @@ module Ferrum
       JS
       @page.document_node_id
     end
-    alias set_content content=
+
+    #
+    # @deprecated Will be removed in Ferrum 0.22. Use {#content=}.
+    #
+    # @param [String] html
+    #
+    # @raise [TimeoutError]
+    #
+    def set_content(html) # rubocop:disable Naming/AccessorMethodName
+      Utils::Deprecate.warn("set_content will be removed in Ferrum 0.22. Use content= instead.", user_code: true)
+      self.content = html
+    end
 
     #
     # Execution context id which is used by JS, each frame has it's own
@@ -219,6 +251,7 @@ module Ferrum
     #
     # @return [Integer, nil]
     #
+    # @api private
     def execution_id=(value)
       if value.nil?
         @execution_id.clear

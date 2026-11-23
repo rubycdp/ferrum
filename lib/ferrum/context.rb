@@ -41,6 +41,8 @@ module Ferrum
     # `Target.createTarget` if none has attached yet.
     #
     # @return [Target]
+    #
+    # @api private
     def default_target
       @default_target ||= create_target
     end
@@ -228,6 +230,8 @@ module Ferrum
     #   The session comes from `Target.attachedToTarget`, so it replaces the one a target got from its frame owner.
     #
     # @return [Target]
+    #
+    # @api private
     def add_target(params:, session_id: nil, attached: false)
       new_target = Target.new(@client, session_id, params, implicit: implicit?)
       target = @targets[new_target.id] || new_target
@@ -246,6 +250,8 @@ module Ferrum
     # @param [Hash] params
     #
     # @return [void]
+    #
+    # @api private
     def update_target(target_id, params)
       @targets[target_id]&.update(params)
     end
@@ -255,6 +261,8 @@ module Ferrum
     # @param [String] target_id
     #
     # @return [Target, nil]
+    #
+    # @api private
     def delete_target(target_id)
       @targets.delete(target_id)
     end
@@ -289,6 +297,8 @@ module Ferrum
     # Returns the first target for which the block returns truthy.
     #
     # @return [Target, nil]
+    #
+    # @api private
     def find_target
       targets = @targets.values
       targets.each { |t| return t if yield(t) }
@@ -300,6 +310,8 @@ module Ferrum
     # disposing the targets themselves.
     #
     # @return [void]
+    #
+    # @api private
     def close_targets_connection
       @targets.values.select(&:connected?).each(&:close_connection)
     end
@@ -329,6 +341,8 @@ module Ferrum
     # @param [String] target_id
     #
     # @return [Boolean]
+    #
+    # @api private
     def target?(target_id)
       !!target(target_id)
     end

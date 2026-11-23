@@ -2,16 +2,20 @@ module Ferrum
   class Page
     module Navigation
       def go_to: (?String? url, ?timeout: (::Numeric | Deadline)?, ?referrer: String?) -> String?
-      alias goto go_to
-      alias go go_to
+
+      %a{deprecated} def goto: (?String? url, **untyped options) -> String?
+
+      %a{deprecated} def go: (?String? url, **untyped options) -> String?
 
       def go_to!: (?String? url, ?timeout: (::Numeric | Deadline)?, ?referrer: String?) -> String
 
       def refresh: (?timeout: (::Numeric | Deadline)?) -> true?
-      alias reload refresh
+
+      %a{deprecated} def reload: (?timeout: (::Numeric | Deadline)?) -> true?
 
       def refresh!: (?timeout: (::Numeric | Deadline)?) -> true
-      alias reload! refresh!
+
+      %a{deprecated} def reload!: (?timeout: (::Numeric | Deadline)?) -> true
 
       def stop: () -> Hash[String, untyped]
 

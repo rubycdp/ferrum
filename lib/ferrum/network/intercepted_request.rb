@@ -13,7 +13,11 @@ module Ferrum
     class InterceptedRequest
       include RequestParams
 
-      attr_accessor :request_id, :frame_id, :resource_type, :network_id, :status
+      # @note The writer is a private API, Ferrum sets it.
+      attr_reader :request_id, :frame_id, :resource_type, :network_id, :status
+
+      # @api private
+      attr_writer :request_id, :frame_id, :resource_type, :network_id, :status
 
       def initialize(client, params)
         @status = nil

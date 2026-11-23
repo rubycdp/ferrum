@@ -12,12 +12,19 @@ module Ferrum
     WINDOW_DEPRECATED = "window? will be removed in Ferrum 0.22. Use opener_id, it is set for a target another one " \
                         "opened."
 
+    attr_reader :options
+
+    # @note The writer is a private API, Ferrum sets it.
+    attr_reader :session_id
+
+    # @api private
+    attr_writer :session_id
+
     # You can create page yourself and assign it to target, used in cuprite
     # where we enhance page class and build page ourselves.
+    #
+    # @api private
     attr_writer :page
-
-    attr_reader :options
-    attr_accessor :session_id
 
     def initialize(browser_client, session_id = nil, params = nil, implicit: false)
       @page = nil
@@ -35,6 +42,8 @@ module Ferrum
     # @param [Hash] params
     #
     # @return [Hash]
+    #
+    # @api private
     def update(params)
       @params.merge!(params)
     end
@@ -52,6 +61,8 @@ module Ferrum
     # @return [Page]
     #
     # @raise [TimeoutError]
+    #
+    # @note The writer is a private API, Ferrum sets it.
     def page
       @page ||= build_page
     end
@@ -82,6 +93,8 @@ module Ferrum
     # @param [Hash] options
     #
     # @return [Page]
+    #
+    # @api private
     def build_page(**options)
       maybe_sleep_if_new_window
       Page.new(client, context_id: context_id, target_id: id, **options)
@@ -90,6 +103,8 @@ module Ferrum
     # Builds a {Worker} for this target. Called lazily by {#worker}.
     #
     # @return [Worker]
+    #
+    # @api private
     def build_worker
       if options.flatten && session_id.nil?
         raise NoSuchTargetError, "No session with #{type} #{id}, attach to it with Context#attach_target first"
@@ -210,6 +225,8 @@ module Ferrum
     # to give it a chance to load before connecting.
     #
     # @return [void]
+    #
+    # @api private
     def maybe_sleep_if_new_window
       # Dirty hack because new window doesn't have events at all
       sleep(NEW_WINDOW_WAIT) if opener_id
@@ -230,6 +247,8 @@ module Ferrum
     #   The command's result.
     #
     # @raise [TimeoutError]
+    #
+    # @api private
     def command(method, timeout: nil, **params)
       client.command(method, timeout: timeout || client.timeout, **params)
     end
