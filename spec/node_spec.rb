@@ -91,13 +91,13 @@ describe Ferrum::Node do
     end
   end
 
-  describe "#scroll_into_view" do
+  describe "#scroll" do
     before { browser.go_to("/scroll") }
 
     it "scrolls the node into the window" do
       link = browser.at_xpath("//a[*//text() = 'Below the fold']")
 
-      link.scroll_into_view
+      link.scroll
 
       expect(link.in_viewport?).to eq(true)
     end
@@ -106,7 +106,7 @@ describe Ferrum::Node do
       link = browser.at_xpath("//a[text() = 'Link outside viewport']")
       box = browser.at_css("#overflow-box")
 
-      link.scroll_into_view
+      link.scroll
 
       expect(link.in_viewport?(of: box)).to eq(true)
     end
@@ -114,7 +114,19 @@ describe Ferrum::Node do
     it "returns the node" do
       link = browser.at_xpath("//a[*//text() = 'Below the fold']")
 
-      expect(link.scroll_into_view).to be(link)
+      expect(link.scroll).to be(link)
+    end
+  end
+
+  describe "#scroll_into_view" do
+    it "scrolls the node into the window and warns that it is deprecated" do
+      browser.go_to("/scroll")
+      link = browser.at_xpath("//a[*//text() = 'Below the fold']")
+      Ferrum::Utils::Deprecate.reset!
+
+      expect { link.scroll_into_view }
+        .to output(/scroll_into_view will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
+      expect(link.in_viewport?).to eq(true)
     end
   end
 
@@ -221,7 +233,7 @@ describe Ferrum::Node do
 
       it "clicks the element by its bounding rect on a scrolled page" do
         browser.go_to("/long_page")
-        link = browser.at_xpath("//a[text() = 'Phasellus blandit velit']").scroll_into_view
+        link = browser.at_xpath("//a[text() = 'Phasellus blandit velit']").scroll
 
         link.click
 
@@ -336,7 +348,7 @@ describe Ferrum::Node do
         box = page.at_xpath("//div[@id='overflow-box']")
         expect(link.in_viewport?(of: box)).to eq(false)
 
-        link.scroll_into_view
+        link.scroll
         expect(link.in_viewport?(of: box)).to eq(true)
         link.click
         expect(page.url).to eq(base_url("/"))
@@ -346,7 +358,7 @@ describe Ferrum::Node do
         link = page.at_xpath("//a[*//text() = 'Below the fold']")
         expect(link.in_viewport?).to eq(false)
 
-        link.scroll_into_view
+        link.scroll
 
         expect(link.in_viewport?).to eq(true)
         link.click
@@ -411,7 +423,7 @@ describe Ferrum::Node do
       frame = page.at_xpath("//iframe[@name = 'padded_frame']").frame
 
       log = frame.at_css("#log")
-      frame.at_css("#one").scroll_into_view.click
+      frame.at_css("#one").scroll.click
       expect(log.text).to eq("one")
     end
 
@@ -431,7 +443,7 @@ describe Ferrum::Node do
 
       inner_frame = page.frame_by(name: "inner_frame")
       log = inner_frame.at_css("#log")
-      inner_frame.at_css("#one").scroll_into_view.click
+      inner_frame.at_css("#one").scroll.click
       expect(log.text).to eq("one")
     end
 
@@ -529,7 +541,7 @@ describe Ferrum::Node do
 
   describe "#selected" do
     before do
-      browser.goto("/form")
+      browser.go_to("/form")
     end
 
     it "returns texts of selected options" do
@@ -558,7 +570,7 @@ describe Ferrum::Node do
 
   describe "#select" do
     before do
-      browser.goto("/form")
+      browser.go_to("/form")
     end
 
     it "picks option in select by match string argument" do
@@ -631,15 +643,12 @@ describe Ferrum::Node do
   end
 
   describe "#[]" do
-    before { browser.go_to("/attributes_properties") }
+    it "returns the property with the given name and warns that it is deprecated" do
+      browser.go_to("/attributes_properties")
+      Ferrum::Utils::Deprecate.reset!
 
-    it "returns the property with the given name" do
-      expect(browser.at_css(".some_other_class")["innerHTML"]).to eq "<p>foobar</p>"
-    end
-
-    it "returns boolean properties as booleans" do
-      expect(browser.at_css("input#checked")["checked"]).to be true
-      expect(browser.at_css("input#unchecked")["checked"]).to be false
+      expect { expect(browser.at_css(".some_other_class")["innerHTML"]).to eq("<p>foobar</p>") }
+        .to output(/node\[name\] will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
     end
   end
 
@@ -735,11 +744,11 @@ describe Ferrum::Node do
     end
   end
 
-  describe "#axnode" do
+  describe "#ax_node" do
     before { browser.go_to("/accessibility") }
 
     it "returns the AXNode for the element" do
-      ax = browser.at_css("#submit").axnode
+      ax = browser.at_css("#submit").ax_node
 
       expect(ax).to be_a(Ferrum::Accessibility::AXNode)
       expect(ax.role).to eq("button")
@@ -747,18 +756,28 @@ describe Ferrum::Node do
     end
 
     it "returns nil for an ignored element" do
-      expect(browser.at_css("#hidden").axnode).to be_nil
+      expect(browser.at_css("#hidden").ax_node).to be_nil
     end
 
     it "returns the AXNode of a node in an iframe" do
       browser.go_to("/accessibility_iframe")
       frame_node = browser.page.at_css("iframe").frame.at_css("#child_btn")
 
-      ax = frame_node.axnode
+      ax = frame_node.ax_node
 
       expect(ax).to be_a(Ferrum::Accessibility::AXNode)
       expect(ax.role).to eq("button")
       expect(ax.name).to eq("Frame button")
+    end
+  end
+
+  describe "#axnode" do
+    it "returns the AXNode for the element and warns that it is deprecated" do
+      browser.go_to("/accessibility")
+      Ferrum::Utils::Deprecate.reset!
+
+      expect { expect(browser.at_css("#submit").axnode.role).to eq("button") }
+        .to output(/axnode will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
     end
   end
 
@@ -828,6 +847,11 @@ describe Ferrum::Node do
       el = browser.at_css(".some_other_class")
       expect(el.property("outerHTML"))
         .to eq %(<div class="some_other_class"><p>foobar</p></div>)
+    end
+
+    it "gets boolean properties as booleans" do
+      expect(browser.at_css("input#checked").property("checked")).to be true
+      expect(browser.at_css("input#unchecked").property("checked")).to be false
     end
 
     it "gets non existent property" do

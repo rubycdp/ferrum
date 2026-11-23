@@ -29,12 +29,12 @@ page.accessibility.node_for(node) # => #<Ferrum::Accessibility::AXNode ...>
 
 You can also get to it directly from the node itself:
 
-#### axnode : `AXNode | nil`
+#### ax_node : `AXNode | nil`
 
-`Node#axnode` is a shortcut for `page.accessibility.node_for(self)`.
+`Node#ax_node` is a shortcut for `page.accessibility.node_for(self)`.
 
 ```ruby
-page.at_css("button").axnode.role # => "button"
+page.at_css("button").ax_node.role # => "button"
 ```
 
 #### partial_tree(\*\*options) : `Array[AXNode]`

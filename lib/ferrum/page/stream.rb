@@ -28,6 +28,7 @@ module Ferrum
       #   The number of bytes written when saved to disk, otherwise the
       #   stream's contents.
       #
+      # @api private
       def stream_to(path:, encoding:, handle:)
         if path.nil?
           stream_to_memory(encoding: encoding, handle: handle)
@@ -47,6 +48,7 @@ module Ferrum
       #
       # @return [Integer] the number of bytes written.
       #
+      # @api private
       def stream_to_file(path:, handle:)
         File.open(path, "wb") do |f|
           stream(output: f, handle: handle)
@@ -65,6 +67,7 @@ module Ferrum
       #
       # @return [String]
       #
+      # @api private
       def stream_to_memory(encoding:, handle:)
         data = String.new # Mutable string has << and compatible to File
         stream(output: data, handle: handle)
@@ -84,6 +87,7 @@ module Ferrum
       #
       # @return [void]
       #
+      # @api private
       def stream(output:, handle:)
         loop do
           result = command("IO.read", handle: handle, size: STREAM_CHUNK)
@@ -104,6 +108,7 @@ module Ferrum
       #
       # @return [void]
       #
+      # @api private
       def close_stream(handle:)
         command("IO.close", handle: handle)
       end

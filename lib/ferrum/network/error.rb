@@ -8,9 +8,13 @@ module Ferrum
     # defined in `ferrum/errors.rb`.
     #
     class Error
-      attr_writer :canceled
-      attr_reader :time, :timestamp
-      attr_accessor :id, :url, :type, :error_text, :monotonic_time, :description
+      attr_reader :time
+
+      # @note The writer is a private API, Ferrum sets it.
+      attr_reader :timestamp, :id, :url, :type, :error_text, :monotonic_time, :description
+
+      # @api private
+      attr_writer :canceled, :id, :url, :type, :error_text, :monotonic_time, :description
 
       # Whether the request was canceled.
       #
@@ -26,6 +30,8 @@ module Ferrum
       #   `Log.entryAdded`.
       #
       # @return [Float]
+      #
+      # @api private
       def timestamp=(value)
         @timestamp = value
         @time = Time.strptime((value / 1000).to_s, "%s")

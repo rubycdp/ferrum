@@ -58,7 +58,9 @@ module Ferrum
 
     def hover: () -> bot
 
-    def scroll_into_view: () -> self
+    def scroll: () -> self
+
+    %a{deprecated} def scroll_into_view: () -> self
 
     def in_viewport?: (?of: Node?) -> bool
 
@@ -80,7 +82,7 @@ module Ferrum
 
     def property: (String name) -> untyped
 
-    alias [] property
+    %a{deprecated} def []: (String name) -> untyped
 
     def attribute: (String name) -> String?
 
@@ -102,7 +104,9 @@ module Ferrum
 
     def computed_style: () -> ::Hash[String, String]
 
-    def axnode: () -> Accessibility::AXNode?
+    def ax_node: () -> Accessibility::AXNode?
+
+    %a{deprecated} def axnode: () -> Accessibility::AXNode?
 
     def remove: () -> ::Hash[String, untyped]
 

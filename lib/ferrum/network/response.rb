@@ -10,6 +10,8 @@ module Ferrum
       # The response body size.
       #
       # @return [Integer, nil]
+      #
+      # @note The writer is a private API, Ferrum sets it.
       attr_reader :body_size
 
       # The parsed JSON attributes for the [Network.Response](https://chromedevtools.github.io/devtools-protocol/1-3/Network/#type-Response)
@@ -21,6 +23,8 @@ module Ferrum
       # The response is fully loaded by the browser.
       #
       # @return [Boolean]
+      #
+      # @api private
       attr_writer :loaded
 
       #
@@ -115,6 +119,8 @@ module Ferrum
       # See https://crbug.com/764946
       # `Network.loadingFinished` encodedDataLength contains both body and
       # headers sizes received by wire.
+      #
+      # @api private
       def body_size=(size)
         @body_size = size - headers_size
       end

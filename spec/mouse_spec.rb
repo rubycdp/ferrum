@@ -58,12 +58,12 @@ describe Ferrum::Mouse do
 
     it "has no trouble clicking elements when the size of a document changes" do
       browser.go_to("/long_page")
-      browser.at_css("#penultimate").scroll_into_view.click
+      browser.at_css("#penultimate").scroll.click
       browser.execute <<~JS
         el = document.getElementById("penultimate")
         el.parentNode.removeChild(el)
       JS
-      browser.at_xpath("//a[text() = 'Phasellus blandit velit']").scroll_into_view.click
+      browser.at_xpath("//a[text() = 'Phasellus blandit velit']").scroll.click
       expect(browser.body).to include("Hello")
     end
 
@@ -95,7 +95,7 @@ describe Ferrum::Mouse do
 
         instructions = %w[one four one two three]
         instructions.each do |instruction|
-          browser.at_css("##{instruction}").scroll_into_view.click
+          browser.at_css("##{instruction}").scroll.click
           expect(log.text).to eq(instruction)
         end
       end

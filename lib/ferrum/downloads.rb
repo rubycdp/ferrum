@@ -135,6 +135,7 @@ module Ferrum
     #
     # @return [void]
     #
+    # @api private
     def subscribe
       subscribe_download_will_begin
       subscribe_download_progress
@@ -145,6 +146,7 @@ module Ferrum
     #
     # @return [void]
     #
+    # @api private
     def subscribe_download_will_begin
       @page.on("Browser.downloadWillBegin") do |params|
         @idle.clear
@@ -158,6 +160,7 @@ module Ferrum
     #
     # @return [void]
     #
+    # @api private
     def subscribe_download_progress
       @page.on("Browser.downloadProgress") do |params|
         @files[params["guid"]].merge!(params)

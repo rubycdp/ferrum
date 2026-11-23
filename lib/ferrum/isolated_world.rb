@@ -66,6 +66,7 @@ module Ferrum
     #
     # @return [Integer, nil]
     #
+    # @api private
     def execution_id=(value)
       if value.nil?
         @execution_id.clear

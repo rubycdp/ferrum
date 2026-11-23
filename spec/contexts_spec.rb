@@ -72,10 +72,21 @@ describe Ferrum::Contexts do
   end
 
   describe "#each" do
-    it "yields the id and the context of every known context" do
+    it "yields every known context" do
       context = browser.contexts.create
 
-      expect(browser.contexts.each.to_a).to include([context.id, context])
+      expect(browser.contexts.each.to_a).to include(context)
+    end
+
+    it "yields the id and the context to a block with two arguments and warns that it is deprecated" do
+      context = browser.contexts.create
+      pairs = []
+      Ferrum::Utils::Deprecate.reset!
+
+      expect { browser.contexts.each { |id, c| pairs << [id, c] } }
+        .to output(/contexts\.each \{ \|id, context\| \} will be removed in Ferrum 0\.22.*called from #{__FILE__}/m)
+        .to_stderr
+      expect(pairs).to include([context.id, context])
     end
 
     it "returns an enumerator when no block is given" do

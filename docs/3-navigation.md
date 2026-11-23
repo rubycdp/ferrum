@@ -65,8 +65,7 @@ page.forward
 
 #### refresh(timeout: nil) : `true` | `nil`
 
-Reload current page. Returns `nil` when it doesn't load in time, `refresh!` raises instead. `reload` and `reload!`
-are aliases.
+Reload current page. Returns `nil` when it doesn't load in time, `refresh!` raises instead.
 
 * timeout `Numeric` how long the whole reload may take, the page timeout by default
 

@@ -159,7 +159,7 @@ describe Ferrum::Page do
       expect(page.evaluate("window.__injected")).to be_nil
 
       page.bypass_csp
-      page.reload
+      page.refresh
       page.add_script_tag(content: "window.__injected = 42")
 
       expect(page.evaluate("window.__injected")).to eq(42)
@@ -195,7 +195,7 @@ describe Ferrum::Page do
       expect(page.evaluate("window.secret")).to eq("top")
 
       expect(page.remove_script_on_new_document(id)).to be(true)
-      page.reload
+      page.refresh
 
       expect(page.evaluate("window.secret")).to be_nil
     end
@@ -276,7 +276,7 @@ describe Ferrum::Page do
 
       expect do
         page.set_viewport(mobile: true)
-        page.reload
+        page.refresh
       end.to change { is_mobile? }.to(true)
     end
 
@@ -285,7 +285,7 @@ describe Ferrum::Page do
 
       expect do
         page.set_viewport(mobile: false)
-        page.reload
+        page.refresh
       end.not_to(change { is_mobile? })
     end
 
@@ -303,11 +303,11 @@ describe Ferrum::Page do
     it "disables touch/mobile emulation with mobile: false after mobile: true" do
       page.go_to("/")
       page.set_viewport(mobile: true)
-      page.reload
+      page.refresh
 
       expect do
         page.set_viewport(mobile: false)
-        page.reload
+        page.refresh
       end.to change { is_mobile? }.from(true).to(false)
     end
   end

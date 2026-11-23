@@ -14,8 +14,12 @@ module Ferrum
     ALLOWED_TARGET_TYPES = %w[page iframe worker shared_worker service_worker].freeze
     RECURSIVE_AUTO_ATTACH_TYPES = %w[page iframe worker shared_worker].freeze
 
+    EACH_PAIRS_DEPRECATED = "contexts.each { |id, context| } will be removed in Ferrum 0.22. It yields the context, " \
+                            "use context.id for the id."
+
     include Enumerable
 
+    # @api private
     attr_reader :contexts
 
     def initialize(client)
@@ -30,6 +34,8 @@ module Ferrum
 
     # Marks a target, so the next time we see it attached, we leave its session alone instead of {#detach}ing it.
     # Used by {Context#attach_target} right before it manually attaches to a service worker on the caller's behalf.
+    #
+    # @api private
     def manually_attached(target_id)
       @manually_attached[target_id] = true
     end
@@ -43,14 +49,23 @@ module Ferrum
       @default_context ||= create
     end
 
-    # Iterates over `[id, context]` pairs; returns an `Enumerator` if no
-    # block is given.
+    # Iterates over the contexts; returns an `Enumerator` if no block is given.
+    # A block taking two arguments still gets `[id, context]` pairs, which is
+    # deprecated and will be removed in Ferrum 0.22.
     #
-    # @return [void, Enumerator]
-    def each(&)
-      return enum_for(__method__) unless block_given?
+    # @yieldparam [Context] context
+    #
+    # @return [self, Enumerator]
+    def each(&block)
+      return enum_for(__method__) unless block
 
-      @contexts.each(&)
+      if block.arity == 2
+        Utils::Deprecate.warn(EACH_PAIRS_DEPRECATED, user_code: true)
+        @contexts.each(&block)
+      else
+        @contexts.each_value(&block)
+      end
+      self
     end
 
     # The context with the given id, if any.
@@ -67,6 +82,8 @@ module Ferrum
     # @param [String] target_id
     #
     # @return [Context, nil]
+    #
+    # @api private
     def find_by(target_id:)
       context = nil
       @contexts.each_value { |c| context = c if c.target?(target_id) }
@@ -119,6 +136,8 @@ module Ferrum
     # without disposing the contexts themselves.
     #
     # @return [void]
+    #
+    # @api private
     def close_connections
       @contexts.each_value(&:close_targets_connection)
     end
