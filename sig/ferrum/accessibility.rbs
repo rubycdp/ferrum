@@ -14,8 +14,12 @@ module Ferrum
 
     def root: (?frame_id: String?) -> AXNode?
 
+    def enabled=: (bool enabled) -> bool
+
+    %a{deprecated}
     def enable: () -> self
 
+    %a{deprecated}
     def disable: () -> self
 
     private

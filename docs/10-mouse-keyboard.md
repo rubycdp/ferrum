@@ -8,18 +8,30 @@ sidebar_position: 10
 
 `page.mouse`
 
-#### scroll_to(x, y)
+#### scroll_by(x: 0, y: 0) : `Mouse`
 
-Scroll page to a given x, y
+Scrolls the page by the given amount, instantly even when the page sets `scroll-behavior: smooth`.
 
-* x `Integer` the pixel along the horizontal axis of the document that you
-  want displayed in the upper left
-* y `Integer` the pixel along the vertical axis of the document that you want
-  displayed in the upper left
+* x `Integer` the horizontal pixels to scroll by
+* y `Integer` the vertical pixels to scroll by
+
+```ruby
+page.mouse.scroll_by(y: 400)
+```
+
+#### scroll_to(x: nil, y: nil) : `Mouse`
+
+Scrolls the page to the given coordinates, instantly even when the page sets `scroll-behavior: smooth`.
+
+* x `Integer` the pixel along the horizontal axis of the document to show in the upper left, the current one if
+  omitted
+* y `Integer` the pixel along the vertical axis of the document to show in the upper left, the current one if
+  omitted
 
 ```ruby
 page.go_to("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
-page.mouse.scroll_to(0, 400)
+page.mouse.scroll_to(x: 0, y: 400)
+page.mouse.scroll_to(y: 0)
 ```
 
 #### click(\*\*options) : `Mouse`
@@ -36,8 +48,8 @@ Click given coordinates, fires mouse move, down and up events.
     * :button `Symbol` :left | :right | :middle | :back | :forward, defaults to :left
     * :count `Integer` defaults to 1
     * :modifiers `Array<Symbol>` | `Integer` modifier keys to hold, `:alt`, `:ctrl` or `:control`, `:meta` or
-      `:command`, `:shift`, or their bitfield, see `keyboard.modifiers`. If omitted, uses the keys held by
-      `keyboard.hold`, or none outside of it
+      `:command`, `:shift`, or CDP's `modifiers` bitfield. If omitted, uses the keys held by `keyboard.hold`, or
+      none outside of it
 
 #### down(\*\*options) : `Mouse`
 
@@ -47,8 +59,8 @@ Mouse down for given coordinates.
     * :button `Symbol` :left | :right | :middle | :back | :forward, defaults to :left
     * :count `Integer` defaults to 1
     * :modifiers `Array<Symbol>` | `Integer` modifier keys to hold, `:alt`, `:ctrl` or `:control`, `:meta` or
-      `:command`, `:shift`, or their bitfield, see `keyboard.modifiers`. If omitted, uses the keys held by
-      `keyboard.hold`, or none outside of it
+      `:command`, `:shift`, or CDP's `modifiers` bitfield. If omitted, uses the keys held by `keyboard.hold`, or
+      none outside of it
 
 #### up(\*\*options) : `Mouse`
 
@@ -58,8 +70,8 @@ Mouse up for given coordinates.
     * :button `Symbol` :left | :right | :middle | :back | :forward, defaults to :left
     * :count `Integer` defaults to 1
     * :modifiers `Array<Symbol>` | `Integer` modifier keys to hold, `:alt`, `:ctrl` or `:control`, `:meta` or
-      `:command`, `:shift`, or their bitfield, see `keyboard.modifiers`. If omitted, uses the keys held by
-      `keyboard.hold`, or none outside of it
+      `:command`, `:shift`, or CDP's `modifiers` bitfield. If omitted, uses the keys held by `keyboard.hold`, or
+      none outside of it
     * :navigation_wait `Numeric` | `false` seconds to watch for a navigation started by releasing the button, then
       wait for it to load, defaults to `false`
     * :timeout `Numeric` how long the event and the page load it starts may take together, the page timeout by default
@@ -73,8 +85,8 @@ Mouse move to given x and y.
     * :y `Integer`
     * :steps `Integer` defaults to 1. Sends intermediate mousemove events.
     * :modifiers `Array<Symbol>` | `Integer` modifier keys to hold, `:alt`, `:ctrl` or `:control`, `:meta` or
-      `:command`, `:shift`, or their bitfield, see `keyboard.modifiers`. If omitted, uses the keys held by
-      `keyboard.hold`, or none outside of it
+      `:command`, `:shift`, or CDP's `modifiers` bitfield. If omitted, uses the keys held by `keyboard.hold`, or
+      none outside of it
     * :timeout `Numeric` how long all the steps may take together, the page timeout by default
 
 ## Keyboard
@@ -116,20 +128,6 @@ page.keyboard.hold(:shift) do
   page.mouse.move(x: 10, y: 10).down.move(x: 200, y: 200, steps: 10).up
 end
 ```
-
-#### held_modifiers : `Integer`
-
-Modifier keys currently pressed by `hold`, in the same format as `modifiers` returns. It's 0 outside a `hold` block.
-
-```ruby
-page.keyboard.hold(:shift) { page.keyboard.held_modifiers } # => 8
-```
-
-#### modifiers(keys) : `Integer`
-
-Returns bitfield for a given keys
-
-* keys `Array<Symbol>` :alt | :ctrl | :command | :shift
 
 ## Examples
 

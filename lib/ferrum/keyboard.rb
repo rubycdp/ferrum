@@ -35,6 +35,8 @@ module Ferrum
     # Modifier keys currently pressed by {#hold}, in the same format as
     # {#modifiers} returns. It's 0 outside a {#hold} block.
     #
+    # @api private
+    #
     # @return [Integer]
     attr_reader :held_modifiers
 
@@ -156,6 +158,8 @@ module Ferrum
 
     #
     # Returns bitfield for a given keys.
+    #
+    # @api private
     #
     # @param [Array<:alt, :ctrl, :command, :shift>] keys
     #
