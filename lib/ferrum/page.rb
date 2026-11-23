@@ -115,6 +115,7 @@ module Ferrum
     attr_reader :document_version
 
     def initialize(client, context_id:, target_id:, proxy: nil)
+      @javascript = true
       @client = client
       @context_id = context_id
       @target_id = target_id
@@ -228,12 +229,43 @@ module Ferrum
     end
 
     #
-    # Disables JavaScript execution from the HTML source for the page.
+    # Turns the page's own scripts on or off. Scripts skipped while they were off don't run when they are turned back
+    # on, reload the page for that. JavaScript evaluated with Ferrum runs either way.
     #
-    # This doesn't prevent users evaluate JavaScript with Ferrum.
+    # @param [Boolean] enabled
+    #
+    # @raise [TimeoutError]
+    #
+    # @example
+    #   page.javascript = false
+    #   page.go_to("https://github.com/")
+    #   page.javascript = true
+    #   page.refresh
+    #
+    def javascript=(enabled)
+      command("Emulation.setScriptExecutionDisabled", value: !enabled)
+      @javascript = enabled
+    end
+
+    #
+    # Whether the page's own scripts run, see {#javascript=}.
+    #
+    # @return [Boolean]
+    #
+    def javascript?
+      @javascript
+    end
+
+    #
+    # @deprecated Will be removed in Ferrum 0.22. Use `javascript = false`.
+    #
+    # @return [Hash]
     #
     # @raise [TimeoutError]
     def disable_javascript
+      Utils::Deprecate.warn("disable_javascript will be removed in Ferrum 0.22. Use javascript = false instead.",
+                            user_code: true)
+      @javascript = false
       command("Emulation.setScriptExecutionDisabled", value: true)
     end
 
@@ -373,7 +405,24 @@ module Ferrum
     end
 
     #
-    # Enables/disables CSP bypass.
+    # Turns bypassing the page's Content Security Policy on or off. It applies from the next navigation.
+    #
+    # @param [Boolean] enabled
+    #
+    # @raise [TimeoutError]
+    #
+    # @example
+    #   page.bypass_csp = true
+    #   page.go_to("https://github.com/ruby-concurrency/concurrent-ruby/blob/master/docs-source/promises.in.md")
+    #   page.add_script_tag(content: "window.__injected = 42")
+    #   page.evaluate("window.__injected") # => 42
+    #
+    def bypass_csp=(enabled)
+      command("Page.setBypassCSP", enabled: enabled)
+    end
+
+    #
+    # @deprecated Will be removed in Ferrum 0.22. Use `bypass_csp = true`.
     #
     # @param [Boolean] enabled
     #
@@ -381,15 +430,10 @@ module Ferrum
     #
     # @raise [TimeoutError]
     #
-    # @example
-    #   page.bypass_csp # => true
-    #   page.go_to("https://github.com/ruby-concurrency/concurrent-ruby/blob/master/docs-source/promises.in.md")
-    #   page.refresh
-    #   page.add_script_tag(content: "window.__injected = 42")
-    #   page.evaluate("window.__injected") # => 42
-    #
     def bypass_csp(enabled: true)
-      command("Page.setBypassCSP", enabled: enabled)
+      Utils::Deprecate.warn("bypass_csp(enabled:) will be removed in Ferrum 0.22. Use bypass_csp = true instead.",
+                            user_code: true)
+      self.bypass_csp = enabled
       enabled
     end
 

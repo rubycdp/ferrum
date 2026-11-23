@@ -31,6 +31,7 @@ module Ferrum
     attr_reader client: (Client | SessionClient)
 
     @client: (Client | SessionClient)
+    @javascript: bool
     @context_id: String?
     @target_id: String
     @options: Browser::Options
@@ -67,7 +68,15 @@ module Ferrum
 
     def window_bounds=: (Hash[Symbol, (::Integer | String)] bounds) -> Hash[String, untyped]
 
-    def bypass_csp: (?enabled: bool) -> Hash[String, untyped]
+    def bypass_csp=: (bool enabled) -> bool
+
+    %a{deprecated} def bypass_csp: (?enabled: bool) -> bool
+
+    def javascript=: (bool enabled) -> bool
+
+    def javascript?: () -> bool
+
+    %a{deprecated} def disable_javascript: () -> Hash[String, untyped]
 
     def evaluate_on_new_document: (String source, ?world_name: String?, ?run_immediately: bool) -> String
 

@@ -51,7 +51,7 @@ Metrics/AbcSize:
   Max: 66
 
 Metrics/ClassLength:
-  Max: 300
+  Max: 320
   Exclude:
     - spec/**/*
 

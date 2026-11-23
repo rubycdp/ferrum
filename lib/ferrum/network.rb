@@ -13,7 +13,7 @@ module Ferrum
   # {Network::Exchange}s built from the underlying CDP `Network.*` events.
   # Also provides request interception/authorization (`intercept`,
   # `authorize`, `blacklist=`/`whitelist=`) and network condition emulation
-  # (`emulate_network_conditions`, `offline_mode`), and user agent, language
+  # (`throttle`, `offline=`), and user agent, language
   # platform and client hints emulation (`emulate`).
   #
   class Network
@@ -456,19 +456,17 @@ module Ferrum
     end
 
     #
-    # Activates emulation of network conditions.
-    #
-    # @param [Boolean] offline
-    #   Emulate internet disconnection,
+    # Slows the page's network down. Each call replaces the previous conditions and turns {#offline=} off, Chrome
+    # keeps a single set of them.
     #
     # @param [Integer] latency
     #   Minimum latency from request sent to response headers received (ms).
     #
-    # @param [Integer] download_throughput
-    #   Maximal aggregated download throughput (bytes/sec).
+    # @param [Integer] download
+    #   Maximal aggregated download throughput (bytes/sec), `-1` for no limit.
     #
-    # @param [Integer] upload_throughput
-    #   Maximal aggregated upload throughput (bytes/sec).
+    # @param [Integer] upload
+    #   Maximal aggregated upload throughput (bytes/sec), `-1` for no limit.
     #
     # @param [String, nil] connection_type
     #   Connection type if known:
@@ -482,39 +480,67 @@ module Ferrum
     #   * `"wimax"`
     #   * `"other"`
     #
+    # @return [void]
+    #
     # @raise [TimeoutError]
     #
     # @example
-    #   browser.network.emulate_network_conditions(connection_type: "cellular2g")
+    #   browser.network.throttle(latency: 300, download: 50_000, connection_type: "cellular2g")
     #   browser.go_to("https://github.com/")
+    #
+    def throttle(latency: 0, download: -1, upload: -1, connection_type: nil)
+      network_conditions(offline: false, latency: latency, download: download, upload: upload,
+                         connection_type: connection_type)
+      nil
+    end
+
+    #
+    # Takes the page offline or back online. It replaces the conditions set by {#throttle}, so going back online
+    # leaves the network unthrottled, call {#throttle} again to restore them.
+    #
+    # @param [Boolean] offline
+    #
+    # @raise [TimeoutError]
+    #
+    # @example
+    #   browser.network.offline = true
+    #   browser.go_to("https://github.com/")
+    #     # => Request to https://github.com/ failed (net::ERR_INTERNET_DISCONNECTED) (Ferrum::StatusError)
+    #   browser.network.offline = false
+    #
+    def offline=(offline)
+      network_conditions(offline: offline)
+    end
+
+    #
+    # @deprecated Will be removed in Ferrum 0.22. Use {#throttle}, or {#offline=} for `offline: true`.
+    #
+    # @return [true]
+    #
+    # @raise [TimeoutError]
     #
     def emulate_network_conditions(offline: false, latency: 0,
                                    download_throughput: -1, upload_throughput: -1,
                                    connection_type: nil)
-      params = {
-        offline: offline, latency: latency,
-        downloadThroughput: download_throughput,
-        uploadThroughput: upload_throughput
-      }
-
-      params[:connectionType] = connection_type if connection_type && ALLOWED_CONNECTION_TYPE.include?(connection_type)
-
-      @page.command("Network.emulateNetworkConditions", **params)
+      Utils::Deprecate.warn("emulate_network_conditions will be removed in Ferrum 0.22. Use throttle, or " \
+                            "offline = true, instead.", user_code: true)
+      network_conditions(offline: offline, latency: latency, download: download_throughput,
+                         upload: upload_throughput, connection_type: connection_type)
       true
     end
 
     #
-    # Activates offline mode for a page.
+    # @deprecated Will be removed in Ferrum 0.22. Use `offline = true`.
+    #
+    # @return [true]
     #
     # @raise [TimeoutError]
     #
-    # @example
-    #   browser.network.offline_mode
-    #   browser.go_to("https://github.com/")
-    #     # => Request to https://github.com/ failed (net::ERR_INTERNET_DISCONNECTED) (Ferrum::StatusError)
-    #
     def offline_mode
-      emulate_network_conditions(offline: true, latency: 0, download_throughput: 0, upload_throughput: 0)
+      Utils::Deprecate.warn("offline_mode will be removed in Ferrum 0.22. Use offline = true instead.",
+                            user_code: true)
+      network_conditions(offline: true, download: 0, upload: 0)
+      true
     end
 
     #
@@ -585,18 +611,41 @@ module Ferrum
     end
 
     #
-    # Toggles ignoring cache for each request. If true, cache will not be used.
+    # Turns the browser cache on or off for the page's requests.
+    #
+    # @param [Boolean] enabled
     #
     # @raise [TimeoutError]
     #
     # @example
-    #   browser.network.cache(disable: true)
+    #   browser.network.cache = false
+    #
+    def cache=(enabled)
+      @page.command("Network.setCacheDisabled", cacheDisabled: !enabled)
+    end
+
+    #
+    # @deprecated Will be removed in Ferrum 0.22. Use `cache = false`.
+    #
+    # @param [Boolean] disable
+    #
+    # @return [Hash]
+    #
+    # @raise [TimeoutError]
     #
     def cache(disable:)
+      Utils::Deprecate.warn("cache(disable:) will be removed in Ferrum 0.22. Use cache = false instead.",
+                            user_code: true)
       @page.command("Network.setCacheDisabled", cacheDisabled: disable)
     end
 
     private
+
+    def network_conditions(offline:, latency: 0, download: -1, upload: -1, connection_type: nil)
+      params = { offline: offline, latency: latency, downloadThroughput: download, uploadThroughput: upload }
+      params[:connectionType] = connection_type if connection_type && ALLOWED_CONNECTION_TYPE.include?(connection_type)
+      @page.command("Network.emulateNetworkConditions", **params)
+    end
 
     def validate_metadata(metadata)
       missing = METADATA_REQUIRED - metadata.keys

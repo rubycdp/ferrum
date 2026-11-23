@@ -1,6 +1,10 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.20.2...main) ##
 
 ### Added
+- `page.javascript = true/false` and `javascript?` turn the page's scripts on and off, there was no way back on
+- `network.offline = true/false` takes the page offline and back online, `network.throttle(latency:, download:, upload:)`
+  slows it down. Each replaces the other's conditions, Chrome keeps one set of them
+- `page.bypass_csp = true/false` and `network.cache = true/false`
 - `Ferrum::Deadline.within(seconds) { ... }` bounds every call the block makes with one budget, `page.go_to`, `cookies`
   and `evaluate` included. `go_to` raises `NavigationTimeoutError` once it runs out
 - `timeout:` on `go_to`, `refresh`, `back`, `forward`, `click` and `await_navigation` bounds the whole call with a single
@@ -96,6 +100,9 @@
 - `contexts.each { |id, context| }`, will be removed in 0.22. `each` yields the context
 - `request_id` of intercepted and auth requests, will be removed in 0.22. Use `id`, like `Request#id`
 - `post_data` of requests, will be removed in 0.22. Use `body`
+- `disable_javascript`, `bypass_csp(enabled:)`, `network.cache(disable:)`, `offline_mode` and
+  `emulate_network_conditions`, will be removed in 0.22. Use `javascript = false`, `bypass_csp =`, `cache =`,
+  `offline = true` and `throttle`
 - `timestamp` and `monotonic_time` of `Network::Error`, will be removed in 0.22. Use `time`, which is now set for every
   failure, not only the ones the browser logs a message for
 

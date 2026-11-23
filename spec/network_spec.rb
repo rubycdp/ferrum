@@ -586,10 +586,30 @@ describe Ferrum::Network do
     end
   end
 
-  describe "#emulate_network_conditions" do
+  describe "#throttle" do
     it "delays requests by the given latency" do
-      page.network.emulate_network_conditions(latency: 500)
+      page.network.throttle(latency: 500)
 
+      start = Ferrum::Utils::ElapsedTime.monotonic_time
+      page.go_to("/with_js")
+
+      expect(Ferrum::Utils::ElapsedTime.elapsed_time(start)).to be >= 0.5
+    end
+
+    it "takes the page back online" do
+      page.network.offline = true
+      page.network.throttle
+
+      expect { page.go_to("/with_js") }.not_to raise_error
+    end
+  end
+
+  describe "#emulate_network_conditions" do
+    it "delays requests by the given latency and warns that it is deprecated" do
+      Ferrum::Utils::Deprecate.reset!
+
+      expect { expect(page.network.emulate_network_conditions(latency: 500)).to be(true) }
+        .to output(/emulate_network_conditions will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
       start = Ferrum::Utils::ElapsedTime.monotonic_time
       page.go_to("/with_js")
 
@@ -722,9 +742,9 @@ describe Ferrum::Network do
     end
   end
 
-  describe "#offline_mode" do
+  describe "#offline=" do
     it "fails requests while offline" do
-      page.network.offline_mode
+      page.network.offline = true
 
       expect { page.go_to("/with_js") }.to raise_error(
         Ferrum::StatusError,
@@ -733,27 +753,56 @@ describe Ferrum::Network do
 
       expect(page.at_css("body").text.downcase).to match("no internet")
     end
+
+    it "loads pages again once back online" do
+      page.network.offline = true
+      page.network.offline = false
+
+      expect { page.go_to("/with_js") }.not_to raise_error
+    end
   end
 
-  describe "#cache" do
-    it "loads resources from the network when the cache is disabled" do
-      network.cache(disable: true)
+  describe "#offline_mode" do
+    it "fails requests while offline and warns that it is deprecated" do
+      Ferrum::Utils::Deprecate.reset!
+
+      expect { page.network.offline_mode }
+        .to output(/offline_mode will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
+
+      expect { page.go_to("/with_js") }.to raise_error(Ferrum::StatusError, /net::ERR_INTERNET_DISCONNECTED/)
+    end
+  end
+
+  describe "#cache=" do
+    it "loads resources from the network when the cache is off" do
+      network.cache = false
 
       expect(cached_on_second_visit?).to be_falsey
     end
 
-    it "loads resources from the cache when the cache is enabled" do
-      network.cache(disable: true)
-      network.cache(disable: false)
+    it "loads resources from the cache when the cache is back on" do
+      network.cache = false
+      network.cache = true
 
       expect(cached_on_second_visit?).to be_truthy
     end
+  end
 
-    def cached_on_second_visit?
-      page.go_to("/cacheable")
-      page.at_xpath("//a").click
-      expect(traffic.length).to eq(2)
-      last_exchange.response.params.dig("response", "fromDiskCache")
+  describe "#cache" do
+    it "loads resources from the network when disabled and warns that it is deprecated" do
+      Ferrum::Utils::Deprecate.reset!
+
+      expect { network.cache(disable: true) }
+        .to output(/cache\(disable:\) will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
+
+      expect(cached_on_second_visit?).to be_falsey
     end
+  end
+
+  def cached_on_second_visit?
+    page.go_to("/cacheable")
+    page.at_xpath("//a").click
+    expect(traffic.length).to eq(2)
+    last_exchange.response.params.dig("response", "fromDiskCache")
   end
 end

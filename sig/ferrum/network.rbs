@@ -65,13 +65,23 @@ module Ferrum
 
     def build_exchange: (untyped id) -> untyped
 
-    def emulate_network_conditions: (?offline: bool, ?latency: ::Integer, ?download_throughput: ::Integer, ?upload_throughput: ::Integer, ?connection_type: untyped?) -> true
+    def throttle: (?latency: ::Integer, ?download: ::Integer, ?upload: ::Integer, ?connection_type: String?) -> nil
 
-    def offline_mode: () -> untyped
+    def offline=: (bool offline) -> bool
+
+    def cache=: (bool enabled) -> bool
+
+    %a{deprecated} def cache: (disable: bool) -> Hash[String, untyped]
+
+    %a{deprecated} def emulate_network_conditions: (?offline: bool, ?latency: ::Integer, ?download_throughput: ::Integer, ?upload_throughput: ::Integer, ?connection_type: untyped?) -> true
+
+    %a{deprecated} def offline_mode: () -> true
 
     def emulate: (?user_agent: String?, ?accept_language: String?, ?platform: String?, ?metadata: ::Hash[Symbol, untyped]?) -> self
 
     private
+
+    def network_conditions: (offline: bool, ?latency: ::Integer, ?download: ::Integer, ?upload: ::Integer, ?connection_type: String?) -> Hash[String, untyped]
 
     def validate_metadata: (::Hash[Symbol, untyped] metadata) -> void
 
