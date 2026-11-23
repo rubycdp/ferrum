@@ -48,10 +48,19 @@ module Ferrum
       # @return [String, nil]
       #   The HTTP `POST` form data.
       #
-      def post_data
+      def body
         @request["postData"]
       end
-      alias body post_data
+
+      #
+      # @deprecated Will be removed in Ferrum 0.22. Use {#body}.
+      #
+      # @return [String, nil]
+      #
+      def post_data
+        Utils::Deprecate.warn("post_data will be removed in Ferrum 0.22. Use body instead.", user_code: true)
+        body
+      end
     end
   end
 end

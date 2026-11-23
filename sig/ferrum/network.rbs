@@ -87,6 +87,8 @@ module Ferrum
 
     def subscribe_loading_failed: () -> untyped
 
+    def failed_at: (Request? request, Float? timestamp) -> Time
+
     def subscribe_log_entry_added: () -> untyped
 
     def blacklist_subscribe: () -> (nil | untyped)

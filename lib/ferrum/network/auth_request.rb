@@ -8,20 +8,39 @@ module Ferrum
     # answered with credentials or canceled.
     #
     class AuthRequest
+      REQUEST_ID_DEPRECATED = "request_id will be removed in Ferrum 0.22. Use id instead."
+
+      # The id of the paused request, the `requestId` that `Fetch` commands take.
+      #
+      # @return [String]
+      #
       # @note The writer is a private API, Ferrum sets it.
-      attr_reader :request_id, :frame_id, :resource_type
+      attr_reader :id
+
+      # @note The writer is a private API, Ferrum sets it.
+      attr_reader :frame_id, :resource_type
 
       # @api private
-      attr_writer :request_id, :frame_id, :resource_type
+      attr_writer :id, :frame_id, :resource_type
 
       def initialize(page, params)
         @page = page
         @params = params
-        @request_id = params["requestId"]
+        @id = params["requestId"]
         @frame_id = params["frameId"]
         @resource_type = params["resourceType"]
         @request = params["request"]
         @handled = false
+      end
+
+      #
+      # @deprecated Will be removed in Ferrum 0.22. Use {#id}.
+      #
+      # @return [String]
+      #
+      def request_id
+        Utils::Deprecate.warn(REQUEST_ID_DEPRECATED, user_code: true)
+        id
       end
 
       #
@@ -86,7 +105,7 @@ module Ferrum
       # @option options [String] :password
       #
       def continue(**options)
-        options = options.merge(requestId: request_id)
+        options = options.merge(requestId: id)
         @handled = true
         @page.command("Fetch.continueWithAuth", **options)
       end
@@ -152,7 +171,7 @@ module Ferrum
       #
       def inspect
         "#<#{self.class} " \
-          "@request_id=#{@request_id.inspect} " \
+          "@id=#{@id.inspect} " \
           "@frame_id=#{@frame_id.inspect} " \
           "@resource_type=#{@resource_type.inspect} " \
           "@request=#{@request.inspect}>"

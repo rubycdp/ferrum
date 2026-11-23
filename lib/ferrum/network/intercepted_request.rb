@@ -13,21 +13,41 @@ module Ferrum
     class InterceptedRequest
       include RequestParams
 
+      REQUEST_ID_DEPRECATED = "request_id will be removed in Ferrum 0.22. Use id instead."
+
+      # The interception id, the `requestId` that `Fetch` commands take. {#network_id} is the {Request#id} of the
+      # same request.
+      #
+      # @return [String]
+      #
       # @note The writer is a private API, Ferrum sets it.
-      attr_reader :request_id, :frame_id, :resource_type, :network_id, :status
+      attr_reader :id
+
+      # @note The writer is a private API, Ferrum sets it.
+      attr_reader :frame_id, :resource_type, :network_id, :status
 
       # @api private
-      attr_writer :request_id, :frame_id, :resource_type, :network_id, :status
+      attr_writer :id, :frame_id, :resource_type, :network_id, :status
 
       def initialize(client, params)
         @status = nil
         @client = client
         @params = params
-        @request_id = params["requestId"]
+        @id = params["requestId"]
         @frame_id = params["frameId"]
         @resource_type = params["resourceType"]
         @request = params["request"]
         @network_id = params["networkId"]
+      end
+
+      #
+      # @deprecated Will be removed in Ferrum 0.22. Use {#id}.
+      #
+      # @return [String]
+      #
+      def request_id
+        Utils::Deprecate.warn(REQUEST_ID_DEPRECATED, user_code: true)
+        id
       end
 
       #
@@ -101,7 +121,7 @@ module Ferrum
         headers = headers.merge(options.fetch(:responseHeaders, {}))
 
         options = { responseCode: 200 }.merge(options)
-        options = options.merge(requestId: request_id, responseHeaders: header_array(headers))
+        options = options.merge(requestId: id, responseHeaders: header_array(headers))
         options = options.merge(body: Base64.strict_encode64(options.fetch(:body, ""))) if has_body
 
         @status = :responded
@@ -130,7 +150,7 @@ module Ferrum
       #   request.continue
       #
       def continue(**options)
-        options = options.merge(requestId: request_id)
+        options = options.merge(requestId: id)
         @status = :continued
         @client.notify("Fetch.continueRequest", **options)
       end
@@ -143,7 +163,7 @@ module Ferrum
       #
       def abort
         @status = :aborted
-        @client.notify("Fetch.failRequest", requestId: request_id, errorReason: "BlockedByClient")
+        @client.notify("Fetch.failRequest", requestId: id, errorReason: "BlockedByClient")
       end
 
       #
@@ -172,7 +192,7 @@ module Ferrum
       #
       def inspect
         "#<#{self.class} " \
-          "@request_id=#{@request_id.inspect} " \
+          "@id=#{@id.inspect} " \
           "@frame_id=#{@frame_id.inspect} " \
           "@resource_type=#{@resource_type.inspect} " \
           "@request=#{@request.inspect}>"
