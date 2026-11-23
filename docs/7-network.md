@@ -205,33 +205,32 @@ You used to call `authorize` method without block, but since it's implemented us
 a collision with another part of your code that also uses request interception, so that authorize allows the request
 while your code denies but it's too late. The block is mandatory now.
 
-#### emulate_network_conditions(\*\*options)
+#### throttle(\*\*options)
 
-Activates emulation of network conditions.
+Slows the page's network down. Each call replaces the previous conditions and takes the page back online, Chrome keeps
+a single set of them.
 
 * options `Hash`
-    * :offline `Boolean` emulate internet disconnection, `false` by default
-    * :latency `Integer` minimum latency from request sent to response headers received (ms), `0` by
-      default
-    * :download_throughput `Integer` maximal aggregated download throughput (bytes/sec), `-1`
-      by default, disables download throttling
-    * :upload_throughput `Integer` maximal aggregated upload throughput (bytes/sec), `-1`
-      by default, disables download throttling
+    * :latency `Integer` minimum latency from request sent to response headers received (ms), `0` by default
+    * :download `Integer` maximal aggregated download throughput (bytes/sec), `-1` by default, no limit
+    * :upload `Integer` maximal aggregated upload throughput (bytes/sec), `-1` by default, no limit
     * :connection_type `String` connection type if known, one of: none, cellular2g, cellular3g, cellular4g,
       bluetooth, ethernet, wifi, wimax, other. `nil` by default
 
 ```ruby
-page.network.emulate_network_conditions(connection_type: "cellular2g")
+page.network.throttle(latency: 300, download: 50_000, connection_type: "cellular2g")
 page.go_to("https://github.com/")
 ```
 
-#### offline_mode
+#### offline=(offline)
 
-Activates offline mode for a page.
+Takes the page offline or back online. It replaces the conditions set by `throttle`, so going back online leaves the
+network unthrottled, call `throttle` again to restore them.
 
 ```ruby
-page.network.offline_mode
+page.network.offline = true
 page.go_to("https://github.com/") # => Ferrum::StatusError (Request to https://github.com/ failed(net::ERR_INTERNET_DISCONNECTED))
+page.network.offline = false
 ```
 
 #### emulate(\*\*options) : `Network`
@@ -267,10 +266,10 @@ page.network.emulate(
 
 Once every option is back to `nil` the override is removed and Chrome sends its own client hints again.
 
-#### cache(disable: `Boolean`)
+#### cache=(enabled)
 
-Toggles ignoring cache for each request. If true, cache will not be used.
+Turns the browser cache on or off for the page's requests.
 
 ```ruby
-page.network.cache(disable: true)
+page.network.cache = false
 ```

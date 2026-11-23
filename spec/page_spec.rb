@@ -152,14 +152,36 @@ describe Ferrum::Page do
     end
   end
 
-  describe "#bypass_csp" do
+  describe "#bypass_csp=" do
     it "bypasses CSP headers" do
       page.go_to("/csp")
       page.add_script_tag(content: "window.__injected = 42")
       expect(page.evaluate("window.__injected")).to be_nil
 
-      page.bypass_csp
+      page.bypass_csp = true
       page.refresh
+      page.add_script_tag(content: "window.__injected = 42")
+
+      expect(page.evaluate("window.__injected")).to eq(42)
+    end
+
+    it "enforces CSP headers again when set to false" do
+      page.bypass_csp = true
+      page.bypass_csp = false
+      page.go_to("/csp")
+      page.add_script_tag(content: "window.__injected = 42")
+
+      expect(page.evaluate("window.__injected")).to be_nil
+    end
+  end
+
+  describe "#bypass_csp" do
+    it "bypasses CSP headers and warns that it is deprecated" do
+      Ferrum::Utils::Deprecate.reset!
+
+      expect { expect(page.bypass_csp).to be(true) }
+        .to output(/bypass_csp\(enabled:\) will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
+      page.go_to("/csp")
       page.add_script_tag(content: "window.__injected = 42")
 
       expect(page.evaluate("window.__injected")).to eq(42)
@@ -243,19 +265,54 @@ describe Ferrum::Page do
     end
   end
 
-  describe "#disable_javascript" do
-    it "disables javascripts on page" do
-      page.disable_javascript
+  describe "#javascript=" do
+    it "stops the page's scripts when set to false" do
+      page.javascript = false
+      page.go_to("/console_log")
 
-      expect { page.go_to("/js_error") }.not_to raise_error
+      expect(page.evaluate("typeof window.onload")).to eq("object")
     end
 
-    it "allows javascript evaluation from Ferrum" do
-      page.disable_javascript
+    it "runs the page's scripts again after a reload when set back to true" do
+      page.javascript = false
+      page.go_to("/console_log")
+      page.javascript = true
+      page.refresh
+
+      expect(page.evaluate("typeof window.onload")).to eq("function")
+    end
+
+    it "allows javascript evaluation from Ferrum when set to false" do
+      page.javascript = false
 
       page.evaluate("document.body.innerHTML = '<p>text</p>'")
 
       expect(page.main_frame.body).to eq("<html><head></head><body><p>text</p></body></html>")
+    end
+  end
+
+  describe "#javascript?" do
+    it "returns true by default" do
+      expect(page.javascript?).to be(true)
+    end
+
+    it "returns false once javascript is turned off" do
+      page.javascript = false
+
+      expect(page.javascript?).to be(false)
+    end
+  end
+
+  describe "#disable_javascript" do
+    it "stops the page's scripts and warns that it is deprecated" do
+      Ferrum::Utils::Deprecate.reset!
+
+      expect { page.disable_javascript }
+        .to output(/disable_javascript will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
+      page.go_to("/console_log")
+
+      expect(page.evaluate("typeof window.onload")).to eq("object")
+      expect(page.javascript?).to be(false)
     end
   end
 

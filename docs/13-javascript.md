@@ -160,27 +160,28 @@ page.add_script_tag(url: "http://example.com/stylesheet.css") # => true
 page.add_style_tag(content: "h1 { font-size: 40px; }") # => true
 
 ```
-#### bypass_csp(\*\*options) : `Boolean`
+#### bypass_csp=(enabled)
 
-* options `Hash`
-  * :enabled `Boolean`, `true` by default
+Turns bypassing the page's Content Security Policy on or off, from the next navigation.
 
 ```ruby
-page.bypass_csp # => true
+page.bypass_csp = true
 page.go_to("https://github.com/ruby-concurrency/concurrent-ruby/blob/master/docs-source/promises.in.md")
-page.refresh
 page.add_script_tag(content: "window.__injected = 42")
 page.evaluate("window.__injected") # => 42
 ```
 
-#### disable_javascript
+#### javascript=(enabled)
 
-Disables Javascripts from the loaded HTML source.
-You can still evaluate JavaScript with `evaluate` or `execute`.
-Returns nothing.
+Turns the page's own scripts on or off. You can still evaluate JavaScript with `evaluate` or `execute`. Scripts skipped
+while they were off don't run when you turn them back on, reload the page for that. `javascript?` tells whether they
+are on.
 
 ```ruby
-page.disable_javascript
+page.javascript = false
+page.go_to("https://github.com/")
+page.javascript = true
+page.refresh
 ```
 
 ## Console
