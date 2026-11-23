@@ -258,6 +258,22 @@ describe Ferrum::Mouse do
       )
     end
 
+    it "sends modifiers given by name" do
+      browser.go_to("/simple")
+      browser.execute(<<~JS)
+        window.events = [];
+        ["mousemove", "mousedown", "mouseup"].forEach(type =>
+          document.addEventListener(type, e => events.push(`${type}:${e.shiftKey}:${e.altKey}`)));
+      JS
+
+      browser.mouse.move(x: 10, y: 10, modifiers: [:shift])
+      browser.mouse.click(x: 30, y: 30, modifiers: %i[alt shift])
+
+      expect(browser.evaluate("events")).to eq(
+        %w[mousemove:true:false mousemove:true:true mousedown:true:true mouseup:true:true]
+      )
+    end
+
     it "drags and drops with a button held" do
       browser.go_to("/html5_drag")
 
