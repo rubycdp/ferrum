@@ -94,4 +94,50 @@ describe Ferrum::Accessibility do
       expect(browser.page.accessibility.root).to be_a(Ferrum::Accessibility::AXNode)
     end
   end
+
+  describe "#enabled=" do
+    def load_completions
+      Queue.new.tap { |q| browser.page.on("Accessibility.loadComplete") { |params| q << params } }
+    end
+
+    it "sends live AX events once enabled" do
+      events = load_completions
+
+      browser.page.accessibility.enabled = true
+      browser.go_to("/accessibility")
+
+      expect(events.pop(timeout: 2)).to include("root")
+    end
+
+    it "stops sending live AX events once disabled" do
+      events = load_completions
+      browser.page.accessibility.enabled = true
+      browser.page.accessibility.enabled = false
+      browser.go_to("/accessibility")
+
+      browser.page.accessibility.enabled = true
+      browser.go_to("/accessibility")
+
+      expect(events.pop(timeout: 2)).to include("root")
+      expect(events).to be_empty
+    end
+  end
+
+  describe "#enable" do
+    it "enables the domain and warns that it is deprecated" do
+      Ferrum::Utils::Deprecate.reset!
+
+      expect { expect(browser.page.accessibility.enable).to eq(browser.page.accessibility) }
+        .to output(/accessibility\.enable will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
+    end
+  end
+
+  describe "#disable" do
+    it "disables the domain and warns that it is deprecated" do
+      Ferrum::Utils::Deprecate.reset!
+
+      expect { expect(browser.page.accessibility.disable).to eq(browser.page.accessibility) }
+        .to output(/accessibility\.disable will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
+    end
+  end
 end

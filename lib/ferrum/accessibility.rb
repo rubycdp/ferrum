@@ -89,24 +89,46 @@ module Ferrum
       build(@page.command("Accessibility.getFullAXTree", **params)["nodes"]).first
     end
 
-    # Enables the Accessibility domain, activating live AX tree change events.
     #
-    # @return [self]
+    # Turns the Accessibility domain on or off. Only needed for its live AX
+    # events, the query methods work without it.
+    #
+    # @param [Boolean] enabled
     #
     # @raise [TimeoutError]
-    def enable
-      @page.command("Accessibility.enable")
-      self
+    #
+    # @example
+    #   page.accessibility.enabled = true
+    #   page.on("Accessibility.nodesUpdated") { |params| puts params["nodes"].size }
+    #
+    def enabled=(enabled)
+      @page.command(enabled ? "Accessibility.enable" : "Accessibility.disable")
     end
 
-    # Disables the Accessibility domain.
+    #
+    # @deprecated Will be removed in Ferrum 0.22. Use `enabled = true`.
     #
     # @return [self]
     #
     # @raise [TimeoutError]
+    #
+    def enable
+      Utils::Deprecate.warn("accessibility.enable will be removed in Ferrum 0.22. Use enabled = true instead.",
+                            user_code: true)
+      tap { self.enabled = true }
+    end
+
+    #
+    # @deprecated Will be removed in Ferrum 0.22. Use `enabled = false`.
+    #
+    # @return [self]
+    #
+    # @raise [TimeoutError]
+    #
     def disable
-      @page.command("Accessibility.disable")
-      self
+      Utils::Deprecate.warn("accessibility.disable will be removed in Ferrum 0.22. Use enabled = false instead.",
+                            user_code: true)
+      tap { self.enabled = false }
     end
 
     private

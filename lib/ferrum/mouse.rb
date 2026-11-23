@@ -24,45 +24,60 @@ module Ferrum
     end
 
     #
-    # Scroll page by the given amount x, y. Scrolls instantly, even when the
+    # Scrolls the page by the given amount. Scrolls instantly, even when the
     # page sets `scroll-behavior: smooth`.
     #
-    # @param [Integer] x
-    #  The horizontal pixel value that you want to scroll by.
+    # @param [Array(Numeric, Numeric)] coordinates
+    #   Deprecated, pass `x:` and `y:`.
     #
-    # @param [Integer] y
+    # @param [Numeric] x
+    #   The horizontal pixel value that you want to scroll by.
+    #
+    # @param [Numeric] y
     #   The vertical pixel value that you want to scroll by.
+    #
+    # @return [self]
     #
     # @raise [TimeoutError]
     #
     # @example
     #   browser.go_to("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
-    #   browser.mouse.scroll_by(0, 400)
+    #   browser.mouse.scroll_by(y: 400)
     #
-    def scroll_by(x, y)
-      tap { @page.execute("window.scrollBy({ left: #{x}, top: #{y}, behavior: 'instant' })") }
+    def scroll_by(*coordinates, x: 0, y: 0)
+      x, y = positional_coordinates(:scroll_by, coordinates, x, y)
+      tap { @page.execute("window.scrollBy({ left: x, top: y, behavior: 'instant' })", x:, y:) }
     end
 
     #
-    # Scroll page to a given x, y coordinates. Scrolls instantly, even when
+    # Scrolls the page to the given coordinates. Scrolls instantly, even when
     # the page sets `scroll-behavior: smooth`.
     #
-    # @param [Integer] x
-    #  The pixel along the horizontal axis of the document that you want
-    #  displayed in the upper left.
+    # @param [Array(Numeric, Numeric)] coordinates
+    #   Deprecated, pass `x:` and `y:`.
     #
-    # @param [Integer] y
+    # @param [Numeric, nil] x
+    #   The pixel along the horizontal axis of the document that you want
+    #   displayed in the upper left. If omitted, keeps the current one.
+    #
+    # @param [Numeric, nil] y
     #   The pixel along the vertical axis of the document that you want
-    #   displayed in the upper left.
+    #   displayed in the upper left. If omitted, keeps the current one.
+    #
+    # @return [self]
     #
     # @raise [TimeoutError]
     #
     # @example
     #   browser.go_to("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
-    #   browser.mouse.scroll_to(0, 400)
+    #   browser.mouse.scroll_to(x: 0, y: 400)
+    #   browser.mouse.scroll_to(y: 0)
     #
-    def scroll_to(x, y)
-      tap { @page.execute("window.scrollTo({ left: #{x}, top: #{y}, behavior: 'instant' })") }
+    def scroll_to(*coordinates, x: nil, y: nil)
+      x, y = positional_coordinates(:scroll_to, coordinates, x, y)
+      tap do
+        @page.execute("window.scrollTo({ left: x ?? undefined, top: y ?? undefined, behavior: 'instant' })", x:, y:)
+      end
     end
 
     #
@@ -95,7 +110,7 @@ module Ferrum
     #
     # @option options [Array<Symbol>, Integer] :modifiers
     #   Modifier keys to hold: `:alt`, `:ctrl` (or `:control`), `:meta` (or
-    #   `:command`) and `:shift`, or their bitfield, see `keyboard.modifiers`.
+    #   `:command`) and `:shift`, or CDP's `modifiers` bitfield.
     #   If omitted, uses the keys held by `keyboard.hold`, or none outside of it.
     #
     # @return [self]
@@ -129,7 +144,7 @@ module Ferrum
     #
     # @option options [Array<Symbol>, Integer] :modifiers
     #   Modifier keys to hold: `:alt`, `:ctrl` (or `:control`), `:meta` (or
-    #   `:command`) and `:shift`, or their bitfield, see `keyboard.modifiers`.
+    #   `:command`) and `:shift`, or CDP's `modifiers` bitfield.
     #   If omitted, uses the keys held by `keyboard.hold`, or none outside of it.
     #
     # @return [self]
@@ -153,7 +168,7 @@ module Ferrum
     #
     # @option options [Array<Symbol>, Integer] :modifiers
     #   Modifier keys to hold: `:alt`, `:ctrl` (or `:control`), `:meta` (or
-    #   `:command`) and `:shift`, or their bitfield, see `keyboard.modifiers`.
+    #   `:command`) and `:shift`, or CDP's `modifiers` bitfield.
     #   If omitted, uses the keys held by `keyboard.hold`, or none outside of it.
     #
     # @option options [Numeric, false] :navigation_wait (false)
@@ -185,7 +200,7 @@ module Ferrum
     #
     # @param [Array<Symbol>, Integer, nil] modifiers
     #   Modifier keys to hold: `:alt`, `:ctrl` (or `:control`), `:meta` (or
-    #   `:command`) and `:shift`, or their bitfield, see `keyboard.modifiers`.
+    #   `:command`) and `:shift`, or CDP's `modifiers` bitfield.
     #   If omitted, uses the keys held by `keyboard.hold`, or none outside of it.
     #
     # @param [Numeric, Deadline, nil] timeout
@@ -241,6 +256,15 @@ module Ferrum
         result = @page.command("Input.dispatchMouseEvent", slowmoable: true, timeout: deadline, **options)
       end
       result
+    end
+
+    def positional_coordinates(name, coordinates, x, y)
+      return [x, y] if coordinates.empty?
+      raise ArgumentError, "#{name} takes x and y" unless coordinates.size == 2
+
+      Utils::Deprecate.warn("Passing x and y to #{name} positionally will be removed in Ferrum 0.22, " \
+                            "pass x: and y: instead.", user_code: true)
+      coordinates
     end
 
     def modifiers_mask(modifiers)

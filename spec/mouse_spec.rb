@@ -110,12 +110,23 @@ describe Ferrum::Mouse do
     it "allows the page to be scrolled" do
       browser.go_to("/long_page")
       browser.resize(width: 10, height: 10)
-      browser.mouse.scroll_by(30, 70)
-      browser.mouse.scroll_by(40, -50)
-      browser.mouse.scroll_by(-60, 0)
+      browser.mouse.scroll_by(x: 30, y: 70)
+      browser.mouse.scroll_by(x: 40, y: -50)
+      browser.mouse.scroll_by(x: -60)
       expect(
         browser.evaluate("[window.scrollX, window.scrollY]")
       ).to eq([10, 20])
+    end
+
+    it "scrolls by positional coordinates and warns that they are deprecated" do
+      browser.go_to("/long_page")
+      browser.resize(width: 10, height: 10)
+      Ferrum::Utils::Deprecate.reset!
+
+      expect { browser.mouse.scroll_by(30, 70) }
+        .to output(/Passing x and y to scroll_by positionally will be removed in Ferrum 0\.22.*called from #{__FILE__}/m)
+        .to_stderr
+      expect(browser.evaluate("[window.scrollX, window.scrollY]")).to eq([30, 70])
     end
 
     context "with smooth scrolling", :launch do
@@ -128,7 +139,7 @@ describe Ferrum::Mouse do
       after { smooth_browser.quit }
 
       it "scrolls instantly" do
-        smooth_browser.mouse.scroll_by(30, 70)
+        smooth_browser.mouse.scroll_by(x: 30, y: 70)
         expect(smooth_browser.evaluate("[window.scrollX, window.scrollY]")).to eq([30, 70])
       end
     end
@@ -138,10 +149,37 @@ describe Ferrum::Mouse do
     it "allows the page to be scrolled" do
       browser.go_to("/long_page")
       browser.resize(width: 10, height: 10)
-      browser.mouse.scroll_to(200, 100)
+      browser.mouse.scroll_to(x: 200, y: 100)
       expect(
         browser.evaluate("[window.scrollX, window.scrollY]")
       ).to eq([200, 100])
+    end
+
+    it "keeps the current position on the axis that isn't given" do
+      browser.go_to("/long_page")
+      browser.resize(width: 10, height: 10)
+      browser.mouse.scroll_to(x: 200, y: 100)
+
+      browser.mouse.scroll_to(y: 50)
+
+      expect(browser.evaluate("[window.scrollX, window.scrollY]")).to eq([200, 50])
+    end
+
+    it "scrolls to positional coordinates and warns that they are deprecated" do
+      browser.go_to("/long_page")
+      browser.resize(width: 10, height: 10)
+      Ferrum::Utils::Deprecate.reset!
+
+      expect { browser.mouse.scroll_to(200, 100) }
+        .to output(/Passing x and y to scroll_to positionally will be removed in Ferrum 0\.22.*called from #{__FILE__}/m)
+        .to_stderr
+      expect(browser.evaluate("[window.scrollX, window.scrollY]")).to eq([200, 100])
+    end
+
+    it "raises when given one positional coordinate" do
+      browser.go_to("/long_page")
+
+      expect { browser.mouse.scroll_to(200) }.to raise_error(ArgumentError, "scroll_to takes x and y")
     end
 
     context "with smooth scrolling", :launch do
@@ -154,7 +192,7 @@ describe Ferrum::Mouse do
       after { smooth_browser.quit }
 
       it "scrolls instantly" do
-        smooth_browser.mouse.scroll_to(200, 100)
+        smooth_browser.mouse.scroll_to(x: 200, y: 100)
         expect(smooth_browser.evaluate("[window.scrollX, window.scrollY]")).to eq([200, 100])
       end
     end

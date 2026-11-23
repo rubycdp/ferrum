@@ -9,9 +9,9 @@ module Ferrum
 
     def initialize: (Page page) -> void
 
-    def scroll_by: (::Numeric x, ::Numeric y) -> self
+    def scroll_by: (*::Numeric coordinates, ?x: ::Numeric, ?y: ::Numeric) -> self
 
-    def scroll_to: (::Numeric x, ::Numeric y) -> self
+    def scroll_to: (*::Numeric coordinates, ?x: ::Numeric?, ?y: ::Numeric?) -> self
 
     def click: (x: ::Numeric, y: ::Numeric, ?delay: ::Numeric, ?navigation_wait: (::Numeric | false), ?wait: ::Numeric?, ?timeout: (::Numeric | Deadline)?, ?button: Symbol, ?count: ::Integer, ?modifiers: (::Array[::Symbol] | ::Integer)) -> self
 
@@ -24,6 +24,8 @@ module Ferrum
     private
 
     def mouse_event: (type: String, ?button: Symbol, ?count: ::Integer, ?modifiers: (::Array[::Symbol] | ::Integer)?, ?navigation_wait: (::Numeric | false), ?wait: ::Numeric?, ?timeout: (::Numeric | Deadline)?) -> Hash[String, untyped]
+
+    def positional_coordinates: (Symbol name, Array[::Numeric] coordinates, ::Numeric? x, ::Numeric? y) -> Array[::Numeric?]
 
     def modifiers_mask: ((::Array[::Symbol] | ::Integer)? modifiers) -> ::Integer
 

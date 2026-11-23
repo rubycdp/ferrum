@@ -67,6 +67,8 @@
 - `on` with a raw CDP event yields only the params, not the callback's index and the total number of callbacks
 - `node.click` takes `button:`, `count:` and `modifiers:` like `mouse.click`, and holds the keys of `keyboard.hold` when
   no `modifiers:` are given. The mouse methods take `modifiers:` as key names as well as a bitfield
+- `mouse.scroll_by` and `scroll_to` take `x:` and `y:`, an omitted one doesn't scroll along its axis
+- `keyboard.modifiers` and `held_modifiers` are internal now, pass `modifiers:` as key names
 
 ### Deprecated
 - `target.window?`, will be removed in 0.22. Use `target.opener_id`, it is set for a target another one opened
@@ -108,6 +110,8 @@
 - `timestamp` and `monotonic_time` of `Network::Error`, will be removed in 0.22. Use `time`, which is now set for every
   failure, not only the ones the browser logs a message for
 - `mode:` and `keys:` of `node.click`, will be removed in 0.22. Use `button: :right` or `count: 2`, and `modifiers:`
+- Positional `mouse.scroll_by(x, y)` and `scroll_to(x, y)`, will be removed in 0.22. Pass `x:` and `y:`
+- `accessibility.enable` and `disable`, will be removed in 0.22. Use `accessibility.enabled = true/false`
 
 ### Fixed
 - `back` on the first history entry reloaded the page, it returns `nil` now
