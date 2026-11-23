@@ -33,30 +33,33 @@ Click given coordinates, fires mouse move, down and up events.
     * :navigation_wait `Numeric` | `false` defaults to `Page::NAVIGATION_WAIT`. Seconds to watch for a navigation started
       by the click, then wait for it to load. `false` returns right after the click.
     * :timeout `Numeric` how long the click and the page load it starts may take together, the page timeout by default
-    * :button `Symbol` :left | :right, defaults to :left
+    * :button `Symbol` :left | :right | :middle | :back | :forward, defaults to :left
     * :count `Integer` defaults to 1
-    * :modifiers `Integer` bitfield for key modifiers. See `keyboard.modifiers`.
-      If omitted, uses the keys held by `keyboard.hold`, or none outside of it
+    * :modifiers `Array<Symbol>` | `Integer` modifier keys to hold, `:alt`, `:ctrl` or `:control`, `:meta` or
+      `:command`, `:shift`, or their bitfield, see `keyboard.modifiers`. If omitted, uses the keys held by
+      `keyboard.hold`, or none outside of it
 
 #### down(\*\*options) : `Mouse`
 
 Mouse down for given coordinates.
 
 * options `Hash`
-    * :button `Symbol` :left | :right, defaults to :left
+    * :button `Symbol` :left | :right | :middle | :back | :forward, defaults to :left
     * :count `Integer` defaults to 1
-    * :modifiers `Integer` bitfield for key modifiers. See `keyboard.modifiers`.
-      If omitted, uses the keys held by `keyboard.hold`, or none outside of it
+    * :modifiers `Array<Symbol>` | `Integer` modifier keys to hold, `:alt`, `:ctrl` or `:control`, `:meta` or
+      `:command`, `:shift`, or their bitfield, see `keyboard.modifiers`. If omitted, uses the keys held by
+      `keyboard.hold`, or none outside of it
 
 #### up(\*\*options) : `Mouse`
 
 Mouse up for given coordinates.
 
 * options `Hash`
-    * :button `Symbol` :left | :right, defaults to :left
+    * :button `Symbol` :left | :right | :middle | :back | :forward, defaults to :left
     * :count `Integer` defaults to 1
-    * :modifiers `Integer` bitfield for key modifiers. See `keyboard.modifiers`.
-      If omitted, uses the keys held by `keyboard.hold`, or none outside of it
+    * :modifiers `Array<Symbol>` | `Integer` modifier keys to hold, `:alt`, `:ctrl` or `:control`, `:meta` or
+      `:command`, `:shift`, or their bitfield, see `keyboard.modifiers`. If omitted, uses the keys held by
+      `keyboard.hold`, or none outside of it
     * :navigation_wait `Numeric` | `false` seconds to watch for a navigation started by releasing the button, then
       wait for it to load, defaults to `false`
     * :timeout `Numeric` how long the event and the page load it starts may take together, the page timeout by default
@@ -69,8 +72,9 @@ Mouse move to given x and y.
     * :x `Integer`
     * :y `Integer`
     * :steps `Integer` defaults to 1. Sends intermediate mousemove events.
-    * :modifiers `Integer` bitfield for key modifiers. See `keyboard.modifiers`.
-      If omitted, uses the keys held by `keyboard.hold`, or none outside of it
+    * :modifiers `Array<Symbol>` | `Integer` modifier keys to hold, `:alt`, `:ctrl` or `:control`, `:meta` or
+      `:command`, `:shift`, or their bitfield, see `keyboard.modifiers`. If omitted, uses the keys held by
+      `keyboard.hold`, or none outside of it
     * :timeout `Numeric` how long all the steps may take together, the page timeout by default
 
 ## Keyboard

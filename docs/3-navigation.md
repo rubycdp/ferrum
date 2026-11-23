@@ -194,7 +194,7 @@ held, or a middle click. Such a page is not returned, compare the targets before
 
 ```ruby
 known = browser.targets.keys
-browser.at_css("a").click(keys: [:ctrl]) # :meta on macOS
+browser.at_css("a").click(modifiers: [:ctrl]) # :meta on macOS
 browser.pages { |t| !known.include?(t.id) } # => [#<Ferrum::Page>]
 ```
 

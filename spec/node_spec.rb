@@ -150,6 +150,15 @@ describe Ferrum::Node do
   end
 
   describe "#click" do
+    def record_mousedowns
+      browser.go_to("/simple")
+      browser.execute(<<~JS)
+        document.body.innerHTML = '<button id="target">Target</button>';
+        window.events = [];
+        document.addEventListener("mousedown", e => events.push(`${e.button}:${e.detail}:${e.shiftKey}:${e.altKey}`));
+      JS
+    end
+
     it "bounds the click by the given timeout" do
       browser.go_to("/with_js")
       node = browser.at_css("#remove")
@@ -366,18 +375,74 @@ describe Ferrum::Node do
       end
     end
 
-    context "with mode: :double" do
+    context "on the double click test page" do
       before { page.go_to("/double_click_test") }
 
-      it "double-clicks the node" do
+      it "double-clicks the node when count is 2" do
         log = browser.at_css("#log")
 
         instructions = %w[one four one two three]
         instructions.each do |instruction|
-          browser.at_css("##{instruction}").click(mode: :double, delay: 0.05)
+          browser.at_css("##{instruction}").click(count: 2, delay: 0.05)
           expect(log.text).to eq(instruction)
         end
       end
+
+      it "double-clicks the node for the deprecated mode: :double and warns about it" do
+        Ferrum::Utils::Deprecate.reset!
+
+        expect { browser.at_css("#one").click(mode: :double, delay: 0.05) }
+          .to output(/mode: will be removed in Ferrum 0\.22, use count: 2.*called from #{__FILE__}/m).to_stderr
+        expect(browser.at_css("#log").text).to eq("one")
+      end
+    end
+
+    it "presses the given button" do
+      record_mousedowns
+
+      browser.at_css("#target").click(button: :right)
+
+      expect(browser.evaluate("events")).to eq(["2:1:false:false"])
+    end
+
+    it "presses the right button for the deprecated mode: :right and warns about it" do
+      record_mousedowns
+      Ferrum::Utils::Deprecate.reset!
+
+      expect { browser.at_css("#target").click(mode: :right) }
+        .to output(/mode: will be removed in Ferrum 0\.22, use button: :right.*called from #{__FILE__}/m).to_stderr
+      expect(browser.evaluate("events")).to eq(["2:1:false:false"])
+    end
+
+    it "holds the given modifiers" do
+      record_mousedowns
+
+      browser.at_css("#target").click(modifiers: %i[shift alt])
+
+      expect(browser.evaluate("events")).to eq(["0:1:true:true"])
+    end
+
+    it "holds the modifiers of the deprecated keys: and warns about it" do
+      record_mousedowns
+      Ferrum::Utils::Deprecate.reset!
+
+      expect { browser.at_css("#target").click(keys: [:shift]) }
+        .to output(/:keys is renamed to :modifiers.*called from #{__FILE__}/m).to_stderr
+      expect(browser.evaluate("events")).to eq(["0:1:true:false"])
+    end
+
+    it "holds the keys of keyboard.hold when no modifiers are given" do
+      record_mousedowns
+
+      browser.keyboard.hold(:shift) { browser.at_css("#target").click }
+
+      expect(browser.evaluate("events")).to eq(["0:1:true:false"])
+    end
+
+    it "raises for an unknown mode" do
+      record_mousedowns
+
+      expect { browser.at_css("#target").click(mode: :triple) }.to raise_error(ArgumentError, "unknown mode: :triple")
     end
 
     it "raises NodeNotFoundError for a node from before a refresh" do

@@ -88,13 +88,14 @@ module Ferrum
     # @param [Hash{Symbol => Object}] options
     #   Additional keyword arguments.
     #
-    # @option options [:left, :right] :button (:left)
+    # @option options [:left, :right, :middle, :back, :forward] :button (:left)
     #   The mouse button to click.
     #
     # @option options [Integer] :count (1)
     #
-    # @option options [Integer] :modifiers
-    #   Bitfield for key modifiers. See `keyboard.modifiers`.
+    # @option options [Array<Symbol>, Integer] :modifiers
+    #   Modifier keys to hold: `:alt`, `:ctrl` (or `:control`), `:meta` (or
+    #   `:command`) and `:shift`, or their bitfield, see `keyboard.modifiers`.
     #   If omitted, uses the keys held by `keyboard.hold`, or none outside of it.
     #
     # @return [self]
@@ -121,13 +122,14 @@ module Ferrum
     # @param [Hash{Symbol => Object}] options
     #   Additional keyword arguments.
     #
-    # @option options [:left, :right] :button (:left)
+    # @option options [:left, :right, :middle, :back, :forward] :button (:left)
     #   The mouse button to click.
     #
     # @option options [Integer] :count (1)
     #
-    # @option options [Integer] :modifiers
-    #   Bitfield for key modifiers. See `keyboard.modifiers`.
+    # @option options [Array<Symbol>, Integer] :modifiers
+    #   Modifier keys to hold: `:alt`, `:ctrl` (or `:control`), `:meta` (or
+    #   `:command`) and `:shift`, or their bitfield, see `keyboard.modifiers`.
     #   If omitted, uses the keys held by `keyboard.hold`, or none outside of it.
     #
     # @return [self]
@@ -144,13 +146,14 @@ module Ferrum
     # @param [Hash{Symbol => Object}] options
     #   Additional keyword arguments.
     #
-    # @option options [:left, :right] :button (:left)
+    # @option options [:left, :right, :middle, :back, :forward] :button (:left)
     #   The mouse button to click.
     #
     # @option options [Integer] :count (1)
     #
-    # @option options [Integer] :modifiers
-    #   Bitfield for key modifiers. See `keyboard.modifiers`.
+    # @option options [Array<Symbol>, Integer] :modifiers
+    #   Modifier keys to hold: `:alt`, `:ctrl` (or `:control`), `:meta` (or
+    #   `:command`) and `:shift`, or their bitfield, see `keyboard.modifiers`.
     #   If omitted, uses the keys held by `keyboard.hold`, or none outside of it.
     #
     # @option options [Numeric, false] :navigation_wait (false)
@@ -180,8 +183,9 @@ module Ferrum
     # @param [Integer] steps
     #   Sends intermediate mousemove events.
     #
-    # @param [Integer, nil] modifiers
-    #   Bitfield for key modifiers. See `keyboard.modifiers`.
+    # @param [Array<Symbol>, Integer, nil] modifiers
+    #   Modifier keys to hold: `:alt`, `:ctrl` (or `:control`), `:meta` (or
+    #   `:command`) and `:shift`, or their bitfield, see `keyboard.modifiers`.
     #   If omitted, uses the keys held by `keyboard.hold`, or none outside of it.
     #
     # @param [Numeric, Deadline, nil] timeout
@@ -197,6 +201,7 @@ module Ferrum
       @x = x
       @y = y
       button = pressed_button
+      modifiers = modifiers_mask(modifiers)
 
       Deadline.within(timeout || @page.timeout) do
         steps.times do |i|
@@ -210,7 +215,7 @@ module Ferrum
                         y: new_y,
                         button: button,
                         buttons: @buttons,
-                        modifiers: modifiers || @page.keyboard.held_modifiers)
+                        modifiers: modifiers)
         end
       end
 
@@ -225,7 +230,7 @@ module Ferrum
       button = validate_button(button)
       register_event_button(type, button)
       options = { x: @x, y: @y, type: type, button: button, buttons: @buttons, clickCount: count,
-                  modifiers: modifiers || @page.keyboard.held_modifiers }
+                  modifiers: modifiers_mask(modifiers) }
       if !navigation_wait || navigation_wait.zero?
         return @page.command("Input.dispatchMouseEvent", slowmoable: true, **options)
       end
@@ -236,6 +241,14 @@ module Ferrum
         result = @page.command("Input.dispatchMouseEvent", slowmoable: true, timeout: deadline, **options)
       end
       result
+    end
+
+    def modifiers_mask(modifiers)
+      case modifiers
+      when nil then @page.keyboard.held_modifiers
+      when Integer then modifiers
+      else @page.keyboard.modifiers(modifiers)
+      end
     end
 
     def validate_button(button)

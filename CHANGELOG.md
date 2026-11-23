@@ -65,6 +65,8 @@
   statements run and the last one's value is returned, and `Node#evaluate` returns nodes and dates, see
   [upgrading](docs/13-javascript.md#upgrading-to-021) [#673]
 - `on` with a raw CDP event yields only the params, not the callback's index and the total number of callbacks
+- `node.click` takes `button:`, `count:` and `modifiers:` like `mouse.click`, and holds the keys of `keyboard.hold` when
+  no `modifiers:` are given. The mouse methods take `modifiers:` as key names as well as a bitfield
 
 ### Deprecated
 - `target.window?`, will be removed in 0.22. Use `target.opener_id`, it is set for a target another one opened
@@ -105,6 +107,7 @@
   `offline = true` and `throttle`
 - `timestamp` and `monotonic_time` of `Network::Error`, will be removed in 0.22. Use `time`, which is now set for every
   failure, not only the ones the browser logs a message for
+- `mode:` and `keys:` of `node.click`, will be removed in 0.22. Use `button: :right` or `count: 2`, and `modifiers:`
 
 ### Fixed
 - `back` on the first history entry reloaded the page, it returns `nil` now
