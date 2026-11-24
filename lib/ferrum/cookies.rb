@@ -118,6 +118,8 @@ module Ferrum
     #
     # @return [nil]
     #
+    # @raise [ArgumentError] if neither `:domain`, `:url` nor `:base_url` is set.
+    #
     # @raise [TimeoutError]
     #
     # @example
@@ -125,7 +127,7 @@ module Ferrum
     #
     def remove(name:, **options)
       domain = options[:domain] || (default_domain unless options[:url])
-      raise "Specify :domain or :url option" if !domain && !options[:url]
+      raise ArgumentError, "Specify :domain or :url option" if !domain && !options[:url]
 
       uri = URI.parse(options[:url]) if options[:url]
       cookies = select do |cookie|

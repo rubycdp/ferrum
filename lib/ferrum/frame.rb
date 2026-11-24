@@ -97,7 +97,9 @@ module Ferrum
     #
     # @api private
     def state=(value)
-      raise ArgumentError unless STATE_VALUES.include?(value)
+      unless STATE_VALUES.include?(value)
+        raise ArgumentError, "Unknown frame state #{value.inspect}, use #{STATE_VALUES.map(&:inspect).join(' | ')}"
+      end
 
       @state = value
     end

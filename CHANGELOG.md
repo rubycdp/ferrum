@@ -5,12 +5,16 @@
 ### Changed
 - `User-Agent` and `Accept-Language` set through `headers` are only sent with requests, they no longer change what
   `navigator` reports. Use `network.emulate(user_agent:, accept_language:)` to override both
+- An unknown mouse button, `cookies.remove` without `:domain` or `:url`, a relative `go_to` without `:base_url` and a
+  relative `:save_path` raise `ArgumentError` instead of `RuntimeError` or `Ferrum::Error`. A failed screencast and
+  `debug_url` raise `Ferrum::Error`. Errors that had no message or a misleading one say what's missing now [#557]
 
 ### Deprecated
 
 ### Fixed
 
 ### Removed
+- `Browser::Options::BASE_URL_SCHEMA`, use `BASE_URL_SCHEMES`
 - `target.window?` and `windows` of a context and of the browser, use `target.opener_id`, `await_page { ... }` or
   `pages(&:opener_id)`
 - `:js_errors`, uncaught exceptions are in `page.console` with `source: :exception`, and `page.on(:console)` yields them

@@ -27,6 +27,8 @@ module Ferrum
       # @return [String, nil]
       #   The navigated frame's id, or `nil` when the page doesn't load in time.
       #
+      # @raise [ArgumentError] if the URL is relative and there's no `:base_url`.
+      #
       # @raise [StatusError]
       #   If the request fails.
       #
@@ -57,6 +59,8 @@ module Ferrum
       #
       # @return [String]
       #   The navigated frame's id.
+      #
+      # @raise [ArgumentError] if the URL is relative and there's no `:base_url`.
       #
       # @raise [StatusError]
       #   If the request fails.
@@ -299,7 +303,8 @@ module Ferrum
         nil_or_relative = url.nil? || url.relative?
 
         if nil_or_relative && !@options.base_url
-          raise "Set :base_url browser's option or use absolute url in `go_to`, you passed: #{url_or_path}"
+          raise ArgumentError,
+                "Set :base_url browser's option or use absolute url in `go_to`, you passed: #{url_or_path}"
         end
 
         (nil_or_relative ? @options.base_url.join(url.to_s) : url).to_s

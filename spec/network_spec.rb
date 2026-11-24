@@ -207,7 +207,7 @@ describe Ferrum::Network do
       page.go_to("/with_js")
       expect(traffic.length).to eq(4)
 
-      expect { network.clear(:something) }.to raise_error(ArgumentError, ":type should be in [:traffic, :cache]")
+      expect { network.clear(:something) }.to raise_error(ArgumentError, ":type should be :traffic | :cache")
 
       expect(traffic.length).to eq(4)
     end

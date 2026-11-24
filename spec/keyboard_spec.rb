@@ -5,11 +5,11 @@ describe Ferrum::Keyboard do
     before { browser.go_to("/set") }
 
     it "sends down events from keyboard" do
-      expect { browser.keyboard.down("") }.to raise_error(ArgumentError, "empty keys passed")
-      expect { browser.keyboard.down([]) }.to raise_error(ArgumentError, "empty keys passed")
+      expect { browser.keyboard.down("") }.to raise_error(ArgumentError, "Empty keys passed")
+      expect { browser.keyboard.down([]) }.to raise_error(ArgumentError, "Empty keys passed")
       expect { browser.keyboard.down("arghhh") }.not_to raise_error
       expect { browser.keyboard.down(:page_down) }.not_to raise_error
-      expect { browser.keyboard.down(1) }.to raise_error(ArgumentError, "unexpected argument")
+      expect { browser.keyboard.down(1) }.to raise_error(ArgumentError, "Keys should be a String, Symbol or Array, got 1")
     end
 
     it "rejects a modifier key" do
@@ -21,11 +21,11 @@ describe Ferrum::Keyboard do
     before { browser.go_to("/set") }
 
     it "sends up events from keyboard" do
-      expect { browser.keyboard.up("") }.to raise_error(ArgumentError, "empty keys passed")
-      expect { browser.keyboard.up([]) }.to raise_error(ArgumentError, "empty keys passed")
+      expect { browser.keyboard.up("") }.to raise_error(ArgumentError, "Empty keys passed")
+      expect { browser.keyboard.up([]) }.to raise_error(ArgumentError, "Empty keys passed")
       expect { browser.keyboard.up("arghhh") }.not_to raise_error
       expect { browser.keyboard.up(:page_down) }.not_to raise_error
-      expect { browser.keyboard.up(1) }.to raise_error(ArgumentError, "unexpected argument")
+      expect { browser.keyboard.up(1) }.to raise_error(ArgumentError, "Keys should be a String, Symbol or Array, got 1")
     end
 
     it "rejects a modifier key" do
@@ -162,8 +162,8 @@ describe Ferrum::Keyboard do
     end
 
     it "rejects keys that are not modifiers" do
-      expect { browser.keyboard.hold(:enter) { nil } }.to raise_error(ArgumentError, "not a modifier key: :enter")
-      expect { browser.keyboard.hold(:shift) }.to raise_error(ArgumentError, "block is required")
+      expect { browser.keyboard.hold(:enter) { nil } }.to raise_error(ArgumentError, "Not a modifier key: :enter")
+      expect { browser.keyboard.hold(:shift) }.to raise_error(ArgumentError, "Block is required")
     end
   end
 

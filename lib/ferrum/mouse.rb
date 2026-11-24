@@ -104,6 +104,8 @@ module Ferrum
     #
     # @return [self]
     #
+    # @raise [ArgumentError] if the button is unknown.
+    #
     # @raise [TimeoutError]
     #
     def click(x:, y:, delay: 0, navigation_wait: Page::NAVIGATION_WAIT, timeout: nil, **options)
@@ -137,6 +139,8 @@ module Ferrum
     #
     # @return [self]
     #
+    # @raise [ArgumentError] if the button is unknown.
+    #
     # @raise [TimeoutError]
     #
     def down(**options)
@@ -166,6 +170,8 @@ module Ferrum
     #   How long the event and the page load it starts may take together, the page timeout by default.
     #
     # @return [self]
+    #
+    # @raise [ArgumentError] if the button is unknown.
     #
     # @raise [TimeoutError]
     #
@@ -251,7 +257,7 @@ module Ferrum
 
     def validate_button(button)
       button = button.to_s
-      raise "Invalid button: #{button}" unless BUTTON_MASKS.key?(button)
+      raise ArgumentError, "Invalid button: #{button}" unless BUTTON_MASKS.key?(button)
 
       button
     end

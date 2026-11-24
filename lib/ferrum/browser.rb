@@ -125,7 +125,7 @@ module Ferrum
     #   {Ferrum::DeadBrowserError}.
     #
     # @option options [Hash] :proxy
-    #   Specify proxy settings, [read more](https://github.com/rubycdp/ferrum#proxy).
+    #   Specify proxy settings, [read more](https://docs.rubycdp.com/docs/ferrum/proxy).
     #
     # @option options [String] :save_path
     #   Path to save attachments with [Content-Disposition](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition)
@@ -331,7 +331,7 @@ module Ferrum
       response = JSON.parse(Net::HTTP.get(URI(build_remote_debug_url(path: "/json"))))
 
       devtools_frontend_path = response[0]&.[]("devtoolsFrontendUrl")
-      raise "Could not generate debug url for remote debugging session" unless devtools_frontend_path
+      raise Error, "Could not generate debug url for remote debugging session" unless devtools_frontend_path
 
       build_remote_debug_url(path: devtools_frontend_path)
     end

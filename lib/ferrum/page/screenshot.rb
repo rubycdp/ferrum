@@ -247,7 +247,7 @@ module Ferrum
 
         if format
           if opts[:paper_width] || opts[:paper_height]
-            raise ArgumentError, "Specify :format or :paper_width, :paper_height"
+            raise ArgumentError, "Pass either :format or :paper_width and :paper_height, not both"
           end
 
           dimension = PAPER_FORMATS.fetch(format)
@@ -347,7 +347,9 @@ module Ferrum
 
       def with_background_color(color)
         if color
-          raise ArgumentError, "Accept Ferrum::RGBA class only" unless color.is_a?(RGBA)
+          unless color.is_a?(RGBA)
+            raise ArgumentError, ":background_color should be a Ferrum::RGBA, got #{color.inspect}"
+          end
 
           command("Emulation.setDefaultBackgroundColorOverride", color: color.to_h)
         end

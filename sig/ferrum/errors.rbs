@@ -12,6 +12,7 @@ module Ferrum
   end
 
   class EmptyPathError < Error
+    def initialize: (?::String message) -> void
   end
 
   class StatusError < Error

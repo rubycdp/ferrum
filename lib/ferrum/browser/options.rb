@@ -14,7 +14,7 @@ module Ferrum
       BROWSER_PORT = "0"
       BROWSER_HOST = "127.0.0.1"
       WINDOW_SIZE = [1024, 768].freeze
-      BASE_URL_SCHEMA = %w[http https].freeze
+      BASE_URL_SCHEMES = %w[http https].freeze
       DEFAULT_TIMEOUT = ENV.fetch("FERRUM_DEFAULT_TIMEOUT", 5).to_f
       PROCESS_TIMEOUT = ENV.fetch("FERRUM_PROCESS_TIMEOUT", 10).to_i
 
@@ -140,8 +140,8 @@ module Ferrum
 
       def parse_base_url(value)
         parsed = Addressable::URI.parse(value)
-        unless BASE_URL_SCHEMA.include?(parsed&.normalized_scheme)
-          raise ArgumentError, "`base_url` should be absolute and include schema: #{BASE_URL_SCHEMA.join(' | ')}"
+        unless BASE_URL_SCHEMES.include?(parsed&.normalized_scheme)
+          raise ArgumentError, "`base_url` should be absolute and include scheme: #{BASE_URL_SCHEMES.join(' | ')}"
         end
 
         parsed

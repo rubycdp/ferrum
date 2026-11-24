@@ -282,7 +282,8 @@ describe Ferrum::Browser do
         Ferrum::Browser.new(browser_path: path, process_timeout: 2)
       end.to raise_error(
         Ferrum::ProcessTimeoutError,
-        "Browser did not produce websocket url within 2 seconds, try to increase `:process_timeout`. See https://github.com/rubycdp/ferrum#customization"
+        "Browser did not produce websocket url within 2 seconds, try to increase `:process_timeout`. " \
+        "See https://docs.rubycdp.com/docs/ferrum/customization"
       )
     end
 
@@ -772,7 +773,7 @@ describe Ferrum::Browser do
       it "raises an error", :launch do
         expect do
           browser.go_to("/#{filename}")
-        end.to raise_error(Ferrum::Error, "supply absolute path for `:save_path` option")
+        end.to raise_error(ArgumentError, "Supply absolute path for `:save_path` option")
       end
     end
 

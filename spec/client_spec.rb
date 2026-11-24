@@ -29,7 +29,7 @@ describe Ferrum::Client do
 
       it "raises NoSuchTargetError for an unknown target" do
         expect { page.command("Target.activateTarget", targetId: "missing") }
-          .to raise_error(Ferrum::NoSuchTargetError)
+          .to raise_error(Ferrum::NoSuchPageError, "Target.activateTarget found no target missing, it's closed or never existed")
       end
     end
 

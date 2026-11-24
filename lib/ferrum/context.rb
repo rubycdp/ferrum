@@ -257,7 +257,7 @@ module Ferrum
     # @raise [TimeoutError]
     def attach_target(target_id)
       target = @targets[target_id]
-      raise NoSuchTargetError unless target
+      raise NoSuchTargetError, "No target #{target_id} in context #{id}" unless target
       return target if target.session_id
 
       @contexts.manually_attached(target_id)

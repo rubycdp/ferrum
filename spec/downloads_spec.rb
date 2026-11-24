@@ -115,7 +115,7 @@ describe Ferrum::Downloads do
       it "raises an error" do
         expect do
           page.downloads.set_behavior(save_path: save_path)
-        end.to raise_error(Ferrum::Error, "supply absolute path for `:save_path` option")
+        end.to raise_error(ArgumentError, "Supply absolute path for `:save_path` option")
 
         page.go_to("/#{filename}")
         expect(File.exist?("#{save_path}/#{filename}")).to be false
