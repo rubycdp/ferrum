@@ -389,18 +389,6 @@ module Ferrum
       tap { page.command("DOM.scrollIntoViewIfNeeded", nodeId: node_id) }
     end
 
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use {#scroll}.
-    #
-    # @return [self]
-    #
-    # @raise [TimeoutError]
-    #
-    def scroll_into_view
-      Utils::Deprecate.warn("scroll_into_view will be removed in Ferrum 0.22. Use scroll instead.", user_code: true)
-      scroll
-    end
-
     # Whether the node's bounding rect is fully within the viewport (or,
     # when `of:` is given, within that scoping element's bounds).
     #
@@ -582,20 +570,6 @@ module Ferrum
     #
     def property(name)
       evaluate("this[name]", name: name)
-    end
-
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use {#property}.
-    #
-    # @param [String] name
-    #
-    # @return [Object]
-    #
-    # @raise [TimeoutError]
-    #
-    def [](name)
-      Utils::Deprecate.warn("node[name] will be removed in Ferrum 0.22. Use property(name) instead.", user_code: true)
-      property(name)
     end
 
     #
@@ -872,18 +846,6 @@ module Ferrum
     #
     def ax_node
       page.accessibility.node_for(self)
-    end
-
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use {#ax_node}.
-    #
-    # @return [Accessibility::AXNode, nil]
-    #
-    # @raise [TimeoutError]
-    #
-    def axnode
-      Utils::Deprecate.warn("axnode will be removed in Ferrum 0.22. Use ax_node instead.", user_code: true)
-      ax_node
     end
 
     #

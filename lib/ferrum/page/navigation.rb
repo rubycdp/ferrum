@@ -47,36 +47,6 @@ module Ferrum
       end
 
       #
-      # @deprecated Will be removed in Ferrum 0.22. Use {#go_to}.
-      #
-      # @param [String, nil] url
-      #
-      # @param [Hash{Symbol => Object}] options
-      #   Passed to {#go_to}.
-      #
-      # @return [String, nil]
-      #
-      def goto(url = nil, **options)
-        Utils::Deprecate.warn("goto will be removed in Ferrum 0.22. Use go_to instead.", user_code: true)
-        go_to(url, **options)
-      end
-
-      #
-      # @deprecated Will be removed in Ferrum 0.22. Use {#go_to}.
-      #
-      # @param [String, nil] url
-      #
-      # @param [Hash{Symbol => Object}] options
-      #   Passed to {#go_to}.
-      #
-      # @return [String, nil]
-      #
-      def go(url = nil, **options)
-        Utils::Deprecate.warn("go will be removed in Ferrum 0.22. Use go_to instead.", user_code: true)
-        go_to(url, **options)
-      end
-
-      #
       # Same as {#go_to}, but raises if the page doesn't load in time.
       #
       # @param [String, nil] url
@@ -132,18 +102,6 @@ module Ferrum
       end
 
       #
-      # @deprecated Will be removed in Ferrum 0.22. Use {#refresh}.
-      #
-      # @param [Numeric, Deadline, nil] timeout
-      #
-      # @return [true, nil]
-      #
-      def reload(timeout: nil)
-        Utils::Deprecate.warn("reload will be removed in Ferrum 0.22. Use refresh instead.", user_code: true)
-        refresh(timeout: timeout)
-      end
-
-      #
       # Same as {#refresh}, but raises if the page doesn't load in time.
       #
       # @param [Numeric, Deadline, nil] timeout
@@ -156,20 +114,6 @@ module Ferrum
         deadline = Deadline.wrap(timeout || self.timeout)
         navigate!(nil, deadline) { command("Page.reload", timeout: deadline, slowmoable: true) }
         true
-      end
-
-      #
-      # @deprecated Will be removed in Ferrum 0.22. Use {#refresh!}.
-      #
-      # @param [Numeric, Deadline, nil] timeout
-      #
-      # @return [true]
-      #
-      # @raise [NavigationTimeoutError]
-      #
-      def reload!(timeout: nil)
-        Utils::Deprecate.warn("reload! will be removed in Ferrum 0.22. Use refresh! instead.", user_code: true)
-        refresh!(timeout: timeout)
       end
 
       #

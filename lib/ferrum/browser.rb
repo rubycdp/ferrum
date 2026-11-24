@@ -29,7 +29,7 @@ module Ferrum
     delegate %i[default_context] => :contexts
     delegate %i[targets create_target page pages await_page await_page! workers service_workers
                 attach_target cookies] => :default_context
-    delegate %i[go_to go_to! goto go back back! forward forward! refresh refresh! reload reload! stop
+    delegate %i[go_to go_to! back back! forward forward! refresh refresh! stop
                 await_navigation await_navigation! await_download await_download! wait_until wait_until!
                 wait_for_reload wait_for_navigation wait_for_navigation!
                 at_css at_xpath css xpath wait_css wait_css! wait_xpath wait_xpath! wait_for_selector

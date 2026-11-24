@@ -358,46 +358,4 @@ describe Ferrum::Page::Navigation do
         .to raise_error(Ferrum::TimeoutError)
     end
   end
-
-  describe "#goto" do
-    it "navigates to the url and warns that it is deprecated" do
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { page.goto("/slow") }
-        .to output(/goto will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      expect(page.html).to include("slow page")
-    end
-  end
-
-  describe "#go" do
-    it "navigates to the url and warns that it is deprecated" do
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { page.go("/slow") }
-        .to output(/go will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      expect(page.html).to include("slow page")
-    end
-  end
-
-  describe "#reload" do
-    it "reloads the page and warns that it is deprecated" do
-      page.go_to("/slow")
-      page.execute("window.marker = 'set'")
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(page.reload).to be(true) }
-        .to output(/reload will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      expect(page.evaluate("window.marker")).to be_nil
-    end
-  end
-
-  describe "#reload!" do
-    it "reloads the page and warns that it is deprecated" do
-      page.go_to("/slow")
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(page.reload!).to be(true) }
-        .to output(/reload! will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-    end
-  end
 end

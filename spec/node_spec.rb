@@ -135,18 +135,6 @@ describe Ferrum::Node do
     end
   end
 
-  describe "#scroll_into_view" do
-    it "scrolls the node into the window and warns that it is deprecated" do
-      browser.go_to("/scroll")
-      link = browser.at_xpath("//a[*//text() = 'Below the fold']")
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { link.scroll_into_view }
-        .to output(/scroll_into_view will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      expect(link.in_viewport?).to eq(true)
-    end
-  end
-
   describe "#in_viewport?" do
     before { browser.go_to("/scroll") }
 
@@ -707,16 +695,6 @@ describe Ferrum::Node do
     end
   end
 
-  describe "#[]" do
-    it "returns the property with the given name and warns that it is deprecated" do
-      browser.go_to("/attributes_properties")
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(browser.at_css(".some_other_class")["innerHTML"]).to eq("<p>foobar</p>") }
-        .to output(/node\[name\] will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-    end
-  end
-
   describe "#==" do
     it "does not equal a node from another page" do
       browser.go_to("/simple")
@@ -833,16 +811,6 @@ describe Ferrum::Node do
       expect(ax).to be_a(Ferrum::Accessibility::AXNode)
       expect(ax.role).to eq("button")
       expect(ax.name).to eq("Frame button")
-    end
-  end
-
-  describe "#axnode" do
-    it "returns the AXNode for the element and warns that it is deprecated" do
-      browser.go_to("/accessibility")
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(browser.at_css("#submit").axnode.role).to eq("button") }
-        .to output(/axnode will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
     end
   end
 

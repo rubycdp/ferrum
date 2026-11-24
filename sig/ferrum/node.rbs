@@ -62,8 +62,6 @@ module Ferrum
 
     def scroll: () -> self
 
-    %a{deprecated} def scroll_into_view: () -> self
-
     def in_viewport?: (?of: Node?) -> bool
 
     def select_file: ((String | ::Array[String]) value) -> self
@@ -83,8 +81,6 @@ module Ferrum
     def value: () -> untyped
 
     def property: (String name) -> untyped
-
-    %a{deprecated} def []: (String name) -> untyped
 
     def attribute: (String name) -> String?
 
@@ -109,8 +105,6 @@ module Ferrum
     def computed_style: () -> ::Hash[String, String]
 
     def ax_node: () -> Accessibility::AXNode?
-
-    %a{deprecated} def axnode: () -> Accessibility::AXNode?
 
     def remove: () -> self
 

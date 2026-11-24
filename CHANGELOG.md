@@ -25,6 +25,10 @@
 - `mode:` and `keys:` of `node.click`, use `button: :right` or `count: 2`, and `modifiers:`
 - Positional `mouse.scroll_by(x, y)` and `scroll_to(x, y)`, pass `x:` and `y:`
 - `accessibility.enable` and `disable`, use `accessibility.enabled = true/false`
+- `goto`, `go`, `reload` and `reload!`, use `go_to`, `refresh` and `refresh!`
+- `frame.set_content`, use `content=`
+- `node.scroll_into_view`, `node.axnode` and `node[name]`, use `scroll`, `ax_node` and `property(name)`
+- `contexts.each { |id, context| }`, `each` yields the context, use `context.id` for the id
 
 
 ## [0.21.0](https://github.com/rubycdp/ferrum/compare/v0.20.2...v0.21.0) (November 24, 2026) ##
