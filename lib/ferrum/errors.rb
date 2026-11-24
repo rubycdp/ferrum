@@ -98,6 +98,43 @@ module Ferrum
     end
   end
 
+  # Raised when connecting to a running browser at `:url` or `:ws_url` takes
+  # longer than `:process_timeout`.
+  class ConnectTimeoutError < TimeoutError
+    # The host and port connected to.
+    #
+    # @return [String]
+    attr_reader :address
+
+    # The seconds the connection was given.
+    #
+    # @return [Numeric]
+    attr_reader :timeout
+
+    #
+    # @param [String] address
+    #   The host and port connected to.
+    #
+    # @param [Numeric] timeout
+    #   The seconds the connection was given.
+    #
+    def initialize(address, timeout)
+      @address = address
+      @timeout = timeout
+      super()
+    end
+
+    #
+    # Explains that the browser couldn't be reached in time.
+    #
+    # @return [String]
+    #
+    def message
+      "Couldn't connect to the browser at #{address} within #{timeout} seconds. Check it's reachable, or set " \
+        "the :process_timeout option to a higher value if it's slow to answer."
+    end
+  end
+
   # Raised by `go_to!`, `refresh!`, `back!` and `forward!` when the page
   # doesn't load in time.
   class NavigationTimeoutError < TimeoutError

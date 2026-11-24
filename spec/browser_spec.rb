@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
+require "digest/sha1"
 require "logger"
+require "timeout"
 require "ferrum/proxy"
 
 describe Ferrum::Browser do
@@ -572,6 +574,75 @@ describe Ferrum::Browser do
 
       expect { Ferrum::Browser.new }.to raise_error(error)
       expect(process.pid).to be(nil)
+    end
+
+    it "closes the connection when :ws_url doesn't answer in time" do
+      with_unresponsive_browser do |ws_url, connections|
+        expect { Ferrum::Browser.new(ws_url: ws_url, timeout: 0.5) }.to raise_error(Ferrum::TimeoutError)
+        expect(closed_by_peer?(connections.pop)).to be(true)
+      end
+    end
+
+    it "closes the connection when start is interrupted" do
+      with_unresponsive_browser do |ws_url, connections|
+        expect { Timeout.timeout(0.5) { Ferrum::Browser.new(ws_url: ws_url, timeout: 10) } }
+          .to raise_error(Timeout::Error)
+        expect(closed_by_peer?(connections.pop)).to be(true)
+      end
+    end
+
+    it "raises ConnectTimeoutError when the :ws_url host doesn't accept the connection within :process_timeout" do
+      expect_connect_timeout(ws_url: "ws://192.0.2.1:9222/devtools/browser/x")
+    end
+
+    it "raises ConnectTimeoutError when the :url host doesn't accept the connection within :process_timeout" do
+      expect_connect_timeout(url: "http://192.0.2.1:9222")
+    end
+
+    def expect_connect_timeout(**options)
+      started = Ferrum::Utils::ElapsedTime.monotonic_time
+
+      expect { Ferrum::Browser.new(**options, process_timeout: 0.5) }
+        .to raise_error(Ferrum::ConnectTimeoutError, /192\.0\.2\.1:9222 within 0\.5 seconds/)
+      expect(Ferrum::Utils::ElapsedTime.monotonic_time - started).to be < 5
+    end
+
+    def with_unresponsive_browser
+      server = TCPServer.new("127.0.0.1", 0)
+      connections = Queue.new
+      acceptor = Thread.new do
+        loop { connections << accept_web_socket(server.accept) }
+      rescue IOError, Errno::EBADF
+        nil
+      end
+
+      yield "ws://127.0.0.1:#{server.addr[1]}/devtools/browser/x", connections
+    ensure
+      acceptor&.kill
+      server&.close
+      connections&.close
+    end
+
+    def accept_web_socket(socket)
+      request = +""
+      request << socket.readpartial(4096) until request.include?("\r\n\r\n")
+      key = request[/^Sec-WebSocket-Key: (\S+)/i, 1]
+      accept = [Digest::SHA1.digest("#{key}258EAFA5-E914-47DA-95CA-C5AB0DC85B11")].pack("m0")
+      socket.write("HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n" \
+                   "Sec-WebSocket-Accept: #{accept}\r\n\r\n")
+      socket
+    end
+
+    def closed_by_peer?(socket)
+      loop do
+        return false unless socket.wait_readable(3)
+
+        socket.readpartial(4096)
+      end
+    rescue EOFError, Errno::ECONNRESET
+      true
+    ensure
+      socket.close
     end
 
     context "with :proxy without authorization" do

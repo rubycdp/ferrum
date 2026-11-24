@@ -58,7 +58,7 @@ module Ferrum
         @output = Output.new(@log)
 
         if options.ws_url || options.url
-          self.ws_url = options.ws_url || fetch_ws_url(options.url)
+          self.ws_url = options.ws_url || fetch_ws_url(options.url, options.process_timeout)
           return
         end
 
@@ -207,8 +207,8 @@ module Ferrum
         uri.to_s
       end
 
-      def fetch_ws_url(url)
-        response = ::Net::HTTP.get_response(URI(json_version_url(url).to_s))
+      def fetch_ws_url(url, timeout)
+        response = request_json_version(URI(json_version_url(url).to_s), timeout)
         status = "#{response.code} #{response.message}" unless response.is_a?(::Net::HTTPSuccess)
         ws_url = begin
           JSON.parse(response.body.to_s)["webSocketDebuggerUrl"]
@@ -217,6 +217,15 @@ module Ferrum
         end
 
         reachable_ws_url(ws_url, url) || raise(NoWebSocketUrlError.new(url, status))
+      end
+
+      def request_json_version(uri, timeout)
+        ::Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == "https",
+                                                  open_timeout: timeout, read_timeout: timeout) do |http|
+          http.request_get(uri)
+        end
+      rescue ::Net::OpenTimeout, ::Net::ReadTimeout, Errno::ETIMEDOUT
+        raise ConnectTimeoutError.new("#{uri.hostname}:#{uri.port}", timeout)
       end
 
       def json_version_url(url)

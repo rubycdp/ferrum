@@ -23,7 +23,7 @@ module Ferrum
       @encoded: Array[String]
       @close_reason: String?
 
-      def initialize: ((String | ::Addressable::URI) url, Integer? max_receive_size, Log? log, ?::Numeric write_timeout) -> void
+      def initialize: ((String | ::Addressable::URI) url, Integer? max_receive_size, Log? log, ?::Numeric write_timeout, ?connect_timeout: ::Numeric?) -> void
 
       def on_open: (untyped event) -> void
 
@@ -40,6 +40,8 @@ module Ferrum
       def force_close: () -> void
 
       private
+
+      def connect: (String host, Integer port, ::Numeric? timeout) -> ::TCPSocket
 
       def drive: (?Deadline? deadline) { () -> void } -> void
 

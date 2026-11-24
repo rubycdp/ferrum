@@ -133,7 +133,8 @@ module Ferrum
     #   will not be spawned.
     #
     # @option options [Integer] :process_timeout
-    #   How long to wait for the Chrome process to respond on startup.
+    #   How long to wait for the Chrome process to respond on startup, or to
+    #   connect to the browser at `:url` or `:ws_url`.
     #
     # @option options [Integer] :ws_max_receive_size
     #   How big messages to accept from Chrome over the web socket, in bytes.
@@ -320,6 +321,7 @@ module Ferrum
     def start
       Utils::ElapsedTime.start
       @process = Process.new(options)
+      started = false
 
       begin
         @process.start
@@ -327,9 +329,12 @@ module Ferrum
         @client = Client.new(@process.ws_url, options)
         @options.default_user_agent = version.user_agent
         @contexts = Contexts.new(@client)
-      rescue StandardError
-        @process.stop
-        raise
+        started = true
+      ensure
+        unless started
+          @client&.close
+          @process.stop
+        end
       end
     end
 
