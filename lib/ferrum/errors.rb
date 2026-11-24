@@ -9,8 +9,13 @@ module Ferrum
   class NoSuchPageError     < NoSuchTargetError; end
   # Raised when no browser binary can be found at the configured path.
   class BinaryNotFoundError < Error; end
+
   # Raised when a required file path option is empty.
-  class EmptyPathError      < Error; end
+  class EmptyPathError < Error
+    def initialize(message = "PATH is empty, there's nowhere to look for the executable")
+      super
+    end
+  end
 
   # Raised when a request fails to reach the server, e.g. due to DNS or
   # connectivity issues.
@@ -52,10 +57,7 @@ module Ferrum
     # @return [String]
     #
     def message
-      "Timed out waiting for #{awaited}. It's possible that this happened " \
-        "because something took a very long time (for example a page load " \
-        "was slow). If so, setting the :timeout option to a higher value might " \
-        "help."
+      "Timed out waiting for #{awaited}, set the :timeout option higher if it's expected to be slow"
     end
 
     private
@@ -167,7 +169,8 @@ module Ferrum
 
     def initialize(timeout, output)
       @output = output
-      super("Browser did not produce websocket url within #{timeout} seconds, try to increase `:process_timeout`. See https://github.com/rubycdp/ferrum#customization")
+      super("Browser did not produce websocket url within #{timeout} seconds, try to increase `:process_timeout`. " \
+            "See https://docs.rubycdp.com/docs/ferrum/customization")
     end
   end
 
@@ -185,16 +188,16 @@ module Ferrum
     end
   end
 
-  # Raised when trying to interact with a browser process that has died or
-  # a window that has already been closed.
+  # Raised when the connection to the browser is lost, because the browser
+  # crashed, was closed, or the websocket dropped.
   class DeadBrowserError < Error
-    def initialize(message = "Browser is dead or given window is closed")
+    def initialize(message = "Lost the connection to the browser, it crashed or was closed")
       super
     end
   end
 
   # Raised when a node keeps moving between attempts to interact with it,
-  # e.g. while trying to click it.
+  # e.g. while trying to click or hover it.
   class NodeMovingError < Error
     def initialize(node, prev, current)
       @node = node
@@ -209,9 +212,7 @@ module Ferrum
     # @return [String]
     #
     def message
-      "#{@node.inspect} that you're trying to click is moving, hence " \
-        "we cannot. Previously it was at #{@prev.inspect} but now at " \
-        "#{@current.inspect}."
+      "#{@node.inspect} keeps moving, it was at #{@prev.inspect} and then at #{@current.inspect}"
     end
   end
 
@@ -276,7 +277,7 @@ module Ferrum
   # command against, e.g. because the frame isn't attached.
   class NoExecutionContextError < BrowserError
     def initialize(response = nil)
-      super(response || { "message" => "There's no context available" })
+      super(response || { "message" => "There's no JavaScript context to run in, the frame is detached or navigating" })
     end
   end
 

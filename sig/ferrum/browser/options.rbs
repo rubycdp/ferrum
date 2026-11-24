@@ -7,7 +7,7 @@ module Ferrum
 
       WINDOW_SIZE: ::Array[::Integer]
 
-      BASE_URL_SCHEMA: ::Array[String]
+      BASE_URL_SCHEMES: ::Array[String]
 
       DEFAULT_TIMEOUT: ::Float
 

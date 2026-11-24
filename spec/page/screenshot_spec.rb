@@ -362,7 +362,7 @@ describe Ferrum::Page::Screenshot do
       browser.go_to
       expect do
         browser.screenshot(path: file, background_color: "#FFF")
-      end.to raise_exception(ArgumentError, "Accept Ferrum::RGBA class only")
+      end.to raise_exception(ArgumentError, /:background_color should be a Ferrum::RGBA, got/)
     end
 
     it "defaults to base64 when path isn't set" do

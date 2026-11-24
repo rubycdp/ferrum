@@ -87,13 +87,15 @@ module Ferrum
       #
       # @return [nil]
       #
+      # @raise [ArgumentError] if neither `:domain`, `:url` nor `:base_url` is set.
+      #
       # @raise [TimeoutError]
       #
       # @example
       #   page.cookies.remove(name: "stealth") # => true
       #
       def remove(name:, **options)
-        raise "Specify :domain or :url option" if !options[:domain] && !options[:url] && !default_domain
+        raise ArgumentError, "Specify :domain or :url option" if !options[:domain] && !options[:url] && !default_domain
 
         options = options.merge(name: name)
         options[:domain] ||= default_domain unless options[:url]

@@ -89,14 +89,15 @@ module Ferrum
     #
     # @return [nil]
     #
-    # @raise [ArgumentError]
-    # @raise [Ferrum::Error]
+    # @raise [ArgumentError] if the behavior is unknown or the path isn't absolute.
     #
     # @raise [TimeoutError]
     #
     def set_behavior(save_path:, behavior: :allow)
-      raise ArgumentError unless VALID_BEHAVIOR.include?(behavior.to_sym)
-      raise Error, "supply absolute path for `:save_path` option" unless Pathname.new(save_path.to_s).absolute?
+      unless VALID_BEHAVIOR.include?(behavior.to_sym)
+        raise ArgumentError, "Unknown behavior #{behavior.inspect}, use #{VALID_BEHAVIOR.map(&:inspect).join(' | ')}"
+      end
+      raise ArgumentError, "Supply absolute path for `:save_path` option" unless Pathname.new(save_path.to_s).absolute?
 
       options = { browserContextId: @page.context_id } if @page.context_id
       @page.command("Browser.setDownloadBehavior",

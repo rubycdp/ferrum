@@ -82,7 +82,7 @@ module Ferrum
         response = command("Page.startScreencast", **options)
 
         if (error_text = response["errorText"]) # https://cs.chromium.org/chromium/src/net/base/net_error_list.h
-          raise "Starting screencast failed (#{error_text})"
+          raise Error, "Starting screencast failed (#{error_text})"
         end
 
         on("Page.screencastFrame") do |params|

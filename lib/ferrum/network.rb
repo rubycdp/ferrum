@@ -29,7 +29,7 @@ module Ferrum
                         SignedExchange Ping CSPViolationReport Preflight Other].freeze
     AUTHORIZE_BLOCK_MISSING = "Block is missing, call `authorize(...) { |r| r.continue } " \
                               "or subscribe to `on(:request)` events before calling it"
-    AUTHORIZE_TYPE_WRONG = ":type should be in #{AUTHORIZE_TYPE}".freeze
+    AUTHORIZE_TYPE_WRONG = ":type should be #{AUTHORIZE_TYPE.map(&:inspect).join(' | ')}".freeze
     ALLOWED_CONNECTION_TYPE = %w[none cellular2g cellular3g cellular4g bluetooth ethernet wifi wimax other].freeze
 
     # Network traffic.
@@ -194,7 +194,7 @@ module Ferrum
     #   traffic.size # => 0
     #
     def clear(type)
-      raise ArgumentError, ":type should be in #{CLEAR_TYPE}" unless CLEAR_TYPE.include?(type)
+      raise ArgumentError, ":type should be #{CLEAR_TYPE.map(&:inspect).join(' | ')}" unless CLEAR_TYPE.include?(type)
 
       if type == :traffic
         @traffic.clear

@@ -314,6 +314,11 @@ describe Ferrum::Context do
 
       expect(target.worker.evaluate("1 + 1")).to eq(2)
     end
+
+    it "raises NoSuchTargetError naming a target the context doesn't have" do
+      expect { browser.attach_target("missing") }
+        .to raise_error(Ferrum::NoSuchTargetError, /\ANo target missing in context /)
+    end
   end
 
   describe "#find_target" do

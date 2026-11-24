@@ -181,7 +181,7 @@ describe Ferrum::Mouse do
     end
 
     it "raises for an unknown button" do
-      expect { browser.mouse.down(button: :wheel) }.to raise_error(RuntimeError, "Invalid button: wheel")
+      expect { browser.mouse.down(button: :wheel) }.to raise_error(ArgumentError, "Invalid button: wheel")
     end
 
     it "returns itself" do
@@ -207,7 +207,7 @@ describe Ferrum::Mouse do
     end
 
     it "raises for an unknown button" do
-      expect { browser.mouse.up(button: :wheel) }.to raise_error(RuntimeError, "Invalid button: wheel")
+      expect { browser.mouse.up(button: :wheel) }.to raise_error(ArgumentError, "Invalid button: wheel")
     end
 
     it "returns itself" do

@@ -137,9 +137,9 @@ module Ferrum
     #   end
     #
     def hold(*keys)
-      raise ArgumentError, "block is required" unless block_given?
+      raise ArgumentError, "Block is required" unless block_given?
 
-      keys = keys.map { |key| modifier_name(key) || raise(ArgumentError, "not a modifier key: #{key.inspect}") }
+      keys = keys.map { |key| modifier_name(key) || raise(ArgumentError, "Not a modifier key: #{key.inspect}") }
       previous = @held_modifiers
       pressed = []
 
@@ -212,7 +212,7 @@ module Ferrum
     def normalize_keys(keys, pressed_keys = [], memo = [])
       case keys
       when Array
-        raise ArgumentError, "empty keys passed" if keys.empty?
+        raise ArgumentError, "Empty keys passed" if keys.empty?
 
         pressed_keys.push([])
         memo += combine_strings(keys).map do |key|
@@ -232,7 +232,7 @@ module Ferrum
           to_options(key)
         end
       when String
-        raise ArgumentError, "empty keys passed" if keys.empty?
+        raise ArgumentError, "Empty keys passed" if keys.empty?
 
         pressed = pressed_keys.flatten
         mask = pressed.map { |k| MODIFIERS[k] }.reduce(@held_modifiers, :|)
@@ -263,7 +263,7 @@ module Ferrum
           end.flatten
         end
       else
-        raise ArgumentError, "unexpected argument"
+        raise ArgumentError, "Keys should be a String, Symbol or Array, got #{keys.inspect}"
       end
     end
     # rubocop:enable Metrics/PerceivedComplexity

@@ -278,6 +278,15 @@ describe Ferrum::Cookies do
 
       expect(browser.cookies.map(&:domain)).to eq(["localhost"])
     end
+
+    it "raises ArgumentError without :domain or :url when base_url isn't set", :launch do
+      browser = Ferrum::Browser.new
+
+      expect { browser.cookies.remove(name: "stealth") }
+        .to raise_error(ArgumentError, "Specify :domain or :url option")
+    ensure
+      browser&.quit
+    end
   end
 
   describe "#clear" do

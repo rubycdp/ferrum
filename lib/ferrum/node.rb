@@ -88,13 +88,13 @@ module Ferrum
       @node_id = begin
         id = page.command("DOM.pushNodesByBackendIdsToFrontend",
                           backendNodeIds: [backend_node_id])["nodeIds"].first
-        raise NodeNotFoundError, { "message" => "node is not trackable" } if id.zero?
+        raise NodeNotFoundError, { "message" => "Node is not trackable" } if id.zero?
 
         id
       rescue BrowserError => e
         raise unless e.message == "Document needs to be requested first"
 
-        raise NodeNotFoundError, { "message" => "node is not trackable, the page is still loading a new document" }
+        raise NodeNotFoundError, { "message" => "Node is not trackable, the page is still loading a new document" }
       end
       @document_version = document_version
       @node_id

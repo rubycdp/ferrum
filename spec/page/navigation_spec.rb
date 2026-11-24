@@ -54,6 +54,15 @@ describe Ferrum::Page::Navigation do
         )
       end
 
+      it "raises ArgumentError for a relative URL when base_url isn't set", :launch do
+        browser = Ferrum::Browser.new
+
+        expect { browser.go_to("/simple") }
+          .to raise_error(ArgumentError, "Set :base_url browser's option or use absolute url in `go_to`, you passed: /simple")
+      ensure
+        browser&.quit
+      end
+
       it "returns nil when the page doesn't load in time" do
         expect(page.go_to("/really_slow", timeout: 0.5)).to be_nil
       end

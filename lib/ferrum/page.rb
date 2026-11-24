@@ -587,7 +587,7 @@ module Ferrum
 
     def accept_dialog(dialog)
       warn "Dialog was shown but no `on(:dialog)` callback handled it, accepting it by default. " \
-           "Please take a look at https://github.com/rubycdp/ferrum#dialogs"
+           "Please take a look at https://docs.rubycdp.com/docs/ferrum/dialogs"
       dialog.accept
     end
 

@@ -249,7 +249,7 @@ module Ferrum
       raise TimeoutError.new(message[:method], session_id: message[:sessionId]) unless data
 
       error, response = data.values_at("error", "result")
-      raise_browser_error(error) if error
+      raise_browser_error(error, message) if error
       response
     end
 
@@ -413,7 +413,7 @@ module Ferrum
       @command_id_mutex.synchronize { @command_id += 1 }
     end
 
-    def raise_browser_error(error)
+    def raise_browser_error(error, message)
       case error["message"]
       # Node has disappeared while we were trying to get it
       when "No node with given id found",
@@ -425,12 +425,19 @@ module Ferrum
       when "Cannot find context with specified id"
         raise NoExecutionContextError, error
       when "No target with given id found"
-        raise NoSuchPageError
+        raise NoSuchPageError, no_target_message(message)
       when /Could not compute content quads/
-        raise CoordinatesNotFoundError
+        raise CoordinatesNotFoundError, error["message"]
       else
         raise BrowserError, error
       end
+    end
+
+    def no_target_message(message)
+      target_id = message.dig(:params, :targetId)
+      return "#{message[:method]} found no target, it's closed or never existed" unless target_id
+
+      "#{message[:method]} found no target #{target_id}, it's closed or never existed"
     end
   end
 end
