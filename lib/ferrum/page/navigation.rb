@@ -179,6 +179,8 @@ module Ferrum
       #
       # Stop all navigations and loading pending resources on the page.
       #
+      # @return [nil]
+      #
       # @raise [TimeoutError]
       #
       # @example
@@ -187,6 +189,7 @@ module Ferrum
       #
       def stop
         command("Page.stopLoading", slowmoable: true)
+        nil
       end
 
       #

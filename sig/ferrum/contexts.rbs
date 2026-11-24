@@ -30,7 +30,7 @@ module Ferrum
 
     def create: (**untyped options) -> Context
 
-    def dispose: (String context_id) -> bool?
+    def dispose: (String context_id) -> nil
 
     def close_connections: () -> void
 

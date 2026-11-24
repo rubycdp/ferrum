@@ -46,7 +46,7 @@ browser.cookies["NID"] # => <Ferrum::Cookies::Cookie:0x0000558624b67a88 @attribu
 browser.cookies["id", domain: "www.example.com", path: "/app"]
 ```
 
-#### set(value) : `true`
+#### set(value)
 
 Sets a cookie, for the `:base_url` host unless `:domain` or `:url` is given.
 
@@ -62,17 +62,17 @@ Sets a cookie, for the `:base_url` host unless `:domain` or `:url` is given.
   * :secure `Boolean`
 
 ```ruby
-browser.cookies.set(name: "stealth", value: "omg", domain: "google.com") # => true
+browser.cookies.set(name: "stealth", value: "omg", domain: "google.com")
 ```
 
 * value `Cookie`
 
 ```ruby
 nid_cookie = browser.cookies["NID"] # => <Ferrum::Cookies::Cookie:0x0000558624b67a88>
-browser.cookies.set(nid_cookie) # => true
+browser.cookies.set(nid_cookie)
 ```
 
-#### remove(\*\*options) : `true`
+#### remove(\*\*options)
 
 Removes the cookies with the given name, on the exact domain, the `:base_url` host by default, or the ones sent to the
 URL.
@@ -84,16 +84,16 @@ URL.
   * :path `String`
 
 ```ruby
-browser.cookies.remove(name: "stealth", domain: "google.com") # => true
-browser.cookies.remove(name: "sso_token", url: "https://sso.example.com") # => true
+browser.cookies.remove(name: "stealth", domain: "google.com")
+browser.cookies.remove(name: "sso_token", url: "https://sso.example.com")
 ```
 
-#### clear : `true`
+#### clear
 
 Removes all cookies in the context.
 
 ```ruby
-browser.cookies.clear # => true
+browser.cookies.clear
 ```
 
 #### store(path) : `Integer`
@@ -104,12 +104,12 @@ Stores all cookies in the context in a file, `cookies.yml` by default.
 browser.cookies.store # => 15657
 ```
 
-#### load(path) : `true`
+#### load(path)
 
 Loads the cookies from a file, `cookies.yml` by default, and sets them in the context.
 
 ```ruby
-browser.cookies.load # => true
+browser.cookies.load
 ```
 
 ## Page cookies
@@ -134,27 +134,27 @@ The page's first cookie with the given name, narrowed down like the context's.
 page.cookies["NID"] # => <Ferrum::Cookies::Cookie:0x0000558624b67a88>
 ```
 
-#### set(value) : `Boolean`
+#### set(value)
 
 Sets a cookie, takes the same options as the context's `set`. Without `:domain` or `:url` it's set for the page's host,
 or the `:base_url` host before the page has loaded anything.
 
 ```ruby
-page.cookies.set(name: "stealth", value: "omg") # => true
+page.cookies.set(name: "stealth", value: "omg")
 ```
 
-#### remove(\*\*options) : `true`
+#### remove(\*\*options)
 
 Removes the cookies with the given name, on the page's host unless `:domain` or `:url` is given.
 
 ```ruby
-page.cookies.remove(name: "stealth") # => true
+page.cookies.remove(name: "stealth")
 ```
 
-#### clear : `true`
+#### clear
 
 Removes the page's cookies, the ones `each` yields. Cookies on other domains stay.
 
 ```ruby
-page.cookies.clear # => true
+page.cookies.clear
 ```

@@ -6,7 +6,7 @@ describe Ferrum::Page do
       page.go_to
       target_id = page.target_id
 
-      expect(page.close).to be(true)
+      page.close
 
       wait_for { browser.targets.key?(target_id) }.to be(false)
     end
@@ -216,7 +216,7 @@ describe Ferrum::Page do
       page.go_to("/simple")
       expect(page.evaluate("window.secret")).to eq("top")
 
-      expect(page.remove_script_on_new_document(id)).to be(true)
+      page.remove_script_on_new_document(id)
       page.refresh
 
       expect(page.evaluate("window.secret")).to be_nil
@@ -231,7 +231,7 @@ describe Ferrum::Page do
       other.activate
       wait_for { page.evaluate("document.visibilityState") }.to eq("hidden")
 
-      expect(page.activate).to be(true)
+      page.activate
 
       wait_for { page.evaluate("document.visibilityState") }.to eq("visible")
     end

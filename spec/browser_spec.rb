@@ -1268,7 +1268,9 @@ describe Ferrum::Browser do
 
   describe "#activate" do
     it "brings the page to the front" do
-      expect(browser.activate).to be(true)
+      browser.activate
+
+      expect(browser.evaluate("document.visibilityState")).to eq("visible")
     end
   end
 end

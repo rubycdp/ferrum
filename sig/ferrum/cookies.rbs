@@ -10,15 +10,15 @@ module Ferrum
     def each: () { (Cookies::Cookie) -> void } -> void
             | () -> Enumerator[Cookies::Cookie, void]
 
-    def set: ((Cookies::Cookie | Hash[Symbol | String, untyped]) options) -> true
+    def set: ((Cookies::Cookie | Hash[Symbol | String, untyped]) options) -> nil
 
-    def remove: (name: String, ?domain: String?, ?url: String?, ?path: String?) -> true
+    def remove: (name: String, ?domain: String?, ?url: String?, ?path: String?) -> nil
 
-    def clear: () -> true
+    def clear: () -> nil
 
     def store: (?String path) -> ::Integer
 
-    def load: (?String path) -> true
+    def load: (?String path) -> nil
 
     private
 

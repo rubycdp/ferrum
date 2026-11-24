@@ -10,11 +10,11 @@ module Ferrum
 
     def get: () -> ::Hash[String, String]
 
-    def set: (::Hash[String, String] headers) -> true
+    def set: (::Hash[String, String] headers) -> nil
 
-    def clear: () -> true
+    def clear: () -> nil
 
-    def add: (::Hash[String, String] headers) -> true
+    def add: (::Hash[String, String] headers) -> nil
 
     private
 

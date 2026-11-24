@@ -38,6 +38,11 @@
   node without a box
 
 ### Changed
+- Commands without a result return `nil` instead of `true`, `self` or Chrome's raw response: `set_viewport`, `resize`,
+  `stop`, `close`, `activate`, `execute`, `remove_script_on_new_document`, `dialog.accept`/`dismiss`, `network.intercept`,
+  `clear` and `emulate`, `headers.add`/`set`/`clear`, `cookies.set`/`remove`/`clear`/`load`, `downloads.set_behavior`,
+  `console.clear`, `browser.close`/`reset`, `context.dispose`, `contexts.dispose` and `worker.close`. `node.remove`,
+  `select_file` and `execute` return the node, like the other node commands
 - `node.click(offset:)` and `hover(offset:)` measure `x` and `y` from the center by default, pass `position: :top` for
   the top-left corner
 - `browser.contexts.each` and the `Enumerable` methods yield contexts instead of `[id, context]` pairs

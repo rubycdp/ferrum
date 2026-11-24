@@ -67,7 +67,7 @@ module Ferrum
 
     def in_viewport?: (?of: Node?) -> bool
 
-    def select_file: ((String | ::Array[String]) value) -> ::Hash[String, untyped]
+    def select_file: ((String | ::Array[String]) value) -> self
 
     def at_xpath: (String selector) -> Node?
 
@@ -97,7 +97,7 @@ module Ferrum
 
     def evaluate_handle: (untyped expression, *untyped positional, **untyped keywords) -> untyped
 
-    def execute: (untyped expression, *untyped positional, **untyped keywords) -> true
+    def execute: (untyped expression, *untyped positional, **untyped keywords) -> self
 
     def ==: (untyped other) -> bool
 
@@ -113,7 +113,7 @@ module Ferrum
 
     %a{deprecated} def axnode: () -> Accessibility::AXNode?
 
-    def remove: () -> ::Hash[String, untyped]
+    def remove: () -> self
 
     def exists?: () -> bool
 

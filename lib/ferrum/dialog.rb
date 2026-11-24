@@ -31,6 +31,8 @@ module Ferrum
     #
     # @param [String, nil] prompt_text
     #
+    # @return [nil]
+    #
     # @raise [TimeoutError]
     #
     # @example
@@ -50,10 +52,13 @@ module Ferrum
       options.merge!(promptText: response) if response
       @handled = true
       @page.command("Page.handleJavaScriptDialog", slowmoable: true, **options)
+      nil
     end
 
     #
     # Dismiss dialog.
+    #
+    # @return [nil]
     #
     # @raise [TimeoutError]
     #
@@ -71,6 +76,7 @@ module Ferrum
     def dismiss
       @handled = true
       @page.command("Page.handleJavaScriptDialog", slowmoable: true, accept: false)
+      nil
     end
 
     #

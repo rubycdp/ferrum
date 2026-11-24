@@ -111,7 +111,7 @@ module Ferrum
     # @param [:deny, :allow, :allowAndName, :default] behavior
     #   Whether/how to allow downloads.
     #
-    # @return [void]
+    # @return [nil]
     #
     # @raise [ArgumentError]
     # @raise [Ferrum::Error]
@@ -128,6 +128,7 @@ module Ferrum
                     downloadPath: save_path,
                     behavior: behavior,
                     eventsEnabled: true)
+      nil
     end
 
     #

@@ -34,7 +34,7 @@ module Ferrum
     # @param [Hash{String => String}] headers
     #   key-value pairs for example `"User-Agent" => "Browser"`.
     #
-    # @return [true]
+    # @return [nil]
     #
     # @raise [TimeoutError]
     #
@@ -47,7 +47,7 @@ module Ferrum
     #
     # Clear all headers, and the user agent and language they set.
     #
-    # @return [true]
+    # @return [nil]
     #
     # @raise [TimeoutError]
     #
@@ -55,7 +55,7 @@ module Ferrum
       reset_overrides
       @headers = {}
       @page.command("Network.setExtraHTTPHeaders", headers: @headers)
-      true
+      nil
     end
 
     #
@@ -64,7 +64,7 @@ module Ferrum
     # @param [Hash{String => String}] headers
     #   key-value pairs for example `"Referer" => "http://example.com"`.
     #
-    # @return [true]
+    # @return [nil]
     #
     # @raise [TimeoutError]
     #
@@ -76,7 +76,7 @@ module Ferrum
         @page.network.emulate(**overrides)
       end
       @page.command("Network.setExtraHTTPHeaders", headers: @headers)
-      true
+      nil
     end
 
     private

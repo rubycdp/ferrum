@@ -44,12 +44,12 @@ list = page.evaluate_handle("document.querySelectorAll('li')")
 page.evaluate("Array.from(nodes).map(n => n.textContent)", nodes: list)
 ```
 
-#### execute(expression, \*args, timeout: nil, \*\*named) : `Boolean`
+#### execute(expression, \*args, timeout: nil, \*\*named)
 
 Run JavaScript for its side effects. The script is used as a function body, so statements need no wrapping.
 
 ```ruby
-page.execute("window.scrollBy(0, 100)") # => true
+page.execute("window.scrollBy(0, 100)")
 ```
 
 `Ferrum::Node` has the same three methods, with `this` bound to the element. Arrow functions don't get `this`, so use a
@@ -117,12 +117,12 @@ page.evaluate("window.secret") # => nil
 world.evaluate("document.title") # => same as page.evaluate("document.title")
 ```
 
-#### remove_script_on_new_document(identifier) : `Boolean`
+#### remove_script_on_new_document(identifier)
 
 Stops running a script added with `evaluate_on_new_document` in new documents.
 
 ```ruby
-page.remove_script_on_new_document(id) # => true
+page.remove_script_on_new_document(id)
 ```
 
 #### add_extension(extension)

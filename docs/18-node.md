@@ -183,7 +183,7 @@ page.at_css("#footer").scroll.in_viewport? # => true
 page.at_css("#row").in_viewport?(of: page.at_css("#table")) # => true
 ```
 
-#### select_file(value) : `Hash`
+#### select_file(value) : `Node`
 
 Sets files on a file input.
 
@@ -285,7 +285,7 @@ page.at_xpath("//*[select]").select(["1", "2"])
 
 #### evaluate(expression, \*positional, \*\*keywords) : `Object`
 #### evaluate_handle(expression, \*positional, \*\*keywords) : `RemoteObject` | `Node` | `Object`
-#### execute(expression, \*positional, \*\*keywords) : `true`
+#### execute(expression, \*positional, \*\*keywords) : `Node`
 
 Run JavaScript with `this` bound to the node. `evaluate` returns the result, `evaluate_handle` returns a handle that
 stays in the browser instead of a serialized value (a `Node` for a node, the value itself for a primitive), `execute`
@@ -329,7 +329,7 @@ page.at_css("input").pinpoint(x: 5, y: 5) # => [131.7, 406.4]
 page.at_css("input").pinpoint(x: 5, y: 5, position: :top) # => [55.2, 395.9]
 ```
 
-#### remove : `Hash`
+#### remove : `Node`
 
 Removes the node from the DOM.
 

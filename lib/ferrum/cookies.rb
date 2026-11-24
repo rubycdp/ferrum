@@ -77,7 +77,7 @@ module Ferrum
     # @option options [String] :samesite
     #   Specifies whether the cookie is `SameSite`, also accepted as `:same_site`.
     #
-    # @return [true]
+    # @return [nil]
     #
     # @raise [BrowserError] if neither `:domain`, `:url` nor `:base_url` is set.
     #
@@ -95,7 +95,7 @@ module Ferrum
       cookie[:domain] ||= default_domain unless cookie[:url]
 
       write(cookie)
-      true
+      nil
     end
 
     #
@@ -116,7 +116,7 @@ module Ferrum
     # @option options [String] :path
     #   The exact path of the cookie.
     #
-    # @return [true]
+    # @return [nil]
     #
     # @raise [TimeoutError]
     #
@@ -135,13 +135,13 @@ module Ferrum
       end
       cookies.each { |cookie| write(cookie.attributes.merge("expires" => 1)) }
 
-      true
+      nil
     end
 
     #
     # Removes all cookies in the context.
     #
-    # @return [true]
+    # @return [nil]
     #
     # @raise [TimeoutError]
     #
@@ -150,7 +150,7 @@ module Ferrum
     #
     def clear
       @client.command("Storage.clearCookies", timeout: @client.timeout, browserContextId: @context_id)
-      true
+      nil
     end
 
     #
@@ -170,7 +170,7 @@ module Ferrum
     #
     # Loads all cookies from the file and sets them in the context.
     #
-    # @return [true]
+    # @return [nil]
     #
     # @raise [TimeoutError]
     #
@@ -180,7 +180,7 @@ module Ferrum
     def load(path = "cookies.yml")
       cookies = YAML.load_file(path)
       cookies.each { |c| set(c) }
-      true
+      nil
     end
 
     private

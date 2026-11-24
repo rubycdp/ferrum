@@ -52,13 +52,15 @@ module Ferrum
 
     def context: () -> Context?
 
-    def close: () -> bool
+    def close: () -> nil
+
+    def activate: () -> nil
 
     def close_connection: () -> void
 
-    def set_viewport: (?width: ::Integer, ?height: ::Integer, ?scale_factor: ::Float, ?mobile: bool?) -> Hash[String, untyped]
+    def set_viewport: (?width: ::Integer, ?height: ::Integer, ?scale_factor: ::Float, ?mobile: bool?) -> nil
 
-    def resize: (?width: ::Numeric?, ?height: ::Numeric?, ?fullscreen: bool) -> Hash[String, untyped]
+    def resize: (?width: ::Numeric?, ?height: ::Numeric?, ?fullscreen: bool) -> nil
 
     def position: () -> Hash[String, ::Integer]
 
@@ -80,7 +82,7 @@ module Ferrum
 
     def evaluate_on_new_document: (String source, ?world_name: String?, ?run_immediately: bool) -> String
 
-    def remove_script_on_new_document: (String identifier) -> true
+    def remove_script_on_new_document: (String identifier) -> nil
 
     def window_id: () -> ::Integer
 

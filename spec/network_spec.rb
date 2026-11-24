@@ -733,8 +733,8 @@ describe Ferrum::Network do
       end
     end
 
-    it "returns the network" do
-      expect(page.network.emulate(platform: "Win32")).to be(page.network)
+    it "returns nil" do
+      expect(page.network.emulate(platform: "Win32")).to be_nil
     end
 
     it "raises on an unknown option" do

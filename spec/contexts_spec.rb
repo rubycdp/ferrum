@@ -133,7 +133,8 @@ describe Ferrum::Contexts do
       context = browser.contexts.create
       context.create_page
 
-      expect(browser.contexts.dispose(context.id)).to be(true)
+      browser.contexts.dispose(context.id)
+
       expect(browser.contexts[context.id]).to be_nil
       expect(browser.command("Target.getBrowserContexts")["browserContextIds"]).not_to include(context.id)
     end

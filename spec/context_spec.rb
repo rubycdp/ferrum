@@ -357,7 +357,8 @@ describe Ferrum::Context do
       context = browser.contexts.create
       page = context.create_page
 
-      expect(context.dispose).to be(true)
+      context.dispose
+
       expect(browser.contexts[context.id]).to be_nil
       expect(browser.command("Target.getBrowserContexts")["browserContextIds"]).not_to include(context.id)
       target_ids = browser.command("Target.getTargets")["targetInfos"].map { |info| info["targetId"] }

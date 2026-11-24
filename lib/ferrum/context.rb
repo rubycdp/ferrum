@@ -319,7 +319,7 @@ module Ferrum
     # Disposes this browser context and all of its targets. The browser's
     # implicit context cannot be disposed, see {#implicit?}.
     #
-    # @return [Boolean, nil]
+    # @return [nil]
     #
     # @raise [TimeoutError]
     def dispose
