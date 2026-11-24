@@ -11,8 +11,6 @@ module Ferrum
 
       INTERMITTENT_SLEEP: untyped
 
-      OBJECT_ID_DEPRECATED: String
-
       DEEP_SERIALIZATION: ::Hash[Symbol, untyped]
 
       SHALLOW_SERIALIZATION: ::Hash[Symbol, untyped]

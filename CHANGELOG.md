@@ -36,6 +36,8 @@
 - `body`, use `html`. `type` and `type?` of `Network::Request` and `type` of `Network::Response`, use `resource_type`
   and `resource_type?`
 - `Ferrum::NotImplementedError`, nothing raises it since `node.hover` works
+- Passing a Hash with an `"objectId"` key to `evaluate` as a remote object, it is passed as a plain Hash now. Pass the
+  `Ferrum::RemoteObject` from `evaluate_handle`
 
 
 ## [0.21.0](https://github.com/rubycdp/ferrum/compare/v0.20.2...v0.21.0) (November 24, 2026) ##
