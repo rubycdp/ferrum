@@ -56,8 +56,6 @@ module Ferrum
 
       attr_reader incognito: bool
 
-      %a{deprecated} attr_reader flatten: bool
-
       attr_reader ignore_default_browser_options: bool?
 
       attr_reader browser_options: Hash[String, (String | bool | nil)]
@@ -71,7 +69,6 @@ module Ferrum
       @window_size: ::Array[::Integer]
       @headless: bool
       @incognito: bool
-      @flatten: bool
       @process_timeout: ::Integer
       @slowmo: ::Float
       @env: Hash[String, String]?
@@ -105,8 +102,6 @@ module Ferrum
       private
 
       def warn_protocol_timeout: () -> void
-
-      def warn_flatten: () -> void
 
       def read_extension: (String | Hash[Symbol, String] extension) -> String
 

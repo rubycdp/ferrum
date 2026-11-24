@@ -25,7 +25,7 @@ module Ferrum
 
     def worker: () -> Worker
 
-    def client: () -> (Client | SessionClient)
+    def client: () -> SessionClient
 
     def build_page: (**untyped options) -> Page
 
@@ -63,8 +63,6 @@ module Ferrum
 
     private
 
-    def build_client: () -> (Client | SessionClient)
-
-    def ws_url: () -> ::Addressable::URI
+    def build_client: () -> SessionClient
   end
 end

@@ -32,7 +32,7 @@ module Ferrum
                   :base_url, :slowmo,
                   :url, :ws_url, :env, :process_timeout, :browser_path,
                   :save_path, :proxy, :port, :host, :headless, :incognito, :dockerize, :browser_options,
-                  :ignore_default_browser_options, :xvfb, :flatten, :extensions
+                  :ignore_default_browser_options, :xvfb, :extensions
       attr_accessor :timeout, :default_user_agent
 
       def initialize(options = nil)
@@ -46,8 +46,6 @@ module Ferrum
         @headless = @options.fetch(:headless, true)
         @incognito = @options.fetch(:incognito, true)
         @dockerize = @options.fetch(:dockerize, false)
-        @flatten = @options.fetch(:flatten, true)
-        warn_flatten unless @flatten
         @process_timeout = @options.fetch(:process_timeout, PROCESS_TIMEOUT)
         @slowmo = @options[:slowmo].to_f
 
@@ -162,13 +160,6 @@ module Ferrum
 
       def warn_protocol_timeout
         Utils::Deprecate.warn(":protocol_timeout #{PROTOCOL_TIMEOUT_REMOVED}", user_code: true)
-      end
-
-      def warn_flatten
-        Utils::Deprecate.warn(
-          "flatten: false will be removed in Ferrum 0.22. Every page will share the browser's websocket connection.",
-          user_code: true
-        )
       end
 
       def read_extension(extension)

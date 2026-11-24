@@ -16,6 +16,7 @@
 - `current_url` and `current_title` of pages and frames, use `url` and `title`, or `frame.page.url` for the top window
   from a frame
 - `cookies.all`, use `to_a`, or `map(&:name)` for the names
+- `flatten: false`, every page shares the browser's websocket connection
 
 
 ## [0.21.0](https://github.com/rubycdp/ferrum/compare/v0.20.2...v0.21.0) (November 24, 2026) ##

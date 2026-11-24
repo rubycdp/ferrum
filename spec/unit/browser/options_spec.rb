@@ -11,15 +11,6 @@ describe Ferrum::Browser::Options do
       expect { described_class.new(protocol_timeout: 10) }
         .to output(/:protocol_timeout is ignored.*called from #{__FILE__}/m).to_stderr
     end
-
-    it "warns that flatten: false will be removed" do
-      expect { described_class.new(flatten: false) }
-        .to output(/flatten: false will be removed in Ferrum 0.22.*called from #{__FILE__}/m).to_stderr
-    end
-
-    it "stays silent when :flatten is true" do
-      expect { described_class.new(flatten: true) }.not_to output.to_stderr
-    end
   end
 
   describe "#protocol_timeout" do

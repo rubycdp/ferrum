@@ -77,10 +77,9 @@ module Ferrum
       @worker ||= build_worker
     end
 
-    # The client connected to this target's own session (or a dedicated
-    # WebSocket connection if `options.flatten` is disabled).
+    # The client connected to this target's own session.
     #
-    # @return [Client, SessionClient]
+    # @return [SessionClient]
     def client
       @client ||= build_client
     end
@@ -104,7 +103,7 @@ module Ferrum
     #
     # @api private
     def build_worker
-      if options.flatten && session_id.nil?
+      if session_id.nil?
         raise NoSuchTargetError, "No session with #{type} #{id}, attach to it with Context#attach_target first"
       end
 
@@ -244,13 +243,7 @@ module Ferrum
     private
 
     def build_client
-      return @browser_client.session(session_id) if options.flatten
-
-      Client.new(ws_url, options)
-    end
-
-    def ws_url
-      @browser_client.ws_url.merge(path: "/devtools/page/#{id}")
+      @browser_client.session(session_id)
     end
   end
 end
