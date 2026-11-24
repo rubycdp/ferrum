@@ -118,6 +118,7 @@
   `resource_type` and `resource_type?`, like the intercepted requests
 
 ### Fixed
+- `Network::Request#time` keeps the fraction of a second, it was truncated to whole seconds
 - A `Browser.new` that failed or was interrupted while connecting left its connection and threads open, it closes them now
 - An unreachable `url` or `ws_url` host blocked `Browser.new` for the OS connect timeout, it raises
   `Ferrum::ConnectTimeoutError`, a `TimeoutError`, after `process_timeout` now

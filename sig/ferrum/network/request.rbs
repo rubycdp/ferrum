@@ -25,7 +25,7 @@ module Ferrum
 
       def headers: () -> untyped
 
-      def time: () -> untyped
+      def time: () -> Time
 
       def post_data: () -> untyped
 
