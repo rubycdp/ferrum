@@ -4,7 +4,7 @@ sidebar_position: 18
 
 # Node
 
-A DOM node found on a page or in a frame, by the [finders](https://github.com/rubycdp/ferrum#Finders). A node belongs to
+A DOM node found on a page or in a frame, by the [finders](/docs/ferrum/finders). A node belongs to
 the target it was found on, so one fetched before a navigation can't be used after it.
 
 ```ruby
@@ -53,8 +53,8 @@ The id of the frame an `iframe` or `frame` element contains, `nil` for other nod
 
 #### frame  : `Frame`
 
-Returns [Frame](https://github.com/rubycdp/ferrum#frame) object for current node, you can keep using
-[Finders](https://github.com/rubycdp/ferrum#Finders) for that object:
+Returns [Frame](/docs/ferrum/frames) object for current node, you can keep using
+[Finders](/docs/ferrum/finders) for that object:
 
 ```ruby
 frame =  page.at_xpath("//iframe").frame # => Frame
@@ -111,7 +111,7 @@ page.at_css("input[name='q']").focus.blur
 #### type(\*keys, timeout: nil) : `Node`
 
 Types the keys with the page's keyboard, into whatever is focused, so it's usually chained after `focus` or `click`. See
-[keyboard](https://github.com/rubycdp/ferrum#keyboard) for what a key can be. `timeout` bounds typing all the keys together,
+[keyboard](/docs/ferrum/mouse-keyboard#keyboard) for what a key can be. `timeout` bounds typing all the keys together,
 the page timeout by default.
 
 ```ruby
@@ -290,7 +290,7 @@ page.at_xpath("//*[select]").select(["1", "2"])
 Run JavaScript with `this` bound to the node. `evaluate` returns the result, `evaluate_handle` returns a handle that
 stays in the browser instead of a serialized value (a `Node` for a node, the value itself for a primitive), `execute`
 returns `true`. Arrow functions don't get `this`, use a `function` when the script needs it. The scripts and arguments
-are the same as in [JavaScript](https://github.com/rubycdp/ferrum#javascript).
+are the same as in [JavaScript](/docs/ferrum/javascript).
 
 ```ruby
 page.at_css("input").evaluate("this.value")
@@ -311,7 +311,7 @@ page.at_css("a").computed_style["display"] # => "inline"
 #### ax_node : `Accessibility::AXNode` | `nil`
 
 The node in the accessibility tree, `nil` if it is ignored there. See
-[accessibility](https://github.com/rubycdp/ferrum#accessibility).
+[accessibility](/docs/ferrum/accessibility).
 
 ```ruby
 page.at_css("a").ax_node.role # => "link"

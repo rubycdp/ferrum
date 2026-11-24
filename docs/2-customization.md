@@ -51,7 +51,7 @@ Ferrum::Browser.new(options)
     * `:ws_max_receive_size` (Integer) - How big messages to accept from Chrome
       over the web socket, in bytes. Defaults to 64MB. Incoming messages larger
       than this will cause a `Ferrum::DeadBrowserError`.
-    * `:proxy` (Hash) - Specify proxy settings, [read more](https://github.com/rubycdp/ferrum#proxy)
+    * `:proxy` (Hash) - Specify proxy settings, [read more](/docs/ferrum/proxy)
     * `:save_path` (String) - Path to save attachments with [Content-Disposition](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition) header.
     * `:env` (Hash) - Environment variables you'd like to pass through to the process
 

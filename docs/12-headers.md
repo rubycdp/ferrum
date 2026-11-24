@@ -17,7 +17,7 @@ Set given headers. Eventually clear all headers and set given ones.
 * headers `Hash` key-value pairs for example `"User-Agent" => "Browser"`
 
 `User-Agent` and `Accept-Language` are only sent with requests, like any other header, `navigator` and the client
-hints stay as they are. Use [network.emulate(user_agent:, accept_language:)](https://github.com/rubycdp/ferrum#network)
+hints stay as they are. Use [network.emulate(user_agent:, accept_language:)](/docs/ferrum/network)
 to override both the header and what the page reports.
 
 #### add(headers)

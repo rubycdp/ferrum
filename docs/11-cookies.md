@@ -4,7 +4,7 @@ sidebar_position: 11
 
 # Cookies
 
-Cookies belong to a [context](https://github.com/rubycdp/ferrum#contexts), and every page in it shares them.
+Cookies belong to a [context](/docs/ferrum/introduction#thread-safety), and every page in it shares them.
 `context.cookies` has all of them, whatever their domain. `browser.cookies` is the cookies of the default context.
 `page.cookies` narrows them down to what the page sees: the cookies sent to its URL and the URLs of its frames.
 
