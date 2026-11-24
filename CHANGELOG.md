@@ -1,4 +1,4 @@
-## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.20.2...main) ##
+## [0.21.0](https://github.com/rubycdp/ferrum/compare/v0.20.2...v0.21.0) (November 24, 2026) ##
 
 ### Added
 - `page.javascript = true/false` and `javascript?` turn the page's scripts on and off, there was no way back on
