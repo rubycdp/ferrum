@@ -238,12 +238,13 @@ module Ferrum
         mask = pressed.map { |k| MODIFIERS[k] }.reduce(@held_modifiers, :|)
         keys.each_char.map do |char|
           key = KEYS[char] || {}
+          typed = key["text"] || char
 
           if mask.zero?
-            key = key.merge(text: char, unmodifiedText: char)
+            key = key.merge(text: typed, unmodifiedText: typed)
             [to_options(key)]
           else
-            text = mask == MODIFIERS["shift"] ? char.upcase : char
+            text = mask == MODIFIERS["shift"] ? typed.upcase : typed
             key = key.merge(
               text: text,
               unmodifiedText: text,

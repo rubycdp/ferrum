@@ -12,6 +12,7 @@
 ### Deprecated
 
 ### Fixed
+- `keyboard.type` and `node.type` type `\n` in a string as Enter, it was dropped
 
 ### Removed
 - `Browser::Options::BASE_URL_SCHEMA`, use `BASE_URL_SCHEMES`
