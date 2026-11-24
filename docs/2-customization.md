@@ -55,7 +55,7 @@ Ferrum::Browser.new(options)
     * `:ws_url` (String) - Websocket url for a running instance of Chrome. If this is set, a
       browser process will not be spawned. It's higher priority than `:url`, setting both doesn't make sense.
     * `:process_timeout` (Integer) - How long to wait for the Chrome process to
-      respond on startup.
+      respond on startup, or to connect to the browser at `:url` or `:ws_url`.
     * `:ws_max_receive_size` (Integer) - How big messages to accept from Chrome
       over the web socket, in bytes. Defaults to 64MB. Incoming messages larger
       than this will cause a `Ferrum::DeadBrowserError`.

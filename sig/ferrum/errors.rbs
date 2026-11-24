@@ -59,6 +59,15 @@ module Ferrum
     def message: () -> "Timed out waiting for evaluated script to return a value"
   end
 
+  class ConnectTimeoutError < TimeoutError
+    attr_reader address: String
+    attr_reader timeout: ::Numeric
+
+    def initialize: (String address, ::Numeric timeout) -> void
+
+    def message: () -> String
+  end
+
   class ProcessTimeoutError < Error
     attr_reader output: String
 

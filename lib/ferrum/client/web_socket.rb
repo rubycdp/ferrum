@@ -34,21 +34,21 @@ module Ferrum
       #   Why Ferrum closed the connection itself, `nil` if it didn't.
       attr_reader :close_reason
 
-      def initialize(url, max_receive_size, log, write_timeout = WRITE_TIMEOUT)
+      def initialize(url, max_receive_size, log, write_timeout = WRITE_TIMEOUT, connect_timeout: nil)
         @url = url
         @log = log
         @write_timeout = write_timeout
         uri = URI.parse(@url)
         port = uri.port || DEFAULT_PORTS[uri.scheme]
 
+        tcp = connect(uri.host, port, connect_timeout)
         if port == 443 || url.scheme == "wss"
-          tcp = TCPSocket.new(uri.host, port)
           ssl_context = OpenSSL::SSL::SSLContext.new
           @sock = OpenSSL::SSL::SSLSocket.new(tcp, ssl_context)
           @sock.sync_close = true
           @sock.connect
         else
-          @sock = TCPSocket.new(uri.host, port)
+          @sock = tcp
         end
 
         max_receive_size ||= ::WebSocket::Driver::MAX_LENGTH
@@ -176,6 +176,12 @@ module Ferrum
       end
 
       private
+
+      def connect(host, port, timeout)
+        TCPSocket.new(host, port, connect_timeout: timeout)
+      rescue IO::TimeoutError, Errno::ETIMEDOUT
+        raise ConnectTimeoutError.new("#{host}:#{port}", timeout)
+      end
 
       def drive(deadline = nil)
         @mutex.synchronize do

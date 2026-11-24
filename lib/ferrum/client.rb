@@ -174,7 +174,7 @@ module Ferrum
       @ws_url = ws_url
       @options = options
       @responses = Concurrency::AwaitableMap.new
-      @ws = WebSocket.new(ws_url, options.ws_max_receive_size, options.log)
+      @ws = WebSocket.new(ws_url, options.ws_max_receive_size, options.log, connect_timeout: options.process_timeout)
       @dispatcher = Concurrency::Dispatcher.new
 
       start
