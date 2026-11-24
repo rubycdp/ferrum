@@ -2,7 +2,6 @@ module Ferrum
   class Node
     MOVING_WAIT_DELAY: ::Float
     MOVING_CHECK_DELAY: ::Float
-    WAIT_FOR_STOP_MOVING_DEPRECATED: String
 
     MOVING_WAIT_ATTEMPTS: ::Integer
 
@@ -45,8 +44,6 @@ module Ferrum
     def wait_still: (?timeout: (::Numeric | Deadline)?, ?interval: ::Numeric) -> ::Array[::Array[::Numeric]]?
 
     def wait_still!: (?timeout: (::Numeric | Deadline)?, ?interval: ::Numeric) -> ::Array[::Array[::Numeric]]
-
-    %a{deprecated} def wait_for_stop_moving: (?delay: ::Numeric, ?attempts: ::Integer) -> ::Array[::Array[::Numeric]]
 
     def moving?: (?delay: ::Numeric) -> bool
 

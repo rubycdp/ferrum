@@ -23,12 +23,6 @@ module Ferrum
 
       def await_navigation!: (?watch: ::Numeric?, ?timeout: (::Numeric | Deadline)?) { () -> void } -> true
 
-      %a{deprecated} def wait_for_reload: (?(::Numeric | Deadline) timeout) -> void
-
-      %a{deprecated} def wait_for_navigation: (?::Numeric navigation_wait, ?timeout: (::Numeric | Deadline)?) { () -> void } -> bool
-
-      %a{deprecated} def wait_for_navigation!: (?::Numeric navigation_wait, ?timeout: (::Numeric | Deadline)?) { () -> void } -> nil
-
       private
 
       def history_navigate: (delta: ::Integer, ?timeout: (::Numeric | Deadline)?) -> true?

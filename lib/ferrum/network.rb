@@ -18,8 +18,6 @@ module Ferrum
   #
   class Network
     WAIT_INTERVAL = 0.05
-    WAIT_FOR_IDLE_DEPRECATED = "wait_for_idle will be removed in Ferrum 0.22. Use wait_idle instead, duration: is " \
-                               "interval: there."
     CLEAR_TYPE = %i[traffic cache].freeze
     EMULATE_KEYS = %i[user_agent accept_language platform metadata].freeze
     METADATA_REQUIRED = %i[platform platform_version architecture model mobile].freeze
@@ -96,53 +94,15 @@ module Ferrum
     end
 
     #
-    # Waits for network idle.
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use {#wait_idle}, `duration:` is `interval:` there.
-    #
-    # @param [Integer] connections
-    #
-    # @param [Float] duration
-    #
-    # @param [Numeric, Deadline] timeout
-    #
-    # @return [Boolean]
-    #
-    def wait_for_idle(connections: 0, duration: WAIT_INTERVAL, timeout: @page.timeout)
-      Utils::Deprecate.warn(WAIT_FOR_IDLE_DEPRECATED, user_code: true)
-      wait_idle(connections: connections, timeout: timeout, interval: duration) || false
-    end
-
-    #
-    # Waits for network idle or raises {Ferrum::TimeoutError} error.
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use {#wait_idle!}.
-    #
-    # @param [Hash] options
-    #   The options of {#wait_for_idle}.
-    #
-    # @return [void]
-    #
-    # @raise [Ferrum::TimeoutError]
-    #
-    def wait_for_idle!(**options)
-      raise TimeoutError unless wait_for_idle(**options)
-    end
-
-    #
     # Whether the network is idle, i.e. no more than `connections`
     # connections are still pending.
-    #
-    # @param [Integer, nil] deprecated_connections
-    #   Deprecated, pass `connections:` instead.
     #
     # @param [Integer] connections
     #   How many connections may still be pending.
     #
     # @return [Boolean]
     #
-    def idle?(deprecated_connections = nil, connections: 0)
-      connections = Utils::Deprecate.positional(:connections, deprecated_connections, connections)
+    def idle?(connections: 0)
       pending_connections <= connections
     end
 

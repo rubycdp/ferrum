@@ -118,29 +118,6 @@ describe Ferrum::Network do
     end
   end
 
-  describe "#wait_for_idle" do
-    it "returns false when the network doesn't go idle in time and warns that it is deprecated" do
-      page.go_to("/show_cookies")
-      page.at_xpath("//button[text() = 'Set cookie slow']").click
-      Ferrum::Utils::Deprecate.reset!
-      result = nil
-
-      expect { result = network.wait_for_idle(duration: 0.05, timeout: 0.2) }
-        .to output(/wait_for_idle will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      expect(result).to be(false)
-    end
-  end
-
-  describe "#wait_for_idle!" do
-    it "raises when the network doesn't go idle in time" do
-      page.go_to("/show_cookies")
-      page.at_xpath("//button[text() = 'Set cookie slow']").click
-      allow(Ferrum::Utils::Deprecate).to receive(:warn)
-
-      expect { network.wait_for_idle!(timeout: 0.2) }.to raise_error(Ferrum::TimeoutError)
-    end
-  end
-
   describe "#idle?" do
     it "waits for network to be idle" do
       page.go_to("/with_slow_ajax_connection")
@@ -163,13 +140,6 @@ describe Ferrum::Network do
       page.go_to("/with_slow_ajax_connection")
 
       expect(network.idle?(connections: 1)).to be(true)
-    end
-
-    it "warns when connections is passed positionally" do
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(network.idle?(0)).to be(true) }
-        .to output(/Passing connections positionally will be removed.*called from #{__FILE__}/m).to_stderr
     end
   end
 

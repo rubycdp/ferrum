@@ -1,7 +1,6 @@
 module Ferrum
   class Downloads
     WAIT_TIMEOUT: ::Integer
-    WAIT_DEPRECATED: String
     VALID_BEHAVIOR: ::Array[:deny | :allow | :allowAndName | :default]
 
     @page: Page
@@ -17,8 +16,6 @@ module Ferrum
     def await_download: (?timeout: (::Numeric | Deadline)) { () -> void } -> Hash[String, untyped]?
 
     def await_download!: (?timeout: (::Numeric | Deadline)) { () -> void } -> Hash[String, untyped]
-
-    %a{deprecated} def wait: (?(::Numeric | Deadline) timeout) ?{ () -> void } -> void
 
     def set_behavior: (save_path: String, ?behavior: :deny | :allow | :allowAndName | :default) -> nil
 

@@ -263,67 +263,6 @@ module Ferrum
         await_navigation(watch: watch, timeout: timeout, &block) || raise(TimeoutError)
       end
 
-      #
-      # Blocks until the page reloads or the timeout is reached.
-      #
-      # @deprecated Will be removed in Ferrum 0.22. Use {#await_navigation} around the code that reloads the page.
-      #
-      # @param [Numeric, Deadline] timeout
-      #   Maximum time in seconds to wait for a reload event.
-      #
-      # @return [void]
-      #
-      # @example
-      #   page.wait_for_reload
-      #
-      def wait_for_reload(timeout = 1)
-        Utils::Deprecate.warn(WAIT_FOR_RELOAD_DEPRECATED, user_code: true)
-        deadline = Deadline.wrap(timeout)
-        generation = @idle.clear if @idle.set?
-        @idle.wait(deadline)
-        @idle.set(true) if generation == @idle.generation
-      end
-
-      #
-      # Runs the block and, if it starts a navigation within `navigation_wait`
-      # seconds, waits for that navigation to finish.
-      #
-      # @deprecated Will be removed in Ferrum 0.22. Use {#await_navigation} with `watch:`.
-      #
-      # @param [Numeric] navigation_wait
-      #
-      # @param [Numeric, Deadline, nil] timeout
-      #
-      # @yield The code that may start a navigation.
-      #
-      # @return [Boolean]
-      #
-      def wait_for_navigation(navigation_wait = NAVIGATION_WAIT, timeout: nil, &)
-        Utils::Deprecate.warn(WAIT_FOR_NAVIGATION_DEPRECATED, user_code: true)
-        await_navigation(watch: navigation_wait, timeout: timeout, &) || false
-      end
-
-      #
-      # Same as {#wait_for_navigation}, but raises if the page doesn't load in time.
-      #
-      # @deprecated Will be removed in Ferrum 0.22. Use {#await_navigation!} with `watch:`.
-      #
-      # @param [Numeric] navigation_wait
-      #
-      # @param [Numeric, Deadline, nil] timeout
-      #
-      # @yield The code that may start a navigation.
-      #
-      # @return [void]
-      #
-      # @raise [TimeoutError]
-      #
-      def wait_for_navigation!(navigation_wait = NAVIGATION_WAIT, timeout: nil, &)
-        Utils::Deprecate.warn(WAIT_FOR_NAVIGATION_DEPRECATED, user_code: true)
-        await_navigation!(watch: navigation_wait, timeout: timeout, &)
-        nil
-      end
-
       private
 
       def history_navigate(delta:, timeout: nil)

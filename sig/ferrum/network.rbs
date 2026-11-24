@@ -1,7 +1,6 @@
 module Ferrum
   class Network
     WAIT_INTERVAL: ::Float
-    WAIT_FOR_IDLE_DEPRECATED: String
     CLEAR_TYPE: ::Array[:traffic | :cache]
     EMULATE_KEYS: ::Array[:user_agent | :accept_language | :platform | :metadata]
     METADATA_REQUIRED: ::Array[Symbol]
@@ -25,11 +24,7 @@ module Ferrum
 
     def wait_idle!: (?connections: ::Integer, ?timeout: (::Numeric | Deadline)?, ?interval: ::Numeric) -> true
 
-    %a{deprecated} def wait_for_idle: (?connections: ::Integer, ?duration: ::Numeric, ?timeout: (::Numeric | Deadline)) -> bool
-
-    %a{deprecated} def wait_for_idle!: (?connections: ::Integer, ?duration: ::Numeric, ?timeout: (::Numeric | Deadline)) -> void
-
-    def idle?: (?::Integer? deprecated_connections, ?connections: ::Integer) -> bool
+    def idle?: (?connections: ::Integer) -> bool
 
     def total_connections: () -> untyped
 

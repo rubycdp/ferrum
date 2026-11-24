@@ -39,6 +39,9 @@
 - Passing a Hash with an `"objectId"` key to `evaluate` as a remote object, it is passed as a plain Hash now. Pass the
   `Ferrum::RemoteObject` from `evaluate_handle`
 - `node.find_position`, use `pinpoint`, its offsets are measured from the center unless `position: :top`
+- `wait_for_navigation`, `wait_for_navigation!`, `wait_for_reload`, `wait_for_selector`, `network.wait_for_idle`,
+  `wait_for_idle!`, `downloads.wait` and `node.wait_for_stop_moving`, use `await_navigation`, `wait_css`, `wait_xpath`,
+  `wait_idle`, `page.await_download` and `wait_still`. Positional `network.idle?(n)`, pass `connections:`
 
 
 ## [0.21.0](https://github.com/rubycdp/ferrum/compare/v0.20.2...v0.21.0) (November 24, 2026) ##

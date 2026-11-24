@@ -47,28 +47,6 @@ module Ferrum
       end
 
       #
-      # Picks the value of an argument that became a keyword: warns and returns the positional one when it is given,
-      # otherwise returns the keyword's.
-      #
-      # @param [Symbol] name
-      #   The keyword.
-      #
-      # @param [Object, nil] value
-      #   What was passed positionally, `nil` when nothing was.
-      #
-      # @param [Object] current
-      #   The value of the keyword.
-      #
-      # @return [Object]
-      #
-      def positional(name, value, current)
-        return current if value.nil?
-
-        warn("Passing #{name} positionally will be removed in Ferrum 0.22, pass #{name}: instead.", user_code: true)
-        value
-      end
-
-      #
       # Forgets which warnings have already been printed. Only useful in tests.
       #
       # @return [void]

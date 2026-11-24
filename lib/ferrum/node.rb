@@ -14,7 +14,6 @@ module Ferrum
     MOVING_WAIT_DELAY = ENV.fetch("FERRUM_NODE_MOVING_WAIT", 0.01).to_f
     MOVING_WAIT_ATTEMPTS = ENV.fetch("FERRUM_NODE_MOVING_ATTEMPTS", 50).to_i
     MOVING_CHECK_DELAY = ENV.fetch("FERRUM_NODE_MOVING_CHECK", 0.05).to_f
-    WAIT_FOR_STOP_MOVING_DEPRECATED = "wait_for_stop_moving will be removed in Ferrum 0.22. Use wait_still instead."
 
     # @return [Page] the page the node belongs to.
     attr_reader :page
@@ -201,25 +200,6 @@ module Ferrum
     #
     def wait_still!(**options)
       wait_still(**options) || raise(TimeoutError)
-    end
-
-    #
-    # Waits until the node's position stops changing, retrying up to
-    # `attempts` times.
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use {#wait_still}.
-    #
-    # @param [Float] delay
-    #
-    # @param [Integer] attempts
-    #
-    # @return [Array<Array<Float>>]
-    #
-    # @raise [NodeMovingError]
-    #
-    def wait_for_stop_moving(delay: MOVING_WAIT_DELAY, attempts: MOVING_WAIT_ATTEMPTS)
-      Utils::Deprecate.warn(WAIT_FOR_STOP_MOVING_DEPRECATED, user_code: true)
-      settled_quads(delay: delay, attempts: attempts)
     end
 
     # Checks whether the node's position is changing, by comparing two

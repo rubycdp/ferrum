@@ -5,8 +5,6 @@ module Ferrum
 
       def self?.warn: (::String message, ?user_code: bool) -> void
 
-      def self?.positional: (Symbol name, untyped value, untyped current) -> untyped
-
       def self?.reset!: () -> void
 
       def self?.skip?: (::String path, bool user_code) -> bool

@@ -62,19 +62,6 @@ describe Ferrum::Downloads do
     end
   end
 
-  describe "#wait" do
-    it "waits for the download the block starts and warns that it is deprecated" do
-      page.downloads.set_behavior(save_path: save_path)
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { page.downloads.wait(2) { page.go_to("/#{filename}") } }
-        .to output(/downloads\.wait will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      expect(File.exist?("#{save_path}/#{filename}")).to be true
-    ensure
-      FileUtils.rm_rf(save_path)
-    end
-  end
-
   describe "#set_behavior" do
     context "with absolute path" do
       it "saves an attachment" do

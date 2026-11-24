@@ -31,10 +31,8 @@ module Ferrum
                 attach_target cookies] => :default_context
     delegate %i[go_to go_to! back back! forward forward! refresh refresh! stop
                 await_navigation await_navigation! await_download await_download! wait_until wait_until!
-                wait_for_reload wait_for_navigation wait_for_navigation!
-                at_css at_xpath css xpath wait_css wait_css! wait_xpath wait_xpath! wait_for_selector
-                url title
-                html doctype content=
+                at_css at_xpath css xpath wait_css wait_css! wait_xpath wait_xpath!
+                url title html doctype content=
                 headers network console accessibility downloads tracing
                 mouse keyboard
                 screenshot pdf mhtml viewport_size device_pixel_ratio document_size

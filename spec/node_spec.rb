@@ -731,18 +731,6 @@ describe Ferrum::Node do
     end
   end
 
-  describe "#wait_for_stop_moving" do
-    it "raises NodeMovingError for a node that keeps moving and warns that it is deprecated" do
-      browser.go_to("/animation")
-      node = browser.at_css(".animated")
-      Ferrum::Utils::Deprecate.reset!
-
-      expect do
-        expect { node.wait_for_stop_moving(delay: 0.1, attempts: 2) }.to raise_error(Ferrum::NodeMovingError, /is moving/)
-      end.to output(/wait_for_stop_moving will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-    end
-  end
-
   describe "#moving?" do
     it "is true for an animated node" do
       browser.go_to("/animation")

@@ -32,14 +32,10 @@ module Ferrum
   class Page
     NAVIGATION_WAIT = ENV.fetch("FERRUM_NAVIGATION_WAIT", 0.1).to_f
     WAIT_INTERVAL = 0.05
-    WAIT_FOR_NAVIGATION_DEPRECATED = "wait_for_navigation will be removed in Ferrum 0.22. Use " \
-                                     "await_navigation(watch: seconds) { ... } instead."
-    WAIT_FOR_RELOAD_DEPRECATED = "wait_for_reload will be removed in Ferrum 0.22. Use await_navigation { ... } " \
-                                 "around the code that reloads the page."
 
     extend Forwardable
 
-    delegate %i[at_css at_xpath css xpath wait_css wait_css! wait_xpath wait_xpath! wait_for_selector
+    delegate %i[at_css at_xpath css xpath wait_css wait_css! wait_xpath wait_xpath!
                 url title html doctype content=
                 execution_id execution_id! evaluate evaluate_handle execute isolated_world
                 add_script_tag add_style_tag] => :main_frame

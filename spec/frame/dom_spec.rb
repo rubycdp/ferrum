@@ -437,22 +437,4 @@ describe Ferrum::Frame::DOM do
       expect { page.wait_xpath!("//div[@id='never_appears']", timeout: 0.3) }.to raise_error(Ferrum::TimeoutError)
     end
   end
-
-  describe "#wait_for_selector" do
-    it "finds the node by css and warns that it is deprecated" do
-      page.go_to("/with_js")
-      Ferrum::Utils::Deprecate.reset!
-      node = nil
-
-      expect { node = page.wait_for_selector(css: "p#remove_me") }
-        .to output(/wait_for_selector will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      expect(node.attribute(:id)).to eq("remove_me")
-    end
-
-    it "raises when both css and xpath are given" do
-      allow(Ferrum::Utils::Deprecate).to receive(:warn)
-
-      expect { page.wait_for_selector(css: "a", xpath: "//a") }.to raise_error(ArgumentError)
-    end
-  end
 end

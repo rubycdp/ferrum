@@ -27,8 +27,6 @@ module Ferrum
     #
     module DOM
       WAIT_INTERVAL = 0.05
-      WAIT_FOR_SELECTOR_DEPRECATED = "wait_for_selector will be removed in Ferrum 0.22. Use wait_css(selector) or " \
-                                     "wait_xpath(selector) instead."
       SCRIPT_SRC_TAG = <<~JS
         function(url, type) {
           const script = document.createElement("script");
@@ -321,35 +319,6 @@ module Ferrum
       #
       def wait_xpath!(selector, **options)
         wait_xpath(selector, **options) || raise(TimeoutError)
-      end
-
-      #
-      # Finds a node by using a CSS path or XPath selector, retrying until
-      # it appears or `timeout` elapses.
-      #
-      # @deprecated Will be removed in Ferrum 0.22. Use {#wait_css} or {#wait_xpath}.
-      #
-      # @param [String, nil] css
-      #
-      # @param [String, nil] xpath
-      #
-      # @param [Node, nil] within
-      #
-      # @param [Numeric, Deadline] timeout
-      #
-      # @param [Float, Integer] interval
-      #
-      # @return [Node, nil]
-      #
-      # @raise [ArgumentError]
-      #   If neither or both of `css`/`xpath` are given.
-      #
-      def wait_for_selector(css: nil, xpath: nil, within: nil, timeout: @page.timeout, interval: WAIT_INTERVAL)
-        Utils::Deprecate.warn(WAIT_FOR_SELECTOR_DEPRECATED, user_code: true)
-        raise ArgumentError, "pass either `css:` or `xpath:`" if (css && xpath) || !(css || xpath)
-
-        options = { within: within, timeout: timeout, interval: interval }
-        css ? wait_css(css, **options) : wait_xpath(xpath, **options)
       end
 
       #
