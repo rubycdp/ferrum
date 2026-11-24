@@ -41,11 +41,11 @@ module Ferrum
                 start_screencast stop_screencast
                 frames frame_by main_frame
                 evaluate evaluate_handle execute isolated_world
-                add_script_tag add_style_tag bypass_csp bypass_csp=
+                add_script_tag add_style_tag bypass_csp=
                 evaluate_on_new_document remove_script_on_new_document
                 on off position position= window_bounds window_bounds= activate
                 playback_rate playback_rate=
-                disable_javascript javascript= javascript? set_viewport resize] => :page
+                javascript= javascript? set_viewport resize] => :page
 
     attr_reader :client, :process, :contexts, :options
 

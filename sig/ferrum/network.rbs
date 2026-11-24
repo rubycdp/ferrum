@@ -71,12 +71,6 @@ module Ferrum
 
     def cache=: (bool enabled) -> bool
 
-    %a{deprecated} def cache: (disable: bool) -> Hash[String, untyped]
-
-    %a{deprecated} def emulate_network_conditions: (?offline: bool, ?latency: ::Integer, ?download_throughput: ::Integer, ?upload_throughput: ::Integer, ?connection_type: untyped?) -> true
-
-    %a{deprecated} def offline_mode: () -> true
-
     def emulate: (?user_agent: String?, ?accept_language: String?, ?platform: String?, ?metadata: ::Hash[Symbol, untyped]?) -> nil
 
     private

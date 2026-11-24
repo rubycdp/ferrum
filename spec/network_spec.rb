@@ -604,19 +604,6 @@ describe Ferrum::Network do
     end
   end
 
-  describe "#emulate_network_conditions" do
-    it "delays requests by the given latency and warns that it is deprecated" do
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(page.network.emulate_network_conditions(latency: 500)).to be(true) }
-        .to output(/emulate_network_conditions will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      start = Ferrum::Utils::ElapsedTime.monotonic_time
-      page.go_to("/with_js")
-
-      expect(Ferrum::Utils::ElapsedTime.elapsed_time(start)).to be >= 0.5
-    end
-  end
-
   describe "#emulate" do
     it "overrides the user agent" do
       page.network.emulate(user_agent: "foo")
@@ -762,17 +749,6 @@ describe Ferrum::Network do
     end
   end
 
-  describe "#offline_mode" do
-    it "fails requests while offline and warns that it is deprecated" do
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { page.network.offline_mode }
-        .to output(/offline_mode will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-
-      expect { page.go_to("/with_js") }.to raise_error(Ferrum::StatusError, /net::ERR_INTERNET_DISCONNECTED/)
-    end
-  end
-
   describe "#cache=" do
     it "loads resources from the network when the cache is off" do
       network.cache = false
@@ -785,17 +761,6 @@ describe Ferrum::Network do
       network.cache = true
 
       expect(cached_on_second_visit?).to be_truthy
-    end
-  end
-
-  describe "#cache" do
-    it "loads resources from the network when disabled and warns that it is deprecated" do
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { network.cache(disable: true) }
-        .to output(/cache\(disable:\) will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-
-      expect(cached_on_second_visit?).to be_falsey
     end
   end
 

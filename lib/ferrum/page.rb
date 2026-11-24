@@ -258,19 +258,6 @@ module Ferrum
     end
 
     #
-    # @deprecated Will be removed in Ferrum 0.22. Use `javascript = false`.
-    #
-    # @return [Hash]
-    #
-    # @raise [TimeoutError]
-    def disable_javascript
-      Utils::Deprecate.warn("disable_javascript will be removed in Ferrum 0.22. Use javascript = false instead.",
-                            user_code: true)
-      @javascript = false
-      command("Emulation.setScriptExecutionDisabled", value: true)
-    end
-
-    #
     # The current position of the window.
     #
     # @return [(Integer, Integer)]
@@ -420,22 +407,6 @@ module Ferrum
     #
     def bypass_csp=(enabled)
       command("Page.setBypassCSP", enabled: enabled)
-    end
-
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use `bypass_csp = true`.
-    #
-    # @param [Boolean] enabled
-    #
-    # @return [Boolean]
-    #
-    # @raise [TimeoutError]
-    #
-    def bypass_csp(enabled: true)
-      Utils::Deprecate.warn("bypass_csp(enabled:) will be removed in Ferrum 0.22. Use bypass_csp = true instead.",
-                            user_code: true)
-      self.bypass_csp = enabled
-      enabled
     end
 
     #

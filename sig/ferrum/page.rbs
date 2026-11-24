@@ -72,13 +72,9 @@ module Ferrum
 
     def bypass_csp=: (bool enabled) -> bool
 
-    %a{deprecated} def bypass_csp: (?enabled: bool) -> bool
-
     def javascript=: (bool enabled) -> bool
 
     def javascript?: () -> bool
-
-    %a{deprecated} def disable_javascript: () -> Hash[String, untyped]
 
     def evaluate_on_new_document: (String source, ?world_name: String?, ?run_immediately: bool) -> String
 
