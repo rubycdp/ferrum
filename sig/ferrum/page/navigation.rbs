@@ -17,7 +17,7 @@ module Ferrum
 
       %a{deprecated} def reload!: (?timeout: (::Numeric | Deadline)?) -> true
 
-      def stop: () -> Hash[String, untyped]
+      def stop: () -> nil
 
       def back: (?timeout: (::Numeric | Deadline)?) -> true?
 

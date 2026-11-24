@@ -43,7 +43,7 @@ module Ferrum
 
     def status: () -> untyped
 
-    def clear: (untyped `type`) -> true
+    def clear: (untyped `type`) -> nil
 
     def blacklist=: (untyped patterns) -> untyped
 
@@ -53,7 +53,7 @@ module Ferrum
 
     alias allowlist= whitelist=
 
-    def intercept: (?pattern: ::String, ?resource_type: untyped?) -> untyped
+    def intercept: (?pattern: ::String, ?resource_type: untyped?) -> nil
 
     def authorize: (user: untyped, password: untyped, ?type: ::Symbol) ?{ () -> untyped } -> untyped
 
@@ -77,7 +77,7 @@ module Ferrum
 
     %a{deprecated} def offline_mode: () -> true
 
-    def emulate: (?user_agent: String?, ?accept_language: String?, ?platform: String?, ?metadata: ::Hash[Symbol, untyped]?) -> self
+    def emulate: (?user_agent: String?, ?accept_language: String?, ?platform: String?, ?metadata: ::Hash[Symbol, untyped]?) -> nil
 
     private
 

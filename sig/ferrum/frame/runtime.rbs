@@ -24,7 +24,7 @@ module Ferrum
 
       def evaluate_handle: (untyped expression, *untyped positional, **untyped keywords) -> untyped
 
-      def execute: (untyped expression, *untyped positional, **untyped keywords) -> true
+      def execute: (untyped expression, *untyped positional, **untyped keywords) -> nil
 
       def evaluate_in: (Node | RemoteObject object, untyped expression, ::Array[untyped] positional, ::Hash[::Symbol, untyped] keywords, ?mode: ::Symbol) -> untyped
 

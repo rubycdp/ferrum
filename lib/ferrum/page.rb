@@ -144,7 +144,7 @@ module Ferrum
     #
     # Closes the page's target and its underlying client connection.
     #
-    # @return [Boolean]
+    # @return [nil]
     #
     # @example
     #   page.close # => true
@@ -152,8 +152,7 @@ module Ferrum
     def close
       client.notify("Target.closeTarget", targetId: @target_id)
       close_connection
-
-      true
+      nil
     end
 
     #
@@ -180,7 +179,10 @@ module Ferrum
     #   a desktop and leaves touch emulation as is. Turning touch off resets hover and pointer to the detected input
     #   devices, which undoes `--blink-settings` overrides until the next navigation
     #
+    # @return [nil]
+    #
     # @raise [TimeoutError]
+    #
     def set_viewport(width: 0, height: 0, scale_factor: 0, mobile: nil)
       command("Emulation.setTouchEmulationEnabled", enabled: mobile, maxTouchPoints: 1) unless mobile.nil?
 
@@ -192,6 +194,7 @@ module Ferrum
         deviceScaleFactor: scale_factor,
         mobile: mobile || false
       )
+      nil
     end
 
     #
@@ -206,7 +209,7 @@ module Ferrum
     #   mode. When `true`, `width` and `height` are read from
     #   {#document_size} instead of the given arguments.
     #
-    # @return [Hash{String => Object}]
+    # @return [nil]
     #
     # @raise [TimeoutError]
     #
@@ -471,20 +474,20 @@ module Ferrum
     #
     # @param [String] identifier
     #
-    # @return [true]
+    # @return [nil]
     #
     # @raise [TimeoutError]
     #
     def remove_script_on_new_document(identifier)
       command("Page.removeScriptToEvaluateOnNewDocument", identifier: identifier)
-      true
+      nil
     end
 
     #
     # Activates (focuses) the target for the given page.
     # When you have multiple tabs you work with, and you need to switch a given one.
     #
-    # @return [Boolean]
+    # @return [nil]
     #
     # @raise [TimeoutError]
     #
@@ -493,7 +496,7 @@ module Ferrum
     #
     def activate
       command("Target.activateTarget", targetId: target_id)
-      true
+      nil
     end
 
     #

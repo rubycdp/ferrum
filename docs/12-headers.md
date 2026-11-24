@@ -10,7 +10,7 @@ sidebar_position: 12
 
 Get all headers
 
-#### set(headers) : `Boolean`
+#### set(headers)
 
 Set given headers. Eventually clear all headers and set given ones.
 
@@ -22,12 +22,12 @@ back the browser's user agent or language once the header that changed it is gon
 two headers are only sent with requests, like any other, and `navigator` and the client hints stay as they are. Use
 `network.emulate(user_agent:, accept_language:)` to override both the header and what the page reports.
 
-#### add(headers) : `Boolean`
+#### add(headers)
 
 Adds given headers to already set ones.
 
 * headers `Hash` key-value pairs for example `"Referer" => "http://example.com"`
 
-#### clear : `Boolean`
+#### clear
 
 Clear all headers, and the user agent or language they set.

@@ -39,7 +39,7 @@ module Ferrum
 
     def command: (String method, ?timeout: (::Numeric | Deadline)?, **untyped params) -> Hash[String, untyped]
 
-    def reset: () -> void
+    def reset: () -> nil
 
     def restart: () -> void
 
@@ -47,7 +47,7 @@ module Ferrum
 
     def crash: () -> Hash[String, untyped]
 
-    def close: () -> Hash[String, untyped]
+    def close: () -> nil
 
     def version: () -> Browser::VersionInfo
 

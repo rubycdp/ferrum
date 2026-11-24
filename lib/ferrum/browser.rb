@@ -199,6 +199,8 @@ module Ferrum
     #
     # Closes browser tabs opened by the `Browser` instance.
     #
+    # @return [nil]
+    #
     # @raise [TimeoutError]
     #
     # @example
@@ -214,6 +216,7 @@ module Ferrum
     #
     def reset
       contexts.reset
+      nil
     end
 
     #
@@ -258,8 +261,11 @@ module Ferrum
     #
     # You should clean up resources/connections in ruby world manually, it's only a CDP command.
     #
+    # @return [nil]
+    #
     def close
       command("Browser.close")
+      nil
     end
 
     #

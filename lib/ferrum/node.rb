@@ -455,7 +455,7 @@ module Ferrum
     # @param [String, Array<String>] value
     #   Path or paths to the file(s) to upload.
     #
-    # @return [Hash{String => Object}]
+    # @return [self]
     #
     # @raise [TimeoutError]
     #
@@ -469,6 +469,7 @@ module Ferrum
         backendNodeId: backend_node_id,
         files: Array(value)
       )
+      self
     end
 
     #
@@ -750,7 +751,7 @@ module Ferrum
     # @param (see Frame::Runtime#evaluate)
     # @option (see Frame::Runtime#evaluate)
     #
-    # @return [Boolean]
+    # @return [self]
     #   Always `true`.
     #
     # @raise [TimeoutError]
@@ -760,7 +761,7 @@ module Ferrum
     #
     def execute(expression, *positional, **keywords)
       @runtime.evaluate_in(self, expression, positional, keywords, mode: :none)
-      true
+      self
     end
 
     #
@@ -906,7 +907,7 @@ module Ferrum
     #
     # Removes the node from the DOM.
     #
-    # @return [Hash{String => Object}]
+    # @return [self]
     #
     # @raise [TimeoutError]
     #
@@ -915,6 +916,7 @@ module Ferrum
     #
     def remove
       page.command("DOM.removeNode", nodeId: node_id)
+      self
     end
 
     # Whether the node still exists in the DOM.

@@ -80,11 +80,11 @@ module Ferrum
     #
     # Forgets the collected messages.
     #
-    # @return [self]
+    # @return [nil]
     #
     def clear
       @mutex.synchronize { @messages.clear }
-      self
+      nil
     end
 
     #

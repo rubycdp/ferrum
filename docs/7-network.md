@@ -233,7 +233,7 @@ page.go_to("https://github.com/") # => Ferrum::StatusError (Request to https://g
 page.network.offline = false
 ```
 
-#### emulate(\*\*options) : `Network`
+#### emulate(\*\*options)
 
 Overrides the user agent, the accept language, the platform and the client hints the page reports, in the request
 headers and in `navigator`. The options you don't pass keep their previous values, `nil` brings one back to the browser's default.

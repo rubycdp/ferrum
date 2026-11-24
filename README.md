@@ -121,7 +121,7 @@ want to keep a value in the browser and pass it back in later, and
 `Ferrum::Node#evaluate` to run a script with `this` bound to an element:
 
 ```ruby
-page.execute("window.scrollBy(0, 100)") # => true
+page.execute("window.scrollBy(0, 100)")
 
 list = page.evaluate_handle("document.querySelectorAll('li')")
 page.evaluate("Array.from(nodes).map(n => n.textContent)", nodes: list)

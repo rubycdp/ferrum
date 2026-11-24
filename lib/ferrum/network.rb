@@ -222,7 +222,7 @@ module Ferrum
     # @param [:traffic, :cache] type
     #   The type of traffic to clear.
     #
-    # @return [true]
+    # @return [nil]
     #
     # @raise [TimeoutError]
     #
@@ -242,7 +242,7 @@ module Ferrum
         @page.command("Network.clearBrowserCache")
       end
 
-      true
+      nil
     end
 
     #
@@ -297,6 +297,8 @@ module Ferrum
     # @param [Symbol, nil] resource_type
     #   One of the [resource types](https://chromedevtools.github.io/devtools-protocol/tot/Network#type-ResourceType)
     #
+    # @return [nil]
+    #
     # @raise [TimeoutError]
     #
     # @example
@@ -327,6 +329,7 @@ module Ferrum
       pattern[:resourceType] = resource_type if resource_type
       pattern[:requestStage] = request_stage if request_stage
       @page.command("Fetch.enable", patterns: [pattern], handleAuthRequests: handle_auth_requests)
+      nil
     end
 
     #
@@ -576,7 +579,7 @@ module Ferrum
     #   `:full_version`, `:bitness`, `:wow64` and `:form_factors` are optional
     #   too.
     #
-    # @return [self]
+    # @return [nil]
     #
     # @raise [ArgumentError] on any other option, or a `:metadata` that is
     #   missing a key or has an unknown one.
@@ -607,7 +610,7 @@ module Ferrum
       params[:userAgentMetadata] = camelize(@overrides[:metadata]) if @overrides[:metadata]
 
       @page.command("Network.setUserAgentOverride", **params)
-      self
+      nil
     end
 
     #

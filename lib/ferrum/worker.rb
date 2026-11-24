@@ -79,7 +79,7 @@ module Ferrum
     # Closes the worker in the browser, and its connection. Chrome refuses
     # `Target.closeTarget` for a dedicated worker, so it closes itself instead.
     #
-    # @return [Boolean]
+    # @return [nil]
     def close
       if type == "worker"
         client.notify("Runtime.evaluate", expression: "self.close()")
@@ -88,7 +88,7 @@ module Ferrum
       end
       close_connection
 
-      true
+      nil
     end
 
     # Closes the WebSocket connection only, without asking the browser to

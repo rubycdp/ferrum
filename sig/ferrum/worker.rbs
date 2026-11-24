@@ -28,7 +28,7 @@ module Ferrum
 
     def main_frame: () -> nil
 
-    def close: () -> true
+    def close: () -> nil
 
     def close_connection: () -> void
 

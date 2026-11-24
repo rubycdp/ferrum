@@ -223,7 +223,7 @@ module Ferrum
       # @param (see #evaluate)
       # @option (see #evaluate)
       #
-      # @return [Boolean]
+      # @return [nil]
       #   Always `true`.
       #
       # @raise [TimeoutError]
@@ -237,7 +237,7 @@ module Ferrum
       #
       def execute(expression, *positional, **keywords)
         run(expression, positional, keywords, mode: :none)
-        true
+        nil
       end
 
       #

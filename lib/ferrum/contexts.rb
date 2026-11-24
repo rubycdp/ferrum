@@ -115,7 +115,7 @@ module Ferrum
     #
     # @param [String] context_id
     #
-    # @return [Boolean, nil]
+    # @return [nil]
     #
     # @raise [TimeoutError, BrowserError]
     def dispose(context_id)
@@ -129,7 +129,8 @@ module Ferrum
       ensure
         @contexts.delete(context_id)
       end
-      true
+
+      nil
     end
 
     # Closes the WebSocket connection of every target in every context,

@@ -53,7 +53,7 @@ module Ferrum
       #
       # @param [Hash{Symbol => Object}, Ferrum::Cookies::Cookie] options
       #
-      # @return [Boolean]
+      # @return [nil]
       #
       # @raise [TimeoutError]
       #
@@ -64,7 +64,8 @@ module Ferrum
         cookie = cookie_params(options)
         cookie[:domain] ||= default_domain unless cookie[:url]
 
-        @page.command("Network.setCookie", **cookie)["success"]
+        @page.command("Network.setCookie", **cookie)
+        nil
       end
 
       #
@@ -84,7 +85,7 @@ module Ferrum
       # @option options [String] :path
       #   The exact path of the cookie.
       #
-      # @return [true]
+      # @return [nil]
       #
       # @raise [TimeoutError]
       #
@@ -99,14 +100,14 @@ module Ferrum
 
         @page.command("Network.deleteCookies", **options)
 
-        true
+        nil
       end
 
       #
       # Removes the page's cookies, the ones {#each} yields. Cookies on other
       # domains stay, `context.cookies.clear` removes them too.
       #
-      # @return [true]
+      # @return [nil]
       #
       # @raise [TimeoutError]
       #
@@ -118,7 +119,7 @@ module Ferrum
           @page.command("Network.deleteCookies", name: cookie.name, domain: cookie.domain, path: cookie.path)
         end
 
-        true
+        nil
       end
 
       private

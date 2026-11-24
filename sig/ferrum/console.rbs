@@ -23,7 +23,7 @@ module Ferrum
 
     def empty?: () -> bool
 
-    def clear: () -> self
+    def clear: () -> nil
 
     def on: () { (Console::Message) -> void } -> ::Integer
 

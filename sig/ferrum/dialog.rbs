@@ -13,9 +13,9 @@ module Ferrum
 
     def handled?: () -> bool
 
-    def accept: (?String? prompt_text) -> Hash[String, untyped]
+    def accept: (?String? prompt_text) -> nil
 
-    def dismiss: () -> Hash[String, untyped]
+    def dismiss: () -> nil
 
     def match?: (Regexp regexp) -> bool
   end

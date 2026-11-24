@@ -55,7 +55,7 @@ module Ferrum
 
     def close_targets_connection: () -> void
 
-    def dispose: () -> bool?
+    def dispose: () -> nil
 
     def target: (String target_id) -> Target?
 

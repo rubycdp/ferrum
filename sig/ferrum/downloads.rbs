@@ -20,7 +20,7 @@ module Ferrum
 
     %a{deprecated} def wait: (?(::Numeric | Deadline) timeout) ?{ () -> void } -> void
 
-    def set_behavior: (save_path: String, ?behavior: :deny | :allow | :allowAndName | :default) -> void
+    def set_behavior: (save_path: String, ?behavior: :deny | :allow | :allowAndName | :default) -> nil
 
     def subscribe: () -> void
 
