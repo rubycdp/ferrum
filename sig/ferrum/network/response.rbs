@@ -21,9 +21,6 @@ module Ferrum
 
       def resource_type: () -> String
 
-      %a{deprecated}
-      def type: () -> String
-
       def content_type: () -> untyped
 
       def body_size=: (untyped size) -> untyped

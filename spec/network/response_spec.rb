@@ -95,16 +95,6 @@ describe Ferrum::Network::Response do
     end
   end
 
-  describe "#type" do
-    it "returns the resource type and warns that it is deprecated" do
-      page.go_to
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(last_exchange.response.type).to eq("Document") }
-        .to output(/Response#type will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-    end
-  end
-
   describe "#content_type" do
     it "returns the content type without parameters" do
       page.go_to("/with_js")

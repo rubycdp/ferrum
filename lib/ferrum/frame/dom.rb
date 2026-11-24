@@ -98,19 +98,6 @@ module Ferrum
       end
 
       #
-      # @deprecated Will be removed in Ferrum 0.22. Use {#html}, it was never
-      #   only `<body>`.
-      #
-      # @return [String]
-      #
-      # @raise [TimeoutError]
-      #
-      def body
-        Utils::Deprecate.warn("body will be removed in Ferrum 0.22. Use html instead.", user_code: true)
-        html
-      end
-
-      #
       # Returns the element in which the window is embedded.
       #
       # @return [Node, nil]

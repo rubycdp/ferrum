@@ -8,9 +8,6 @@ module Ferrum
   class NoSuchPageError < NoSuchTargetError
   end
 
-  class NotImplementedError < Error
-  end
-
   class BinaryNotFoundError < Error
   end
 

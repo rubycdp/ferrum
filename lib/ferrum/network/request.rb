@@ -54,30 +54,6 @@ module Ferrum
       end
 
       #
-      # @deprecated Will be removed in Ferrum 0.22. Use {#resource_type}.
-      #
-      # @return [String]
-      #
-      def type
-        Utils::Deprecate.warn("Request#type will be removed in Ferrum 0.22. Use resource_type instead.",
-                              user_code: true)
-        resource_type
-      end
-
-      #
-      # @deprecated Will be removed in Ferrum 0.22. Use {#resource_type?}.
-      #
-      # @param [String, Symbol] value
-      #
-      # @return [Boolean]
-      #
-      def type?(value)
-        Utils::Deprecate.warn("Request#type? will be removed in Ferrum 0.22. Use resource_type? instead.",
-                              user_code: true)
-        resource_type?(value)
-      end
-
-      #
       # Determines if the request is XHR.
       #
       # @return [Boolean]

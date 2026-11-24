@@ -97,8 +97,7 @@ page.title # => "Google"
 
 #### html : `String`
 
-Returns the HTML of the whole document, `<html>` included. `body` is deprecated and will be removed in 0.22, it never
-returned only `<body>`.
+Returns the HTML of the whole document, `<html>` included.
 
 ```ruby
 page.go_to("https://google.com/")

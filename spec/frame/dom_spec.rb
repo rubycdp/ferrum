@@ -135,16 +135,6 @@ describe Ferrum::Frame::DOM do
     end
   end
 
-  describe "#body" do
-    it "returns the HTML and warns that it is deprecated" do
-      page.go_to("/simple")
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(page.body).to eq(page.html) }
-        .to output(/body will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-    end
-  end
-
   describe "#frame_element" do
     it "gets the frame element" do
       page.go_to("/frame_parent")

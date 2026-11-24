@@ -7,8 +7,6 @@ module Ferrum
   class NoSuchTargetError   < Error; end
   # Raised when Chrome reports that the referenced page no longer exists, a {NoSuchTargetError} for pages.
   class NoSuchPageError     < NoSuchTargetError; end
-  # Raised when a requested feature isn't implemented for the current setup.
-  class NotImplementedError < Error; end
   # Raised when no browser binary can be found at the configured path.
   class BinaryNotFoundError < Error; end
   # Raised when a required file path option is empty.

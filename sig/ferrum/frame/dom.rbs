@@ -15,8 +15,6 @@ module Ferrum
 
       def html: () -> String
 
-      %a{deprecated} def body: () -> String
-
       def xpath: (untyped selector, ?within: untyped?) -> untyped
 
       def at_xpath: (untyped selector, ?within: untyped?) -> untyped

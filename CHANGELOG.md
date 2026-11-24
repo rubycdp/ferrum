@@ -33,6 +33,9 @@
   `Network::Error`, use `id`, `body` and `time`
 - `disable_javascript`, `bypass_csp(enabled:)`, `network.cache(disable:)`, `offline_mode` and
   `emulate_network_conditions`, use `javascript = false`, `bypass_csp =`, `cache =`, `offline = true` and `throttle`
+- `body`, use `html`. `type` and `type?` of `Network::Request` and `type` of `Network::Response`, use `resource_type`
+  and `resource_type?`
+- `Ferrum::NotImplementedError`, nothing raises it since `node.hover` works
 
 
 ## [0.21.0](https://github.com/rubycdp/ferrum/compare/v0.20.2...v0.21.0) (November 24, 2026) ##
