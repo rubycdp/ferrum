@@ -106,17 +106,6 @@ module Ferrum
       end
 
       #
-      # @deprecated Will be removed in Ferrum 0.22. Use {#resource_type}.
-      #
-      # @return [String]
-      #
-      def type
-        Utils::Deprecate.warn("Response#type will be removed in Ferrum 0.22. Use resource_type instead.",
-                              user_code: true)
-        resource_type
-      end
-
-      #
       # The `Content-Type` header value of the response.
       #
       # @return [String, nil]

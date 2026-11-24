@@ -32,26 +32,6 @@ describe Ferrum::Network::Request do
     end
   end
 
-  describe "#type" do
-    it "returns the resource type and warns that it is deprecated" do
-      page.go_to
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(last_exchange.request.type).to eq("Document") }
-        .to output(/Request#type will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-    end
-  end
-
-  describe "#type?" do
-    it "matches the resource type and warns that it is deprecated" do
-      page.go_to
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(last_exchange.request.type?(:document)).to be(true) }
-        .to output(/Request#type\? will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-    end
-  end
-
   describe "#xhr?" do
     it "returns true for XHR requests" do
       page.go_to("/headers_with_ajax")
@@ -125,16 +105,6 @@ describe Ferrum::Network::Request do
       request = Ferrum::Network::Request.new({ "request" => { "postData" => "name=ferrum" } })
 
       expect(request.body).to eq("name=ferrum")
-    end
-  end
-
-  describe "#post_data" do
-    it "returns the POST data and warns that it is deprecated" do
-      request = Ferrum::Network::Request.new({ "request" => { "postData" => "name=ferrum" } })
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(request.post_data).to eq("name=ferrum") }
-        .to output(/post_data will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
     end
   end
 end

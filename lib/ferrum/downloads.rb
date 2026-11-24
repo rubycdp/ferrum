@@ -10,8 +10,6 @@ module Ferrum
   #
   class Downloads
     WAIT_TIMEOUT = 5
-    WAIT_DEPRECATED = "downloads.wait will be removed in Ferrum 0.22. Use page.await_download { ... } around the " \
-                      "code that starts the download."
     VALID_BEHAVIOR = %i[deny allow allowAndName default].freeze
 
     def initialize(page)
@@ -78,28 +76,6 @@ module Ferrum
     #
     def await_download!(timeout: WAIT_TIMEOUT, &)
       await_download(timeout: timeout, &) || raise(TimeoutError)
-    end
-
-    #
-    # Waits until the current download finishes.
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use {#await_download} around the code that starts the download.
-    #
-    # @param [Numeric, Deadline] timeout
-    #   How long to wait in seconds.
-    #
-    # @yield
-    #   Optional block that triggers the download, e.g. clicking a link.
-    #
-    # @return [void]
-    #
-    def wait(timeout = WAIT_TIMEOUT)
-      Utils::Deprecate.warn(WAIT_DEPRECATED, user_code: true)
-      deadline = Deadline.wrap(timeout)
-      generation = @idle.clear
-      yield if block_given?
-      @idle.wait(deadline)
-      @idle.set(true) if generation == @idle.generation
     end
 
     #

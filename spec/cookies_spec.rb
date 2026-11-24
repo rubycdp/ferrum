@@ -76,34 +76,6 @@ describe Ferrum::Cookies do
     end
   end
 
-  describe "#all" do
-    around do |example|
-      Ferrum::Utils::Deprecate.reset!
-      example.run
-      Ferrum::Utils::Deprecate.reset!
-    end
-
-    it "returns cookies by name and warns that it is deprecated" do
-      browser.go_to("/set_cookie")
-
-      cookies = nil
-      expect { cookies = browser.cookies.all }
-        .to output(/cookies\.all will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      expect(cookies).to eq({ "stealth" => Ferrum::Cookies::Cookie.new("name" => "stealth",
-                                                                       "value" => "test_cookie",
-                                                                       "domain" => "127.0.0.1",
-                                                                       "path" => "/",
-                                                                       "expires" => -1,
-                                                                       "size" => 18,
-                                                                       "httpOnly" => false,
-                                                                       "secure" => false,
-                                                                       "session" => true,
-                                                                       "priority" => "Medium",
-                                                                       "sourceScheme" => "NonSecure",
-                                                                       "sourcePort" => server.port) })
-    end
-  end
-
   describe "#[]" do
     it "returns the cookie with the given name" do
       browser.go_to("/set_cookie")

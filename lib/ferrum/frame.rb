@@ -203,18 +203,6 @@ module Ferrum
     end
 
     #
-    # @deprecated Will be removed in Ferrum 0.22. Use {#content=}.
-    #
-    # @param [String] html
-    #
-    # @raise [TimeoutError]
-    #
-    def set_content(html) # rubocop:disable Naming/AccessorMethodName
-      Utils::Deprecate.warn("set_content will be removed in Ferrum 0.22. Use content= instead.", user_code: true)
-      self.content = html
-    end
-
-    #
     # Execution context id which is used by JS, each frame has it's own
     # context in which JS evaluates. Locks for a page timeout and raises
     # an error if an execution id hasn't been set yet, if id is set

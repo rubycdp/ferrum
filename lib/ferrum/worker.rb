@@ -117,13 +117,6 @@ module Ferrum
       on("Runtime.executionContextCreated") do |params|
         self.execution_id = params.dig("context", "id")
       end
-
-      return unless @options.js_errors
-
-      on("Runtime.exceptionThrown") do |params|
-        # FIXME: https://jvns.ca/blog/2015/11/27/why-rubys-timeout-is-dangerous-and-thread-dot-raise-is-terrifying/
-        Thread.main.raise JavaScriptError, params["exceptionDetails"]
-      end
     end
 
     def prepare

@@ -237,8 +237,6 @@ page.network.offline = false
 
 Overrides the user agent, the accept language, the platform and the client hints the page reports, in the request
 headers and in `navigator`. The options you don't pass keep their previous values, `nil` brings one back to the browser's default.
-Setting `User-Agent` or `Accept-Language` with [headers](https://github.com/rubycdp/ferrum#headers) goes through
-here too, the last one set wins. That is deprecated and stops in 0.22.
 
 * options `Hash`
     * :user_agent `String` the `User-Agent` header and `navigator.userAgent`

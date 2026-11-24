@@ -2,7 +2,6 @@ module Ferrum
   class Frame
     module DOM
       WAIT_INTERVAL: ::Float
-      WAIT_FOR_SELECTOR_DEPRECATED: String
       SCRIPT_SRC_TAG: ::String
 
       SCRIPT_TEXT_TAG: ::String
@@ -11,15 +10,9 @@ module Ferrum
 
       LINK_TAG: ::String
 
-      %a{deprecated} def current_url: () -> untyped
-
-      %a{deprecated} def current_title: () -> untyped
-
       def doctype: () -> untyped
 
       def html: () -> String
-
-      %a{deprecated} def body: () -> String
 
       def xpath: (untyped selector, ?within: untyped?) -> untyped
 
@@ -36,8 +29,6 @@ module Ferrum
       def wait_xpath: (String selector, ?within: Node?, ?timeout: (::Numeric | Deadline)?, ?interval: ::Numeric) -> Node?
 
       def wait_xpath!: (String selector, ?within: Node?, ?timeout: (::Numeric | Deadline)?, ?interval: ::Numeric) -> Node
-
-      %a{deprecated} def wait_for_selector: (?css: String?, ?xpath: String?, ?within: Node?, ?timeout: (::Numeric | Deadline), ?interval: ::Numeric) -> Node?
 
       def add_script_tag: (?url: untyped?, ?path: untyped?, ?content: untyped?, ?type: ::String) -> untyped
 

@@ -14,15 +14,6 @@ module Ferrum
     MOVING_WAIT_DELAY = ENV.fetch("FERRUM_NODE_MOVING_WAIT", 0.01).to_f
     MOVING_WAIT_ATTEMPTS = ENV.fetch("FERRUM_NODE_MOVING_ATTEMPTS", 50).to_i
     MOVING_CHECK_DELAY = ENV.fetch("FERRUM_NODE_MOVING_CHECK", 0.05).to_f
-    WAIT_FOR_STOP_MOVING_DEPRECATED = "wait_for_stop_moving will be removed in Ferrum 0.22. Use wait_still instead."
-    FIND_POSITION_DEPRECATED = "find_position will be removed in Ferrum 0.22. Use pinpoint instead, its offsets are " \
-                               "measured from the center unless position: :top."
-    CLICK_MODES = {
-      left: [:left, 1, "drop it, a left click is the default"],
-      right: [:right, 1, "use button: :right instead"],
-      double: [:left, 2, "use count: 2 instead"]
-    }.freeze
-    private_constant :CLICK_MODES
 
     # @return [Page] the page the node belongs to.
     attr_reader :page
@@ -211,25 +202,6 @@ module Ferrum
       wait_still(**options) || raise(TimeoutError)
     end
 
-    #
-    # Waits until the node's position stops changing, retrying up to
-    # `attempts` times.
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use {#wait_still}.
-    #
-    # @param [Float] delay
-    #
-    # @param [Integer] attempts
-    #
-    # @return [Array<Array<Float>>]
-    #
-    # @raise [NodeMovingError]
-    #
-    def wait_for_stop_moving(delay: MOVING_WAIT_DELAY, attempts: MOVING_WAIT_ATTEMPTS)
-      Utils::Deprecate.warn(WAIT_FOR_STOP_MOVING_DEPRECATED, user_code: true)
-      settled_quads(delay: delay, attempts: attempts)
-    end
-
     # Checks whether the node's position is changing, by comparing two
     # content-quad snapshots taken `delay` seconds apart. The default is a few
     # frames, a shorter one can miss a node that moves slowly.
@@ -320,15 +292,6 @@ module Ferrum
     #   wait for it to load. Ignored for other buttons and counts, which never
     #   wait. `false` returns as soon as the click is dispatched.
     #
-    # @param [:left, :right, :double, nil] mode
-    #   Deprecated, use `button: :right` or `count: 2`.
-    #
-    # @param [Array<Symbol>, nil] keys
-    #   Deprecated, renamed to `modifiers`.
-    #
-    # @param [Numeric, nil] wait
-    #   Deprecated, renamed to `navigation_wait`.
-    #
     # @param [Numeric, Deadline, nil] timeout
     #   How long finding the node's position, the click and the page load it starts may take together, the page
     #   timeout by default.
@@ -348,10 +311,7 @@ module Ferrum
     #   page.at_css("canvas").click(offset: { x: 10, y: 20, position: :top })
     #
     def click(button: :left, count: 1, modifiers: nil, offset: {}, delay: 0, # rubocop:disable Metrics/ParameterLists
-              navigation_wait: Page::NAVIGATION_WAIT, timeout: nil, mode: nil, keys: nil, wait: nil)
-      navigation_wait = Utils::Deprecate.renamed_keyword(:wait, :navigation_wait, wait, navigation_wait)
-      modifiers = Utils::Deprecate.renamed_keyword(:keys, :modifiers, keys, modifiers)
-      button, count = click_mode(mode) if mode
+              navigation_wait: Page::NAVIGATION_WAIT, timeout: nil)
       # Only a single left click waits, preserving the historical no-network-wait default of `Mouse#up`
       navigation_wait = false unless button.to_s == "left" && count == 1
       deadline = Deadline.wrap(timeout || page.timeout)
@@ -405,18 +365,6 @@ module Ferrum
     #
     def scroll
       tap { page.command("DOM.scrollIntoViewIfNeeded", nodeId: node_id) }
-    end
-
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use {#scroll}.
-    #
-    # @return [self]
-    #
-    # @raise [TimeoutError]
-    #
-    def scroll_into_view
-      Utils::Deprecate.warn("scroll_into_view will be removed in Ferrum 0.22. Use scroll instead.", user_code: true)
-      scroll
     end
 
     # Whether the node's bounding rect is fully within the viewport (or,
@@ -600,20 +548,6 @@ module Ferrum
     #
     def property(name)
       evaluate("this[name]", name: name)
-    end
-
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use {#property}.
-    #
-    # @param [String] name
-    #
-    # @return [Object]
-    #
-    # @raise [TimeoutError]
-    #
-    def [](name)
-      Utils::Deprecate.warn("node[name] will be removed in Ferrum 0.22. Use property(name) instead.", user_code: true)
-      property(name)
     end
 
     #
@@ -833,36 +767,6 @@ module Ferrum
     end
 
     #
-    # Finds the x, y coordinates to click or hover on the node.
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use {#pinpoint}.
-    #
-    # @param [Integer, nil] x
-    #   Horizontal offset from the reference point.
-    #
-    # @param [Integer, nil] y
-    #   Vertical offset from the reference point.
-    #
-    # @param [Symbol] position
-    #   `:top` to offset from the node's top-left corner, `:center` to offset
-    #   from its center.
-    #
-    # @return [(Float, Float)]
-    #
-    # @raise [TimeoutError]
-    #
-    def find_position(x: nil, y: nil, position: :top)
-      Utils::Deprecate.warn(FIND_POSITION_DEPRECATED, user_code: true)
-      points = settled_quads.map { |q| to_points(q) }.first
-      get_position(points, x, y, position)
-    rescue CoordinatesNotFoundError
-      x, y = bounding_rect_coordinates
-      raise if x.zero? && y.zero?
-
-      [x, y]
-    end
-
-    #
     # The computed CSS styles of the node.
     #
     # @return [Hash{String => String}]
@@ -890,18 +794,6 @@ module Ferrum
     #
     def ax_node
       page.accessibility.node_for(self)
-    end
-
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use {#ax_node}.
-    #
-    # @return [Accessibility::AXNode, nil]
-    #
-    # @raise [TimeoutError]
-    #
-    def axnode
-      Utils::Deprecate.warn("axnode will be removed in Ferrum 0.22. Use ax_node instead.", user_code: true)
-      ax_node
     end
 
     #
@@ -939,27 +831,12 @@ module Ferrum
 
     private
 
-    def click_mode(mode)
-      button, count, hint = CLICK_MODES.fetch(mode) { raise ArgumentError, "unknown mode: #{mode.inspect}" }
-      Utils::Deprecate.warn("mode: will be removed in Ferrum 0.22, #{hint}.", user_code: true)
-      [button, count]
-    end
-
     def center_of(points)
       [points.sum { |p| p[:x] } / 4.0, points.sum { |p| p[:y] } / 4.0]
     end
 
     def bounding_rect
       evaluate("function() { const r = this.getBoundingClientRect(); return [r.left, r.top, r.width, r.height]; }")
-    end
-
-    def bounding_rect_coordinates
-      evaluate(<<~JS)
-        function() {
-          const { left, top, width, height } = this.getBoundingClientRect();
-          return [left + (width / 2), top + (height / 2)];
-        }
-      JS
     end
 
     def content_quads
@@ -983,31 +860,6 @@ module Ferrum
       sleep(delay)
       current = content_quads
       [previous, current]
-    end
-
-    def get_position(points, offset_x, offset_y, position)
-      x = y = nil
-
-      if offset_x && offset_y && position == :top
-        point = points.first
-        x = point[:x] + offset_x.to_i
-        y = point[:y] + offset_y.to_i
-      else
-        x, y = points.inject([0, 0]) do |memo, coordinate|
-          [memo[0] + coordinate[:x],
-           memo[1] + coordinate[:y]]
-        end
-
-        x /= 4
-        y /= 4
-      end
-
-      if offset_x && offset_y && position == :center
-        x += offset_x.to_i
-        y += offset_y.to_i
-      end
-
-      [x, y]
     end
 
     def to_points(quad)

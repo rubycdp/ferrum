@@ -27,9 +27,6 @@ module Ferrum
     # Scrolls the page by the given amount. Scrolls instantly, even when the
     # page sets `scroll-behavior: smooth`.
     #
-    # @param [Array(Numeric, Numeric)] coordinates
-    #   Deprecated, pass `x:` and `y:`.
-    #
     # @param [Numeric] x
     #   The horizontal pixel value that you want to scroll by.
     #
@@ -44,17 +41,13 @@ module Ferrum
     #   browser.go_to("https://www.google.com/search?q=Ruby+headless+driver+for+Capybara")
     #   browser.mouse.scroll_by(y: 400)
     #
-    def scroll_by(*coordinates, x: 0, y: 0)
-      x, y = positional_coordinates(:scroll_by, coordinates, x, y)
+    def scroll_by(x: 0, y: 0)
       tap { @page.execute("window.scrollBy({ left: x, top: y, behavior: 'instant' })", x:, y:) }
     end
 
     #
     # Scrolls the page to the given coordinates. Scrolls instantly, even when
     # the page sets `scroll-behavior: smooth`.
-    #
-    # @param [Array(Numeric, Numeric)] coordinates
-    #   Deprecated, pass `x:` and `y:`.
     #
     # @param [Numeric, nil] x
     #   The pixel along the horizontal axis of the document that you want
@@ -73,8 +66,7 @@ module Ferrum
     #   browser.mouse.scroll_to(x: 0, y: 400)
     #   browser.mouse.scroll_to(y: 0)
     #
-    def scroll_to(*coordinates, x: nil, y: nil)
-      x, y = positional_coordinates(:scroll_to, coordinates, x, y)
+    def scroll_to(x: nil, y: nil)
       tap do
         @page.execute("window.scrollTo({ left: x ?? undefined, top: y ?? undefined, behavior: 'instant' })", x:, y:)
       end
@@ -93,9 +85,6 @@ module Ferrum
     # @param [Numeric, false] navigation_wait
     #   Seconds to watch for a navigation started by the click, then wait for it
     #   to load. `false` returns as soon as the click is dispatched.
-    #
-    # @param [Numeric, nil] wait
-    #   Deprecated, renamed to `navigation_wait`.
     #
     # @param [Numeric, Deadline, nil] timeout
     #   How long the click and the page load it starts may take together, the page timeout by default.
@@ -117,8 +106,7 @@ module Ferrum
     #
     # @raise [TimeoutError]
     #
-    def click(x:, y:, delay: 0, navigation_wait: Page::NAVIGATION_WAIT, wait: nil, timeout: nil, **options) # rubocop:disable Metrics/ParameterLists
-      navigation_wait = Utils::Deprecate.renamed_keyword(:wait, :navigation_wait, wait, navigation_wait)
+    def click(x:, y:, delay: 0, navigation_wait: Page::NAVIGATION_WAIT, timeout: nil, **options)
       deadline = Deadline.wrap(timeout || @page.timeout)
       Deadline.within(deadline) do
         move(x: x, y: y, modifiers: options[:modifiers])
@@ -173,9 +161,6 @@ module Ferrum
     #
     # @option options [Numeric, false] :navigation_wait (false)
     #   Seconds to watch for a navigation started by releasing the button, then wait for it to load.
-    #
-    # @option options [Numeric] :wait
-    #   Deprecated, renamed to `:navigation_wait`.
     #
     # @option options [Numeric, Deadline] :timeout
     #   How long the event and the page load it starts may take together, the page timeout by default.
@@ -239,9 +224,7 @@ module Ferrum
 
     private
 
-    def mouse_event(type:, button: :left, count: 1, modifiers: nil, navigation_wait: false, wait: nil, # rubocop:disable Metrics/ParameterLists
-                    timeout: nil)
-      navigation_wait = Utils::Deprecate.renamed_keyword(:wait, :navigation_wait, wait, navigation_wait)
+    def mouse_event(type:, button: :left, count: 1, modifiers: nil, navigation_wait: false, timeout: nil)
       button = validate_button(button)
       register_event_button(type, button)
       options = { x: @x, y: @y, type: type, button: button, buttons: @buttons, clickCount: count,
@@ -256,15 +239,6 @@ module Ferrum
         result = @page.command("Input.dispatchMouseEvent", slowmoable: true, timeout: deadline, **options)
       end
       result
-    end
-
-    def positional_coordinates(name, coordinates, x, y)
-      return [x, y] if coordinates.empty?
-      raise ArgumentError, "#{name} takes x and y" unless coordinates.size == 2
-
-      Utils::Deprecate.warn("Passing x and y to #{name} positionally will be removed in Ferrum 0.22, " \
-                            "pass x: and y: instead.", user_code: true)
-      coordinates
     end
 
     def modifiers_mask(modifiers)

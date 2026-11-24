@@ -37,26 +37,6 @@ describe Ferrum::Network::Error do
     end
   end
 
-  describe "#timestamp" do
-    it "returns the failure time in milliseconds and warns that it is deprecated" do
-      error = server_error
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(error.timestamp).to be_within(1000).of(error.time.to_f * 1000) }
-        .to output(/timestamp will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-    end
-  end
-
-  describe "#monotonic_time" do
-    it "returns Chrome's monotonic failure time and warns that it is deprecated" do
-      error = server_error
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(error.monotonic_time).to be_a(Float) }
-        .to output(/monotonic_time will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-    end
-  end
-
   def server_error
     expect { page.go_to("/server_error") }.to raise_error(Ferrum::StatusError)
     page.wait_until { page.network.traffic.first.error&.time }

@@ -3,8 +3,6 @@ module Ferrum
     ALLOWED_TARGET_TYPES: ::Array[String]
     RECURSIVE_AUTO_ATTACH_TYPES: ::Array[String]
 
-    EACH_PAIRS_DEPRECATED: String
-
     include Enumerable[Context]
 
     attr_reader contexts: ::Concurrent::Map[String, Context]

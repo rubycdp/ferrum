@@ -1,7 +1,6 @@
 module Ferrum
   class Network
     WAIT_INTERVAL: ::Float
-    WAIT_FOR_IDLE_DEPRECATED: String
     CLEAR_TYPE: ::Array[:traffic | :cache]
     EMULATE_KEYS: ::Array[:user_agent | :accept_language | :platform | :metadata]
     METADATA_REQUIRED: ::Array[Symbol]
@@ -25,11 +24,7 @@ module Ferrum
 
     def wait_idle!: (?connections: ::Integer, ?timeout: (::Numeric | Deadline)?, ?interval: ::Numeric) -> true
 
-    %a{deprecated} def wait_for_idle: (?connections: ::Integer, ?duration: ::Numeric, ?timeout: (::Numeric | Deadline)) -> bool
-
-    %a{deprecated} def wait_for_idle!: (?connections: ::Integer, ?duration: ::Numeric, ?timeout: (::Numeric | Deadline)) -> void
-
-    def idle?: (?::Integer? deprecated_connections, ?connections: ::Integer) -> bool
+    def idle?: (?connections: ::Integer) -> bool
 
     def total_connections: () -> untyped
 
@@ -70,12 +65,6 @@ module Ferrum
     def offline=: (bool offline) -> bool
 
     def cache=: (bool enabled) -> bool
-
-    %a{deprecated} def cache: (disable: bool) -> Hash[String, untyped]
-
-    %a{deprecated} def emulate_network_conditions: (?offline: bool, ?latency: ::Integer, ?download_throughput: ::Integer, ?upload_throughput: ::Integer, ?connection_type: untyped?) -> true
-
-    %a{deprecated} def offline_mode: () -> true
 
     def emulate: (?user_agent: String?, ?accept_language: String?, ?platform: String?, ?metadata: ::Hash[Symbol, untyped]?) -> nil
 

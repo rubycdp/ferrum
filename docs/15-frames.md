@@ -122,8 +122,7 @@ frame.main? # => false
 
 #### page : `Page`
 
-The page the frame belongs to, use `frame.page.url` and `frame.page.title` for the top window. `current_url` and
-`current_title` are deprecated and will be removed in 0.22.
+The page the frame belongs to, use `frame.page.url` and `frame.page.title` for the top window.
 
 ```ruby
 page.go_to("https://www.w3schools.com/tags/tag_frame.asp")

@@ -3,19 +3,11 @@ module Ferrum
     module Navigation
       def go_to: (?String? url, ?timeout: (::Numeric | Deadline)?, ?referrer: String?) -> String?
 
-      %a{deprecated} def goto: (?String? url, **untyped options) -> String?
-
-      %a{deprecated} def go: (?String? url, **untyped options) -> String?
-
       def go_to!: (?String? url, ?timeout: (::Numeric | Deadline)?, ?referrer: String?) -> String
 
       def refresh: (?timeout: (::Numeric | Deadline)?) -> true?
 
-      %a{deprecated} def reload: (?timeout: (::Numeric | Deadline)?) -> true?
-
       def refresh!: (?timeout: (::Numeric | Deadline)?) -> true
-
-      %a{deprecated} def reload!: (?timeout: (::Numeric | Deadline)?) -> true
 
       def stop: () -> nil
 
@@ -30,12 +22,6 @@ module Ferrum
       def await_navigation: (?watch: ::Numeric?, ?timeout: (::Numeric | Deadline)?) { () -> void } -> true?
 
       def await_navigation!: (?watch: ::Numeric?, ?timeout: (::Numeric | Deadline)?) { () -> void } -> true
-
-      %a{deprecated} def wait_for_reload: (?(::Numeric | Deadline) timeout) -> void
-
-      %a{deprecated} def wait_for_navigation: (?::Numeric navigation_wait, ?timeout: (::Numeric | Deadline)?) { () -> void } -> bool
-
-      %a{deprecated} def wait_for_navigation!: (?::Numeric navigation_wait, ?timeout: (::Numeric | Deadline)?) { () -> void } -> nil
 
       private
 

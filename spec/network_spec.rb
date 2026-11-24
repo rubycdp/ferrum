@@ -118,29 +118,6 @@ describe Ferrum::Network do
     end
   end
 
-  describe "#wait_for_idle" do
-    it "returns false when the network doesn't go idle in time and warns that it is deprecated" do
-      page.go_to("/show_cookies")
-      page.at_xpath("//button[text() = 'Set cookie slow']").click
-      Ferrum::Utils::Deprecate.reset!
-      result = nil
-
-      expect { result = network.wait_for_idle(duration: 0.05, timeout: 0.2) }
-        .to output(/wait_for_idle will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      expect(result).to be(false)
-    end
-  end
-
-  describe "#wait_for_idle!" do
-    it "raises when the network doesn't go idle in time" do
-      page.go_to("/show_cookies")
-      page.at_xpath("//button[text() = 'Set cookie slow']").click
-      allow(Ferrum::Utils::Deprecate).to receive(:warn)
-
-      expect { network.wait_for_idle!(timeout: 0.2) }.to raise_error(Ferrum::TimeoutError)
-    end
-  end
-
   describe "#idle?" do
     it "waits for network to be idle" do
       page.go_to("/with_slow_ajax_connection")
@@ -163,13 +140,6 @@ describe Ferrum::Network do
       page.go_to("/with_slow_ajax_connection")
 
       expect(network.idle?(connections: 1)).to be(true)
-    end
-
-    it "warns when connections is passed positionally" do
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(network.idle?(0)).to be(true) }
-        .to output(/Passing connections positionally will be removed.*called from #{__FILE__}/m).to_stderr
     end
   end
 
@@ -604,19 +574,6 @@ describe Ferrum::Network do
     end
   end
 
-  describe "#emulate_network_conditions" do
-    it "delays requests by the given latency and warns that it is deprecated" do
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(page.network.emulate_network_conditions(latency: 500)).to be(true) }
-        .to output(/emulate_network_conditions will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      start = Ferrum::Utils::ElapsedTime.monotonic_time
-      page.go_to("/with_js")
-
-      expect(Ferrum::Utils::ElapsedTime.elapsed_time(start)).to be >= 0.5
-    end
-  end
-
   describe "#emulate" do
     it "overrides the user agent" do
       page.network.emulate(user_agent: "foo")
@@ -657,22 +614,6 @@ describe Ferrum::Network do
 
       expect(page.evaluate("navigator.userAgent")).to eq(page.default_user_agent)
       expect(page.evaluate("navigator.platform")).to eq("Win32")
-    end
-
-    it "keeps the platform when headers set the user agent" do
-      page.network.emulate(platform: "Win32")
-      page.headers.set("User-Agent" => "foo")
-      page.go_to("/with_js")
-
-      expect(page.evaluate("[navigator.userAgent, navigator.platform]")).to eq(%w[foo Win32])
-    end
-
-    it "keeps the header user agent when the platform is emulated" do
-      page.headers.set("User-Agent" => "foo")
-      page.network.emulate(platform: "Win32")
-      page.go_to("/with_js")
-
-      expect(page.evaluate("[navigator.userAgent, navigator.platform]")).to eq(%w[foo Win32])
     end
 
     context "with metadata" do
@@ -762,17 +703,6 @@ describe Ferrum::Network do
     end
   end
 
-  describe "#offline_mode" do
-    it "fails requests while offline and warns that it is deprecated" do
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { page.network.offline_mode }
-        .to output(/offline_mode will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-
-      expect { page.go_to("/with_js") }.to raise_error(Ferrum::StatusError, /net::ERR_INTERNET_DISCONNECTED/)
-    end
-  end
-
   describe "#cache=" do
     it "loads resources from the network when the cache is off" do
       network.cache = false
@@ -785,17 +715,6 @@ describe Ferrum::Network do
       network.cache = true
 
       expect(cached_on_second_visit?).to be_truthy
-    end
-  end
-
-  describe "#cache" do
-    it "loads resources from the network when disabled and warns that it is deprecated" do
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { network.cache(disable: true) }
-        .to output(/cache\(disable:\) will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-
-      expect(cached_on_second_visit?).to be_falsey
     end
   end
 

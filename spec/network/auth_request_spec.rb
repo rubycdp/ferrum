@@ -104,13 +104,4 @@ describe Ferrum::Network::AuthRequest do
       expect(request.id).to eq("interception-id")
     end
   end
-
-  describe "#request_id" do
-    it "returns the id of the paused request and warns that it is deprecated" do
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(request.request_id).to eq("interception-id") }
-        .to output(/request_id will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-    end
-  end
 end

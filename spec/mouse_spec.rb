@@ -43,13 +43,6 @@ describe Ferrum::Mouse do
       end
     end
 
-    it "warns when given the deprecated wait:" do
-      browser.go_to("/click_coordinates")
-
-      expect { browser.mouse.click(x: 100, y: 150, wait: 0) }
-        .to output(/:wait is renamed to :navigation_wait/).to_stderr
-    end
-
     it "supports clicking precise coordinates" do
       browser.go_to("/click_coordinates")
       browser.mouse.click(x: 100, y: 150)
@@ -118,17 +111,6 @@ describe Ferrum::Mouse do
       ).to eq([10, 20])
     end
 
-    it "scrolls by positional coordinates and warns that they are deprecated" do
-      browser.go_to("/long_page")
-      browser.resize(width: 10, height: 10)
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { browser.mouse.scroll_by(30, 70) }
-        .to output(/Passing x and y to scroll_by positionally will be removed in Ferrum 0\.22.*called from #{__FILE__}/m)
-        .to_stderr
-      expect(browser.evaluate("[window.scrollX, window.scrollY]")).to eq([30, 70])
-    end
-
     context "with smooth scrolling", :launch do
       before do
         smooth_browser.go_to(base_url("/long_page"))
@@ -163,23 +145,6 @@ describe Ferrum::Mouse do
       browser.mouse.scroll_to(y: 50)
 
       expect(browser.evaluate("[window.scrollX, window.scrollY]")).to eq([200, 50])
-    end
-
-    it "scrolls to positional coordinates and warns that they are deprecated" do
-      browser.go_to("/long_page")
-      browser.resize(width: 10, height: 10)
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { browser.mouse.scroll_to(200, 100) }
-        .to output(/Passing x and y to scroll_to positionally will be removed in Ferrum 0\.22.*called from #{__FILE__}/m)
-        .to_stderr
-      expect(browser.evaluate("[window.scrollX, window.scrollY]")).to eq([200, 100])
-    end
-
-    it "raises when given one positional coordinate" do
-      browser.go_to("/long_page")
-
-      expect { browser.mouse.scroll_to(200) }.to raise_error(ArgumentError, "scroll_to takes x and y")
     end
 
     context "with smooth scrolling", :launch do
@@ -225,16 +190,6 @@ describe Ferrum::Mouse do
   end
 
   describe "#up" do
-    it "takes the deprecated wait: as navigation_wait:" do
-      Ferrum::Utils::Deprecate.reset!
-      record_mouse_buttons
-
-      expect { browser.mouse.down.up(wait: 0.1) }.to output(/:wait is renamed to :navigation_wait/).to_stderr
-      expect(browser.evaluate("events")).to eq(%w[mousedown:0:1 mouseup:0:1])
-    ensure
-      Ferrum::Utils::Deprecate.reset!
-    end
-
     it "releases the left button by default" do
       record_mouse_buttons
 

@@ -71,40 +71,6 @@ describe Ferrum::Frame::DOM do
     end
   end
 
-  describe "#current_url" do
-    around do |example|
-      Ferrum::Utils::Deprecate.reset!
-      example.run
-      Ferrum::Utils::Deprecate.reset!
-    end
-
-    it "returns the top window's url and warns that it is deprecated" do
-      page.go_to
-      page.execute(%(document.body.innerHTML += "<iframe src='/slow' name='frame'>"))
-      frame = page.at_xpath("//iframe[@name='frame']").frame
-
-      expect { expect(frame.current_url).to eq(page.url) }
-        .to output(/#current_url will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-    end
-  end
-
-  describe "#current_title" do
-    around do |example|
-      Ferrum::Utils::Deprecate.reset!
-      example.run
-      Ferrum::Utils::Deprecate.reset!
-    end
-
-    it "returns the top window's title and warns that it is deprecated" do
-      page.go_to
-      page.execute(%(document.body.innerHTML += "<iframe src='/slow' name='frame'>"))
-      frame = page.at_xpath("//iframe[@name='frame']").frame
-
-      expect { expect(frame.current_title).to eq(page.title) }
-        .to output(/#current_title will be removed in Ferrum 0\.22/).to_stderr
-    end
-  end
-
   describe "#doctype" do
     it "returns the doctype" do
       page.go_to("/frames")
@@ -166,16 +132,6 @@ describe Ferrum::Frame::DOM do
       JS
       frame = page.at_xpath("//iframe[@name='frame']").frame
       expect(frame.html).to include("Hello Frame")
-    end
-  end
-
-  describe "#body" do
-    it "returns the HTML and warns that it is deprecated" do
-      page.go_to("/simple")
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(page.body).to eq(page.html) }
-        .to output(/body will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
     end
   end
 
@@ -479,24 +435,6 @@ describe Ferrum::Frame::DOM do
       page.go_to("/with_js")
 
       expect { page.wait_xpath!("//div[@id='never_appears']", timeout: 0.3) }.to raise_error(Ferrum::TimeoutError)
-    end
-  end
-
-  describe "#wait_for_selector" do
-    it "finds the node by css and warns that it is deprecated" do
-      page.go_to("/with_js")
-      Ferrum::Utils::Deprecate.reset!
-      node = nil
-
-      expect { node = page.wait_for_selector(css: "p#remove_me") }
-        .to output(/wait_for_selector will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      expect(node.attribute(:id)).to eq("remove_me")
-    end
-
-    it "raises when both css and xpath are given" do
-      allow(Ferrum::Utils::Deprecate).to receive(:warn)
-
-      expect { page.wait_for_selector(css: "a", xpath: "//a") }.to raise_error(ArgumentError)
     end
   end
 end

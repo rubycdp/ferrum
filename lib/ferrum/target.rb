@@ -9,8 +9,6 @@ module Ferrum
   #
   class Target
     NEW_WINDOW_WAIT = ENV.fetch("FERRUM_NEW_WINDOW_WAIT", 0.3).to_f
-    WINDOW_DEPRECATED = "window? will be removed in Ferrum 0.22. Use opener_id, it is set for a target another one " \
-                        "opened."
 
     attr_reader :options
 
@@ -79,10 +77,9 @@ module Ferrum
       @worker ||= build_worker
     end
 
-    # The client connected to this target's own session (or a dedicated
-    # WebSocket connection if `options.flatten` is disabled).
+    # The client connected to this target's own session.
     #
-    # @return [Client, SessionClient]
+    # @return [SessionClient]
     def client
       @client ||= build_client
     end
@@ -106,7 +103,7 @@ module Ferrum
     #
     # @api private
     def build_worker
-      if options.flatten && session_id.nil?
+      if session_id.nil?
         raise NoSuchTargetError, "No session with #{type} #{id}, attach to it with Context#attach_target first"
       end
 
@@ -174,16 +171,6 @@ module Ferrum
     # @return [String, nil]
     def context_id
       @params["browserContextId"] unless @implicit
-    end
-
-    # Whether this target was opened by another one, i.e. has an {#opener_id}.
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use {#opener_id}.
-    #
-    # @return [Boolean]
-    def window?
-      Utils::Deprecate.warn(WINDOW_DEPRECATED, user_code: true)
-      !!opener_id
     end
 
     # Whether this target is an iframe.
@@ -256,13 +243,7 @@ module Ferrum
     private
 
     def build_client
-      return @browser_client.session(session_id) if options.flatten
-
-      Client.new(ws_url, options)
-    end
-
-    def ws_url
-      @browser_client.ws_url.merge(path: "/devtools/page/#{id}")
+      @browser_client.session(session_id)
     end
   end
 end

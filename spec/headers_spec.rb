@@ -9,17 +9,11 @@ describe Ferrum::Headers do
       expect(browser.html).to include("YOURNAME: your_value")
     end
 
-    it "supports User-Agent" do
+    it "sends User-Agent with requests and leaves navigator alone" do
       browser.headers.set("User-Agent" => "foo")
-      browser.go_to
-      expect(browser.evaluate("window.navigator.userAgent")).to eq("foo")
-    end
-
-    it "warns that changing navigator through User-Agent is deprecated" do
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { browser.headers.set("User-Agent" => "foo") }
-        .to output(/User-Agent and Accept-Language set through headers.*0\.22.*called from #{__FILE__}/m).to_stderr
+      browser.go_to("/headers")
+      expect(browser.html).to include("USER_AGENT: foo")
+      expect(browser.evaluate("navigator.userAgent")).to eq(browser.default_user_agent)
     end
 
     it "sets headers for all HTTP requests" do
@@ -43,20 +37,6 @@ describe Ferrum::Headers do
       browser.go_to
       expect(browser.evaluate("navigator.userAgent")).to eq("Bot/1.0")
     end
-
-    it "brings the user agent back when set no longer has one" do
-      browser.headers.set("User-Agent" => "foo")
-      browser.headers.set("X-Trace" => "1")
-      browser.go_to
-      expect(browser.evaluate("navigator.userAgent")).to eq(browser.default_user_agent)
-    end
-
-    it "brings client hints back when set no longer has a user agent" do
-      browser.headers.set("User-Agent" => "foo")
-      browser.headers.set("X-Trace" => "1")
-      browser.go_to("/headers")
-      expect(browser.html).to include("SEC_CH_UA_PLATFORM")
-    end
   end
 
   describe "#clear" do
@@ -74,13 +54,12 @@ describe Ferrum::Headers do
       expect(browser.html).not_to include("REFERER: http://google.com/")
     end
 
-    it "brings the user agent and language back" do
+    it "stops sending the user agent and language" do
       browser.headers.set("User-Agent" => "foo", "Accept-Language" => "de-DE")
       browser.headers.clear
       browser.go_to("/headers")
-      expect(browser.evaluate("navigator.userAgent")).to eq(browser.default_user_agent)
+      expect(browser.html).to include("USER_AGENT: #{browser.default_user_agent}")
       expect(browser.html).not_to include("ACCEPT_LANGUAGE: de-DE")
-      expect(browser.html).to include("SEC_CH_UA_PLATFORM")
     end
 
     it "keeps a user agent from network.emulate" do
@@ -115,13 +94,6 @@ describe Ferrum::Headers do
       browser.go_to("/headers")
       expect(browser.html).to include("USER_AGENT: #{browser.default_user_agent}")
       expect(browser.html).to match(/ACCEPT_LANGUAGE: esperanto/)
-    end
-
-    it "warns that changing navigator through Accept-Language is deprecated" do
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { browser.headers.add("Accept-Language" => "de-DE") }
-        .to output(/User-Agent and Accept-Language set through headers.*0\.22.*called from #{__FILE__}/m).to_stderr
     end
 
     it "sends added headers with the initial and later requests" do

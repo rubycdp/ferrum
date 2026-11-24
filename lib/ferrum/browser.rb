@@ -27,30 +27,28 @@ module Ferrum
     extend Forwardable
 
     delegate %i[default_context] => :contexts
-    delegate %i[targets create_target page pages windows await_page await_page! workers service_workers
+    delegate %i[targets create_target page pages await_page await_page! workers service_workers
                 attach_target cookies] => :default_context
-    delegate %i[go_to go_to! goto go back back! forward forward! refresh refresh! reload reload! stop
+    delegate %i[go_to go_to! back back! forward forward! refresh refresh! stop
                 await_navigation await_navigation! await_download await_download! wait_until wait_until!
-                wait_for_reload wait_for_navigation wait_for_navigation!
-                at_css at_xpath css xpath wait_css wait_css! wait_xpath wait_xpath! wait_for_selector
-                current_url current_title url title
-                html body doctype content=
+                at_css at_xpath css xpath wait_css wait_css! wait_xpath wait_xpath!
+                url title html doctype content=
                 headers network console accessibility downloads tracing
                 mouse keyboard
                 screenshot pdf mhtml viewport_size device_pixel_ratio document_size
                 start_screencast stop_screencast
                 frames frame_by main_frame
                 evaluate evaluate_handle execute isolated_world
-                add_script_tag add_style_tag bypass_csp bypass_csp=
+                add_script_tag add_style_tag bypass_csp=
                 evaluate_on_new_document remove_script_on_new_document
                 on off position position= window_bounds window_bounds= activate
                 playback_rate playback_rate=
-                disable_javascript javascript= javascript? set_viewport resize] => :page
+                javascript= javascript? set_viewport resize] => :page
 
     attr_reader :client, :process, :contexts, :options
 
-    delegate %i[timeout timeout= protocol_timeout protocol_timeout= base_url base_url= default_user_agent
-                default_user_agent= extensions add_extension] => :options
+    delegate %i[timeout timeout= base_url base_url= default_user_agent default_user_agent= extensions
+                add_extension] => :options
 
     #
     # Initializes the browser.
@@ -69,11 +67,6 @@ module Ferrum
     #
     # @option options [Boolean] :xvfb (false)
     #   Run browser in a virtual framebuffer.
-    #
-    # @option options [Boolean] :flatten (true)
-    #   Use one websocket connection to the browser and all the pages in flatten mode.
-    #   Passing `false` is deprecated, the option will be removed in Ferrum 0.22
-    #   and every page will share the browser's connection.
     #
     # @option options [(Integer, Integer)] :window_size ([1024, 768])
     #   The dimensions of the browser window in which to test, expressed as a
@@ -97,16 +90,6 @@ module Ferrum
     #   only sends commands waits for the browser's answer. A call that runs out raises {TimeoutError}.
     #   `FERRUM_DEFAULT_TIMEOUT` sets the default. Pass `timeout:` to `go_to`, `refresh` or `await_navigation` to
     #   change it for one call, or wrap calls in {Deadline.within} to bound them together.
-    #
-    # @option options [Boolean] :js_errors
-    #   Deprecated, will be removed in Ferrum 0.22. When true, JavaScript
-    #   errors get re-raised in Ruby. Uncaught exceptions are in the console,
-    #   use `page.console.select { |m| m.source == :exception }` or
-    #   `page.on(:console)` instead.
-    #
-    # @option options [Boolean] :pending_connection_errors (false)
-    #   Deprecated, will be removed in Ferrum 0.22. Makes `go_to` raise
-    #   {PendingConnectionsError} on timeout, use `go_to!` instead.
     #
     # @option options [String] :browser_path
     #   Path to Chrome binary, you can also set ENV variable as

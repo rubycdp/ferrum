@@ -36,8 +36,6 @@ module Ferrum
 
     def content=: (untyped html) -> untyped
 
-    %a{deprecated} def set_content: (untyped html) -> untyped
-
     def execution_id!: (?(::Numeric | Deadline)? timeout) -> untyped
 
     def execution_id: () -> (nil | untyped)

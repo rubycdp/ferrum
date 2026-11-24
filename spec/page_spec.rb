@@ -175,19 +175,6 @@ describe Ferrum::Page do
     end
   end
 
-  describe "#bypass_csp" do
-    it "bypasses CSP headers and warns that it is deprecated" do
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(page.bypass_csp).to be(true) }
-        .to output(/bypass_csp\(enabled:\) will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      page.go_to("/csp")
-      page.add_script_tag(content: "window.__injected = 42")
-
-      expect(page.evaluate("window.__injected")).to eq(42)
-    end
-  end
-
   describe "#evaluate_on_new_document" do
     it "runs JavaScript before the page's scripts" do
       page.evaluate_on_new_document <<~JS
@@ -299,19 +286,6 @@ describe Ferrum::Page do
     it "returns false once javascript is turned off" do
       page.javascript = false
 
-      expect(page.javascript?).to be(false)
-    end
-  end
-
-  describe "#disable_javascript" do
-    it "stops the page's scripts and warns that it is deprecated" do
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { page.disable_javascript }
-        .to output(/disable_javascript will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      page.go_to("/console_log")
-
-      expect(page.evaluate("typeof window.onload")).to eq("object")
       expect(page.javascript?).to be(false)
     end
   end

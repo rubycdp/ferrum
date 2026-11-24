@@ -14,9 +14,6 @@ module Ferrum
     ALLOWED_TARGET_TYPES = %w[page iframe worker shared_worker service_worker].freeze
     RECURSIVE_AUTO_ATTACH_TYPES = %w[page iframe worker shared_worker].freeze
 
-    EACH_PAIRS_DEPRECATED = "contexts.each { |id, context| } will be removed in Ferrum 0.22. It yields the context, " \
-                            "use context.id for the id."
-
     include Enumerable
 
     # @api private
@@ -50,8 +47,6 @@ module Ferrum
     end
 
     # Iterates over the contexts; returns an `Enumerator` if no block is given.
-    # A block taking two arguments still gets `[id, context]` pairs, which is
-    # deprecated and will be removed in Ferrum 0.22.
     #
     # @yieldparam [Context] context
     #
@@ -59,12 +54,7 @@ module Ferrum
     def each(&block)
       return enum_for(__method__) unless block
 
-      if block.arity == 2
-        Utils::Deprecate.warn(EACH_PAIRS_DEPRECATED, user_code: true)
-        @contexts.each(&block)
-      else
-        @contexts.each_value(&block)
-      end
+      @contexts.each_value(&block)
       self
     end
 

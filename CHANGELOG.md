@@ -1,3 +1,51 @@
+## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.21.0...main) ##
+
+### Added
+
+### Changed
+- `User-Agent` and `Accept-Language` set through `headers` are only sent with requests, they no longer change what
+  `navigator` reports. Use `network.emulate(user_agent:, accept_language:)` to override both
+
+### Deprecated
+
+### Fixed
+
+### Removed
+- `target.window?` and `windows` of a context and of the browser, use `target.opener_id`, `await_page { ... }` or
+  `pages(&:opener_id)`
+- `:js_errors`, uncaught exceptions are in `page.console` with `source: :exception`, and `page.on(:console)` yields them
+- `:pending_connection_errors` and `PendingConnectionsError`, use `go_to!`, it raises `NavigationTimeoutError`
+- `current_url` and `current_title` of pages and frames, use `url` and `title`, or `frame.page.url` for the top window
+  from a frame
+- `cookies.all`, use `to_a`, or `map(&:name)` for the names
+- `flatten: false`, every page shares the browser's websocket connection
+- `FERRUM_DEBUG`, use `FERRUM_LOG=*`
+- `:protocol_timeout`, `browser.protocol_timeout`, `browser.protocol_timeout=` and `FERRUM_PROTOCOL_TIMEOUT`, they were
+  ignored, `:timeout` bounds everything else
+- `wait:` of `click`, `mouse.up` and `mouse.down`, use `navigation_wait:`. `FERRUM_CLICK_WAIT` and `FERRUM_GOTO_WAIT`,
+  use `FERRUM_NAVIGATION_WAIT`
+- `mode:` and `keys:` of `node.click`, use `button: :right` or `count: 2`, and `modifiers:`
+- Positional `mouse.scroll_by(x, y)` and `scroll_to(x, y)`, pass `x:` and `y:`
+- `accessibility.enable` and `disable`, use `accessibility.enabled = true/false`
+- `goto`, `go`, `reload` and `reload!`, use `go_to`, `refresh` and `refresh!`
+- `frame.set_content`, use `content=`
+- `node.scroll_into_view`, `node.axnode` and `node[name]`, use `scroll`, `ax_node` and `property(name)`
+- `contexts.each { |id, context| }`, `each` yields the context, use `context.id` for the id
+- `request_id` of intercepted and auth requests, `post_data` of requests, and `timestamp` and `monotonic_time` of
+  `Network::Error`, use `id`, `body` and `time`
+- `disable_javascript`, `bypass_csp(enabled:)`, `network.cache(disable:)`, `offline_mode` and
+  `emulate_network_conditions`, use `javascript = false`, `bypass_csp =`, `cache =`, `offline = true` and `throttle`
+- `body`, use `html`. `type` and `type?` of `Network::Request` and `type` of `Network::Response`, use `resource_type`
+  and `resource_type?`
+- `Ferrum::NotImplementedError`, nothing raises it since `node.hover` works
+- Passing a Hash with an `"objectId"` key to `evaluate` as a remote object, it is passed as a plain Hash now. Pass the
+  `Ferrum::RemoteObject` from `evaluate_handle`
+- `node.find_position`, use `pinpoint`, its offsets are measured from the center unless `position: :top`
+- `wait_for_navigation`, `wait_for_navigation!`, `wait_for_reload`, `wait_for_selector`, `network.wait_for_idle`,
+  `wait_for_idle!`, `downloads.wait` and `node.wait_for_stop_moving`, use `await_navigation`, `wait_css`, `wait_xpath`,
+  `wait_idle`, `page.await_download` and `wait_still`. Positional `network.idle?(n)`, pass `connections:`
+
+
 ## [0.21.0](https://github.com/rubycdp/ferrum/compare/v0.20.2...v0.21.0) (November 24, 2026) ##
 
 ### Added

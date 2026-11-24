@@ -15,9 +15,6 @@ Ferrum::Browser.new(options)
     * `:incognito` (Boolean) - Create an incognito profile for the browser startup window, `true` by default.
     * `:dockerize` (Boolean) - Provide CLI flags to the browser to run it in a container, `false` by default.
     * `:xvfb` (Boolean) - Run browser in a virtual framebuffer, `false` by default.
-    * `:flatten` (Boolean) - Use one websocket connection to the browser and all the pages in flatten mode,
-      `true` by default. When set to `false`, each page/target opens its own dedicated websocket connection instead
-      of sharing the browser's connection. Passing `false` is deprecated, the option will be removed in 0.22.
     * `:window_size` (Array) - The dimensions of the browser window in which to
       test, expressed as a 2-element array, e.g. [1024, 768]. Default: [1024, 768]
     * `:extensions` (Array[String | Hash]) - An array of paths to files or JS
@@ -32,11 +29,6 @@ Ferrum::Browser.new(options)
       commands, like `evaluate` or `at_css`, waits for the browser's answer. A call that runs out raises
       `Ferrum::TimeoutError`. Pass `timeout:` to `go_to`, `refresh` or `await_navigation` to change it for one
       call, or wrap calls in `Ferrum::Deadline.within` to bound them together, see [Timeouts](#timeouts).
-    * `:js_errors` (Boolean) - Deprecated, will be removed in 0.22. When true, JavaScript errors get re-raised in
-      Ruby. Uncaught exceptions are in the [console](/docs/ferrum/javascript#console), use
-      `page.console.select { |m| m.source == :exception }` or `page.on(:console)` instead.
-    * `:pending_connection_errors` (Boolean) - Deprecated, will be removed in 0.22. Use `page.go_to!(url)` to raise
-      when the page doesn't load in time.
     * `:browser_path` (String) - Path to Chrome binary, or to an Opera or Edge one, you can also set ENV
       variable as `BROWSER_PATH=some/path/chrome bundle exec rspec`.
     * `:browser_options` (Hash) - Additional command line options,
@@ -82,8 +74,7 @@ FERRUM_LOG=0                         # nothing, even with :logger
 ```
 
 Items with a dot are CDP method patterns, a leading `-` leaves things out and wins over the rest, and a response is
-kept or dropped with the command it answers. Without `FERRUM_LOG`, `:logger` gets everything. `FERRUM_DEBUG` still
-works as `FERRUM_LOG=*`, but is deprecated and will be removed in 0.22.
+kept or dropped with the command it answers. Without `FERRUM_LOG`, `:logger` gets everything.
 
 `FERRUM_LOG_FORMAT` picks how CDP messages look. `json` writes each message as JSON alone, one per line and never
 colored, for tools such as `jq`. `annotated` puts the command id and method in front of each CDP message, one line

@@ -1,7 +1,6 @@
 module Ferrum
   class Target
     NEW_WINDOW_WAIT: ::Float
-    WINDOW_DEPRECATED: String
 
     attr_writer page: Page?
     attr_reader options: Browser::Options
@@ -26,7 +25,7 @@ module Ferrum
 
     def worker: () -> Worker
 
-    def client: () -> (Client | SessionClient)
+    def client: () -> SessionClient
 
     def build_page: (**untyped options) -> Page
 
@@ -48,8 +47,6 @@ module Ferrum
 
     def context_id: () -> String?
 
-    %a{deprecated} def window?: () -> bool
-
     def iframe?: () -> bool
 
     def page?: () -> bool
@@ -66,8 +63,6 @@ module Ferrum
 
     private
 
-    def build_client: () -> (Client | SessionClient)
-
-    def ws_url: () -> ::Addressable::URI
+    def build_client: () -> SessionClient
   end
 end

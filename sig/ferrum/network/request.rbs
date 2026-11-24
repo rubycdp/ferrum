@@ -9,12 +9,6 @@ module Ferrum
 
       def resource_type?: (String | Symbol value) -> bool
 
-      %a{deprecated}
-      def type: () -> String
-
-      %a{deprecated}
-      def type?: (String | Symbol value) -> bool
-
       def frame_id: () -> untyped
 
       def url: () -> untyped

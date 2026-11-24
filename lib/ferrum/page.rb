@@ -30,19 +30,13 @@ module Ferrum
   # JavaScript evaluation methods are ultimately delegated to from {Browser}.
   #
   class Page
-    NAVIGATION_WAIT = Utils::Deprecate.renamed_env(
-      "FERRUM_NAVIGATION_WAIT", %w[FERRUM_CLICK_WAIT FERRUM_GOTO_WAIT], 0.1
-    )
+    NAVIGATION_WAIT = ENV.fetch("FERRUM_NAVIGATION_WAIT", 0.1).to_f
     WAIT_INTERVAL = 0.05
-    WAIT_FOR_NAVIGATION_DEPRECATED = "wait_for_navigation will be removed in Ferrum 0.22. Use " \
-                                     "await_navigation(watch: seconds) { ... } instead."
-    WAIT_FOR_RELOAD_DEPRECATED = "wait_for_reload will be removed in Ferrum 0.22. Use await_navigation { ... } " \
-                                 "around the code that reloads the page."
 
     extend Forwardable
 
-    delegate %i[at_css at_xpath css xpath wait_css wait_css! wait_xpath wait_xpath! wait_for_selector
-                current_url current_title url title html body doctype content=
+    delegate %i[at_css at_xpath css xpath wait_css wait_css! wait_xpath wait_xpath!
+                url title html doctype content=
                 execution_id execution_id! evaluate evaluate_handle execute isolated_world
                 add_script_tag add_style_tag] => :main_frame
     delegate %i[await_download await_download!] => :downloads
@@ -260,19 +254,6 @@ module Ferrum
     end
 
     #
-    # @deprecated Will be removed in Ferrum 0.22. Use `javascript = false`.
-    #
-    # @return [Hash]
-    #
-    # @raise [TimeoutError]
-    def disable_javascript
-      Utils::Deprecate.warn("disable_javascript will be removed in Ferrum 0.22. Use javascript = false instead.",
-                            user_code: true)
-      @javascript = false
-      command("Emulation.setScriptExecutionDisabled", value: true)
-    end
-
-    #
     # The current position of the window.
     #
     # @return [(Integer, Integer)]
@@ -422,22 +403,6 @@ module Ferrum
     #
     def bypass_csp=(enabled)
       command("Page.setBypassCSP", enabled: enabled)
-    end
-
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use `bypass_csp = true`.
-    #
-    # @param [Boolean] enabled
-    #
-    # @return [Boolean]
-    #
-    # @raise [TimeoutError]
-    #
-    def bypass_csp(enabled: true)
-      Utils::Deprecate.warn("bypass_csp(enabled:) will be removed in Ferrum 0.22. Use bypass_csp = true instead.",
-                            user_code: true)
-      self.bypass_csp = enabled
-      enabled
     end
 
     #
@@ -608,13 +573,6 @@ module Ferrum
       downloads.subscribe
 
       on("DOM.documentUpdated") { @document_version += 1 }
-
-      if @options.js_errors
-        on("Runtime.exceptionThrown") do |params|
-          # FIXME: https://jvns.ca/blog/2015/11/27/why-rubys-timeout-is-dangerous-and-thread-dot-raise-is-terrifying/
-          Thread.main.raise JavaScriptError, params["exceptionDetails"]
-        end
-      end
 
       chain(:dialog)
     end

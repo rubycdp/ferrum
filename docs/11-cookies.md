@@ -27,11 +27,6 @@ browser.cookies.to_a # => [#<Ferrum::Cookies::Cookie:0x0000558624b37a40 @attribu
 browser.cookies.select { |cookie| cookie.domain == ".google.com" }
 ```
 
-#### all : `Hash<String, Cookie>`
-
-Deprecated, will be removed in 0.22. Cookies keyed by name, so of the cookies sharing a name only one is kept. Use
-`to_a`, or `map(&:name)` for the names.
-
 #### \[\](name, domain: `String`, path: `String`) : `Cookie` | `nil`
 
 The first cookie with the given name. A name can be used by several cookies, on different domains or paths, `domain`
@@ -119,7 +114,7 @@ browser.cookies.load
 #### each(urls: `Array<String>`) : `Enumerator<Cookie>`
 
 The cookies sent to the page's URL and the URLs of its frames, or to the given URLs. Nothing before the page has
-loaded a URL. `all` is deprecated here too.
+loaded a URL.
 
 ```ruby
 page.cookies.map(&:name) # => ["session"]

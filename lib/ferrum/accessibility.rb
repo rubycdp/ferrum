@@ -105,32 +105,6 @@ module Ferrum
       @page.command(enabled ? "Accessibility.enable" : "Accessibility.disable")
     end
 
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use `enabled = true`.
-    #
-    # @return [self]
-    #
-    # @raise [TimeoutError]
-    #
-    def enable
-      Utils::Deprecate.warn("accessibility.enable will be removed in Ferrum 0.22. Use enabled = true instead.",
-                            user_code: true)
-      tap { self.enabled = true }
-    end
-
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use `enabled = false`.
-    #
-    # @return [self]
-    #
-    # @raise [TimeoutError]
-    #
-    def disable
-      Utils::Deprecate.warn("accessibility.disable will be removed in Ferrum 0.22. Use enabled = false instead.",
-                            user_code: true)
-      tap { self.enabled = false }
-    end
-
     private
 
     def build(nodes)

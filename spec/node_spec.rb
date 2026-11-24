@@ -135,18 +135,6 @@ describe Ferrum::Node do
     end
   end
 
-  describe "#scroll_into_view" do
-    it "scrolls the node into the window and warns that it is deprecated" do
-      browser.go_to("/scroll")
-      link = browser.at_xpath("//a[*//text() = 'Below the fold']")
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { link.scroll_into_view }
-        .to output(/scroll_into_view will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      expect(link.in_viewport?).to eq(true)
-    end
-  end
-
   describe "#in_viewport?" do
     before { browser.go_to("/scroll") }
 
@@ -242,12 +230,6 @@ describe Ferrum::Node do
 
       # first load, load of new url, ping
       expect(browser.network.traffic.length).to be <= 5
-    end
-
-    it "warns when given the deprecated wait:" do
-      browser.go_to("/link_with_ping")
-
-      expect { browser.at_css("a").click(wait: 0) }.to output(/:wait is renamed to :navigation_wait/).to_stderr
     end
 
     it "returns without waiting for the navigation to load when navigation is false" do
@@ -425,14 +407,6 @@ describe Ferrum::Node do
           expect(log.text).to eq(instruction)
         end
       end
-
-      it "double-clicks the node for the deprecated mode: :double and warns about it" do
-        Ferrum::Utils::Deprecate.reset!
-
-        expect { browser.at_css("#one").click(mode: :double, delay: 0.05) }
-          .to output(/mode: will be removed in Ferrum 0\.22, use count: 2.*called from #{__FILE__}/m).to_stderr
-        expect(browser.at_css("#log").text).to eq("one")
-      end
     end
 
     it "presses the given button" do
@@ -440,15 +414,6 @@ describe Ferrum::Node do
 
       browser.at_css("#target").click(button: :right)
 
-      expect(browser.evaluate("events")).to eq(["2:1:false:false"])
-    end
-
-    it "presses the right button for the deprecated mode: :right and warns about it" do
-      record_mousedowns
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { browser.at_css("#target").click(mode: :right) }
-        .to output(/mode: will be removed in Ferrum 0\.22, use button: :right.*called from #{__FILE__}/m).to_stderr
       expect(browser.evaluate("events")).to eq(["2:1:false:false"])
     end
 
@@ -460,27 +425,12 @@ describe Ferrum::Node do
       expect(browser.evaluate("events")).to eq(["0:1:true:true"])
     end
 
-    it "holds the modifiers of the deprecated keys: and warns about it" do
-      record_mousedowns
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { browser.at_css("#target").click(keys: [:shift]) }
-        .to output(/:keys is renamed to :modifiers.*called from #{__FILE__}/m).to_stderr
-      expect(browser.evaluate("events")).to eq(["0:1:true:false"])
-    end
-
     it "holds the keys of keyboard.hold when no modifiers are given" do
       record_mousedowns
 
       browser.keyboard.hold(:shift) { browser.at_css("#target").click }
 
       expect(browser.evaluate("events")).to eq(["0:1:true:false"])
-    end
-
-    it "raises for an unknown mode" do
-      record_mousedowns
-
-      expect { browser.at_css("#target").click(mode: :triple) }.to raise_error(ArgumentError, "unknown mode: :triple")
     end
 
     it "raises NodeNotFoundError for a node from before a refresh" do
@@ -745,16 +695,6 @@ describe Ferrum::Node do
     end
   end
 
-  describe "#[]" do
-    it "returns the property with the given name and warns that it is deprecated" do
-      browser.go_to("/attributes_properties")
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(browser.at_css(".some_other_class")["innerHTML"]).to eq("<p>foobar</p>") }
-        .to output(/node\[name\] will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-    end
-  end
-
   describe "#==" do
     it "does not equal a node from another page" do
       browser.go_to("/simple")
@@ -788,18 +728,6 @@ describe Ferrum::Node do
       browser.go_to("/animation")
 
       expect { browser.at_css(".animated").wait_still!(timeout: 0.3, interval: 0.1) }.to raise_error(Ferrum::TimeoutError)
-    end
-  end
-
-  describe "#wait_for_stop_moving" do
-    it "raises NodeMovingError for a node that keeps moving and warns that it is deprecated" do
-      browser.go_to("/animation")
-      node = browser.at_css(".animated")
-      Ferrum::Utils::Deprecate.reset!
-
-      expect do
-        expect { node.wait_for_stop_moving(delay: 0.1, attempts: 2) }.to raise_error(Ferrum::NodeMovingError, /is moving/)
-      end.to output(/wait_for_stop_moving will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
     end
   end
 
@@ -871,16 +799,6 @@ describe Ferrum::Node do
       expect(ax).to be_a(Ferrum::Accessibility::AXNode)
       expect(ax.role).to eq("button")
       expect(ax.name).to eq("Frame button")
-    end
-  end
-
-  describe "#axnode" do
-    it "returns the AXNode for the element and warns that it is deprecated" do
-      browser.go_to("/accessibility")
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(browser.at_css("#submit").axnode.role).to eq("button") }
-        .to output(/axnode will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
     end
   end
 
@@ -1533,20 +1451,6 @@ describe Ferrum::Node do
       node.execute("this.style.display = 'none'; this.offsetHeight")
 
       expect { node.pinpoint }.to raise_error(Ferrum::CoordinatesNotFoundError)
-    end
-  end
-
-  describe "#find_position" do
-    it "warns that find_position is deprecated and returns the offset from the top-left corner" do
-      browser.go_to("/simple")
-      node = browser.at_css("#nav")
-      left, top = node.evaluate("[this.getBoundingClientRect().left, this.getBoundingClientRect().top]")
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(node.find_position(x: 5, y: 3)).to match([be_within(0.5).of(left + 5), be_within(0.5).of(top + 3)]) }
-        .to output(/find_position will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-    ensure
-      Ferrum::Utils::Deprecate.reset!
     end
   end
 

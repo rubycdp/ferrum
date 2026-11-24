@@ -18,8 +18,6 @@ module Ferrum
   #
   class Network
     WAIT_INTERVAL = 0.05
-    WAIT_FOR_IDLE_DEPRECATED = "wait_for_idle will be removed in Ferrum 0.22. Use wait_idle instead, duration: is " \
-                               "interval: there."
     CLEAR_TYPE = %i[traffic cache].freeze
     EMULATE_KEYS = %i[user_agent accept_language platform metadata].freeze
     METADATA_REQUIRED = %i[platform platform_version architecture model mobile].freeze
@@ -96,53 +94,15 @@ module Ferrum
     end
 
     #
-    # Waits for network idle.
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use {#wait_idle}, `duration:` is `interval:` there.
-    #
-    # @param [Integer] connections
-    #
-    # @param [Float] duration
-    #
-    # @param [Numeric, Deadline] timeout
-    #
-    # @return [Boolean]
-    #
-    def wait_for_idle(connections: 0, duration: WAIT_INTERVAL, timeout: @page.timeout)
-      Utils::Deprecate.warn(WAIT_FOR_IDLE_DEPRECATED, user_code: true)
-      wait_idle(connections: connections, timeout: timeout, interval: duration) || false
-    end
-
-    #
-    # Waits for network idle or raises {Ferrum::TimeoutError} error.
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use {#wait_idle!}.
-    #
-    # @param [Hash] options
-    #   The options of {#wait_for_idle}.
-    #
-    # @return [void]
-    #
-    # @raise [Ferrum::TimeoutError]
-    #
-    def wait_for_idle!(**options)
-      raise TimeoutError unless wait_for_idle(**options)
-    end
-
-    #
     # Whether the network is idle, i.e. no more than `connections`
     # connections are still pending.
-    #
-    # @param [Integer, nil] deprecated_connections
-    #   Deprecated, pass `connections:` instead.
     #
     # @param [Integer] connections
     #   How many connections may still be pending.
     #
     # @return [Boolean]
     #
-    def idle?(deprecated_connections = nil, connections: 0)
-      connections = Utils::Deprecate.positional(:connections, deprecated_connections, connections)
+    def idle?(connections: 0)
       pending_connections <= connections
     end
 
@@ -516,37 +476,6 @@ module Ferrum
     end
 
     #
-    # @deprecated Will be removed in Ferrum 0.22. Use {#throttle}, or {#offline=} for `offline: true`.
-    #
-    # @return [true]
-    #
-    # @raise [TimeoutError]
-    #
-    def emulate_network_conditions(offline: false, latency: 0,
-                                   download_throughput: -1, upload_throughput: -1,
-                                   connection_type: nil)
-      Utils::Deprecate.warn("emulate_network_conditions will be removed in Ferrum 0.22. Use throttle, or " \
-                            "offline = true, instead.", user_code: true)
-      network_conditions(offline: offline, latency: latency, download: download_throughput,
-                         upload: upload_throughput, connection_type: connection_type)
-      true
-    end
-
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use `offline = true`.
-    #
-    # @return [true]
-    #
-    # @raise [TimeoutError]
-    #
-    def offline_mode
-      Utils::Deprecate.warn("offline_mode will be removed in Ferrum 0.22. Use offline = true instead.",
-                            user_code: true)
-      network_conditions(offline: true, download: 0, upload: 0)
-      true
-    end
-
-    #
     # Overrides the user agent, the accept language, the platform and the
     # client hints the page reports, both in the request headers and to
     # JavaScript via `navigator`. Chrome replaces the whole override on every
@@ -625,21 +554,6 @@ module Ferrum
     #
     def cache=(enabled)
       @page.command("Network.setCacheDisabled", cacheDisabled: !enabled)
-    end
-
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use `cache = false`.
-    #
-    # @param [Boolean] disable
-    #
-    # @return [Hash]
-    #
-    # @raise [TimeoutError]
-    #
-    def cache(disable:)
-      Utils::Deprecate.warn("cache(disable:) will be removed in Ferrum 0.22. Use cache = false instead.",
-                            user_code: true)
-      @page.command("Network.setCacheDisabled", cacheDisabled: disable)
     end
 
     private

@@ -7,8 +7,6 @@ module Ferrum
   class NoSuchTargetError   < Error; end
   # Raised when Chrome reports that the referenced page no longer exists, a {NoSuchTargetError} for pages.
   class NoSuchPageError     < NoSuchTargetError; end
-  # Raised when a requested feature isn't implemented for the current setup.
-  class NotImplementedError < Error; end
   # Raised when no browser binary can be found at the configured path.
   class BinaryNotFoundError < Error; end
   # Raised when a required file path option is empty.
@@ -19,23 +17,6 @@ module Ferrum
   class StatusError < Error
     def initialize(url, message = nil)
       super(message || "Request to #{url} failed to reach server, check DNS and server status")
-    end
-  end
-
-  # Raised when the request reached the server, but the page still has
-  # pending network connections that never settled.
-  #
-  # @deprecated Will be removed in Ferrum 0.22 with the `:pending_connection_errors`
-  #   option. `go_to!` raises {NavigationTimeoutError}.
-  class PendingConnectionsError < StatusError
-    attr_reader :pendings
-
-    def initialize(url, pendings = [])
-      @pendings = pendings
-      message = "Request to #{url} reached server, but there are still pending connections"
-      message += ": #{pendings.join(', ')}" unless @pendings.empty?
-
-      super(url, message)
     end
   end
 

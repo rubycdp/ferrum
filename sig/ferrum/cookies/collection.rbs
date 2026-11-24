@@ -3,8 +3,6 @@ module Ferrum
     module Collection : _Each[Cookies::Cookie]
       include Enumerable[Cookies::Cookie]
 
-      %a{deprecated} def all: (**untyped options) -> ::Hash[String, Cookies::Cookie]
-
       def []: (String name, ?domain: String?, ?path: String?) -> Cookies::Cookie?
 
       private

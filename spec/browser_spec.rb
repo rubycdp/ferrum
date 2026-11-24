@@ -93,18 +93,6 @@ describe Ferrum::Browser do
       end
     end
 
-    it "logs everything with the deprecated FERRUM_DEBUG", :launch do
-      with_env("FERRUM_DEBUG" => "true") do
-        browser = Ferrum::Browser.new(logger: logger)
-        browser.go_to(base_url("/console_log"))
-
-        expect(logger.string).to include("Page.navigate")
-        expect(logger.string).to include("DevTools listening on")
-      ensure
-        browser&.quit
-      end
-    end
-
     it "leaves out the channels excluded in FERRUM_LOG", :launch do
       with_env("FERRUM_LOG" => "*,-browser") do
         browser = Ferrum::Browser.new(logger: logger)
@@ -533,18 +521,6 @@ describe Ferrum::Browser do
       expect(browser.process.host).to eq(ENV.fetch("BROWSER_TEST_HOST"))
     ensure
       browser&.quit
-    end
-
-    it "supports deprecated :pending_connection_errors argument", :launch do
-      Ferrum::Utils::Deprecate.reset!
-      browser = nil
-
-      expect { browser = Ferrum::Browser.new(base_url: base_url, pending_connection_errors: true, timeout: 0.5) }
-        .to output(/:pending_connection_errors will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      expect { browser.go_to("/really_slow") }.to raise_error(Ferrum::PendingConnectionsError)
-    ensure
-      browser&.quit
-      Ferrum::Utils::Deprecate.reset!
     end
 
     it "stops process if an error is raised during process start", :launch do

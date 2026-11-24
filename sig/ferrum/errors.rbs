@@ -8,9 +8,6 @@ module Ferrum
   class NoSuchPageError < NoSuchTargetError
   end
 
-  class NotImplementedError < Error
-  end
-
   class BinaryNotFoundError < Error
   end
 
@@ -19,12 +16,6 @@ module Ferrum
 
   class StatusError < Error
     def initialize: (String url, ?String? message) -> void
-  end
-
-  %a{deprecated} class PendingConnectionsError < StatusError
-    attr_reader pendings: ::Array[String]
-
-    def initialize: (String url, ?::Array[String] pendings) -> void
   end
 
   class NavigationTimeoutError < TimeoutError
