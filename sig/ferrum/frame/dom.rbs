@@ -11,10 +11,6 @@ module Ferrum
 
       LINK_TAG: ::String
 
-      %a{deprecated} def current_url: () -> untyped
-
-      %a{deprecated} def current_title: () -> untyped
-
       def doctype: () -> untyped
 
       def html: () -> String

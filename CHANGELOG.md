@@ -13,6 +13,8 @@
   `pages(&:opener_id)`
 - `:js_errors`, uncaught exceptions are in `page.console` with `source: :exception`, and `page.on(:console)` yields them
 - `:pending_connection_errors` and `PendingConnectionsError`, use `go_to!`, it raises `NavigationTimeoutError`
+- `current_url` and `current_title` of pages and frames, use `url` and `title`, or `frame.page.url` for the top window
+  from a frame
 
 
 ## [0.21.0](https://github.com/rubycdp/ferrum/compare/v0.20.2...v0.21.0) (November 24, 2026) ##

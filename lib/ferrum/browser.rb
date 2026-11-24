@@ -33,7 +33,7 @@ module Ferrum
                 await_navigation await_navigation! await_download await_download! wait_until wait_until!
                 wait_for_reload wait_for_navigation wait_for_navigation!
                 at_css at_xpath css xpath wait_css wait_css! wait_xpath wait_xpath! wait_for_selector
-                current_url current_title url title
+                url title
                 html body doctype content=
                 headers network console accessibility downloads tracing
                 mouse keyboard

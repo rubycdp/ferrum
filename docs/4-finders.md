@@ -95,8 +95,6 @@ page.go_to("https://google.com/")
 page.title # => "Google"
 ```
 
-`current_url` and `current_title` are deprecated and will be removed in 0.22, use `url` and `title`.
-
 #### html : `String`
 
 Returns the HTML of the whole document, `<html>` included. `body` is deprecated and will be removed in 0.22, it never

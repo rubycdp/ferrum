@@ -71,40 +71,6 @@ describe Ferrum::Frame::DOM do
     end
   end
 
-  describe "#current_url" do
-    around do |example|
-      Ferrum::Utils::Deprecate.reset!
-      example.run
-      Ferrum::Utils::Deprecate.reset!
-    end
-
-    it "returns the top window's url and warns that it is deprecated" do
-      page.go_to
-      page.execute(%(document.body.innerHTML += "<iframe src='/slow' name='frame'>"))
-      frame = page.at_xpath("//iframe[@name='frame']").frame
-
-      expect { expect(frame.current_url).to eq(page.url) }
-        .to output(/#current_url will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-    end
-  end
-
-  describe "#current_title" do
-    around do |example|
-      Ferrum::Utils::Deprecate.reset!
-      example.run
-      Ferrum::Utils::Deprecate.reset!
-    end
-
-    it "returns the top window's title and warns that it is deprecated" do
-      page.go_to
-      page.execute(%(document.body.innerHTML += "<iframe src='/slow' name='frame'>"))
-      frame = page.at_xpath("//iframe[@name='frame']").frame
-
-      expect { expect(frame.current_title).to eq(page.title) }
-        .to output(/#current_title will be removed in Ferrum 0\.22/).to_stderr
-    end
-  end
-
   describe "#doctype" do
     it "returns the doctype" do
       page.go_to("/frames")
