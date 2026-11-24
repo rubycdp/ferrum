@@ -81,6 +81,14 @@ describe Ferrum::Keyboard do
       expect(input.value).to eq("Tex")
     end
 
+    it "types a newline in a string as Enter" do
+      textarea = browser.at_css("#empty_textarea").focus
+
+      browser.keyboard.type("a\nb")
+
+      expect(textarea.value).to eq("a\nb")
+    end
+
     it "returns itself" do
       expect(browser.keyboard.type("a")).to eq(browser.keyboard)
     end

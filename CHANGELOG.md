@@ -9,6 +9,7 @@
 ### Deprecated
 
 ### Fixed
+- `keyboard.type` and `node.type` type `\n` in a string as Enter, it was dropped
 
 ### Removed
 - `target.window?` and `windows` of a context and of the browser, use `target.opener_id`, `await_page { ... }` or
