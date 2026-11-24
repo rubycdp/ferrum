@@ -84,8 +84,8 @@ describe Ferrum::Network::Request do
   end
 
   describe "#time" do
-    it "returns the wall time the request was sent at" do
-      started_at = Time.at(Time.now.to_i)
+    it "returns the wall time the request was sent at with sub-second precision" do
+      started_at = Time.now
 
       page.go_to
 

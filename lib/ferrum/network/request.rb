@@ -105,12 +105,12 @@ module Ferrum
       end
 
       #
-      # The request timestamp.
+      # The wall time the request was sent at, with sub-second precision.
       #
       # @return [Time]
       #
       def time
-        @time ||= Time.strptime(@params["wallTime"].to_s, "%s")
+        @time ||= Time.at(@params["wallTime"])
       end
 
       #
