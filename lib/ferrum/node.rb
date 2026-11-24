@@ -15,6 +15,8 @@ module Ferrum
     MOVING_WAIT_ATTEMPTS = ENV.fetch("FERRUM_NODE_MOVING_ATTEMPTS", 50).to_i
     MOVING_CHECK_DELAY = ENV.fetch("FERRUM_NODE_MOVING_CHECK", 0.05).to_f
     WAIT_FOR_STOP_MOVING_DEPRECATED = "wait_for_stop_moving will be removed in Ferrum 0.22. Use wait_still instead."
+    FIND_POSITION_DEPRECATED = "find_position will be removed in Ferrum 0.22. Use pinpoint instead, its offsets are " \
+                               "measured from the center unless position: :top."
     CLICK_MODES = {
       left: [:left, 1, "drop it, a left click is the default"],
       right: [:right, 1, "use button: :right instead"],
@@ -301,15 +303,14 @@ module Ferrum
     #   `keyboard.hold`, or none outside of it.
     #
     # @param [Hash{Symbol => Object}] offset
-    #   Where to click instead of the center, needs both `:x` and `:y`.
+    #   Where to click instead of the center, passed to {#pinpoint}.
     #
-    # @option offset [Integer] :x
+    # @option offset [Numeric] :x
     #
-    # @option offset [Integer] :y
+    # @option offset [Numeric] :y
     #
-    # @option offset [:top, :center] :position (:top)
-    #   What `:x` and `:y` are measured from: the node's top-left corner or its
-    #   center.
+    # @option offset [:center, :top] :position (:center)
+    #   What `:x` and `:y` are measured from: the node's center or its top-left corner.
     #
     # @param [Float] delay
     #   Delay between mouse down and mouse up events.
@@ -344,7 +345,7 @@ module Ferrum
     #   page.at_css("a").click(count: 2)
     #   page.at_css("a").click(modifiers: [:ctrl, :shift])
     #   page.at_css("canvas").click(offset: { x: 10, y: 20 })
-    #   page.at_css("canvas").click(offset: { x: 10, y: 20, position: :center })
+    #   page.at_css("canvas").click(offset: { x: 10, y: 20, position: :top })
     #
     def click(button: :left, count: 1, modifiers: nil, offset: {}, delay: 0, # rubocop:disable Metrics/ParameterLists
               navigation_wait: Page::NAVIGATION_WAIT, timeout: nil, mode: nil, keys: nil, wait: nil)
@@ -355,7 +356,7 @@ module Ferrum
       navigation_wait = false unless button.to_s == "left" && count == 1
       deadline = Deadline.wrap(timeout || page.timeout)
       Deadline.within(deadline) do
-        x, y = find_position(**offset)
+        x, y = pinpoint(**offset)
         page.mouse.click(x:, y:, button:, count:, modifiers:, delay:, navigation_wait:, timeout: deadline)
       end
 
@@ -368,7 +369,7 @@ module Ferrum
     # for the node to stop moving, see {#wait_still}.
     #
     # @param [Hash{Symbol => Object}] offset
-    #   Where to move instead of the center, see {#click}.
+    #   Where to move instead of the center, passed to {#pinpoint}.
     #
     # @param [Numeric, Deadline, nil] timeout
     #   How long finding the node's position and moving there may take
@@ -385,7 +386,7 @@ module Ferrum
     def hover(offset: {}, timeout: nil)
       deadline = Deadline.wrap(timeout || page.timeout)
       Deadline.within(deadline) do
-        x, y = find_position(**offset)
+        x, y = pinpoint(**offset)
         page.mouse.move(x:, y:, timeout: deadline)
       end
 
@@ -790,7 +791,50 @@ module Ferrum
     end
 
     #
+    # The point a click on the node lands on, in viewport coordinates, without clicking. Waits for the node to stop
+    # moving, see {#wait_still}.
+    #
+    # @param [Numeric] x
+    #   Horizontal offset from the reference point.
+    #
+    # @param [Numeric] y
+    #   Vertical offset from the reference point.
+    #
+    # @param [:center, :top] position
+    #   What `x` and `y` are measured from: the node's center or its top-left corner.
+    #
+    # @return [(Float, Float)]
+    #
+    # @raise [ArgumentError]
+    #   When `position` is neither `:center` nor `:top`.
+    #
+    # @raise [CoordinatesNotFoundError]
+    #   When the node has no box, e.g. it isn't displayed.
+    #
+    # @raise [TimeoutError]
+    #
+    # @example
+    #   page.at_css("input").pinpoint # => [126.7, 401.4]
+    #   page.at_css("input").pinpoint(x: 5, y: 5) # => [131.7, 406.4]
+    #   page.at_css("input").pinpoint(x: 5, y: 5, position: :top) # => [55.2, 395.9]
+    #
+    def pinpoint(x: 0, y: 0, position: :center)
+      raise ArgumentError, "position: should be :center or :top" unless %i[center top].include?(position)
+
+      corners = to_points(settled_quads.first)
+      left, top = position == :top ? corners.first.values_at(:x, :y) : center_of(corners)
+      [left + x, top + y]
+    rescue CoordinatesNotFoundError
+      left, top, width, height = bounding_rect
+      raise if (left + (width / 2.0)).zero? && (top + (height / 2.0)).zero?
+
+      position == :top ? [left + x, top + y] : [left + (width / 2.0) + x, top + (height / 2.0) + y]
+    end
+
+    #
     # Finds the x, y coordinates to click or hover on the node.
+    #
+    # @deprecated Will be removed in Ferrum 0.22. Use {#pinpoint}.
     #
     # @param [Integer, nil] x
     #   Horizontal offset from the reference point.
@@ -806,12 +850,8 @@ module Ferrum
     #
     # @raise [TimeoutError]
     #
-    # @example
-    #   page.at_css("input").find_position # => [126.7, 401.4]
-    #   page.at_css("input").find_position(x: 5, y: 5) # => [55.2, 395.9]
-    #   page.at_css("input").find_position(x: 5, y: 5, position: :center) # => [131.7, 406.4]
-    #
     def find_position(x: nil, y: nil, position: :top)
+      Utils::Deprecate.warn(FIND_POSITION_DEPRECATED, user_code: true)
       points = settled_quads.map { |q| to_points(q) }.first
       get_position(points, x, y, position)
     rescue CoordinatesNotFoundError
@@ -901,6 +941,14 @@ module Ferrum
       button, count, hint = CLICK_MODES.fetch(mode) { raise ArgumentError, "unknown mode: #{mode.inspect}" }
       Utils::Deprecate.warn("mode: will be removed in Ferrum 0.22, #{hint}.", user_code: true)
       [button, count]
+    end
+
+    def center_of(points)
+      [points.sum { |p| p[:x] } / 4.0, points.sum { |p| p[:y] } / 4.0]
+    end
+
+    def bounding_rect
+      evaluate("function() { const r = this.getBoundingClientRect(); return [r.left, r.top, r.width, r.height]; }")
     end
 
     def bounding_rect_coordinates
