@@ -2,7 +2,8 @@
 Gemfile.*
 doc
 pkg
-tmp
+/tmp
+/spec/tmp
 .idea
 .ruby-version
 .yardoc
