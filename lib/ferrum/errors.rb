@@ -22,23 +22,6 @@ module Ferrum
     end
   end
 
-  # Raised when the request reached the server, but the page still has
-  # pending network connections that never settled.
-  #
-  # @deprecated Will be removed in Ferrum 0.22 with the `:pending_connection_errors`
-  #   option. `go_to!` raises {NavigationTimeoutError}.
-  class PendingConnectionsError < StatusError
-    attr_reader :pendings
-
-    def initialize(url, pendings = [])
-      @pendings = pendings
-      message = "Request to #{url} reached server, but there are still pending connections"
-      message += ": #{pendings.join(', ')}" unless @pendings.empty?
-
-      super(url, message)
-    end
-  end
-
   # Raised when waiting for a response from the browser times out.
   class TimeoutError < Error
     # The CDP method that didn't answer in time, `nil` when the wait wasn't for a command.

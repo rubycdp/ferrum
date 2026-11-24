@@ -33,9 +33,6 @@ module Ferrum
       # @raise [NavigationTimeoutError]
       #   Once the budget of an enclosing {Deadline.within} is used up.
       #
-      # @raise [PendingConnectionsError]
-      #   If the deprecated `:pending_connection_errors` option is set and the page doesn't load in time.
-      #
       # @example
       #   page.go_to("https://github.com/")
       #   page.go_to("/slow", timeout: 10)
@@ -43,8 +40,7 @@ module Ferrum
       #
       def go_to(url = nil, timeout: nil, referrer: nil)
         go_to!(url, timeout: timeout, referrer: referrer)
-      rescue NavigationTimeoutError => e
-        raise PendingConnectionsError.new(e.url, e.pendings) if @options.pending_connection_errors
+      rescue NavigationTimeoutError
         raise if Deadline.current&.expired?
 
         nil

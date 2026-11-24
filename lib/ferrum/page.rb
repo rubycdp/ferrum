@@ -609,13 +609,6 @@ module Ferrum
 
       on("DOM.documentUpdated") { @document_version += 1 }
 
-      if @options.js_errors
-        on("Runtime.exceptionThrown") do |params|
-          # FIXME: https://jvns.ca/blog/2015/11/27/why-rubys-timeout-is-dangerous-and-thread-dot-raise-is-terrifying/
-          Thread.main.raise JavaScriptError, params["exceptionDetails"]
-        end
-      end
-
       chain(:dialog)
     end
 

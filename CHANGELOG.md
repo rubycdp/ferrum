@@ -11,6 +11,8 @@
 ### Removed
 - `target.window?` and `windows` of a context and of the browser, use `target.opener_id`, `await_page { ... }` or
   `pages(&:opener_id)`
+- `:js_errors`, uncaught exceptions are in `page.console` with `source: :exception`, and `page.on(:console)` yields them
+- `:pending_connection_errors` and `PendingConnectionsError`, use `go_to!`, it raises `NavigationTimeoutError`
 
 
 ## [0.21.0](https://github.com/rubycdp/ferrum/compare/v0.20.2...v0.21.0) (November 24, 2026) ##

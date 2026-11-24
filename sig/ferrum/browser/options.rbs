@@ -30,13 +30,9 @@ module Ferrum
 
       attr_reader ws_max_receive_size: ::Integer?
 
-      %a{deprecated} attr_reader js_errors: bool
-
       attr_reader base_url: ::Addressable::URI?
 
       attr_reader slowmo: ::Float
-
-      %a{deprecated} attr_reader pending_connection_errors: bool
 
       attr_reader url: String?
 
@@ -45,7 +41,6 @@ module Ferrum
       attr_reader env: Hash[String, String]?
 
       attr_reader process_timeout: ::Integer
-
 
       attr_reader browser_path: String?
 
@@ -74,11 +69,9 @@ module Ferrum
       @host: String
       @timeout: ::Numeric
       @window_size: ::Array[::Integer]
-      @js_errors: bool
       @headless: bool
       @incognito: bool
       @flatten: bool
-      @pending_connection_errors: bool
       @process_timeout: ::Integer
       @slowmo: ::Float
       @env: Hash[String, String]?
@@ -114,8 +107,6 @@ module Ferrum
       def warn_protocol_timeout: () -> void
 
       def warn_flatten: () -> void
-
-      def fetch_deprecated: (Symbol name, String instead) -> bool
 
       def read_extension: (String | Hash[Symbol, String] extension) -> String
 

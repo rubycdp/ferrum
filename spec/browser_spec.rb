@@ -535,18 +535,6 @@ describe Ferrum::Browser do
       browser&.quit
     end
 
-    it "supports deprecated :pending_connection_errors argument", :launch do
-      Ferrum::Utils::Deprecate.reset!
-      browser = nil
-
-      expect { browser = Ferrum::Browser.new(base_url: base_url, pending_connection_errors: true, timeout: 0.5) }
-        .to output(/:pending_connection_errors will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      expect { browser.go_to("/really_slow") }.to raise_error(Ferrum::PendingConnectionsError)
-    ensure
-      browser&.quit
-      Ferrum::Utils::Deprecate.reset!
-    end
-
     it "stops process if an error is raised during process start", :launch do
       process = Ferrum::Browser::Process.new(Ferrum::Browser::Options.new(process_timeout: 0))
       allow(Ferrum::Browser::Process).to receive(:new).and_return(process)

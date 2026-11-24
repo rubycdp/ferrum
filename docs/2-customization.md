@@ -32,11 +32,6 @@ Ferrum::Browser.new(options)
       commands, like `evaluate` or `at_css`, waits for the browser's answer. A call that runs out raises
       `Ferrum::TimeoutError`. Pass `timeout:` to `go_to`, `refresh` or `await_navigation` to change it for one
       call, or wrap calls in `Ferrum::Deadline.within` to bound them together, see [Timeouts](#timeouts).
-    * `:js_errors` (Boolean) - Deprecated, will be removed in 0.22. When true, JavaScript errors get re-raised in
-      Ruby. Uncaught exceptions are in the [console](/docs/ferrum/javascript#console), use
-      `page.console.select { |m| m.source == :exception }` or `page.on(:console)` instead.
-    * `:pending_connection_errors` (Boolean) - Deprecated, will be removed in 0.22. Use `page.go_to!(url)` to raise
-      when the page doesn't load in time.
     * `:browser_path` (String) - Path to Chrome binary, or to an Opera or Edge one, you can also set ENV
       variable as `BROWSER_PATH=some/path/chrome bundle exec rspec`.
     * `:browser_options` (Hash) - Additional command line options,

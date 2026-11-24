@@ -29,7 +29,7 @@ module Ferrum
       end
 
       attr_reader :window_size, :logger, :log, :ws_max_receive_size,
-                  :js_errors, :base_url, :slowmo, :pending_connection_errors,
+                  :base_url, :slowmo,
                   :url, :ws_url, :env, :process_timeout, :browser_path,
                   :save_path, :proxy, :port, :host, :headless, :incognito, :dockerize, :browser_options,
                   :ignore_default_browser_options, :xvfb, :flatten, :extensions
@@ -43,19 +43,11 @@ module Ferrum
         @timeout = @options.fetch(:timeout, DEFAULT_TIMEOUT)
         warn_protocol_timeout if @options.key?(:protocol_timeout)
         @window_size = @options.fetch(:window_size, WINDOW_SIZE)
-        @js_errors = fetch_deprecated(
-          :js_errors,
-          "Uncaught exceptions are in the console, use page.console.select { |m| m.source == :exception } " \
-          "or page.on(:console)."
-        )
         @headless = @options.fetch(:headless, true)
         @incognito = @options.fetch(:incognito, true)
         @dockerize = @options.fetch(:dockerize, false)
         @flatten = @options.fetch(:flatten, true)
         warn_flatten unless @flatten
-        @pending_connection_errors = fetch_deprecated(
-          :pending_connection_errors, "Use page.go_to!(url) to raise when the page doesn't load in time."
-        )
         @process_timeout = @options.fetch(:process_timeout, PROCESS_TIMEOUT)
         @slowmo = @options[:slowmo].to_f
 
@@ -177,13 +169,6 @@ module Ferrum
           "flatten: false will be removed in Ferrum 0.22. Every page will share the browser's websocket connection.",
           user_code: true
         )
-      end
-
-      def fetch_deprecated(name, instead)
-        return false unless @options.key?(name)
-
-        Utils::Deprecate.warn(":#{name} will be removed in Ferrum 0.22. #{instead}", user_code: true)
-        @options[name]
       end
 
       def read_extension(extension)

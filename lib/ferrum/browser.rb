@@ -98,16 +98,6 @@ module Ferrum
     #   `FERRUM_DEFAULT_TIMEOUT` sets the default. Pass `timeout:` to `go_to`, `refresh` or `await_navigation` to
     #   change it for one call, or wrap calls in {Deadline.within} to bound them together.
     #
-    # @option options [Boolean] :js_errors
-    #   Deprecated, will be removed in Ferrum 0.22. When true, JavaScript
-    #   errors get re-raised in Ruby. Uncaught exceptions are in the console,
-    #   use `page.console.select { |m| m.source == :exception }` or
-    #   `page.on(:console)` instead.
-    #
-    # @option options [Boolean] :pending_connection_errors (false)
-    #   Deprecated, will be removed in Ferrum 0.22. Makes `go_to` raise
-    #   {PendingConnectionsError} on timeout, use `go_to!` instead.
-    #
     # @option options [String] :browser_path
     #   Path to Chrome binary, you can also set ENV variable as
     #   `BROWSER_PATH=some/path/chrome bundle exec rspec`.
