@@ -116,6 +116,8 @@
 - `body`, will be removed in 0.22. Use `html`, it always returned the whole document
 - `type` and `type?` of `Network::Request` and `type` of `Network::Response`, will be removed in 0.22. Use
   `resource_type` and `resource_type?`, like the intercepted requests
+- Passing a Hash with an `"objectId"` key to `evaluate` as a remote object, will be removed in 0.22. Pass the
+  `Ferrum::RemoteObject` from `evaluate_handle`
 
 ### Fixed
 - `Network::Request#time` keeps the fraction of a second, it was truncated to whole seconds

@@ -358,15 +358,14 @@ describe Ferrum::Frame::Runtime do
         expect(elapsed).to be < Ferrum::Frame::Runtime::INTERMITTENT_SLEEP
       end
 
-      it "raises NodeNotFoundError for a node resolved on the previous page" do
+      it "raises NodeNotFoundError for a handle resolved on the previous page" do
         browser.go_to("/table")
-        node = browser.at_xpath(".//td")
-        object_id = browser.page.command("DOM.resolveNode", nodeId: node.node_id).dig("object", "objectId")
+        handle = browser.evaluate_handle("({ a: 1 })")
 
         browser.go_to("/table")
 
         expect do
-          browser.evaluate("arguments[0].textContent", { "objectId" => object_id })
+          browser.evaluate("arguments[0].a", handle)
         end.to raise_error(Ferrum::NodeNotFoundError, /same JavaScript world/)
       end
     end
@@ -602,6 +601,18 @@ describe Ferrum::Frame::Runtime do
         browser.execute("return new Promise(resolve => setTimeout(() => { window.done = true; resolve() }, 100))")
 
         expect(browser.evaluate("window.done")).to be(true)
+      end
+
+      it "warns that a Hash with objectId is deprecated and passes it as a remote object" do
+        browser.go_to("/index")
+        node = browser.at_xpath(".//a")
+        object_id = browser.page.command("DOM.resolveNode", nodeId: node.node_id).dig("object", "objectId")
+        Ferrum::Utils::Deprecate.reset!
+
+        expect { expect(browser.evaluate("arguments[0].tagName", { "objectId" => object_id })).to eq("A") }
+          .to output(/"objectId" as a remote object will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
+      ensure
+        Ferrum::Utils::Deprecate.reset!
       end
 
       it "resolves nodes and dates from Node#evaluate" do

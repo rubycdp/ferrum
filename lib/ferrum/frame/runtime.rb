@@ -142,6 +142,8 @@ module Ferrum
     module Runtime
       INTERMITTENT_ATTEMPTS = ENV.fetch("FERRUM_INTERMITTENT_ATTEMPTS", 6).to_i
       INTERMITTENT_SLEEP = ENV.fetch("FERRUM_INTERMITTENT_SLEEP", 0.1).to_f
+      OBJECT_ID_DEPRECATED = "Passing a Hash with \"objectId\" as a remote object will be removed in Ferrum 0.22, " \
+                             "pass a Ferrum::RemoteObject instead."
       DEEP_SERIALIZATION = {
         serialization: "deep",
         additionalParameters: { maxNodeDepth: 0, includeShadowTree: "none" }
@@ -495,7 +497,10 @@ module Ferrum
           when RemoteObject
             { objectId: arg.remote_id }
           when Hash
-            arg["objectId"] ? { objectId: arg["objectId"] } : { value: arg }
+            next { value: arg } unless arg["objectId"]
+
+            Utils::Deprecate.warn(OBJECT_ID_DEPRECATED, user_code: true)
+            { objectId: arg["objectId"] }
           else
             { value: arg }
           end
