@@ -74,8 +74,7 @@ FERRUM_LOG=0                         # nothing, even with :logger
 ```
 
 Items with a dot are CDP method patterns, a leading `-` leaves things out and wins over the rest, and a response is
-kept or dropped with the command it answers. Without `FERRUM_LOG`, `:logger` gets everything. `FERRUM_DEBUG` still
-works as `FERRUM_LOG=*`, but is deprecated and will be removed in 0.22.
+kept or dropped with the command it answers. Without `FERRUM_LOG`, `:logger` gets everything.
 
 `FERRUM_LOG_FORMAT` picks how CDP messages look. `json` writes each message as JSON alone, one per line and never
 colored, for tools such as `jq`. `annotated` puts the command id and method in front of each CDP message, one line

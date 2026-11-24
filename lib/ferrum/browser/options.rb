@@ -18,16 +18,6 @@ module Ferrum
       DEFAULT_TIMEOUT = ENV.fetch("FERRUM_DEFAULT_TIMEOUT", 5).to_f
       PROCESS_TIMEOUT = ENV.fetch("FERRUM_PROCESS_TIMEOUT", 10).to_i
 
-      PROTOCOL_TIMEOUT_REMOVED = "is ignored and will be removed in Ferrum 0.22. Internal commands have a fixed " \
-                                 "timeout, :timeout bounds everything else."
-
-      if ENV.key?("FERRUM_DEBUG")
-        Utils::Deprecate.warn("FERRUM_DEBUG will be removed in Ferrum 0.22. Use FERRUM_LOG=* instead.")
-      end
-      if ENV.key?("FERRUM_PROTOCOL_TIMEOUT")
-        Utils::Deprecate.warn("FERRUM_PROTOCOL_TIMEOUT #{PROTOCOL_TIMEOUT_REMOVED}")
-      end
-
       attr_reader :window_size, :logger, :log, :ws_max_receive_size,
                   :base_url, :slowmo,
                   :url, :ws_url, :env, :process_timeout, :browser_path,
@@ -41,7 +31,6 @@ module Ferrum
         @port = @options.fetch(:port, BROWSER_PORT)
         @host = @options.fetch(:host, BROWSER_HOST)
         @timeout = @options.fetch(:timeout, DEFAULT_TIMEOUT)
-        warn_protocol_timeout if @options.key?(:protocol_timeout)
         @window_size = @options.fetch(:window_size, WINDOW_SIZE)
         @headless = @options.fetch(:headless, true)
         @incognito = @options.fetch(:incognito, true)
@@ -65,29 +54,6 @@ module Ferrum
 
         @options = @options.merge(window_size: @window_size).freeze
         @browser_options = @options.fetch(:browser_options, {}).freeze
-      end
-
-      #
-      # Deprecated, will be removed in Ferrum 0.22. Internal commands have a fixed timeout.
-      #
-      # @return [Integer]
-      #   {Client::PROTOCOL_TIMEOUT}.
-      #
-      def protocol_timeout
-        warn_protocol_timeout
-        Client::PROTOCOL_TIMEOUT
-      end
-
-      #
-      # Deprecated, will be removed in Ferrum 0.22. The value is ignored.
-      #
-      # @param [Numeric] value
-      #
-      # @return [Numeric]
-      #
-      def protocol_timeout=(value)
-        warn_protocol_timeout
-        value
       end
 
       #
@@ -158,16 +124,12 @@ module Ferrum
 
       private
 
-      def warn_protocol_timeout
-        Utils::Deprecate.warn(":protocol_timeout #{PROTOCOL_TIMEOUT_REMOVED}", user_code: true)
-      end
-
       def read_extension(extension)
         (extension.is_a?(Hash) && extension[:source]) || File.read(extension)
       end
 
       def parse_logger(logger)
-        value = ENV.fetch("FERRUM_LOG") { "*" if ENV.key?("FERRUM_DEBUG") }
+        value = ENV.fetch("FERRUM_LOG", nil)
         settings = value ? Log.parse(value) : {}
         logger ||= $stdout.tap { |s| s.sync = true } if value && settings
         return [logger, nil] unless logger && settings

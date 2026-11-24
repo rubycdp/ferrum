@@ -93,18 +93,6 @@ describe Ferrum::Browser do
       end
     end
 
-    it "logs everything with the deprecated FERRUM_DEBUG", :launch do
-      with_env("FERRUM_DEBUG" => "true") do
-        browser = Ferrum::Browser.new(logger: logger)
-        browser.go_to(base_url("/console_log"))
-
-        expect(logger.string).to include("Page.navigate")
-        expect(logger.string).to include("DevTools listening on")
-      ensure
-        browser&.quit
-      end
-    end
-
     it "leaves out the channels excluded in FERRUM_LOG", :launch do
       with_env("FERRUM_LOG" => "*,-browser") do
         browser = Ferrum::Browser.new(logger: logger)

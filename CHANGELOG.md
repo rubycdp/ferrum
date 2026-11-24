@@ -17,6 +17,9 @@
   from a frame
 - `cookies.all`, use `to_a`, or `map(&:name)` for the names
 - `flatten: false`, every page shares the browser's websocket connection
+- `FERRUM_DEBUG`, use `FERRUM_LOG=*`
+- `:protocol_timeout`, `browser.protocol_timeout`, `browser.protocol_timeout=` and `FERRUM_PROTOCOL_TIMEOUT`, they were
+  ignored, `:timeout` bounds everything else
 
 
 ## [0.21.0](https://github.com/rubycdp/ferrum/compare/v0.20.2...v0.21.0) (November 24, 2026) ##
