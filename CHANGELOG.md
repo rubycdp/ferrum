@@ -3,6 +3,8 @@
 ### Added
 
 ### Changed
+- `User-Agent` and `Accept-Language` set through `headers` are only sent with requests, they no longer change what
+  `navigator` reports. Use `network.emulate(user_agent:, accept_language:)` to override both
 
 ### Deprecated
 

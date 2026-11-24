@@ -616,22 +616,6 @@ describe Ferrum::Network do
       expect(page.evaluate("navigator.platform")).to eq("Win32")
     end
 
-    it "keeps the platform when headers set the user agent" do
-      page.network.emulate(platform: "Win32")
-      page.headers.set("User-Agent" => "foo")
-      page.go_to("/with_js")
-
-      expect(page.evaluate("[navigator.userAgent, navigator.platform]")).to eq(%w[foo Win32])
-    end
-
-    it "keeps the header user agent when the platform is emulated" do
-      page.headers.set("User-Agent" => "foo")
-      page.network.emulate(platform: "Win32")
-      page.go_to("/with_js")
-
-      expect(page.evaluate("[navigator.userAgent, navigator.platform]")).to eq(%w[foo Win32])
-    end
-
     context "with metadata" do
       let(:metadata) do
         { platform: "Windows", platform_version: "15.0.0", architecture: "x86", model: "", mobile: false }
