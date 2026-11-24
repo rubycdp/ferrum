@@ -155,26 +155,6 @@ describe Ferrum::Context do
     end
   end
 
-  describe "#windows" do
-    around do |example|
-      Ferrum::Utils::Deprecate.reset!
-      example.run
-      Ferrum::Utils::Deprecate.reset!
-    end
-
-    it "returns the pages opened by another page and warns that it is deprecated" do
-      browser.go_to
-      popup = browser.await_page { browser.execute(%(window.open("/simple", "popup"))) }
-
-      windows = nil
-      expect { windows = browser.windows }
-        .to output(/windows will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-      expect(windows).to eq([popup])
-    ensure
-      popup&.close
-    end
-  end
-
   describe "#await_page" do
     it "returns the page opened with window.open" do
       browser.go_to

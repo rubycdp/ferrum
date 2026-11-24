@@ -11,10 +11,6 @@ module Ferrum
   # of contexts and routes CDP target events to the right one.
   #
   class Context
-    POSITION = %i[first last].freeze
-    WINDOWS_DEPRECATED = "windows will be removed in Ferrum 0.22. Use await_page { ... } for the page a click " \
-                         "opens, or pages(&:opener_id) for all of them."
-
     attr_reader :id
 
     def initialize(client, contexts, id, implicit: false)
@@ -108,29 +104,6 @@ module Ferrum
     # @return [Array<Target>]
     def service_workers
       @targets.values.select(&:service_worker?)
-    end
-
-    # The pages of this context opened by another page.
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use {#await_page} for the page a click opens, or
-    #   `pages(&:opener_id)` for all of them.
-    #
-    # @param [:first, :last, nil] pos
-    #
-    # @param [Integer] size
-    #
-    # @return [Array<Page>]
-    #
-    # @raise [ArgumentError]
-    #
-    # @raise [TimeoutError]
-    def windows(pos = nil, size = 1)
-      Utils::Deprecate.warn(WINDOWS_DEPRECATED, user_code: true)
-      raise ArgumentError if pos && !POSITION.include?(pos)
-
-      windows = @targets.values.select(&:opener_id)
-      windows = windows.send(pos, size) if pos
-      windows.map(&:page)
     end
 
     # Runs the block and returns the page it opens, in a tab or a window,

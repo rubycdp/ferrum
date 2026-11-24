@@ -1,8 +1,5 @@
 module Ferrum
   class Context
-    POSITION: ::Array[:first | :last]
-    WINDOWS_DEPRECATED: String
-
     attr_reader id: String
 
     def targets: () -> Hash[String, Target]
@@ -32,8 +29,6 @@ module Ferrum
     def workers: () -> ::Array[Worker]
 
     def service_workers: () -> ::Array[Target]
-
-    %a{deprecated} def windows: (?(:first | :last)?, ?::Integer) -> ::Array[Page]
 
     def await_page: (?opener: Page?, ?timeout: (::Numeric | Deadline)?) { () -> void } -> Page?
 

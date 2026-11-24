@@ -9,8 +9,6 @@ module Ferrum
   #
   class Target
     NEW_WINDOW_WAIT = ENV.fetch("FERRUM_NEW_WINDOW_WAIT", 0.3).to_f
-    WINDOW_DEPRECATED = "window? will be removed in Ferrum 0.22. Use opener_id, it is set for a target another one " \
-                        "opened."
 
     attr_reader :options
 
@@ -174,16 +172,6 @@ module Ferrum
     # @return [String, nil]
     def context_id
       @params["browserContextId"] unless @implicit
-    end
-
-    # Whether this target was opened by another one, i.e. has an {#opener_id}.
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use {#opener_id}.
-    #
-    # @return [Boolean]
-    def window?
-      Utils::Deprecate.warn(WINDOW_DEPRECATED, user_code: true)
-      !!opener_id
     end
 
     # Whether this target is an iframe.

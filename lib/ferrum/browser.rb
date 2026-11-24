@@ -27,7 +27,7 @@ module Ferrum
     extend Forwardable
 
     delegate %i[default_context] => :contexts
-    delegate %i[targets create_target page pages windows await_page await_page! workers service_workers
+    delegate %i[targets create_target page pages await_page await_page! workers service_workers
                 attach_target cookies] => :default_context
     delegate %i[go_to go_to! goto go back back! forward forward! refresh refresh! reload reload! stop
                 await_navigation await_navigation! await_download await_download! wait_until wait_until!

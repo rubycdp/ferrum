@@ -1,3 +1,18 @@
+## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.21.0...main) ##
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+- `target.window?` and `windows` of a context and of the browser, use `target.opener_id`, `await_page { ... }` or
+  `pages(&:opener_id)`
+
+
 ## [0.21.0](https://github.com/rubycdp/ferrum/compare/v0.20.2...v0.21.0) (November 24, 2026) ##
 
 ### Added
