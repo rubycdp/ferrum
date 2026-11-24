@@ -17,12 +17,6 @@ module Ferrum
     WAIT_FOR_STOP_MOVING_DEPRECATED = "wait_for_stop_moving will be removed in Ferrum 0.22. Use wait_still instead."
     FIND_POSITION_DEPRECATED = "find_position will be removed in Ferrum 0.22. Use pinpoint instead, its offsets are " \
                                "measured from the center unless position: :top."
-    CLICK_MODES = {
-      left: [:left, 1, "drop it, a left click is the default"],
-      right: [:right, 1, "use button: :right instead"],
-      double: [:left, 2, "use count: 2 instead"]
-    }.freeze
-    private_constant :CLICK_MODES
 
     # @return [Page] the page the node belongs to.
     attr_reader :page
@@ -320,15 +314,6 @@ module Ferrum
     #   wait for it to load. Ignored for other buttons and counts, which never
     #   wait. `false` returns as soon as the click is dispatched.
     #
-    # @param [:left, :right, :double, nil] mode
-    #   Deprecated, use `button: :right` or `count: 2`.
-    #
-    # @param [Array<Symbol>, nil] keys
-    #   Deprecated, renamed to `modifiers`.
-    #
-    # @param [Numeric, nil] wait
-    #   Deprecated, renamed to `navigation_wait`.
-    #
     # @param [Numeric, Deadline, nil] timeout
     #   How long finding the node's position, the click and the page load it starts may take together, the page
     #   timeout by default.
@@ -348,10 +333,7 @@ module Ferrum
     #   page.at_css("canvas").click(offset: { x: 10, y: 20, position: :top })
     #
     def click(button: :left, count: 1, modifiers: nil, offset: {}, delay: 0, # rubocop:disable Metrics/ParameterLists
-              navigation_wait: Page::NAVIGATION_WAIT, timeout: nil, mode: nil, keys: nil, wait: nil)
-      navigation_wait = Utils::Deprecate.renamed_keyword(:wait, :navigation_wait, wait, navigation_wait)
-      modifiers = Utils::Deprecate.renamed_keyword(:keys, :modifiers, keys, modifiers)
-      button, count = click_mode(mode) if mode
+              navigation_wait: Page::NAVIGATION_WAIT, timeout: nil)
       # Only a single left click waits, preserving the historical no-network-wait default of `Mouse#up`
       navigation_wait = false unless button.to_s == "left" && count == 1
       deadline = Deadline.wrap(timeout || page.timeout)
@@ -938,12 +920,6 @@ module Ferrum
     end
 
     private
-
-    def click_mode(mode)
-      button, count, hint = CLICK_MODES.fetch(mode) { raise ArgumentError, "unknown mode: #{mode.inspect}" }
-      Utils::Deprecate.warn("mode: will be removed in Ferrum 0.22, #{hint}.", user_code: true)
-      [button, count]
-    end
 
     def center_of(points)
       [points.sum { |p| p[:x] } / 4.0, points.sum { |p| p[:y] } / 4.0]

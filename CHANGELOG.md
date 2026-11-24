@@ -20,6 +20,11 @@
 - `FERRUM_DEBUG`, use `FERRUM_LOG=*`
 - `:protocol_timeout`, `browser.protocol_timeout`, `browser.protocol_timeout=` and `FERRUM_PROTOCOL_TIMEOUT`, they were
   ignored, `:timeout` bounds everything else
+- `wait:` of `click`, `mouse.up` and `mouse.down`, use `navigation_wait:`. `FERRUM_CLICK_WAIT` and `FERRUM_GOTO_WAIT`,
+  use `FERRUM_NAVIGATION_WAIT`
+- `mode:` and `keys:` of `node.click`, use `button: :right` or `count: 2`, and `modifiers:`
+- Positional `mouse.scroll_by(x, y)` and `scroll_to(x, y)`, pass `x:` and `y:`
+- `accessibility.enable` and `disable`, use `accessibility.enabled = true/false`
 
 
 ## [0.21.0](https://github.com/rubycdp/ferrum/compare/v0.20.2...v0.21.0) (November 24, 2026) ##

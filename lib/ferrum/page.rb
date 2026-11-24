@@ -30,9 +30,7 @@ module Ferrum
   # JavaScript evaluation methods are ultimately delegated to from {Browser}.
   #
   class Page
-    NAVIGATION_WAIT = Utils::Deprecate.renamed_env(
-      "FERRUM_NAVIGATION_WAIT", %w[FERRUM_CLICK_WAIT FERRUM_GOTO_WAIT], 0.1
-    )
+    NAVIGATION_WAIT = ENV.fetch("FERRUM_NAVIGATION_WAIT", 0.1).to_f
     WAIT_INTERVAL = 0.05
     WAIT_FOR_NAVIGATION_DEPRECATED = "wait_for_navigation will be removed in Ferrum 0.22. Use " \
                                      "await_navigation(watch: seconds) { ... } instead."

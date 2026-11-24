@@ -5,7 +5,6 @@ module Ferrum
     WAIT_FOR_STOP_MOVING_DEPRECATED: String
 
     FIND_POSITION_DEPRECATED: String
-    CLICK_MODES: ::Hash[::Symbol, [::Symbol, ::Integer, String]]
 
     MOVING_WAIT_ATTEMPTS: ::Integer
 
@@ -57,7 +56,7 @@ module Ferrum
 
     def type: (*untyped keys, ?timeout: (::Numeric | Deadline)?) -> self
 
-    def click: (?button: ::Symbol, ?count: ::Integer, ?modifiers: ::Array[::Symbol]?, ?offset: ::Hash[::Symbol, untyped], ?delay: ::Numeric, ?navigation_wait: (::Numeric | false), ?timeout: (::Numeric | Deadline)?, ?mode: ::Symbol?, ?keys: ::Array[::Symbol]?, ?wait: ::Numeric?) -> self
+    def click: (?button: ::Symbol, ?count: ::Integer, ?modifiers: ::Array[::Symbol]?, ?offset: ::Hash[::Symbol, untyped], ?delay: ::Numeric, ?navigation_wait: (::Numeric | false), ?timeout: (::Numeric | Deadline)?) -> self
 
     def hover: (?offset: ::Hash[::Symbol, untyped], ?timeout: (::Numeric | Deadline)?) -> self
 
@@ -118,8 +117,6 @@ module Ferrum
     def exists?: () -> bool
 
     private
-
-    def click_mode: (::Symbol mode) -> [::Symbol, ::Integer]
 
     def center_of: (::Array[{ x: ::Numeric, y: ::Numeric }] points) -> [::Float, ::Float]
 

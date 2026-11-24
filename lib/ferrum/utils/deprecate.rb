@@ -47,31 +47,6 @@ module Ferrum
       end
 
       #
-      # Picks the value of a keyword argument that was renamed: warns and returns the old one when it is given,
-      # otherwise returns the current one.
-      #
-      # @param [Symbol] old
-      #   The old keyword.
-      #
-      # @param [Symbol] new
-      #   The new keyword.
-      #
-      # @param [Object, nil] value
-      #   What was passed as the old keyword, `nil` when nothing was.
-      #
-      # @param [Object] current
-      #   The value of the new keyword.
-      #
-      # @return [Object]
-      #
-      def renamed_keyword(old, new, value, current)
-        return current if value.nil?
-
-        warn(":#{old} is renamed to :#{new} and will be removed in Ferrum 0.22.", user_code: true)
-        value
-      end
-
-      #
       # Picks the value of an argument that became a keyword: warns and returns the positional one when it is given,
       # otherwise returns the keyword's.
       #
@@ -91,31 +66,6 @@ module Ferrum
 
         warn("Passing #{name} positionally will be removed in Ferrum 0.22, pass #{name}: instead.", user_code: true)
         value
-      end
-
-      #
-      # Reads a float from an environment variable that replaced older ones: warns and falls back to the first old
-      # one that is set when the new one is not.
-      #
-      # @param [String] name
-      #   The current variable.
-      #
-      # @param [Array<String>] legacy
-      #   The variables it replaced.
-      #
-      # @param [Float] default
-      #   Used when none is set.
-      #
-      # @return [Float]
-      #
-      def renamed_env(name, legacy, default)
-        return ENV[name].to_f if ENV.key?(name)
-
-        old = legacy.find { |n| ENV.key?(n) }
-        return default unless old
-
-        warn("#{old} is replaced by #{name} and will be removed in Ferrum 0.22.")
-        ENV[old].to_f
       end
 
       #

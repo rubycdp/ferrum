@@ -122,22 +122,4 @@ describe Ferrum::Accessibility do
       expect(events).to be_empty
     end
   end
-
-  describe "#enable" do
-    it "enables the domain and warns that it is deprecated" do
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(browser.page.accessibility.enable).to eq(browser.page.accessibility) }
-        .to output(/accessibility\.enable will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-    end
-  end
-
-  describe "#disable" do
-    it "disables the domain and warns that it is deprecated" do
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(browser.page.accessibility.disable).to eq(browser.page.accessibility) }
-        .to output(/accessibility\.disable will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-    end
-  end
 end

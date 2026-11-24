@@ -244,12 +244,6 @@ describe Ferrum::Node do
       expect(browser.network.traffic.length).to be <= 5
     end
 
-    it "warns when given the deprecated wait:" do
-      browser.go_to("/link_with_ping")
-
-      expect { browser.at_css("a").click(wait: 0) }.to output(/:wait is renamed to :navigation_wait/).to_stderr
-    end
-
     it "returns without waiting for the navigation to load when navigation is false" do
       browser.go_to("/")
       browser.execute(<<~JS)
@@ -425,14 +419,6 @@ describe Ferrum::Node do
           expect(log.text).to eq(instruction)
         end
       end
-
-      it "double-clicks the node for the deprecated mode: :double and warns about it" do
-        Ferrum::Utils::Deprecate.reset!
-
-        expect { browser.at_css("#one").click(mode: :double, delay: 0.05) }
-          .to output(/mode: will be removed in Ferrum 0\.22, use count: 2.*called from #{__FILE__}/m).to_stderr
-        expect(browser.at_css("#log").text).to eq("one")
-      end
     end
 
     it "presses the given button" do
@@ -440,15 +426,6 @@ describe Ferrum::Node do
 
       browser.at_css("#target").click(button: :right)
 
-      expect(browser.evaluate("events")).to eq(["2:1:false:false"])
-    end
-
-    it "presses the right button for the deprecated mode: :right and warns about it" do
-      record_mousedowns
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { browser.at_css("#target").click(mode: :right) }
-        .to output(/mode: will be removed in Ferrum 0\.22, use button: :right.*called from #{__FILE__}/m).to_stderr
       expect(browser.evaluate("events")).to eq(["2:1:false:false"])
     end
 
@@ -460,27 +437,12 @@ describe Ferrum::Node do
       expect(browser.evaluate("events")).to eq(["0:1:true:true"])
     end
 
-    it "holds the modifiers of the deprecated keys: and warns about it" do
-      record_mousedowns
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { browser.at_css("#target").click(keys: [:shift]) }
-        .to output(/:keys is renamed to :modifiers.*called from #{__FILE__}/m).to_stderr
-      expect(browser.evaluate("events")).to eq(["0:1:true:false"])
-    end
-
     it "holds the keys of keyboard.hold when no modifiers are given" do
       record_mousedowns
 
       browser.keyboard.hold(:shift) { browser.at_css("#target").click }
 
       expect(browser.evaluate("events")).to eq(["0:1:true:false"])
-    end
-
-    it "raises for an unknown mode" do
-      record_mousedowns
-
-      expect { browser.at_css("#target").click(mode: :triple) }.to raise_error(ArgumentError, "unknown mode: :triple")
     end
 
     it "raises NodeNotFoundError for a node from before a refresh" do
