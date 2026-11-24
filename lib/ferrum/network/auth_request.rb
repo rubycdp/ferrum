@@ -8,8 +8,6 @@ module Ferrum
     # answered with credentials or canceled.
     #
     class AuthRequest
-      REQUEST_ID_DEPRECATED = "request_id will be removed in Ferrum 0.22. Use id instead."
-
       # The id of the paused request, the `requestId` that `Fetch` commands take.
       #
       # @return [String]
@@ -31,16 +29,6 @@ module Ferrum
         @resource_type = params["resourceType"]
         @request = params["request"]
         @handled = false
-      end
-
-      #
-      # @deprecated Will be removed in Ferrum 0.22. Use {#id}.
-      #
-      # @return [String]
-      #
-      def request_id
-        Utils::Deprecate.warn(REQUEST_ID_DEPRECATED, user_code: true)
-        id
       end
 
       #

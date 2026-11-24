@@ -127,14 +127,4 @@ describe Ferrum::Network::Request do
       expect(request.body).to eq("name=ferrum")
     end
   end
-
-  describe "#post_data" do
-    it "returns the POST data and warns that it is deprecated" do
-      request = Ferrum::Network::Request.new({ "request" => { "postData" => "name=ferrum" } })
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(request.post_data).to eq("name=ferrum") }
-        .to output(/post_data will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-    end
-  end
 end

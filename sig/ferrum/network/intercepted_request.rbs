@@ -1,11 +1,7 @@
 module Ferrum
   class Network
     class InterceptedRequest
-      REQUEST_ID_DEPRECATED: String
-
       attr_accessor id: String
-
-      %a{deprecated} def request_id: () -> String
 
       attr_accessor frame_id: untyped
 

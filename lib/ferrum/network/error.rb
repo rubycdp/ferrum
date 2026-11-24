@@ -8,9 +8,6 @@ module Ferrum
     # defined in `ferrum/errors.rb`.
     #
     class Error
-      TIMESTAMP_DEPRECATED = "timestamp will be removed in Ferrum 0.22. Use time instead."
-      MONOTONIC_TIME_DEPRECATED = "monotonic_time will be removed in Ferrum 0.22. Use time instead."
-
       # @note The writer is a private API, Ferrum sets it.
       attr_reader :id, :url, :type, :error_text, :description
 
@@ -30,22 +27,6 @@ module Ferrum
       #
       # @note The writer is a private API, Ferrum sets it.
       attr_reader :time
-
-      # @deprecated Will be removed in Ferrum 0.22. Use {#time}.
-      #
-      # @return [Float, nil]
-      def timestamp
-        Utils::Deprecate.warn(TIMESTAMP_DEPRECATED, user_code: true)
-        @timestamp
-      end
-
-      # @deprecated Will be removed in Ferrum 0.22. Use {#time}.
-      #
-      # @return [Float, nil]
-      def monotonic_time
-        Utils::Deprecate.warn(MONOTONIC_TIME_DEPRECATED, user_code: true)
-        @monotonic_time
-      end
 
       # Sets the error's timestamp, deriving {#time} from it.
       #

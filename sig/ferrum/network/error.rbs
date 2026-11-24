@@ -1,9 +1,6 @@
 module Ferrum
   class Network
     class Error
-      TIMESTAMP_DEPRECATED: String
-      MONOTONIC_TIME_DEPRECATED: String
-
       attr_writer canceled: bool?
 
       attr_writer time: Time?
@@ -23,10 +20,6 @@ module Ferrum
       def canceled?: () -> bool?
 
       def time: () -> Time?
-
-      %a{deprecated} def timestamp: () -> Float?
-
-      %a{deprecated} def monotonic_time: () -> Float?
 
       def timestamp=: (Float value) -> Float
     end

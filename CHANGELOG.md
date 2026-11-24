@@ -29,6 +29,8 @@
 - `frame.set_content`, use `content=`
 - `node.scroll_into_view`, `node.axnode` and `node[name]`, use `scroll`, `ax_node` and `property(name)`
 - `contexts.each { |id, context| }`, `each` yields the context, use `context.id` for the id
+- `request_id` of intercepted and auth requests, `post_data` of requests, and `timestamp` and `monotonic_time` of
+  `Network::Error`, use `id`, `body` and `time`
 
 
 ## [0.21.0](https://github.com/rubycdp/ferrum/compare/v0.20.2...v0.21.0) (November 24, 2026) ##

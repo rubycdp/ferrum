@@ -51,16 +51,6 @@ module Ferrum
       def body
         @request["postData"]
       end
-
-      #
-      # @deprecated Will be removed in Ferrum 0.22. Use {#body}.
-      #
-      # @return [String, nil]
-      #
-      def post_data
-        Utils::Deprecate.warn("post_data will be removed in Ferrum 0.22. Use body instead.", user_code: true)
-        body
-      end
     end
   end
 end

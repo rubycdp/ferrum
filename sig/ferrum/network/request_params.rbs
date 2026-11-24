@@ -12,8 +12,6 @@ module Ferrum
       def headers: () -> ::Hash[String, String]
 
       def body: () -> String?
-
-      %a{deprecated} def post_data: () -> String?
     end
   end
 end

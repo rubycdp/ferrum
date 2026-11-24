@@ -13,8 +13,6 @@ module Ferrum
     class InterceptedRequest
       include RequestParams
 
-      REQUEST_ID_DEPRECATED = "request_id will be removed in Ferrum 0.22. Use id instead."
-
       # The interception id, the `requestId` that `Fetch` commands take. {#network_id} is the {Request#id} of the
       # same request.
       #
@@ -38,16 +36,6 @@ module Ferrum
         @resource_type = params["resourceType"]
         @request = params["request"]
         @network_id = params["networkId"]
-      end
-
-      #
-      # @deprecated Will be removed in Ferrum 0.22. Use {#id}.
-      #
-      # @return [String]
-      #
-      def request_id
-        Utils::Deprecate.warn(REQUEST_ID_DEPRECATED, user_code: true)
-        id
       end
 
       #
