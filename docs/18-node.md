@@ -317,16 +317,16 @@ The node in the accessibility tree, `nil` if it is ignored there. See
 page.at_css("a").ax_node.role # => "link"
 ```
 
-#### find_position(x: `Integer`, y: `Integer`, position: `Symbol`) : `Array<Float>`
+#### pinpoint(x: `Numeric`, y: `Numeric`, position: `Symbol`) : `Array<Float>`
 
-The `[x, y]` coordinates a click on the node would land on, without clicking. Without `x` and `y` it's the center of
-the node. With both, it's that offset from the top-left corner (`position: :top`, the default) or from the center
-(`position: :center`).
+The `[x, y]` point a click on the node would land on, in viewport coordinates, without clicking. `x` and `y` are an
+offset from the node's center (`position: :center`, the default) or from its top-left corner (`position: :top`).
+`click(offset:)` and `hover(offset:)` take the same keys.
 
 ```ruby
-page.at_css("input").find_position # => [126.7, 401.4]
-page.at_css("input").find_position(x: 5, y: 5) # => [55.2, 395.9]
-page.at_css("input").find_position(x: 5, y: 5, position: :center) # => [131.7, 406.4]
+page.at_css("input").pinpoint # => [126.7, 401.4]
+page.at_css("input").pinpoint(x: 5, y: 5) # => [131.7, 406.4]
+page.at_css("input").pinpoint(x: 5, y: 5, position: :top) # => [55.2, 395.9]
 ```
 
 #### remove : `Hash`

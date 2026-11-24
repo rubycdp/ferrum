@@ -176,6 +176,27 @@ describe Ferrum::Node do
       JS
     end
 
+    it "clicks the center of the node without an offset" do
+      browser.go_to("/click_coordinates")
+      browser.at_css("#box").click
+
+      expect(browser.at_css("#log").text).to eq("x: 400, y: 300")
+    end
+
+    it "clicks at the offset from the center of the node" do
+      browser.go_to("/click_coordinates")
+      browser.at_css("#box").click(offset: { x: 10, y: 20 })
+
+      expect(browser.at_css("#log").text).to eq("x: 410, y: 320")
+    end
+
+    it "clicks at the offset from the top-left corner of the node with position: :top" do
+      browser.go_to("/click_coordinates")
+      browser.at_css("#box").click(offset: { x: 10, y: 20, position: :top })
+
+      expect(browser.at_css("#log").text).to eq("x: 10, y: 20")
+    end
+
     it "bounds the click by the given timeout" do
       browser.go_to("/with_js")
       node = browser.at_css("#remove")
@@ -1452,46 +1473,80 @@ describe Ferrum::Node do
     end
   end
 
-  describe "#find_position" do
+  describe "#pinpoint" do
     before { browser.go_to("/simple") }
 
     def rect
       browser.at_css("#nav").evaluate("this.getBoundingClientRect().toJSON()")
     end
 
+    def without_content_quads
+      allow(browser.page).to receive(:command).and_wrap_original do |command, method, **params|
+        method == "DOM.getContentQuads" ? { "quads" => [] } : command.call(method, **params)
+      end
+    end
+
     it "returns the center of the node" do
-      x, y = browser.at_css("#nav").find_position
+      x, y = browser.at_css("#nav").pinpoint
 
       expect(x).to be_within(0.5).of(rect["left"] + (rect["width"] / 2))
       expect(y).to be_within(0.5).of(rect["top"] + (rect["height"] / 2))
     end
 
-    it "returns the offset from the top-left corner of the node" do
-      x, y = browser.at_css("#nav").find_position(x: 5, y: 3)
-
-      expect(x).to be_within(0.5).of(rect["left"] + 5)
-      expect(y).to be_within(0.5).of(rect["top"] + 3)
-    end
-
-    it "returns the offset from the center of the node with position: :center" do
-      x, y = browser.at_css("#nav").find_position(x: 5, y: 3, position: :center)
+    it "returns the offset from the center of the node" do
+      x, y = browser.at_css("#nav").pinpoint(x: 5, y: 3)
 
       expect(x).to be_within(0.5).of(rect["left"] + (rect["width"] / 2) + 5)
       expect(y).to be_within(0.5).of(rect["top"] + (rect["height"] / 2) + 3)
     end
 
-    it "returns the center of the node when only one offset is given" do
-      x, y = browser.at_css("#nav").find_position(x: 5)
+    it "returns the offset from the top-left corner of the node with position: :top" do
+      x, y = browser.at_css("#nav").pinpoint(x: 5, y: 3, position: :top)
 
-      expect(x).to be_within(0.5).of(rect["left"] + (rect["width"] / 2))
+      expect(x).to be_within(0.5).of(rect["left"] + 5)
+      expect(y).to be_within(0.5).of(rect["top"] + 3)
+    end
+
+    it "applies a single offset" do
+      x, y = browser.at_css("#nav").pinpoint(x: 5)
+
+      expect(x).to be_within(0.5).of(rect["left"] + (rect["width"] / 2) + 5)
       expect(y).to be_within(0.5).of(rect["top"] + (rect["height"] / 2))
+    end
+
+    it "applies the offset to the bounding rect when the node has no content quads" do
+      node = browser.at_css("#nav")
+      without_content_quads
+
+      x, y = node.pinpoint(x: 5, y: 3, position: :top)
+
+      expect(x).to be_within(0.5).of(rect["left"] + 5)
+      expect(y).to be_within(0.5).of(rect["top"] + 3)
+    end
+
+    it "raises ArgumentError for an unknown position" do
+      expect { browser.at_css("#nav").pinpoint(position: :left) }.to raise_error(ArgumentError, /:center or :top/)
     end
 
     it "raises CoordinatesNotFoundError for a hidden node" do
       node = browser.at_css("#nav")
       node.execute("this.style.display = 'none'; this.offsetHeight")
 
-      expect { node.find_position }.to raise_error(Ferrum::CoordinatesNotFoundError)
+      expect { node.pinpoint }.to raise_error(Ferrum::CoordinatesNotFoundError)
+    end
+  end
+
+  describe "#find_position" do
+    it "warns that find_position is deprecated and returns the offset from the top-left corner" do
+      browser.go_to("/simple")
+      node = browser.at_css("#nav")
+      left, top = node.evaluate("[this.getBoundingClientRect().left, this.getBoundingClientRect().top]")
+      Ferrum::Utils::Deprecate.reset!
+
+      expect { expect(node.find_position(x: 5, y: 3)).to match([be_within(0.5).of(left + 5), be_within(0.5).of(top + 3)]) }
+        .to output(/find_position will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
+    ensure
+      Ferrum::Utils::Deprecate.reset!
     end
   end
 

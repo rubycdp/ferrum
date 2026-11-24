@@ -33,8 +33,13 @@
   the page or the download. `wait_css`, `wait_xpath`, `network.wait_idle`, `node.wait_still` and `page.wait_until { }`
   return what they waited for. Every one returns `nil` on timeout and has a `!` version that raises `TimeoutError`
 - `node.hover` moves the mouse over the node, it raised `NotImplementedError`
+- `node.pinpoint(x:, y:, position:)` returns the point a click on the node lands on, `x` and `y` are an offset from
+  the center or, with `position: :top`, from the top-left corner. A single offset applies, and so does the offset of a
+  node without a box
 
 ### Changed
+- `node.click(offset:)` and `hover(offset:)` measure `x` and `y` from the center by default, pass `position: :top` for
+  the top-left corner
 - `browser.contexts.each` and the `Enumerable` methods yield contexts instead of `[id, context]` pairs
 - `refresh`, `back` and `forward` return `nil` when the page doesn't load in time instead of raising, use `refresh!`,
   `back!` and `forward!` to raise
@@ -118,6 +123,8 @@
   `resource_type` and `resource_type?`, like the intercepted requests
 - Passing a Hash with an `"objectId"` key to `evaluate` as a remote object, will be removed in 0.22. Pass the
   `Ferrum::RemoteObject` from `evaluate_handle`
+- `node.find_position`, will be removed in 0.22. Use `pinpoint`, its offsets are measured from the center unless
+  `position: :top`
 
 ### Fixed
 - `Network::Request#time` keeps the fraction of a second, it was truncated to whole seconds
