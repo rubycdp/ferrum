@@ -1466,20 +1466,6 @@ describe Ferrum::Node do
     end
   end
 
-  describe "#find_position" do
-    it "warns that find_position is deprecated and returns the offset from the top-left corner" do
-      browser.go_to("/simple")
-      node = browser.at_css("#nav")
-      left, top = node.evaluate("[this.getBoundingClientRect().left, this.getBoundingClientRect().top]")
-      Ferrum::Utils::Deprecate.reset!
-
-      expect { expect(node.find_position(x: 5, y: 3)).to match([be_within(0.5).of(left + 5), be_within(0.5).of(top + 3)]) }
-        .to output(/find_position will be removed in Ferrum 0\.22.*called from #{__FILE__}/m).to_stderr
-    ensure
-      Ferrum::Utils::Deprecate.reset!
-    end
-  end
-
   describe "#execute" do
     before { browser.go_to("/index") }
 

@@ -15,8 +15,6 @@ module Ferrum
     MOVING_WAIT_ATTEMPTS = ENV.fetch("FERRUM_NODE_MOVING_ATTEMPTS", 50).to_i
     MOVING_CHECK_DELAY = ENV.fetch("FERRUM_NODE_MOVING_CHECK", 0.05).to_f
     WAIT_FOR_STOP_MOVING_DEPRECATED = "wait_for_stop_moving will be removed in Ferrum 0.22. Use wait_still instead."
-    FIND_POSITION_DEPRECATED = "find_position will be removed in Ferrum 0.22. Use pinpoint instead, its offsets are " \
-                               "measured from the center unless position: :top."
 
     # @return [Page] the page the node belongs to.
     attr_reader :page
@@ -789,36 +787,6 @@ module Ferrum
     end
 
     #
-    # Finds the x, y coordinates to click or hover on the node.
-    #
-    # @deprecated Will be removed in Ferrum 0.22. Use {#pinpoint}.
-    #
-    # @param [Integer, nil] x
-    #   Horizontal offset from the reference point.
-    #
-    # @param [Integer, nil] y
-    #   Vertical offset from the reference point.
-    #
-    # @param [Symbol] position
-    #   `:top` to offset from the node's top-left corner, `:center` to offset
-    #   from its center.
-    #
-    # @return [(Float, Float)]
-    #
-    # @raise [TimeoutError]
-    #
-    def find_position(x: nil, y: nil, position: :top)
-      Utils::Deprecate.warn(FIND_POSITION_DEPRECATED, user_code: true)
-      points = settled_quads.map { |q| to_points(q) }.first
-      get_position(points, x, y, position)
-    rescue CoordinatesNotFoundError
-      x, y = bounding_rect_coordinates
-      raise if x.zero? && y.zero?
-
-      [x, y]
-    end
-
-    #
     # The computed CSS styles of the node.
     #
     # @return [Hash{String => String}]
@@ -891,15 +859,6 @@ module Ferrum
       evaluate("function() { const r = this.getBoundingClientRect(); return [r.left, r.top, r.width, r.height]; }")
     end
 
-    def bounding_rect_coordinates
-      evaluate(<<~JS)
-        function() {
-          const { left, top, width, height } = this.getBoundingClientRect();
-          return [left + (width / 2), top + (height / 2)];
-        }
-      JS
-    end
-
     def content_quads
       quads = page.command("DOM.getContentQuads", nodeId: node_id)["quads"]
       raise CoordinatesNotFoundError, "Node is either not visible or not an HTMLElement" if quads.empty?
@@ -921,31 +880,6 @@ module Ferrum
       sleep(delay)
       current = content_quads
       [previous, current]
-    end
-
-    def get_position(points, offset_x, offset_y, position)
-      x = y = nil
-
-      if offset_x && offset_y && position == :top
-        point = points.first
-        x = point[:x] + offset_x.to_i
-        y = point[:y] + offset_y.to_i
-      else
-        x, y = points.inject([0, 0]) do |memo, coordinate|
-          [memo[0] + coordinate[:x],
-           memo[1] + coordinate[:y]]
-        end
-
-        x /= 4
-        y /= 4
-      end
-
-      if offset_x && offset_y && position == :center
-        x += offset_x.to_i
-        y += offset_y.to_i
-      end
-
-      [x, y]
     end
 
     def to_points(quad)

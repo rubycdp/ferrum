@@ -38,6 +38,7 @@
 - `Ferrum::NotImplementedError`, nothing raises it since `node.hover` works
 - Passing a Hash with an `"objectId"` key to `evaluate` as a remote object, it is passed as a plain Hash now. Pass the
   `Ferrum::RemoteObject` from `evaluate_handle`
+- `node.find_position`, use `pinpoint`, its offsets are measured from the center unless `position: :top`
 
 
 ## [0.21.0](https://github.com/rubycdp/ferrum/compare/v0.20.2...v0.21.0) (November 24, 2026) ##
