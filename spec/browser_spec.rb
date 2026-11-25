@@ -1055,6 +1055,12 @@ describe Ferrum::Browser do
       expect(browser.targets.size).to eq(0)
     end
 
+    it "opens a page in a window of its own with new_window: true" do
+      page = browser.create_page
+
+      expect(browser.create_page(new_window: true).window_id).not_to eq(page.window_id)
+    end
+
     it "creates a page in a new context without a block" do
       expect(browser.contexts.size).to eq(0)
 

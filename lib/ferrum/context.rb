@@ -165,28 +165,37 @@ module Ferrum
     # Creates a new target in this context and eagerly connects to it as a
     # {Page}, forwarding `options` to {Target#build_page}.
     #
+    # @param [Boolean] new_window
+    #   Opens the page in a window of its own instead of a tab, see {#create_target}.
+    #
     # @param [Hash] options
     #
     # @return [Page]
     #
     # @raise [TimeoutError]
-    def create_page(**options)
-      target = create_target
+    def create_page(new_window: false, **options)
+      target = create_target(new_window: new_window)
       target.page = target.build_page(**options)
     end
 
     # Creates a new target in this context via `Target.createTarget` and
     # blocks until it's been registered (see {#add_target}).
     #
+    # @param [Boolean] new_window
+    #   Opens the target in a window of its own. Otherwise it's a tab in the
+    #   window Chrome last opened for this context.
+    #
     # @return [Target]
     #
     # @raise [NoSuchTargetError]
     #
     # @raise [TimeoutError]
-    def create_target
-      options = { browserContextId: @id } unless implicit?
+    def create_target(new_window: false)
+      options = {}
+      options[:browserContextId] = @id unless implicit?
+      options[:newWindow] = true if new_window
       deadline = Deadline.wrap(@client.timeout)
-      response = @client.command("Target.createTarget", timeout: deadline, url: "about:blank", **Hash(options))
+      response = @client.command("Target.createTarget", timeout: deadline, url: "about:blank", **options)
       @targets.await(response["targetId"], deadline) || raise(NoSuchTargetError)
     end
 
