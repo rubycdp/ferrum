@@ -1,6 +1,7 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.21.0...main) ##
 
 ### Added
+- `new_window:` for `create_target` and `create_page` of a context and of the browser opens a window instead of a tab
 - The gem ships its RBS signatures from `sig/`, so type checkers pick them up without local stubs [#731]
 
 ### Changed

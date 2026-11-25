@@ -34,9 +34,9 @@ module Ferrum
 
     def await_page!: (?opener: Page?, ?timeout: (::Numeric | Deadline)?) { () -> void } -> Page
 
-    def create_page: (**untyped options) -> Page
+    def create_page: (?new_window: bool, **untyped options) -> Page
 
-    def create_target: () -> Target
+    def create_target: (?new_window: bool) -> Target
 
     def add_target: (params: Hash[String, untyped], ?session_id: String?, ?attached: bool) -> Target
 

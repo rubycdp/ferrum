@@ -287,6 +287,26 @@ describe Ferrum::Context do
     end
   end
 
+  describe "#create_target" do
+    def window_id(target)
+      browser.client.command("Browser.getWindowForTarget", timeout: 5, targetId: target.id)["windowId"]
+    end
+
+    it "opens a tab in the window of the context" do
+      context = browser.contexts.create
+      first = context.create_target
+
+      expect(window_id(context.create_target)).to eq(window_id(first))
+    end
+
+    it "opens a window of its own with new_window: true" do
+      context = browser.contexts.create
+      first = context.create_target
+
+      expect(window_id(context.create_target(new_window: true))).not_to eq(window_id(first))
+    end
+  end
+
   describe "#attach_target" do
     it "reuses the session of an already attached target", :launch do
       browser = Ferrum::Browser.new(base_url: base_url,

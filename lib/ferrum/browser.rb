@@ -147,6 +147,9 @@ module Ferrum
     # @param [Boolean] new_context
     #   Whether to create a page in a new context or not.
     #
+    # @param [Boolean] new_window
+    #   Whether to open the page in a window of its own instead of a tab.
+    #
     # @param [Hash] proxy
     #   Whether to use proxy for a page. The page will be created in a new context if so.
     #
@@ -155,7 +158,7 @@ module Ferrum
     #
     # @raise [TimeoutError]
     #
-    def create_page(new_context: false, proxy: nil)
+    def create_page(new_context: false, new_window: false, proxy: nil)
       page = if new_context || proxy
                params = {}
 
@@ -166,9 +169,9 @@ module Ferrum
                end
 
                context = contexts.create(**params)
-               context.create_page(proxy: proxy)
+               context.create_page(new_window: new_window, proxy: proxy)
              else
-               default_context.create_page
+               default_context.create_page(new_window: new_window)
              end
 
       block_given? ? yield(page) : page
