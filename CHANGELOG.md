@@ -1,6 +1,7 @@
 ## [Unreleased](https://github.com/rubycdp/ferrum/compare/v0.21.0...main) ##
 
 ### Added
+- The gem ships its RBS signatures from `sig/`, so type checkers pick them up without local stubs [#731]
 
 ### Changed
 - `User-Agent` and `Accept-Language` set through `headers` are only sent with requests, they no longer change what

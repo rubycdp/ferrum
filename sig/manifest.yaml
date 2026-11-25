@@ -1,0 +1,8 @@
+dependencies:
+  - name: forwardable
+  - name: net-http
+  - name: openssl
+  - name: singleton
+  - name: socket
+  - name: strscan
+  - name: uri
