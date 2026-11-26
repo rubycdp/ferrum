@@ -79,6 +79,7 @@ module Ferrum
       @ws_url: String?
       @browser_options: Hash[String, (String | bool | nil)]
       @extensions: ::Array[String]
+      @page_handlers: ::Array[^(Page) -> void]
       @default_user_agent: String?
 
       def initialize: (?Hash[Symbol, untyped]? options) -> void
@@ -88,6 +89,10 @@ module Ferrum
       def extensions: () -> ::Array[String]
 
       def add_extension: (String | Hash[Symbol, String] extension) -> ::Array[String]
+
+      def on_page: () { (Page page) -> void } -> nil
+
+      attr_reader page_handlers: ::Array[^(Page) -> void]
 
       def validate_proxy: (Hash[Symbol, (String | ::Integer)]? options) -> Hash[Symbol, (String | ::Integer)]?
 

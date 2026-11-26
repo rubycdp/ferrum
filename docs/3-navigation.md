@@ -204,6 +204,16 @@ The target of an opened page has the id of the page that opened it:
 browser.targets[opened.target_id].opener_id == page.target_id # => true
 ```
 
+#### on_page { |page| }
+
+Calls the block with every new page before Ferrum returns it, so the page can be set up before anything runs on it.
+That covers pages you create and pages other pages open, like popups. Pages already open when you call this aren't
+passed.
+
+```ruby
+browser.on_page { |page| page.on(:dialog, &:accept) }
+```
+
 #### pages { |target| } : `Array<Page>`
 
 Returns the pages of the default context. With a block, only the pages of the targets it returns truthy for.
