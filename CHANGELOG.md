@@ -21,6 +21,8 @@
 - `keyboard.type` and `node.type` type `\n` in a string as Enter, it was dropped
 
 ### Removed
+- `Target#page=`, a private API Cuprite no longer needs, build pages with `create_page` and set them up with
+  `on_page`
 - `Browser::Options::BASE_URL_SCHEMA`, use `BASE_URL_SCHEMES`
 - `target.window?` and `windows` of a context and of the browser, use `target.opener_id`, `await_page { ... }` or
   `pages(&:opener_id)`

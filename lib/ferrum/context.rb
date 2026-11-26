@@ -175,7 +175,7 @@ module Ferrum
     # @raise [TimeoutError]
     def create_page(new_window: false, **options)
       target = create_target(new_window: new_window)
-      target.page = target.build_page(**options)
+      target.build_page(**options)
     end
 
     # Creates a new target in this context via `Target.createTarget` and

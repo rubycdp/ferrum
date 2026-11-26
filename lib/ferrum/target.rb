@@ -18,12 +18,6 @@ module Ferrum
     # @api private
     attr_writer :session_id
 
-    # You can create page yourself and assign it to target, used in cuprite
-    # where we enhance page class and build page ourselves.
-    #
-    # @api private
-    attr_writer :page
-
     def initialize(browser_client, session_id = nil, params = nil, implicit: false)
       @page = nil
       @worker = nil
@@ -59,10 +53,8 @@ module Ferrum
     # @return [Page]
     #
     # @raise [TimeoutError]
-    #
-    # @note The writer is a private API, Ferrum sets it.
     def page
-      @page ||= build_page
+      @page || build_page
     end
 
     # Connects to and returns this target's {Worker}.
@@ -84,9 +76,9 @@ module Ferrum
       @client ||= build_client
     end
 
-    # Builds a {Page} for this target, and passes it to the blocks
-    # registered with `on_page` before returning it. Called lazily by
-    # `page`, or eagerly by {Context#create_page}.
+    # Builds this target's {Page}, and passes it to the blocks registered
+    # with `on_page` before returning it. Called lazily by `page`, or
+    # eagerly by {Context#create_page}.
     #
     # @param [Hash] options
     #
@@ -95,9 +87,9 @@ module Ferrum
     # @api private
     def build_page(**options)
       maybe_sleep_if_new_window
-      page = Page.new(client, context_id: context_id, target_id: id, **options)
-      @options.page_handlers.each { |handler| handler.call(page) }
-      page
+      @page = Page.new(client, context_id: context_id, target_id: id, **options)
+      @options.page_handlers.each { |handler| handler.call(@page) }
+      @page
     end
 
     # Builds a {Worker} for this target. Called lazily by {#worker}.
