@@ -51,6 +51,7 @@ module Ferrum
         @url = @options[:url].to_s if @options[:url]
         @ws_url = @options[:ws_url].to_s if @options[:ws_url]
         @extensions = Array(@options[:extensions]).map { |e| read_extension(e) }.freeze
+        @page_handlers = [].freeze
 
         @options = @options.merge(window_size: @window_size).freeze
         @browser_options = @options.fetch(:browser_options, {}).freeze
@@ -88,6 +89,37 @@ module Ferrum
       def add_extension(extension)
         @extensions = [*@extensions, read_extension(extension)].freeze
       end
+
+      #
+      # Calls the block with every new page before Ferrum returns it, so the page can be set up before anything runs
+      # on it. That covers pages you create and pages other pages open, like popups. Pages already open when you call
+      # this aren't passed.
+      #
+      # @yieldparam [Page] page
+      #
+      # @return [nil]
+      #
+      # @raise [ArgumentError]
+      #   If no block is given.
+      #
+      # @example
+      #   browser.on_page { |page| page.on(:dialog, &:accept) }
+      #
+      def on_page(&block)
+        raise ArgumentError, "on_page requires a block" unless block
+
+        @page_handlers = [*@page_handlers, block].freeze
+        nil
+      end
+
+      #
+      # The blocks registered with {#on_page}.
+      #
+      # @return [Array<Proc>]
+      #
+      # @api private
+      #
+      attr_reader :page_handlers
 
       #
       # Validates the `:proxy` option, if given.

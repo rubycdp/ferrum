@@ -814,6 +814,37 @@ describe Ferrum::Browser do
     end
   end
 
+  describe "#on_page" do
+    it "passes a page it creates to the block before returning it", :launch do
+      browser = Ferrum::Browser.new(base_url: base_url)
+      built = []
+      browser.on_page { |page| built << page }
+
+      page = browser.create_page
+
+      expect(built).to eq([page])
+    ensure
+      browser&.quit
+    end
+
+    it "passes a page another page opens to the block", :launch do
+      browser = Ferrum::Browser.new(base_url: base_url)
+      built = []
+      browser.on_page { |page| built << page }
+      browser.go_to("/simple")
+
+      popup = browser.await_page { browser.execute(%(window.open("/simple", "popup"))) }
+
+      expect(built).to include(popup)
+    ensure
+      browser&.quit
+    end
+
+    it "raises ArgumentError without a block" do
+      expect { browser.on_page }.to raise_error(ArgumentError, "on_page requires a block")
+    end
+  end
+
   describe "#add_extension" do
     it "extends the world of pages opened afterwards", :launch do
       browser = Ferrum::Browser.new(base_url: base_url)

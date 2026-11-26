@@ -84,8 +84,9 @@ module Ferrum
       @client ||= build_client
     end
 
-    # Builds a {Page} for this target. Called lazily by `page`, or eagerly
-    # by {Context#create_page}.
+    # Builds a {Page} for this target, and passes it to the blocks
+    # registered with `on_page` before returning it. Called lazily by
+    # `page`, or eagerly by {Context#create_page}.
     #
     # @param [Hash] options
     #
@@ -94,7 +95,9 @@ module Ferrum
     # @api private
     def build_page(**options)
       maybe_sleep_if_new_window
-      Page.new(client, context_id: context_id, target_id: id, **options)
+      page = Page.new(client, context_id: context_id, target_id: id, **options)
+      @options.page_handlers.each { |handler| handler.call(page) }
+      page
     end
 
     # Builds a {Worker} for this target. Called lazily by {#worker}.

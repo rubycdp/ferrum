@@ -4,6 +4,8 @@
 - `new_window:` for `create_target` and `create_page` of a context and of the browser opens a window instead of a tab
 - `close_target` of a context and of the browser closes a target and removes it from the context at once, so
   `targets` and `pages` stop listing it right away instead of when Chrome reports it destroyed, as after `page.close`
+- `browser.on_page { |page| }` calls the block with every new page, popups included, before Ferrum returns it, so the
+  page can be set up before anything runs on it
 - The gem ships its RBS signatures from `sig/`, so type checkers pick them up without local stubs [#731]
 
 ### Changed

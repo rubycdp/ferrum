@@ -48,7 +48,7 @@ module Ferrum
     attr_reader :client, :process, :contexts, :options
 
     delegate %i[timeout timeout= base_url base_url= default_user_agent default_user_agent= extensions
-                add_extension] => :options
+                add_extension on_page] => :options
 
     #
     # Initializes the browser.
