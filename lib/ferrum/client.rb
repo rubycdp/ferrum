@@ -329,7 +329,9 @@ module Ferrum
       @ws.close
       # Give a thread some time to handle a tail of messages
       @responses.close
-      @thread.kill unless @thread.join(1)
+      joined = @thread.join(1)
+    ensure
+      @thread.kill unless joined
       @dispatcher.close
       @ws.force_close
     end

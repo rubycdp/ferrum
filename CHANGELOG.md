@@ -19,6 +19,8 @@
 
 ### Fixed
 - `keyboard.type` and `node.type` type `\n` in a string as Enter, it was dropped
+- A failed `Browser.new` interrupted while it cleans up, e.g. by `Timeout.timeout`, closes the socket, stops its
+  threads and the browser process instead of leaking them [#738]
 
 ### Removed
 - `Target#page=`, a private API Cuprite no longer needs, build pages with `create_page` and set them up with
