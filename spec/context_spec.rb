@@ -341,6 +341,32 @@ describe Ferrum::Context do
     end
   end
 
+  describe "#close_target" do
+    it "removes a closed page from the context right away" do
+      target = browser.create_target
+      target.page
+
+      browser.close_target(target.id)
+
+      expect(browser.targets).not_to have_key(target.id)
+    end
+
+    it "closes a target that isn't connected to in the browser" do
+      target = browser.create_target
+
+      browser.close_target(target.id)
+
+      expect(target).not_to be_connected
+      wait_for { browser.command("Target.getTargets")["targetInfos"].map { |info| info["targetId"] } }
+        .not_to include(target.id)
+    end
+
+    it "raises NoSuchTargetError naming a target the context doesn't have" do
+      expect { browser.close_target("missing") }
+        .to raise_error(Ferrum::NoSuchTargetError, /\ANo target missing in context /)
+    end
+  end
+
   describe "#find_target" do
     it "returns the first target the block matches" do
       context = browser.contexts.create

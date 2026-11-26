@@ -276,6 +276,32 @@ module Ferrum
       target
     end
 
+    # Closes a target in the browser, and its page or worker if one is
+    # connected, and removes it from the context right away, so `targets`
+    # and `pages` no longer list it once this returns. Chrome reports the
+    # target destroyed only later.
+    #
+    # @param [String] target_id
+    #
+    # @return [nil]
+    #
+    # @raise [NoSuchTargetError] if the context has no such target.
+    def close_target(target_id)
+      target = @targets[target_id]
+      raise NoSuchTargetError, "No target #{target_id} in context #{id}" unless target
+
+      if !target.connected?
+        @client.notify("Target.closeTarget", targetId: target_id)
+      elsif target.page?
+        target.page.close
+      else
+        target.worker.close
+      end
+      delete_target(target_id)
+
+      nil
+    end
+
     # Returns the first target for which the block returns truthy.
     #
     # @return [Target, nil]

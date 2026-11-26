@@ -46,6 +46,8 @@ module Ferrum
 
     def attach_target: (String target_id) -> Target
 
+    def close_target: (String target_id) -> nil
+
     def find_target: () { (Target) -> bool } -> Target?
 
     def close_targets_connection: () -> void
