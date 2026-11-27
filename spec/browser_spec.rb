@@ -981,6 +981,17 @@ describe Ferrum::Browser do
 
       expect { Process.kill(0, pid) }.to raise_error(Errno::ESRCH)
     end
+
+    it "stops the process when quitting a hung browser is interrupted", :launch, skip: Ferrum::Utils::Platform.windows? do
+      browser = Ferrum::Browser.new
+      pid = browser.process.pid
+      Process.kill("STOP", pid)
+
+      expect { Timeout.timeout(0.5) { browser.quit } }.to raise_error(Timeout::Error)
+      expect { Process.kill(0, pid) }.to raise_error(Errno::ESRCH)
+    ensure
+      browser&.quit
+    end
   end
 
   describe "#restart" do
