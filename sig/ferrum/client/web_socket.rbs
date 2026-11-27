@@ -5,6 +5,7 @@ module Ferrum
       DEFAULT_PORTS: Hash[String, Integer]
       WRITE_CHUNK_SIZE: Integer
       WRITE_TIMEOUT: Integer
+      MESSAGE_TOO_BIG: Integer
 
       attr_reader url: (String | ::Addressable::URI)
       attr_reader messages: ::Queue
@@ -22,6 +23,7 @@ module Ferrum
       @write_timeout: ::Numeric?
       @encoded: Array[String]
       @close_reason: String?
+      @max_receive_size: Integer
 
       def initialize: ((String | ::Addressable::URI) url, Integer? max_receive_size, Log? log, ?::Numeric write_timeout, ?connect_timeout: ::Numeric?) -> void
 

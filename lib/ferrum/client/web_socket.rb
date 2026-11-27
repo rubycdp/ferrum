@@ -26,6 +26,7 @@ module Ferrum
       DEFAULT_PORTS = { "ws" => 80, "wss" => 443 }.freeze
       WRITE_CHUNK_SIZE = 64 * 1024
       WRITE_TIMEOUT = 30
+      MESSAGE_TOO_BIG = 1009
       ESCAPE_OR_LONE_SURROGATE = /\\u[dD][89abAB]\h{2}\\u[dD][c-fC-F]\h{2}|\\u([dD][89a-fA-F]\h{2})|\\./
 
       attr_reader :url, :messages
@@ -51,8 +52,8 @@ module Ferrum
           @sock = tcp
         end
 
-        max_receive_size ||= ::WebSocket::Driver::MAX_LENGTH
-        @driver = ::WebSocket::Driver.client(self, max_length: max_receive_size)
+        @max_receive_size = max_receive_size || ::WebSocket::Driver::MAX_LENGTH
+        @driver = ::WebSocket::Driver.client(self, max_length: @max_receive_size)
         # websocket-driver holds no locks and is called from many threads: commands from
         # callers, pong/close replies from the reader. One lock keeps frames from interleaving.
         @mutex = Mutex.new
@@ -101,11 +102,15 @@ module Ferrum
       #
       # Handles the driver's `:close` event: closes the message queue, lets the
       # writer send what's queued and close the socket, then kills the reader
-      # thread.
+      # thread. A message over the receive limit is named as the reason.
       #
       # @return [void]
       #
-      def on_close(_event)
+      def on_close(event)
+        if event.code == MESSAGE_TOO_BIG
+          @close_reason ||= "Browser sent a message larger than ws_max_receive_size (#{@max_receive_size} bytes), " \
+                            "connection closed"
+        end
         @messages.close
         queue_encoded
         @outgoing.close
