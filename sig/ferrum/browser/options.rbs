@@ -9,6 +9,8 @@ module Ferrum
 
       BASE_URL_SCHEMES: ::Array[String]
 
+      def self.const_missing: (Symbol name) -> untyped
+
       DEFAULT_TIMEOUT: ::Float
 
       PROCESS_TIMEOUT: ::Integer

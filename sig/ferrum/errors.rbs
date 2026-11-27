@@ -1,4 +1,9 @@
 module Ferrum
+  class DeprecatedNotImplementedError < Error
+  end
+
+  def self.const_missing: (Symbol name) -> untyped
+
   class Error < StandardError
   end
 

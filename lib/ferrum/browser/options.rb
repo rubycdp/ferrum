@@ -18,6 +18,24 @@ module Ferrum
       DEFAULT_TIMEOUT = ENV.fetch("FERRUM_DEFAULT_TIMEOUT", 5).to_f
       PROCESS_TIMEOUT = ENV.fetch("FERRUM_PROCESS_TIMEOUT", 10).to_i
 
+      #
+      # Answers `BASE_URL_SCHEMA`, renamed to `BASE_URL_SCHEMES`, with a deprecation warning until 1.0.
+      #
+      # @param [Symbol] name
+      #
+      # @return [Object]
+      #
+      # @raise [NameError]
+      #   For any other missing constant.
+      #
+      def self.const_missing(name)
+        return super unless name == :BASE_URL_SCHEMA
+
+        Utils::Deprecate.warn("BASE_URL_SCHEMA will be removed in Ferrum 1.0. Use BASE_URL_SCHEMES instead.",
+                              user_code: true)
+        BASE_URL_SCHEMES
+      end
+
       attr_reader :window_size, :logger, :log, :ws_max_receive_size,
                   :base_url, :slowmo,
                   :url, :ws_url, :env, :process_timeout, :browser_path,

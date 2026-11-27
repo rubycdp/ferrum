@@ -17,4 +17,17 @@ describe Ferrum::Browser::Options do
       expect(default_timeout("FERRUM_DEFAULT_TIMEOUT" => nil)).to eq("5.0")
     end
   end
+
+  describe ".const_missing" do
+    before { Ferrum::Utils::Deprecate.reset! }
+
+    it "answers BASE_URL_SCHEMA with BASE_URL_SCHEMES and a deprecation warning" do
+      expect { expect(described_class::BASE_URL_SCHEMA).to eq(%w[http https]) }
+        .to output(/BASE_URL_SCHEMA will be removed in Ferrum 1.0. Use BASE_URL_SCHEMES instead./).to_stderr
+    end
+
+    it "raises NameError for another missing constant" do
+      expect { described_class::NO_SUCH_CONSTANT }.to raise_error(NameError, /NO_SUCH_CONSTANT/)
+    end
+  end
 end

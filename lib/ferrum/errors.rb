@@ -293,4 +293,26 @@ module Ferrum
       super(response.merge("message" => @message))
     end
   end
+
+  # The class `NotImplementedError` answers until 1.0, nothing raises it.
+  # @api private
+  class DeprecatedNotImplementedError < Error; end
+
+  #
+  # Answers `NotImplementedError`, which nothing raises since `node.hover` works, with a deprecation warning until 1.0.
+  #
+  # @param [Symbol] name
+  #
+  # @return [Object]
+  #
+  # @raise [NameError]
+  #   For any other missing constant.
+  #
+  def self.const_missing(name)
+    return super unless name == :NotImplementedError
+
+    Utils::Deprecate.warn("Ferrum::NotImplementedError will be removed in Ferrum 1.0, nothing raises it.",
+                          user_code: true)
+    DeprecatedNotImplementedError
+  end
 end

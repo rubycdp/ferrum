@@ -11,11 +11,14 @@
 ### Changed
 - `User-Agent` and `Accept-Language` set through `headers` are only sent with requests, they no longer change what
   `navigator` reports. Use `network.emulate(user_agent:, accept_language:)` to override both
-- An unknown mouse button, `cookies.remove` without `:domain` or `:url`, a relative `go_to` without `:base_url` and a
-  relative `:save_path` raise `ArgumentError` instead of `RuntimeError` or `Ferrum::Error`. A failed screencast and
-  `debug_url` raise `Ferrum::Error`. Errors that had no message or a misleading one say what's missing now [#557]
+- Breaking: an unknown mouse button, `cookies.remove` without `:domain` or `:url`, a relative `go_to` without
+  `:base_url` and a relative `:save_path` raise `ArgumentError` instead of `RuntimeError` or `Ferrum::Error`. A failed
+  screencast and `debug_url` raise `Ferrum::Error`. Errors that had no message or a misleading one say what's missing
+  now [#557]
 
 ### Deprecated
+- `Browser::Options::BASE_URL_SCHEMA`, will be removed in 1.0. Use `BASE_URL_SCHEMES`
+- `Ferrum::NotImplementedError`, will be removed in 1.0. Nothing raises it since `node.hover` works
 
 ### Fixed
 - `keyboard.type` and `node.type` type `\n` in a string as Enter, it was dropped
@@ -23,7 +26,6 @@
 ### Removed
 - `Target#page=`, a private API Cuprite no longer needs, build pages with `create_page` and set them up with
   `on_page`
-- `Browser::Options::BASE_URL_SCHEMA`, use `BASE_URL_SCHEMES`
 - `target.window?` and `windows` of a context and of the browser, use `target.opener_id`, `await_page { ... }` or
   `pages(&:opener_id)`
 - `:js_errors`, uncaught exceptions are in `page.console` with `source: :exception`, and `page.on(:console)` yields them
@@ -50,7 +52,6 @@
   `emulate_network_conditions`, use `javascript = false`, `bypass_csp =`, `cache =`, `offline = true` and `throttle`
 - `body`, use `html`. `type` and `type?` of `Network::Request` and `type` of `Network::Response`, use `resource_type`
   and `resource_type?`
-- `Ferrum::NotImplementedError`, nothing raises it since `node.hover` works
 - Passing a Hash with an `"objectId"` key to `evaluate` as a remote object, it is passed as a plain Hash now. Pass the
   `Ferrum::RemoteObject` from `evaluate_handle`
 - `node.find_position`, use `pinpoint`, its offsets are measured from the center unless `position: :top`
