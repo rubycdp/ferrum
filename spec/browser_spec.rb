@@ -611,6 +611,20 @@ describe Ferrum::Browser do
       expect_connect_timeout(url: "http://192.0.2.1:9222")
     end
 
+    it "raises ConnectTimeoutError when a wss :ws_url doesn't finish the TLS handshake within :process_timeout" do
+      server = TCPServer.new("127.0.0.1", 0)
+      connections = []
+      acceptor = Thread.new { loop { connections << server.accept } }
+      ws_url = "wss://127.0.0.1:#{server.addr[1]}/devtools/browser/x"
+
+      expect { Timeout.timeout(5) { Ferrum::Browser.new(ws_url: ws_url, process_timeout: 0.5) } }
+        .to raise_error(Ferrum::ConnectTimeoutError, /127\.0\.0\.1:\d+ within 0\.5 seconds/)
+    ensure
+      acceptor&.kill
+      connections&.each(&:close)
+      server&.close
+    end
+
     def expect_connect_timeout(**options)
       started = Ferrum::Utils::ElapsedTime.monotonic_time
 

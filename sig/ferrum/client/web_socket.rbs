@@ -43,7 +43,9 @@ module Ferrum
 
       private
 
-      def connect: (String host, Integer port, ::Numeric? timeout) -> ::TCPSocket
+      def connect: (String host, Integer port, bool tls, ::Numeric? timeout) -> (::TCPSocket | ::OpenSSL::SSL::SSLSocket)
+
+      def handshake: (::TCPSocket tcp, Deadline? deadline) -> ::OpenSSL::SSL::SSLSocket
 
       def drive: (?Deadline? deadline) { () -> void } -> void
 

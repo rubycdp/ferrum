@@ -24,6 +24,8 @@
 - A message from Chrome over `:ws_max_receive_size` raises `DeadBrowserError` that names the limit [#739]
 - `browser.quit` and `restart` interrupted while closing the connection to a hung browser, e.g. by `Timeout.timeout`,
   still stop the browser process [#740]
+- `:process_timeout` bounds the TLS handshake of a `wss://` connection too, a host that accepts the connection and
+  never answers raises `ConnectTimeoutError` instead of hanging [#741]
 
 ### Removed
 - `Target#page=`, a private API Cuprite no longer needs, build pages with `create_page` and set them up with
