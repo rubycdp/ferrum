@@ -570,6 +570,16 @@ describe Ferrum::Browser do
       expect(process.pid).to be(nil)
     end
 
+    it "raises DeadBrowserError naming :ws_max_receive_size when a message exceeds it", :launch do
+      browser = Ferrum::Browser.new(ws_max_receive_size: 1024 * 1024)
+
+      expect { browser.evaluate("'x'.repeat(2 * 1024 * 1024)") }
+        .to raise_error(Ferrum::DeadBrowserError, /ws_max_receive_size \(1048576 bytes\)/)
+      expect { browser.evaluate("1") }.to raise_error(Ferrum::DeadBrowserError, /ws_max_receive_size/)
+    ensure
+      browser&.quit
+    end
+
     it "closes the connection when :ws_url doesn't answer in time" do
       with_unresponsive_browser do |ws_url, connections|
         expect { Ferrum::Browser.new(ws_url: ws_url, timeout: 0.5) }.to raise_error(Ferrum::TimeoutError)
