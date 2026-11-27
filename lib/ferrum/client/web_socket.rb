@@ -42,15 +42,7 @@ module Ferrum
         uri = URI.parse(@url)
         port = uri.port || DEFAULT_PORTS[uri.scheme]
 
-        tcp = connect(uri.host, port, connect_timeout)
-        if port == 443 || url.scheme == "wss"
-          ssl_context = OpenSSL::SSL::SSLContext.new
-          @sock = OpenSSL::SSL::SSLSocket.new(tcp, ssl_context)
-          @sock.sync_close = true
-          @sock.connect
-        else
-          @sock = tcp
-        end
+        @sock = connect(uri.host, port, port == 443 || url.scheme == "wss", connect_timeout)
 
         @max_receive_size = max_receive_size || ::WebSocket::Driver::MAX_LENGTH
         @driver = ::WebSocket::Driver.client(self, max_length: @max_receive_size)
@@ -182,10 +174,24 @@ module Ferrum
 
       private
 
-      def connect(host, port, timeout)
-        TCPSocket.new(host, port, connect_timeout: timeout)
+      def connect(host, port, tls, timeout)
+        deadline = Deadline.after(timeout) if timeout
+        tcp = TCPSocket.new(host, port, connect_timeout: timeout)
+        tls ? handshake(tcp, deadline) : tcp
       rescue IO::TimeoutError, Errno::ETIMEDOUT
+        tcp&.close
         raise ConnectTimeoutError.new("#{host}:#{port}", timeout)
+      end
+
+      def handshake(tcp, deadline)
+        sock = OpenSSL::SSL::SSLSocket.new(tcp, OpenSSL::SSL::SSLContext.new)
+        sock.sync_close = true
+        until (state = sock.connect_nonblock(exception: false)) == sock
+          remaining = deadline&.remaining
+          ready = state == :wait_readable ? tcp.wait_readable(remaining) : tcp.wait_writable(remaining)
+          raise IO::TimeoutError unless ready
+        end
+        sock
       end
 
       def drive(deadline = nil)
