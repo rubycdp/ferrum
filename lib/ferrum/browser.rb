@@ -324,8 +324,11 @@ module Ferrum
         started = true
       ensure
         unless started
-          @client&.close
-          @process.stop
+          begin
+            @client&.close
+          ensure
+            @process.stop
+          end
         end
       end
     end

@@ -553,6 +553,23 @@ describe Ferrum::Browser do
       expect(process.pid).to be(nil)
     end
 
+    it "stops process if closing the client is interrupted after a failed start", :launch do
+      process = Ferrum::Browser::Process.new(Ferrum::Browser::Options.new)
+      allow(Ferrum::Browser::Process).to receive(:new).and_return(process)
+      allow(Ferrum::Contexts).to receive(:new).and_raise(StandardError)
+      allow(Ferrum::Client).to receive(:new).and_wrap_original do |new_client, *args|
+        new_client.call(*args).tap do |client|
+          allow(client).to receive(:close).and_wrap_original do |close|
+            close.call
+            raise Interrupt
+          end
+        end
+      end
+
+      expect { Ferrum::Browser.new }.to raise_error(Interrupt)
+      expect(process.pid).to be(nil)
+    end
+
     it "closes the connection when :ws_url doesn't answer in time" do
       with_unresponsive_browser do |ws_url, connections|
         expect { Ferrum::Browser.new(ws_url: ws_url, timeout: 0.5) }.to raise_error(Ferrum::TimeoutError)
@@ -563,6 +580,14 @@ describe Ferrum::Browser do
     it "closes the connection when start is interrupted" do
       with_unresponsive_browser do |ws_url, connections|
         expect { Timeout.timeout(0.5) { Ferrum::Browser.new(ws_url: ws_url, timeout: 10) } }
+          .to raise_error(Timeout::Error)
+        expect(closed_by_peer?(connections.pop)).to be(true)
+      end
+    end
+
+    it "closes the connection when cleaning up after a failed start is interrupted" do
+      with_unresponsive_browser do |ws_url, connections|
+        expect { Timeout.timeout(0.8) { Ferrum::Browser.new(ws_url: ws_url, timeout: 0.5) } }
           .to raise_error(Timeout::Error)
         expect(closed_by_peer?(connections.pop)).to be(true)
       end
